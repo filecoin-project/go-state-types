@@ -19,7 +19,6 @@ func (s SectorNumber) String() string {
 
 // The maximum assignable sector number.
 // Raising this would require modifying our AMT implementation.
-//goland:noinspection GoUnusedConst
 const MaxSectorNumber = math.MaxInt64
 
 // SectorSize indicates one of a set of possible sizes in the network.
@@ -62,7 +61,6 @@ type StoragePower = big.Int
 
 type SectorQuality = big.Int
 
-//goland:noinspection GoUnusedExportedFunction
 func NewStoragePower(n int64) StoragePower {
 	return big.NewInt(n)
 }
@@ -70,7 +68,6 @@ func NewStoragePower(n int64) StoragePower {
 // These enumerations must match the proofs library and never change.
 type RegisteredSealProof int64
 
-//goland:noinspection GoUnusedConst
 const (
 	RegisteredSealProof_StackedDrg2KiBV1   = RegisteredSealProof(0)
 	RegisteredSealProof_StackedDrg8MiBV1   = RegisteredSealProof(1)
@@ -81,7 +78,6 @@ const (
 
 type RegisteredPoStProof int64
 
-//goland:noinspection GoUnusedConst
 const (
 	RegisteredPoStProof_StackedDrgWinning2KiBV1   = RegisteredPoStProof(0)
 	RegisteredPoStProof_StackedDrgWinning8MiBV1   = RegisteredPoStProof(1)

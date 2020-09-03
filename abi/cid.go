@@ -46,5 +46,4 @@ func (b cidBuilder) Sum(data []byte) (cid.Cid, error) {
 //
 // - The default codec is CBOR. This can be changed with CidBuilder.WithCodec.
 // - The default hash function is 256bit blake2b.
-//goland:noinspection GoUnusedGlobalVariable
 var CidBuilder cid.Builder = cidBuilder{codec: cid.DagCBOR}
