@@ -154,6 +154,36 @@ func (p RegisteredSealProof) RegisteredWindowPoStProof() (RegisteredPoStProof, e
 	return info.WindowPoStProof, nil
 }
 
+var PoStSealProofTypes = map[RegisteredPoStProof]RegisteredSealProof{
+	RegisteredPoStProof_StackedDrgWinning2KiBV1:   RegisteredSealProof_StackedDrg2KiBV1,
+	RegisteredPoStProof_StackedDrgWindow2KiBV1:    RegisteredSealProof_StackedDrg2KiBV1,
+	RegisteredPoStProof_StackedDrgWinning8MiBV1:   RegisteredSealProof_StackedDrg8MiBV1,
+	RegisteredPoStProof_StackedDrgWindow8MiBV1:    RegisteredSealProof_StackedDrg8MiBV1,
+	RegisteredPoStProof_StackedDrgWinning512MiBV1: RegisteredSealProof_StackedDrg512MiBV1,
+	RegisteredPoStProof_StackedDrgWindow512MiBV1:  RegisteredSealProof_StackedDrg512MiBV1,
+	RegisteredPoStProof_StackedDrgWinning32GiBV1:  RegisteredSealProof_StackedDrg32GiBV1,
+	RegisteredPoStProof_StackedDrgWindow32GiBV1:   RegisteredSealProof_StackedDrg32GiBV1,
+	RegisteredPoStProof_StackedDrgWinning64GiBV1:  RegisteredSealProof_StackedDrg64GiBV1,
+	RegisteredPoStProof_StackedDrgWindow64GiBV1:   RegisteredSealProof_StackedDrg64GiBV1,
+}
+
+// Maps PoSt proof types back to seal proof types.
+func (p RegisteredPoStProof) RegisteredSealProof() (RegisteredSealProof, error) {
+	sp, ok := PoStSealProofTypes[p]
+	if !ok {
+		return 0, xerrors.Errorf("unsupported PoSt proof type: %v", p)
+	}
+	return sp, nil
+}
+
+func (p RegisteredPoStProof) SectorSize() (SectorSize, error) {
+	sp, err := p.RegisteredSealProof()
+	if err != nil {
+		return 0, err
+	}
+	return sp.SectorSize()
+}
+
 type SealRandomness Randomness
 type InteractiveSealRandomness Randomness
 type PoStRandomness Randomness
