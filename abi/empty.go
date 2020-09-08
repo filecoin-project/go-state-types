@@ -17,7 +17,6 @@ import (
 type EmptyValue struct{}
 
 // A typed nil pointer to EmptyValue.
-//goland:noinspection GoUnusedGlobalVariable
 var Empty *EmptyValue = nil
 
 var _ cbg.CBORMarshaler = (*EmptyValue)(nil)
