@@ -84,27 +84,37 @@ func NewDeadlineInfo(periodStart abi.ChainEpoch, deadlineIdx uint64, currEpoch a
 	if deadlineIdx < wPoStPeriodDeadlines {
 		deadlineOpen := periodStart + (abi.ChainEpoch(deadlineIdx) * wPoStChallengeWindow)
 		return &DeadlineInfo{
-			CurrentEpoch:       currEpoch,
-			PeriodStart:        periodStart,
-			Index:              deadlineIdx,
-			Open:               deadlineOpen,
-			Close:              deadlineOpen + wPoStChallengeWindow,
-			Challenge:          deadlineOpen - wPoStChallengeLookback,
-			FaultCutoff:        deadlineOpen - faultDeclarationCutoff,
-			WPoStProvingPeriod: wPoStProvingPeriod,
+			CurrentEpoch: currEpoch,
+			PeriodStart:  periodStart,
+			Index:        deadlineIdx,
+			Open:         deadlineOpen,
+			Close:        deadlineOpen + wPoStChallengeWindow,
+			Challenge:    deadlineOpen - wPoStChallengeLookback,
+			FaultCutoff:  deadlineOpen - faultDeclarationCutoff,
+			// parameters
+			WPoStPeriodDeadlines:   wPoStPeriodDeadlines,
+			WPoStProvingPeriod:     wPoStProvingPeriod,
+			WPoStChallengeWindow:   wPoStChallengeWindow,
+			WPoStChallengeLookback: wPoStChallengeLookback,
+			FaultDeclarationCutoff: faultDeclarationCutoff,
 		}
 	} else {
 		// Return deadline info for a no-duration deadline immediately after the last real one.
 		afterLastDeadline := periodStart + wPoStProvingPeriod
 		return &DeadlineInfo{
-			CurrentEpoch:       currEpoch,
-			PeriodStart:        periodStart,
-			Index:              deadlineIdx,
-			Open:               afterLastDeadline,
-			Close:              afterLastDeadline,
-			Challenge:          afterLastDeadline,
-			FaultCutoff:        0,
-			WPoStProvingPeriod: wPoStProvingPeriod,
+			CurrentEpoch: currEpoch,
+			PeriodStart:  periodStart,
+			Index:        deadlineIdx,
+			Open:         afterLastDeadline,
+			Close:        afterLastDeadline,
+			Challenge:    afterLastDeadline,
+			FaultCutoff:  0,
+			// parameters
+			WPoStPeriodDeadlines:   wPoStPeriodDeadlines,
+			WPoStProvingPeriod:     wPoStProvingPeriod,
+			WPoStChallengeWindow:   wPoStChallengeWindow,
+			WPoStChallengeLookback: wPoStChallengeLookback,
+			FaultDeclarationCutoff: faultDeclarationCutoff,
 		}
 	}
 }
