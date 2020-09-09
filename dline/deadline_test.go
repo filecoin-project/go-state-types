@@ -1,4 +1,4 @@
-package deadline_test
+package dline_test
 
 import (
 	"testing"
@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/go-state-types/deadline"
+	"github.com/filecoin-project/go-state-types/dline"
 )
 
 func TestProvingPeriodDeadlines(t *testing.T) {
@@ -20,7 +20,7 @@ func TestProvingPeriodDeadlines(t *testing.T) {
 		curr := abi.ChainEpoch(0) // Current is before the period opens.
 		{
 			periodStart := FDC + 1
-			di := deadline.NewDeadlineInfo(periodStart, 0, curr, DLs, PP, CW, CL, FDC)
+			di := dline.NewInfo(periodStart, 0, curr, DLs, PP, CW, CL, FDC)
 			assert.Equal(t, curr, di.CurrentEpoch)
 			assert.Equal(t, periodStart, di.PeriodStart)
 			assert.Equal(t, uint64(0), di.Index)
@@ -41,7 +41,7 @@ func TestProvingPeriodDeadlines(t *testing.T) {
 		}
 		{
 			periodStart := FDC - 1
-			di := deadline.NewDeadlineInfo(periodStart, 0, curr, DLs, PP, CW, CL, FDC)
+			di := dline.NewInfo(periodStart, 0, curr, DLs, PP, CW, CL, FDC)
 			assert.True(t, di.FaultCutoffPassed())
 		}
 	})
@@ -51,7 +51,7 @@ func TestProvingPeriodDeadlines(t *testing.T) {
 		{
 			// Period not yet started
 			curr := periodStart - 1
-			di := deadline.NewDeadlineInfo(periodStart, 0, curr, DLs, PP, CW, CL, FDC)
+			di := dline.NewInfo(periodStart, 0, curr, DLs, PP, CW, CL, FDC)
 			assert.False(t, di.PeriodStarted()) // Not yet started
 			assert.False(t, di.PeriodElapsed())
 			assert.Equal(t, periodStart+PP-1, di.PeriodEnd())
@@ -60,7 +60,7 @@ func TestProvingPeriodDeadlines(t *testing.T) {
 		{
 			// Period started
 			curr := periodStart
-			di := deadline.NewDeadlineInfo(periodStart, 0, curr, DLs, PP, CW, CL, FDC)
+			di := dline.NewInfo(periodStart, 0, curr, DLs, PP, CW, CL, FDC)
 			assert.True(t, di.PeriodStarted())
 			assert.False(t, di.PeriodElapsed())
 			assert.Equal(t, periodStart+PP-1, di.PeriodEnd())
@@ -69,7 +69,7 @@ func TestProvingPeriodDeadlines(t *testing.T) {
 		{
 			// Period elapsed
 			curr := periodStart + PP
-			di := deadline.NewDeadlineInfo(periodStart, DLs-1, curr, DLs, PP, CW, CL, FDC)
+			di := dline.NewInfo(periodStart, DLs-1, curr, DLs, PP, CW, CL, FDC)
 			assert.True(t, di.PeriodStarted())
 			assert.True(t, di.PeriodElapsed())
 			assert.Equal(t, periodStart+PP-1, di.PeriodEnd())
@@ -85,7 +85,7 @@ func TestProvingPeriodDeadlines(t *testing.T) {
 		{
 			// First epoch of deadline zero
 			curr := periodStart
-			di := deadline.NewDeadlineInfo(periodStart, 0, curr, DLs, PP, CW, CL, FDC)
+			di := dline.NewInfo(periodStart, 0, curr, DLs, PP, CW, CL, FDC)
 
 			assert.Equal(t, periodStart, di.Open)
 			assert.Equal(t, periodStart+CW, di.Close)
@@ -105,7 +105,7 @@ func TestProvingPeriodDeadlines(t *testing.T) {
 		{
 			// Before deadline zero opens
 			curr := periodStart - 1
-			di := deadline.NewDeadlineInfo(periodStart, 0, curr, DLs, PP, CW, CL, FDC)
+			di := dline.NewInfo(periodStart, 0, curr, DLs, PP, CW, CL, FDC)
 
 			assert.False(t, di.IsOpen()) // Not yet open
 			assert.False(t, di.HasElapsed())
@@ -119,7 +119,7 @@ func TestProvingPeriodDeadlines(t *testing.T) {
 		{
 			// During deadline zero, deadline one isn't open
 			curr := periodStart
-			di0 := deadline.NewDeadlineInfo(periodStart, 0, curr, DLs, PP, CW, CL, FDC)
+			di0 := dline.NewInfo(periodStart, 0, curr, DLs, PP, CW, CL, FDC)
 			assert.True(t, di0.IsOpen()) // Now open
 			assert.False(t, di0.HasElapsed())
 			assert.True(t, di0.FaultCutoffPassed())
@@ -130,7 +130,7 @@ func TestProvingPeriodDeadlines(t *testing.T) {
 			assert.Equal(t, periodStart, nxt0.PeriodStart)
 			assert.Equal(t, uint64(0), nxt0.Index)
 
-			di1 := deadline.NewDeadlineInfo(periodStart, 1, curr, DLs, PP, CW, CL, FDC)
+			di1 := dline.NewInfo(periodStart, 1, curr, DLs, PP, CW, CL, FDC)
 			assert.False(t, di1.IsOpen())
 			assert.False(t, di1.HasElapsed())
 			// The fault cutoff is more than one deadline into the future.
@@ -144,7 +144,7 @@ func TestProvingPeriodDeadlines(t *testing.T) {
 		{
 			// Last epoch of deadline zero
 			curr := periodStart + CW - 1
-			di := deadline.NewDeadlineInfo(periodStart, 0, curr, DLs, PP, CW, CL, FDC)
+			di := dline.NewInfo(periodStart, 0, curr, DLs, PP, CW, CL, FDC)
 
 			assert.True(t, di.IsOpen())
 			assert.False(t, di.HasElapsed())
@@ -158,7 +158,7 @@ func TestProvingPeriodDeadlines(t *testing.T) {
 		{
 			// Deadline zero expired
 			curr := periodStart + CW
-			di := deadline.NewDeadlineInfo(periodStart, 0, curr, DLs, PP, CW, CL, FDC)
+			di := dline.NewInfo(periodStart, 0, curr, DLs, PP, CW, CL, FDC)
 
 			assert.False(t, di.IsOpen())
 			assert.True(t, di.HasElapsed())
@@ -174,7 +174,7 @@ func TestProvingPeriodDeadlines(t *testing.T) {
 	t.Run("period expired", func(t *testing.T) {
 		periodStart := abi.ChainEpoch(0)
 		curr := periodStart + PP
-		d := deadline.NewDeadlineInfo(periodStart, DLs, curr, DLs, PP, CW, CL, FDC)
+		d := dline.NewInfo(periodStart, DLs, curr, DLs, PP, CW, CL, FDC)
 		assert.True(t, d.PeriodStarted())
 		assert.True(t, d.PeriodElapsed())
 		assert.Equal(t, DLs, d.Index)
