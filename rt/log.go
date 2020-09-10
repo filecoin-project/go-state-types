@@ -1,4 +1,4 @@
-package log
+package rt
 
 // Specifies importance of message, LogLevel numbering is consistent with the uber-go/zap package.
 type LogLevel int
