@@ -4,15 +4,15 @@ import "io"
 
 // These interfaces are intended to match those from whyrusleeping/cbor-gen, such that code generated from that
 // system is automatically usable here (but not mandatory).
-type CBORMarshaler interface {
+type Marshaler interface {
 	MarshalCBOR(w io.Writer) error
 }
 
-type CBORUnmarshaler interface {
+type Unmarshaler interface {
 	UnmarshalCBOR(r io.Reader) error
 }
 
-type CBORer interface {
-	CBORMarshaler
-	CBORUnmarshaler
+type Er interface {
+	Marshaler
+	Unmarshaler
 }
