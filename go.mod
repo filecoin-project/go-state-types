@@ -3,6 +3,7 @@ module github.com/filecoin-project/go-state-types
 go 1.13
 
 require (
+	github.com/filecoin-project/go-address v0.0.3
 	github.com/ipfs/go-cid v0.0.7
 	github.com/multiformats/go-multihash v0.0.14
 	github.com/stretchr/testify v1.6.1
