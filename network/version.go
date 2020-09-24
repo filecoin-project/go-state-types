@@ -9,8 +9,8 @@ type Version uint
 const (
 	Version0 = Version(iota) // specs-actors v0.9.3
 	Version1                 // specs-actors v0.9.7
-	Version2                 // specs-actors v0.9.?
-	Version3                 // Coming soon
+	Version2                 // specs-actors v0.9.8
+	Version3                 // specs-actors v0.9.11
 	Version4                 // Who knows?
 
 	VersionMax = Version(math.MaxUint32)
