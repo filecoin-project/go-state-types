@@ -13,7 +13,10 @@ const (
 	Version3                 // ignition  (specs-actors v0.9.11)
 	Version4                 // actors v2 (specs-actors v2.0.3)
 	Version5                 // tape      (specs-actors v2.1.0)
-	Version6                 // upcoming
+	Version6                 // kumquat   (specs-actors v2.2.0)
+	Version7                 // upcoming
+	Version8                 // reserved
+	Version9                 // reserved
 
 	// VersionMax is the maximum version number
 	VersionMax = Version(math.MaxUint32)
