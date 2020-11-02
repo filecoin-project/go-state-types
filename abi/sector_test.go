@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/filecoin-project/go-state-types/abi"
 )
@@ -35,4 +36,37 @@ func TestSectorSizeShortString(t *testing.T) {
 	assert.Equal(t, "1PiB", abi.SectorSize(pib).ShortString())
 	assert.Equal(t, "1EiB", abi.SectorSize(pib*kib).ShortString())
 	assert.Equal(t, "10EiB", abi.SectorSize(pib*kib*10).ShortString())
+}
+
+func TestV1_1SealProofEquivalence(t *testing.T) {
+	for v1 := abi.RegisteredSealProof_StackedDrg2KiBV1; v1 < abi.RegisteredSealProof_StackedDrg2KiBV1_1; v1++ {
+		v1Size, err := v1.SectorSize()
+		require.NoError(t, err)
+		v1Wpost, err := v1.RegisteredWindowPoStProof()
+		require.NoError(t, err)
+		v1Gpost, err := v1.RegisteredWinningPoStProof()
+		require.NoError(t, err)
+
+		v1_1 := v1 + 5 // RegisteredSealProof_StackedDrgXxxV1_1
+		v11Size, err := v1_1.SectorSize()
+		require.NoError(t, err)
+		v11Wpost, err := v1_1.RegisteredWindowPoStProof()
+		require.NoError(t, err)
+		v11Gpost, err := v1_1.RegisteredWinningPoStProof()
+		require.NoError(t, err)
+
+		assert.Equal(t, v1Size, v11Size)
+		assert.Equal(t, v1Wpost, v11Wpost)
+		assert.Equal(t, v1Gpost, v11Gpost)
+
+		gpost := abi.RegisteredPoStProof(v1) // RegisteredPoStProof_StackedDrgWinningXxxV1
+		gpostSize, err := gpost.SectorSize()
+		require.NoError(t, err)
+		assert.Equal(t, v1Size, gpostSize)
+
+		wpost := gpost + 5 // RegisteredPoStProof_StackedDrgWindowXxxV1
+		wpostSize, err := wpost.SectorSize()
+		require.NoError(t, err)
+		assert.Equal(t, v1Size, wpostSize)
+	}
 }
