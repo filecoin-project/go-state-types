@@ -74,6 +74,12 @@ const (
 	RegisteredSealProof_StackedDrg512MiBV1 = RegisteredSealProof(2)
 	RegisteredSealProof_StackedDrg32GiBV1  = RegisteredSealProof(3)
 	RegisteredSealProof_StackedDrg64GiBV1  = RegisteredSealProof(4)
+
+	RegisteredSealProof_StackedDrg2KiBV1_1   = RegisteredSealProof(5)
+	RegisteredSealProof_StackedDrg8MiBV1_1   = RegisteredSealProof(6)
+	RegisteredSealProof_StackedDrg512MiBV1_1 = RegisteredSealProof(7)
+	RegisteredSealProof_StackedDrg32GiBV1_1  = RegisteredSealProof(8)
+	RegisteredSealProof_StackedDrg64GiBV1_1  = RegisteredSealProof(9)
 )
 
 type RegisteredPoStProof int64
@@ -93,36 +99,70 @@ const (
 
 // Metadata about a seal proof type.
 type SealProofInfo struct {
-	SectorSize                 SectorSize
-	WinningPoStProof           RegisteredPoStProof
-	WindowPoStProof            RegisteredPoStProof
+	SectorSize       SectorSize
+	WinningPoStProof RegisteredPoStProof
+	WindowPoStProof  RegisteredPoStProof
 }
+
+const (
+	ss2KiB   = 2 << 10
+	ss8MiB   = 8 << 20
+	ss512MiB = 512 << 20
+	ss32GiB  = 32 << 30
+	ss64GiB  = 64 << 30
+)
 
 var SealProofInfos = map[RegisteredSealProof]*SealProofInfo{
 	RegisteredSealProof_StackedDrg2KiBV1: {
-		SectorSize:                 2 << 10,
-		WinningPoStProof:           RegisteredPoStProof_StackedDrgWinning2KiBV1,
-		WindowPoStProof:            RegisteredPoStProof_StackedDrgWindow2KiBV1,
+		SectorSize:       ss2KiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning2KiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow2KiBV1,
 	},
 	RegisteredSealProof_StackedDrg8MiBV1: {
-		SectorSize:                 8 << 20,
-		WinningPoStProof:           RegisteredPoStProof_StackedDrgWinning8MiBV1,
-		WindowPoStProof:            RegisteredPoStProof_StackedDrgWindow8MiBV1,
+		SectorSize:       ss8MiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning8MiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow8MiBV1,
 	},
 	RegisteredSealProof_StackedDrg512MiBV1: {
-		SectorSize:                 512 << 20,
-		WinningPoStProof:           RegisteredPoStProof_StackedDrgWinning512MiBV1,
-		WindowPoStProof:            RegisteredPoStProof_StackedDrgWindow512MiBV1,
+		SectorSize:       ss512MiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning512MiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow512MiBV1,
 	},
 	RegisteredSealProof_StackedDrg32GiBV1: {
-		SectorSize:                 32 << 30,
-		WinningPoStProof:           RegisteredPoStProof_StackedDrgWinning32GiBV1,
-		WindowPoStProof:            RegisteredPoStProof_StackedDrgWindow32GiBV1,
+		SectorSize:       ss32GiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning32GiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow32GiBV1,
 	},
 	RegisteredSealProof_StackedDrg64GiBV1: {
-		SectorSize:                 64 << 30,
-		WinningPoStProof:           RegisteredPoStProof_StackedDrgWinning64GiBV1,
-		WindowPoStProof:            RegisteredPoStProof_StackedDrgWindow64GiBV1,
+		SectorSize:       ss64GiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning64GiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow64GiBV1,
+	},
+
+	RegisteredSealProof_StackedDrg2KiBV1_1: {
+		SectorSize:       ss2KiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning2KiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow2KiBV1,
+	},
+	RegisteredSealProof_StackedDrg8MiBV1_1: {
+		SectorSize:       ss8MiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning8MiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow8MiBV1,
+	},
+	RegisteredSealProof_StackedDrg512MiBV1_1: {
+		SectorSize:       ss512MiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning512MiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow512MiBV1,
+	},
+	RegisteredSealProof_StackedDrg32GiBV1_1: {
+		SectorSize:       ss32GiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning32GiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow32GiBV1,
+	},
+	RegisteredSealProof_StackedDrg64GiBV1_1: {
+		SectorSize:       ss64GiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning64GiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow64GiBV1,
 	},
 }
 
@@ -154,37 +194,52 @@ func (p RegisteredSealProof) RegisteredWindowPoStProof() (RegisteredPoStProof, e
 	return info.WindowPoStProof, nil
 }
 
-var PoStSealProofTypes = map[RegisteredPoStProof]RegisteredSealProof{
-	RegisteredPoStProof_StackedDrgWinning2KiBV1:   RegisteredSealProof_StackedDrg2KiBV1,
-	RegisteredPoStProof_StackedDrgWindow2KiBV1:    RegisteredSealProof_StackedDrg2KiBV1,
-	RegisteredPoStProof_StackedDrgWinning8MiBV1:   RegisteredSealProof_StackedDrg8MiBV1,
-	RegisteredPoStProof_StackedDrgWindow8MiBV1:    RegisteredSealProof_StackedDrg8MiBV1,
-	RegisteredPoStProof_StackedDrgWinning512MiBV1: RegisteredSealProof_StackedDrg512MiBV1,
-	RegisteredPoStProof_StackedDrgWindow512MiBV1:  RegisteredSealProof_StackedDrg512MiBV1,
-	RegisteredPoStProof_StackedDrgWinning32GiBV1:  RegisteredSealProof_StackedDrg32GiBV1,
-	RegisteredPoStProof_StackedDrgWindow32GiBV1:   RegisteredSealProof_StackedDrg32GiBV1,
-	RegisteredPoStProof_StackedDrgWinning64GiBV1:  RegisteredSealProof_StackedDrg64GiBV1,
-	RegisteredPoStProof_StackedDrgWindow64GiBV1:   RegisteredSealProof_StackedDrg64GiBV1,
+// Metadata about a PoSt proof type.
+type PoStProofInfo struct {
+	SectorSize SectorSize
 }
 
-// Maps PoSt proof types back to seal proof types.
-func (p RegisteredPoStProof) RegisteredSealProof() (RegisteredSealProof, error) {
-	sp, ok := PoStSealProofTypes[p]
-	if !ok {
-		return 0, xerrors.Errorf("unsupported PoSt proof type: %v", p)
-	}
-	return sp, nil
+var PoStProofInfos = map[RegisteredPoStProof]*PoStProofInfo{
+	RegisteredPoStProof_StackedDrgWinning2KiBV1: {
+		SectorSize: ss2KiB,
+	},
+	RegisteredPoStProof_StackedDrgWinning8MiBV1: {
+		SectorSize: ss8MiB,
+	},
+	RegisteredPoStProof_StackedDrgWinning512MiBV1: {
+		SectorSize: ss512MiB,
+	},
+	RegisteredPoStProof_StackedDrgWinning32GiBV1: {
+		SectorSize: ss32GiB,
+	},
+	RegisteredPoStProof_StackedDrgWinning64GiBV1: {
+		SectorSize: ss64GiB,
+	},
+	RegisteredPoStProof_StackedDrgWindow2KiBV1: {
+		SectorSize: ss2KiB,
+	},
+	RegisteredPoStProof_StackedDrgWindow8MiBV1: {
+		SectorSize: ss8MiB,
+	},
+	RegisteredPoStProof_StackedDrgWindow512MiBV1: {
+		SectorSize: ss512MiB,
+	},
+	RegisteredPoStProof_StackedDrgWindow32GiBV1: {
+		SectorSize: ss32GiB,
+	},
+	RegisteredPoStProof_StackedDrgWindow64GiBV1: {
+		SectorSize: ss64GiB,
+	},
 }
 
 func (p RegisteredPoStProof) SectorSize() (SectorSize, error) {
-	sp, err := p.RegisteredSealProof()
-	if err != nil {
-		return 0, err
+	info, ok := PoStProofInfos[p]
+	if !ok {
+		return 0, xerrors.Errorf("unsupported proof type: %v", p)
 	}
-	return sp.SectorSize()
+	return info.SectorSize, nil
 }
 
 type SealRandomness Randomness
 type InteractiveSealRandomness Randomness
 type PoStRandomness Randomness
-
