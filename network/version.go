@@ -7,17 +7,19 @@ import "math"
 type Version uint
 
 const (
-	Version0 = Version(iota) // genesis   (specs-actors v0.9.3)
-	Version1                 // breeze    (specs-actors v0.9.7)
-	Version2                 // smoke     (specs-actors v0.9.8)
-	Version3                 // ignition  (specs-actors v0.9.11)
-	Version4                 // actors v2 (specs-actors v2.0.3)
-	Version5                 // tape      (specs-actors v2.1.0)
-	Version6                 // kumquat   (specs-actors v2.2.0)
-	Version7                 // calico    (specs-actors v2.3.2)
-	Version8                 // persian   (post-2.3.2 behaviour transition)
-	Version9                 // reserved
-	Version10                // reserved
+	Version0  = Version(iota) // genesis   (specs-actors v0.9.3)
+	Version1                  // breeze    (specs-actors v0.9.7)
+	Version2                  // smoke     (specs-actors v0.9.8)
+	Version3                  // ignition  (specs-actors v0.9.11)
+	Version4                  // actors v2 (specs-actors v2.0.3)
+	Version5                  // tape      (specs-actors v2.1.0)
+	Version6                  // kumquat   (specs-actors v2.2.0)
+	Version7                  // calico    (specs-actors v2.3.2)
+	Version8                  // persian   (post-2.3.2 behaviour transition)
+	Version9                  // orange    (post-2.3.2 behaviour transition)
+	Version10                 // reserved  (specs-actors v3.x)
+	Version11                 // reserved
+	Version12                 // reserved
 
 	// VersionMax is the maximum version number
 	VersionMax = Version(math.MaxUint32)
