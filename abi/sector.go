@@ -99,6 +99,9 @@ const (
 
 // Metadata about a seal proof type.
 type SealProofInfo struct {
+	// The proof sizes are 192 * the number of "porep" partitions.
+	// https://github.com/filecoin-project/rust-fil-proofs/blob/64390b6fcedb04dd1fdbe43c82b1e91c1439cea2/filecoin-proofs/src/constants.rs#L68-L80
+	ProofSize        uint64
 	SectorSize       SectorSize
 	WinningPoStProof RegisteredPoStProof
 	WindowPoStProof  RegisteredPoStProof
@@ -114,56 +117,76 @@ const (
 
 var SealProofInfos = map[RegisteredSealProof]*SealProofInfo{
 	RegisteredSealProof_StackedDrg2KiBV1: {
+		ProofSize:        192,
 		SectorSize:       ss2KiB,
 		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning2KiBV1,
 		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow2KiBV1,
 	},
+
 	RegisteredSealProof_StackedDrg8MiBV1: {
+		ProofSize:        192,
 		SectorSize:       ss8MiB,
 		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning8MiBV1,
 		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow8MiBV1,
 	},
 	RegisteredSealProof_StackedDrg512MiBV1: {
+		ProofSize:        192,
 		SectorSize:       ss512MiB,
 		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning512MiBV1,
 		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow512MiBV1,
 	},
 	RegisteredSealProof_StackedDrg32GiBV1: {
+		ProofSize:        1920,
 		SectorSize:       ss32GiB,
 		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning32GiBV1,
 		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow32GiBV1,
 	},
 	RegisteredSealProof_StackedDrg64GiBV1: {
+		ProofSize:        1920,
 		SectorSize:       ss64GiB,
 		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning64GiBV1,
 		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow64GiBV1,
 	},
 
 	RegisteredSealProof_StackedDrg2KiBV1_1: {
+		ProofSize:        192,
 		SectorSize:       ss2KiB,
 		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning2KiBV1,
 		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow2KiBV1,
 	},
 	RegisteredSealProof_StackedDrg8MiBV1_1: {
+		ProofSize:        192,
 		SectorSize:       ss8MiB,
 		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning8MiBV1,
 		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow8MiBV1,
 	},
 	RegisteredSealProof_StackedDrg512MiBV1_1: {
+		ProofSize:        192,
 		SectorSize:       ss512MiB,
 		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning512MiBV1,
 		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow512MiBV1,
 	},
 	RegisteredSealProof_StackedDrg32GiBV1_1: {
+		ProofSize:        1920,
 		SectorSize:       ss32GiB,
 		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning32GiBV1,
 		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow32GiBV1,
 	},
 	RegisteredSealProof_StackedDrg64GiBV1_1: {
+		ProofSize:        1920,
 		SectorSize:       ss64GiB,
 		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning64GiBV1,
 		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow64GiBV1,
 	},
+}
+
+// ProofSize returns the size of seal proofs for the given sector type.
+func (p RegisteredSealProof) ProofSize() (uint64, error) {
+	info, ok := SealProofInfos[p]
+	if !ok {
+		return 0, xerrors.Errorf("unsupported proof type: %v", p)
+	}
+	return info.ProofSize, nil
 }
 
 func (p RegisteredSealProof) SectorSize() (SectorSize, error) {
@@ -197,38 +220,51 @@ func (p RegisteredSealProof) RegisteredWindowPoStProof() (RegisteredPoStProof, e
 // Metadata about a PoSt proof type.
 type PoStProofInfo struct {
 	SectorSize SectorSize
+
+	// Size of a single proof.
+	ProofSize uint64
 }
 
 var PoStProofInfos = map[RegisteredPoStProof]*PoStProofInfo{
 	RegisteredPoStProof_StackedDrgWinning2KiBV1: {
 		SectorSize: ss2KiB,
+		ProofSize:  192,
 	},
 	RegisteredPoStProof_StackedDrgWinning8MiBV1: {
 		SectorSize: ss8MiB,
+		ProofSize:  192,
 	},
 	RegisteredPoStProof_StackedDrgWinning512MiBV1: {
 		SectorSize: ss512MiB,
+		ProofSize:  192,
 	},
 	RegisteredPoStProof_StackedDrgWinning32GiBV1: {
 		SectorSize: ss32GiB,
+		ProofSize:  192,
 	},
 	RegisteredPoStProof_StackedDrgWinning64GiBV1: {
 		SectorSize: ss64GiB,
+		ProofSize:  192,
 	},
 	RegisteredPoStProof_StackedDrgWindow2KiBV1: {
 		SectorSize: ss2KiB,
+		ProofSize:  192,
 	},
 	RegisteredPoStProof_StackedDrgWindow8MiBV1: {
 		SectorSize: ss8MiB,
+		ProofSize:  192,
 	},
 	RegisteredPoStProof_StackedDrgWindow512MiBV1: {
 		SectorSize: ss512MiB,
+		ProofSize:  192,
 	},
 	RegisteredPoStProof_StackedDrgWindow32GiBV1: {
 		SectorSize: ss32GiB,
+		ProofSize:  192,
 	},
 	RegisteredPoStProof_StackedDrgWindow64GiBV1: {
 		SectorSize: ss64GiB,
+		ProofSize:  192,
 	},
 }
 
@@ -238,6 +274,15 @@ func (p RegisteredPoStProof) SectorSize() (SectorSize, error) {
 		return 0, xerrors.Errorf("unsupported proof type: %v", p)
 	}
 	return info.SectorSize, nil
+}
+
+// ProofSize returns the size of window post proofs for the given sector type.
+func (p RegisteredPoStProof) ProofSize() (uint64, error) {
+	info, ok := PoStProofInfos[p]
+	if !ok {
+		return 0, xerrors.Errorf("unsupported proof type: %v", p)
+	}
+	return info.ProofSize, nil
 }
 
 type SealRandomness Randomness
