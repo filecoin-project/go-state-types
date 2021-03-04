@@ -72,11 +72,34 @@ func (d *Info) FaultCutoffPassed() bool {
 
 // Returns the next instance of this deadline that has not yet elapsed.
 func (d *Info) NextNotElapsed() *Info {
-	next := d
-	for next.HasElapsed() {
-		next = NewInfo(next.NextPeriodStart(), d.Index, d.CurrentEpoch, d.WPoStPeriodDeadlines, d.WPoStProvingPeriod, d.WPoStChallengeWindow, d.WPoStChallengeLookback, d.FaultDeclarationCutoff)
+	// If the deadline hasn't elapsed, do nothing.
+	if !d.HasElapsed() {
+		return d
 	}
-	return next
+
+	// find a nearby period start
+	// 1. first, find our period's offset from the "global" period
+	offset := d.PeriodStart % d.WPoStProvingPeriod
+	// handle negative period starts just in case.
+	if offset < 0 {
+		offset += d.WPoStProvingPeriod
+	}
+	// 2. determine the global period index.
+	globalPeriod := (d.CurrentEpoch / d.WPoStProvingPeriod)
+	// 3. Determine our next period start.
+	periodStart := globalPeriod*d.WPoStProvingPeriod + offset
+
+	// Backtrack so the period starts before the current epoch. This should usually run 0 or 1 times.
+	for periodStart > d.CurrentEpoch {
+		periodStart -= d.WPoStProvingPeriod
+	}
+
+	// If the next deadline opens at or after the current epoch, move to the next pp.
+	if d.CurrentEpoch >= periodStart+abi.ChainEpoch(d.Index+1)*d.WPoStChallengeWindow {
+		periodStart += d.WPoStProvingPeriod
+	}
+
+	return NewInfo(periodStart, d.Index, d.CurrentEpoch, d.WPoStPeriodDeadlines, d.WPoStProvingPeriod, d.WPoStChallengeWindow, d.WPoStChallengeLookback, d.FaultDeclarationCutoff)
 }
 
 // Returns deadline-related calculations for a deadline in some proving period and the current epoch.

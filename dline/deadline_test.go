@@ -184,4 +184,28 @@ func TestProvingPeriodDeadlines(t *testing.T) {
 		assert.Equal(t, PP-1, d.PeriodEnd())
 		assert.Equal(t, PP, d.NextPeriodStart())
 	})
+
+	t.Run("period start", func(t *testing.T) {
+		periodStart := abi.ChainEpoch(0)
+		f := func(t *testing.T) {
+			for curr := -99999; curr < 99999; curr++ {
+				d := dline.NewInfo(periodStart, DLs, abi.ChainEpoch(curr), DLs, PP, CW, CL, FDC)
+				actual := d.NextNotElapsed()
+				expected := d
+				for expected.HasElapsed() {
+					expected = dline.NewInfo(expected.PeriodStart+PP, DLs, abi.ChainEpoch(curr), DLs, PP, CW, CL, FDC)
+				}
+				assert.Equal(t, *expected, *actual)
+			}
+		}
+
+		periodStart = 60
+		t.Run("small", f)
+		periodStart = PP + 60
+		t.Run("next", f)
+		periodStart = 5*PP + 60
+		t.Run("later", f)
+		periodStart = 60 - PP
+		t.Run("negative", f)
+	})
 }
