@@ -97,6 +97,12 @@ const (
 	RegisteredPoStProof_StackedDrgWindow64GiBV1   = RegisteredPoStProof(9)
 )
 
+type RegisteredAggregationProof int64
+
+const (
+	RegisteredAggregationProof_SnarkPackV1 = RegisteredAggregationProof(0)
+)
+
 // Metadata about a seal proof type.
 type SealProofInfo struct {
 	// The proof sizes are 192 * the number of "porep" partitions.
