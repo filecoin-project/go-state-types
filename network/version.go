@@ -17,9 +17,10 @@ const (
 	Version7                  // calico    (specs-actors v2.3.2)
 	Version8                  // persian   (post-2.3.2 behaviour transition)
 	Version9                  // orange    (post-2.3.2 behaviour transition)
-	Version10                 // reserved  (specs-actors v3.x)
-	Version11                 // reserved
-	Version12                 // reserved
+	Version10                 // actors v3 (specs-actors v3.0.3)
+	Version11                 // norwegian (specs-actors v3.1.0)
+	Version12                 // actors v4 (specs-actors v4.0.0)
+	Version13                 // reserved  (specs-actors v5.x)
 
 	// VersionMax is the maximum version number
 	VersionMax = Version(math.MaxUint32)
