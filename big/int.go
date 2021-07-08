@@ -32,6 +32,8 @@ func Zero() Int {
 	return NewInt(0)
 }
 
+var reusableZero = Zero()
+
 // PositiveFromUnsignedBytes interprets b as the bytes of a big-endian unsigned
 // integer and returns a positive Int with this absolute value.
 func PositiveFromUnsignedBytes(b []byte) Int {
@@ -59,6 +61,9 @@ func FromString(s string) (Int, error) {
 }
 
 func (bi Int) Copy() Int {
+	if bi.Int == nil {
+		return NewInt(0)
+	}
 	return Int{Int: new(big.Int).Set(bi.Int)}
 }
 
@@ -71,18 +76,42 @@ func Product(ints ...Int) Int {
 }
 
 func Mul(a, b Int) Int {
+	if a.Int == nil {
+		a = reusableZero
+	}
+	if b.Int == nil {
+		b = reusableZero
+	}
 	return Int{big.NewInt(0).Mul(a.Int, b.Int)}
 }
 
 func Div(a, b Int) Int {
+	if a.Int == nil {
+		a = reusableZero
+	}
+	if b.Int == nil {
+		b = reusableZero
+	}
 	return Int{big.NewInt(0).Div(a.Int, b.Int)}
 }
 
 func Mod(a, b Int) Int {
+	if a.Int == nil {
+		a = reusableZero
+	}
+	if b.Int == nil {
+		b = reusableZero
+	}
 	return Int{big.NewInt(0).Mod(a.Int, b.Int)}
 }
 
 func Add(a, b Int) Int {
+	if a.Int == nil {
+		a = reusableZero
+	}
+	if b.Int == nil {
+		b = reusableZero
+	}
 	return Int{big.NewInt(0).Add(a.Int, b.Int)}
 }
 
@@ -103,25 +132,46 @@ func Subtract(num1 Int, ints ...Int) Int {
 }
 
 func Sub(a, b Int) Int {
+	if a.Int == nil {
+		a = reusableZero
+	}
+	if b.Int == nil {
+		b = reusableZero
+	}
 	return Int{big.NewInt(0).Sub(a.Int, b.Int)}
 }
 
 //  Returns a**e unless e <= 0 (in which case returns 1).
 func Exp(a Int, e Int) Int {
+	if a.Int == nil {
+		a = reusableZero
+	}
+	if e.Int == nil {
+		e = reusableZero
+	}
 	return Int{big.NewInt(0).Exp(a.Int, e.Int, nil)}
 }
 
 // Returns x << n
 func Lsh(a Int, n uint) Int {
+	if a.Int == nil {
+		return NewInt(0)
+	}
 	return Int{big.NewInt(0).Lsh(a.Int, n)}
 }
 
 // Returns x >> n
 func Rsh(a Int, n uint) Int {
+	if a.Int == nil {
+		return NewInt(0)
+	}
 	return Int{big.NewInt(0).Rsh(a.Int, n)}
 }
 
 func BitLen(a Int) uint {
+	if a.Int == nil {
+		return 0
+	}
 	return uint(a.Int.BitLen())
 }
 
@@ -154,6 +204,12 @@ func Min(x, y Int) Int {
 }
 
 func Cmp(a, b Int) int {
+	if a.Int == nil {
+		a = reusableZero
+	}
+	if b.Int == nil {
+		b = reusableZero
+	}
 	return a.Int.Cmp(b.Int)
 }
 
@@ -337,8 +393,9 @@ func (bi *Int) UnmarshalCBOR(br io.Reader) error {
 	return nil
 }
 
+// IsZero is identical to NilOrZero
 func (bi *Int) IsZero() bool {
-	return bi.Int.Sign() == 0
+	return bi.Int == nil || bi.Int.Sign() == 0
 }
 
 func (bi *Int) Nil() bool {

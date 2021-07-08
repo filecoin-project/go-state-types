@@ -2,6 +2,7 @@ package big
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"testing"
@@ -114,6 +115,36 @@ func TestOperations(t *testing.T) {
 
 	ta = Int{}
 	assert.True(t, ta.Nil())
+}
+
+func TestInt_NilUnmarshal(t *testing.T) {
+
+	parsedStruct := func() (s struct{ Big Int }) {
+		require.NoError(t, json.Unmarshal([]byte("{}"), &s))
+		return s
+	}
+
+	for _, testCase := range []struct {
+		name     string
+		f        func(Int, Int) Int
+		expected Int
+	}{
+		{name: "Sum", f: Add, expected: NewInt(1000)},
+		{name: "Sub", f: Sub, expected: NewInt(-1000)},
+		{name: "Mul", f: Mul, expected: NewInt(0)},
+		{name: "Div", f: Div, expected: NewInt(0)},
+		{name: "Mod", f: Mod, expected: NewInt(0)},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			assert.Equal(t, testCase.expected, testCase.f(parsedStruct().Big, Int{Int: big.NewInt(1000)}))
+		})
+	}
+
+	s := parsedStruct()
+	assert.True(t, s.Big.IsZero())
+
+	s = parsedStruct()
+	assert.True(t, s.Big.Nil())
 }
 
 func TestCopy(t *testing.T) {
