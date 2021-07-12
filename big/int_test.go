@@ -81,6 +81,12 @@ func TestInt_MarshalUnmarshalJSON(t *testing.T) {
 	s, err := tnil.MarshalJSON()
 	require.NoError(t, err)
 	assert.Equal(t, "\"0\"", string(s))
+
+	parsedStruct := func() (s struct{ Big Int }) {
+		require.NoError(t, json.Unmarshal([]byte("{}"), &s))
+		return s
+	}
+	assert.Equal(t, parsedStruct().Big, Int{})
 }
 
 func TestOperations(t *testing.T) {
@@ -89,7 +95,7 @@ func TestOperations(t *testing.T) {
 		f        func(Int, Int) Int
 		expected Int
 	}{
-		{name: "Sum", f: Add, expected: NewInt(7000)},
+		{name: "Add", f: Add, expected: NewInt(7000)},
 		{name: "Sub", f: Sub, expected: NewInt(3000)},
 		{name: "Mul", f: Mul, expected: NewInt(10000000)},
 		{name: "Div", f: Div, expected: NewInt(2)},
@@ -112,39 +118,37 @@ func TestOperations(t *testing.T) {
 	assert.True(t, ta.GreaterThan(tb))
 	assert.False(t, ta.LessThan(tb))
 	assert.True(t, tb.Equals(tc))
-
-	ta = Int{}
-	assert.True(t, ta.Nil())
 }
+func TestNilOperations(t *testing.T) {
 
-func TestInt_NilUnmarshal(t *testing.T) {
-
-	parsedStruct := func() (s struct{ Big Int }) {
-		require.NoError(t, json.Unmarshal([]byte("{}"), &s))
-		return s
-	}
+	nilInternals := Int{}
 
 	for _, testCase := range []struct {
 		name     string
 		f        func(Int, Int) Int
 		expected Int
 	}{
-		{name: "Sum", f: Add, expected: NewInt(1000)},
+		{name: "Add", f: Add, expected: NewInt(1000)},
 		{name: "Sub", f: Sub, expected: NewInt(-1000)},
 		{name: "Mul", f: Mul, expected: NewInt(0)},
 		{name: "Div", f: Div, expected: NewInt(0)},
 		{name: "Mod", f: Mod, expected: NewInt(0)},
 	} {
+
 		t.Run(testCase.name, func(t *testing.T) {
-			assert.Equal(t, testCase.expected, testCase.f(parsedStruct().Big, Int{Int: big.NewInt(1000)}))
+			assert.Equal(t, testCase.expected, testCase.f(nilInternals, Int{Int: big.NewInt(1000)}))
 		})
 	}
 
-	s := parsedStruct()
-	assert.True(t, s.Big.IsZero())
+	assert.Equal(t, Cmp(nilInternals, NewInt(0)), 0)
+	assert.Equal(t, Cmp(NewInt(0), nilInternals), 0)
+	assert.True(t, nilInternals.Equals(NewInt(0)))
 
-	s = parsedStruct()
-	assert.True(t, s.Big.Nil())
+	assert.True(t, nilInternals.GreaterThan(NewInt(-1)))
+	assert.True(t, nilInternals.LessThan(NewInt(1)))
+
+	assert.True(t, nilInternals.IsZero())
+	assert.True(t, nilInternals.Nil())
 }
 
 func TestCopy(t *testing.T) {
