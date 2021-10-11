@@ -103,6 +103,16 @@ const (
 	RegisteredAggregationProof_SnarkPackV1 = RegisteredAggregationProof(0)
 )
 
+type RegisteredUpdateProof int64
+
+const (
+	RegisteredUpdateProof_StackedDrg2KiBV1   = RegisteredUpdateProof(0)
+	RegisteredUpdateProof_StackedDrg8MiBV1   = RegisteredUpdateProof(1)
+	RegisteredUpdateProof_StackedDrg512MiBV1 = RegisteredUpdateProof(2)
+	RegisteredUpdateProof_StackedDrg32GiBV1  = RegisteredUpdateProof(3)
+	RegisteredUpdateProof_StackedDrg64GiBV1  = RegisteredUpdateProof(4)
+)
+
 // Metadata about a seal proof type.
 type SealProofInfo struct {
 	// The proof sizes are 192 * the number of "porep" partitions.
