@@ -90,7 +90,7 @@ jobs:
         default: golang
       golangci-lint-version:
         type: string
-        default: 1.23.1
+        default: 1.42.1
       concurrency:
         type: string
         default: '2'
