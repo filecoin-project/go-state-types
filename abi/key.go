@@ -26,8 +26,15 @@ type AddrPairKey struct {
 	second address.Address
 }
 
-func (k AddrPairKey) Key() string {
+func (k *AddrPairKey) Key() string {
 	return string(address.Address(k.first).Bytes()) +  string(address.Address(k.second).Bytes())
+}
+
+func NewAddrPairKey(first address.Address, second address.Address) *AddrPairKey{
+	return  &AddrPairKey{
+		first:  first,
+		second: second,
+	}
 }
 
 type CidKey cid.Cid
