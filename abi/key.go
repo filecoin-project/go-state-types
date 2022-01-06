@@ -20,6 +20,23 @@ func (k AddrKey) Key() string {
 	return string(address.Address(k).Bytes())
 }
 
+// Adapts an address tuple as a mapping key.
+type AddrPairKey struct {
+	first address.Address
+	second address.Address
+}
+
+func (k *AddrPairKey) Key() string {
+	return string(address.Address(k.first).Bytes()) +  string(address.Address(k.second).Bytes())
+}
+
+func NewAddrPairKey(first address.Address, second address.Address) *AddrPairKey{
+	return  &AddrPairKey{
+		first:  first,
+		second: second,
+	}
+}
+
 type CidKey cid.Cid
 
 func (k CidKey) Key() string {
