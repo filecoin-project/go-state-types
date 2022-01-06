@@ -11,6 +11,7 @@ func main() {
 	if err := gen.WriteTupleEncodersToFile("./abi/cbor_gen.go", "abi",
 		abi.PieceInfo{},
 		abi.SectorID{},
+		abi.AddrPairKey{},
 	); err != nil {
 		panic(err)
 	}

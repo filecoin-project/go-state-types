@@ -163,3 +163,65 @@ func (t *SectorID) UnmarshalCBOR(r io.Reader) error {
 	}
 	return nil
 }
+
+var lengthBufAddrPairKey = []byte{130}
+
+func (t *AddrPairKey) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufAddrPairKey); err != nil {
+		return err
+	}
+
+	// t.First (address.Address) (struct)
+	if err := t.First.MarshalCBOR(w); err != nil {
+		return err
+	}
+
+	// t.Second (address.Address) (struct)
+	if err := t.Second.MarshalCBOR(w); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *AddrPairKey) UnmarshalCBOR(r io.Reader) error {
+	*t = AddrPairKey{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.First (address.Address) (struct)
+
+	{
+
+		if err := t.First.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.First: %w", err)
+		}
+
+	}
+	// t.Second (address.Address) (struct)
+
+	{
+
+		if err := t.Second.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.Second: %w", err)
+		}
+
+	}
+	return nil
+}
