@@ -1,6 +1,7 @@
 package abi
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 
@@ -22,18 +23,20 @@ func (k AddrKey) Key() string {
 
 // Adapts an address tuple as a mapping key.
 type AddrPairKey struct {
-	first address.Address
-	second address.Address
+	First address.Address
+	Second address.Address
 }
 
 func (k *AddrPairKey) Key() string {
-	return string(address.Address(k.first).Bytes()) +  string(address.Address(k.second).Bytes())
+	buf := new(bytes.Buffer)
+	_ = k.MarshalCBOR(buf)
+	return buf.String()
 }
 
 func NewAddrPairKey(first address.Address, second address.Address) *AddrPairKey{
 	return  &AddrPairKey{
-		first:  first,
-		second: second,
+		First:  first,
+		Second: second,
 	}
 }
 
