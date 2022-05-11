@@ -2,10 +2,10 @@ package miner
 
 import (
 	"github.com/filecoin-project/go-bitfield"
-	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin/v8/util/adt"
 	xc "github.com/filecoin-project/go-state-types/exitcode"
+	"github.com/filecoin-project/go-state-types/proof"
 	"github.com/ipfs/go-cid"
 	"golang.org/x/xerrors"
 )
@@ -77,11 +77,6 @@ type Deadline struct {
 	OptimisticPoStSubmissionsSnapshot cid.Cid
 }
 
-type PoStProof struct {
-	PoStProof  abi.RegisteredPoStProof
-	ProofBytes []byte
-}
-
 type WindowedPoSt struct {
 	// Partitions proved by this WindowedPoSt.
 	Partitions bitfield.BitField
@@ -89,7 +84,7 @@ type WindowedPoSt struct {
 	// the sectors being proven. In the usual case of a single proof type,
 	// this array will always have a single element (independent of number
 	// of partitions).
-	Proofs []PoStProof
+	Proofs []proof.PoStProof
 }
 
 // Bitwidth of AMTs determined empirically from mutation patterns and projections of mainnet data.

@@ -167,18 +167,12 @@ func main() {
 		miner.PreCommitSectorBatchParams{},
 		miner.ProveReplicaUpdatesParams{},
 		// other types
-		miner.PoStProof{},
 		miner.FaultDeclaration{},
 		miner.RecoveryDeclaration{},
 		miner.ExpirationExtension{},
 		miner.TerminationDeclaration{},
 		miner.PoStPartition{},
 		miner.ReplicaUpdate{},
-		miner.ExtendedSectorInfo{},
-		miner.SealVerifyInfo{},
-		miner.WindowPoStVerifyInfo{},
-		miner.WinningPoStVerifyInfo{},
-		miner.SectorInfo{},
 	); err != nil {
 		panic(err)
 	}

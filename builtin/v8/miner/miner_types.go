@@ -8,6 +8,7 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v8/power"
 	"github.com/filecoin-project/go-state-types/builtin/v8/util/adt"
 	xc "github.com/filecoin-project/go-state-types/exitcode"
+	"github.com/filecoin-project/go-state-types/proof"
 	"github.com/ipfs/go-cid"
 	"golang.org/x/xerrors"
 )
@@ -67,7 +68,7 @@ type SubmitWindowedPoStParams struct {
 	Partitions []PoStPartition
 	// Array of proofs, one per distinct registered proof type present in the sectors being proven.
 	// In the usual case of a single proof type, this array will always have a single element (independent of number of partitions).
-	Proofs []PoStProof
+	Proofs []proof.PoStProof
 	// The epoch at which these proofs is being committed to a particular chain.
 	ChainCommitEpoch abi.ChainEpoch
 	// The ticket randomness on the chain at the ChainCommitEpoch on the chain this post is committed to
@@ -183,73 +184,6 @@ type PartitionKey struct {
 
 type PreCommitSectorBatchParams struct {
 	Sectors []SectorPreCommitInfo
-}
-
-type SectorInfo struct {
-	SealProof    abi.RegisteredSealProof // RegisteredProof used when sealing - needs to be mapped to PoSt registered proof when used to verify a PoSt
-	SectorNumber abi.SectorNumber
-	SealedCID    cid.Cid // CommR
-}
-
-type ExtendedSectorInfo struct {
-	SealProof    abi.RegisteredSealProof // RegisteredProof used when sealing - needs to be mapped to PoSt registered proof when used to verify a PoSt
-	SectorNumber abi.SectorNumber
-	SectorKey    *cid.Cid
-	SealedCID    cid.Cid // CommR
-}
-
-type WinningPoStVerifyInfo struct {
-	Randomness        abi.PoStRandomness
-	Proofs            []PoStProof
-	ChallengedSectors []SectorInfo
-	Prover            abi.ActorID // used to derive 32-byte prover ID
-}
-
-// Information needed to verify a Window PoSt submitted directly to a miner actor.
-type WindowPoStVerifyInfo struct {
-	Randomness        abi.PoStRandomness
-	Proofs            []PoStProof
-	ChallengedSectors []SectorInfo
-	Prover            abi.ActorID // used to derive 32-byte prover ID
-}
-
-type SealVerifyInfo struct {
-	SealProof abi.RegisteredSealProof
-	abi.SectorID
-	DealIDs               []abi.DealID
-	Randomness            abi.SealRandomness
-	InteractiveRandomness abi.InteractiveSealRandomness
-	Proof                 []byte
-
-	// Safe because we get those from the miner actor
-	SealedCID   cid.Cid `checked:"true"` // CommR
-	UnsealedCID cid.Cid `checked:"true"` // CommD
-}
-
-type AggregateSealVerifyInfo struct {
-	Number                abi.SectorNumber
-	Randomness            abi.SealRandomness
-	InteractiveRandomness abi.InteractiveSealRandomness
-
-	// Safe because we get those from the miner actor
-	SealedCID   cid.Cid `checked:"true"` // CommR
-	UnsealedCID cid.Cid `checked:"true"` // CommD
-}
-
-type AggregateSealVerifyProofAndInfos struct {
-	Miner          abi.ActorID
-	SealProof      abi.RegisteredSealProof
-	AggregateProof abi.RegisteredAggregationProof
-	Proof          []byte
-	Infos          []AggregateSealVerifyInfo
-}
-
-type ReplicaUpdateInfo struct {
-	UpdateProofType      abi.RegisteredUpdateProof
-	OldSealedSectorCID   cid.Cid
-	NewSealedSectorCID   cid.Cid
-	NewUnsealedSectorCID cid.Cid
-	Proof                []byte
 }
 
 // ExpirationSet is a collection of sector numbers that are expiring, either due to
