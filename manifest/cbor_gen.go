@@ -5,18 +5,12 @@ package manifest
 import (
 	"fmt"
 	"io"
-	"math"
-	"sort"
 
-	cid "github.com/ipfs/go-cid"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	xerrors "golang.org/x/xerrors"
 )
 
 var _ = xerrors.Errorf
-var _ = cid.Undef
-var _ = math.E
-var _ = sort.Sort
 
 var lengthBufManifest = []byte{130}
 
@@ -25,43 +19,37 @@ func (t *Manifest) MarshalCBOR(w io.Writer) error {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-
-	cw := cbg.NewCborWriter(w)
-
-	if _, err := cw.Write(lengthBufManifest); err != nil {
+	if _, err := w.Write(lengthBufManifest); err != nil {
 		return err
 	}
 
+	scratch := make([]byte, 9)
+
 	// t.Version (uint64) (uint64)
 
-	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Version)); err != nil {
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.Version)); err != nil {
 		return err
 	}
 
 	// t.Data (cid.Cid) (struct)
 
-	if err := cbg.WriteCid(cw, t.Data); err != nil {
+	if err := cbg.WriteCidBuf(scratch, w, t.Data); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Data: %w", err)
 	}
 
 	return nil
 }
 
-func (t *Manifest) UnmarshalCBOR(r io.Reader) (err error) {
+func (t *Manifest) UnmarshalCBOR(r io.Reader) error {
 	*t = Manifest{}
 
-	cr := cbg.NewCborReader(r)
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
 
-	maj, extra, err := cr.ReadHeader()
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-	}()
-
 	if maj != cbg.MajArray {
 		return fmt.Errorf("cbor input should be of type array")
 	}
@@ -74,7 +62,7 @@ func (t *Manifest) UnmarshalCBOR(r io.Reader) (err error) {
 
 	{
 
-		maj, extra, err = cr.ReadHeader()
+		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
 		if err != nil {
 			return err
 		}
@@ -88,7 +76,7 @@ func (t *Manifest) UnmarshalCBOR(r io.Reader) (err error) {
 
 	{
 
-		c, err := cbg.ReadCid(cr)
+		c, err := cbg.ReadCid(br)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Data: %w", err)
 		}
@@ -106,19 +94,18 @@ func (t *ManifestEntry) MarshalCBOR(w io.Writer) error {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-
-	cw := cbg.NewCborWriter(w)
-
-	if _, err := cw.Write(lengthBufManifestEntry); err != nil {
+	if _, err := w.Write(lengthBufManifestEntry); err != nil {
 		return err
 	}
+
+	scratch := make([]byte, 9)
 
 	// t.Name (string) (string)
 	if len(t.Name) > cbg.MaxLength {
 		return xerrors.Errorf("Value in field t.Name was too long")
 	}
 
-	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Name))); err != nil {
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajTextString, uint64(len(t.Name))); err != nil {
 		return err
 	}
 	if _, err := io.WriteString(w, string(t.Name)); err != nil {
@@ -127,28 +114,23 @@ func (t *ManifestEntry) MarshalCBOR(w io.Writer) error {
 
 	// t.Code (cid.Cid) (struct)
 
-	if err := cbg.WriteCid(cw, t.Code); err != nil {
+	if err := cbg.WriteCidBuf(scratch, w, t.Code); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Code: %w", err)
 	}
 
 	return nil
 }
 
-func (t *ManifestEntry) UnmarshalCBOR(r io.Reader) (err error) {
+func (t *ManifestEntry) UnmarshalCBOR(r io.Reader) error {
 	*t = ManifestEntry{}
 
-	cr := cbg.NewCborReader(r)
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
 
-	maj, extra, err := cr.ReadHeader()
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-	}()
-
 	if maj != cbg.MajArray {
 		return fmt.Errorf("cbor input should be of type array")
 	}
@@ -160,7 +142,7 @@ func (t *ManifestEntry) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.Name (string) (string)
 
 	{
-		sval, err := cbg.ReadString(cr)
+		sval, err := cbg.ReadStringBuf(br, scratch)
 		if err != nil {
 			return err
 		}
@@ -171,7 +153,7 @@ func (t *ManifestEntry) UnmarshalCBOR(r io.Reader) (err error) {
 
 	{
 
-		c, err := cbg.ReadCid(cr)
+		c, err := cbg.ReadCid(br)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Code: %w", err)
 		}

@@ -19,6 +19,6 @@ require (
 	github.com/smartystreets/goconvey v0.0.0-20190731233626-505e41936337 // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/warpfork/go-wish v0.0.0-20190328234359-8b3e70f8e830 // indirect
-	github.com/whyrusleeping/cbor-gen v0.0.0-20220323183124-98fa8256a799
+	github.com/whyrusleeping/cbor-gen v0.0.0-20210118024343-169e9d70c0c2
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 )
