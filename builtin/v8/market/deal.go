@@ -159,7 +159,7 @@ func (label *DealLabel) UnmarshalCBOR(br io.Reader) error {
 	return nil
 }
 
-func (label *DealLabel) MarshalJSON() ([]byte, error) {
+func (label DealLabel) MarshalJSON() ([]byte, error) {
 	str, err := label.ToString()
 	if err != nil {
 		return nil, xerrors.Errorf("can only marshal strings: %w", err)
