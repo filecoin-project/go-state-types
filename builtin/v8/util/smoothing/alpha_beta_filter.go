@@ -7,8 +7,26 @@ import (
 )
 
 var (
+	DefaultAlpha big.Int // Q.128 value of 9.25e-4
+	DefaultBeta  big.Int // Q.128 value of 2.84e-7
+
 	ExtrapolatedCumSumRatioEpsilon big.Int // Q.128 value of 2^-50
 )
+
+func init() {
+	// Alpha Beta Filter constants
+	constStrs := []string{
+		"314760000000000000000000000000000000", // DefaultAlpha
+		"96640100000000000000000000000000",     // DefaultBeta
+		"302231454903657293676544",             // Epsilon
+
+	}
+	constBigs := math.Parse(constStrs)
+	DefaultAlpha = big.NewFromGo(constBigs[0])
+	DefaultBeta = big.NewFromGo(constBigs[1])
+	ExtrapolatedCumSumRatioEpsilon = big.NewFromGo(constBigs[2])
+
+}
 
 //Alpha Beta Filter "position" (value) and "velocity" (rate of change of value) estimates
 //Estimates are in Q.128 format
