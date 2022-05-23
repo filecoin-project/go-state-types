@@ -13,7 +13,7 @@ import (
 
 var _ = xerrors.Errorf
 
-var lengthBufState = []byte{131}
+var lengthBufState = []byte{132}
 
 func (t *State) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -49,6 +49,13 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 	if _, err := io.WriteString(w, string(t.NetworkName)); err != nil {
 		return err
 	}
+
+	// t.InstalledActors (cid.Cid) (struct)
+
+	if err := cbg.WriteCidBuf(scratch, w, t.InstalledActors); err != nil {
+		return xerrors.Errorf("failed to write cid field t.InstalledActors: %w", err)
+	}
+
 	return nil
 }
 
@@ -66,7 +73,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 3 {
+	if extra != 4 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
@@ -105,6 +112,18 @@ func (t *State) UnmarshalCBOR(r io.Reader) error {
 		}
 
 		t.NetworkName = string(sval)
+	}
+	// t.InstalledActors (cid.Cid) (struct)
+
+	{
+
+		c, err := cbg.ReadCid(br)
+		if err != nil {
+			return xerrors.Errorf("failed to read cid field t.InstalledActors: %w", err)
+		}
+
+		t.InstalledActors = c
+
 	}
 	return nil
 }
@@ -313,6 +332,152 @@ func (t *ExecReturn) UnmarshalCBOR(r io.Reader) error {
 			return xerrors.Errorf("unmarshaling t.RobustAddress: %w", err)
 		}
 
+	}
+	return nil
+}
+
+var lengthBufInstallParams = []byte{129}
+
+func (t *InstallParams) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufInstallParams); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.Code ([]uint8) (slice)
+	if len(t.Code) > cbg.ByteArrayMaxLen {
+		return xerrors.Errorf("Byte array in field t.Code was too long")
+	}
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajByteString, uint64(len(t.Code))); err != nil {
+		return err
+	}
+
+	if _, err := w.Write(t.Code[:]); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *InstallParams) UnmarshalCBOR(r io.Reader) error {
+	*t = InstallParams{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Code ([]uint8) (slice)
+
+	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+
+	if extra > cbg.ByteArrayMaxLen {
+		return fmt.Errorf("t.Code: byte array too large (%d)", extra)
+	}
+	if maj != cbg.MajByteString {
+		return fmt.Errorf("expected byte array")
+	}
+
+	if extra > 0 {
+		t.Code = make([]uint8, extra)
+	}
+
+	if _, err := io.ReadFull(br, t.Code[:]); err != nil {
+		return err
+	}
+	return nil
+}
+
+var lengthBufInstallReturn = []byte{130}
+
+func (t *InstallReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufInstallReturn); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.CodeCid (cid.Cid) (struct)
+
+	if err := cbg.WriteCidBuf(scratch, w, t.CodeCid); err != nil {
+		return xerrors.Errorf("failed to write cid field t.CodeCid: %w", err)
+	}
+
+	// t.Installed (bool) (bool)
+	if err := cbg.WriteBool(w, t.Installed); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *InstallReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = InstallReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.CodeCid (cid.Cid) (struct)
+
+	{
+
+		c, err := cbg.ReadCid(br)
+		if err != nil {
+			return xerrors.Errorf("failed to read cid field t.CodeCid: %w", err)
+		}
+
+		t.CodeCid = c
+
+	}
+	// t.Installed (bool) (bool)
+
+	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajOther {
+		return fmt.Errorf("booleans must be major type 7")
+	}
+	switch extra {
+	case 20:
+		t.Installed = false
+	case 21:
+		t.Installed = true
+	default:
+		return fmt.Errorf("booleans are either major type 7, value 20 or 21 (got %d)", extra)
 	}
 	return nil
 }
