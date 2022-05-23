@@ -18,3 +18,12 @@ type ExecReturn struct {
 	IDAddress     addr.Address // The canonical ID-based address for the actor.
 	RobustAddress addr.Address // A more expensive but re-org-safe address for the newly created actor.
 }
+
+type InstallParams struct {
+	Code []byte
+}
+
+type InstallReturn struct {
+	CodeCid   cid.Cid
+	Installed bool
+}
