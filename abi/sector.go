@@ -101,6 +101,7 @@ type RegisteredAggregationProof int64
 
 const (
 	RegisteredAggregationProof_SnarkPackV1 = RegisteredAggregationProof(0)
+	RegisteredAggregationProof_SnarkPackV2 = RegisteredAggregationProof(1)
 )
 
 type RegisteredUpdateProof int64
