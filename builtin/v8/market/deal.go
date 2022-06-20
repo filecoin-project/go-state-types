@@ -160,23 +160,28 @@ func (label *DealLabel) UnmarshalCBOR(br io.Reader) error {
 }
 
 func (label DealLabel) MarshalJSON() ([]byte, error) {
-	str, err := label.ToString()
-	if err != nil {
-		return nil, xerrors.Errorf("can only marshal strings: %w", err)
-	}
-
-	return json.Marshal(str)
+	return json.Marshal(label.bs)
 }
 
 func (label *DealLabel) UnmarshalJSON(b []byte) error {
-	var str string
-	if err := json.Unmarshal(b, &str); err != nil {
-		return xerrors.Errorf("failed to unmarshal string: %w", err)
+	var bs []byte
+	if err := json.Unmarshal(b, &bs); err != nil {
+		return xerrors.Errorf("failed to unmarshal bytes: %w", err)
 	}
 
-	newLabel, err := NewLabelFromString(str)
+	if utf8.ValidString(string(bs)) {
+		newLabel, err := NewLabelFromString(string(bs))
+		if err != nil {
+			return xerrors.Errorf("failed to create label from string: %w", err)
+		}
+
+		*label = newLabel
+		return nil
+	}
+
+	newLabel, err := NewLabelFromBytes(bs)
 	if err != nil {
-		return xerrors.Errorf("failed to create label from string: %w", err)
+		return xerrors.Errorf("failed to create label from bytes: %w", err)
 	}
 
 	*label = newLabel

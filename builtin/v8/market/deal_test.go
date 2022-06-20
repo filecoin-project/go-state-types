@@ -171,6 +171,34 @@ func TestDealLabelJSON(t *testing.T) {
 	str, err = dp2.Label.ToString()
 	assert.NoError(t, err)
 	assert.Equal(t, "", str)
+
+	// bytes label
+	label1, err = market.NewLabelFromBytes([]byte{0xde, 0xad, 0xbe, 0xef})
+	assert.NoError(t, err)
+	assert.True(t, label1.IsBytes())
+	assert.False(t, label1.IsString())
+
+	dp = &market.DealProposal{
+		PieceCID:             cid.Undef,
+		PieceSize:            0,
+		VerifiedDeal:         false,
+		Client:               address.Undef,
+		Provider:             address.Undef,
+		Label:                label1,
+		StoragePricePerEpoch: big.Zero(),
+		ProviderCollateral:   big.Zero(),
+		ClientCollateral:     big.Zero(),
+	}
+
+	dpJSON, err = json.Marshal(dp)
+	require.NoError(t, err, "failed to JSON marshal deal proposal")
+	dp2 = market.DealProposal{}
+	require.NoError(t, json.Unmarshal(dpJSON, &dp2))
+	assert.True(t, dp2.Label.IsBytes())
+	assert.False(t, dp2.Label.IsString())
+	bs, err := dp2.Label.ToBytes()
+	assert.NoError(t, err)
+	assert.Equal(t, bs, []byte{0xde, 0xad, 0xbe, 0xef})
 }
 
 func TestDealLabelFromCBOR(t *testing.T) {
