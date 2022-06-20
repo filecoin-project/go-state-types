@@ -194,11 +194,14 @@ func TestDealLabelJSON(t *testing.T) {
 	require.NoError(t, err, "failed to JSON marshal deal proposal")
 	dp2 = market.DealProposal{}
 	require.NoError(t, json.Unmarshal(dpJSON, &dp2))
-	assert.True(t, dp2.Label.IsBytes())
-	assert.False(t, dp2.Label.IsString())
-	bs, err := dp2.Label.ToBytes()
+	// a JSON-unmarshaled label is always string type
+	assert.False(t, dp2.Label.IsBytes())
+	assert.True(t, dp2.Label.IsString())
+
+	// it can be converted ToString, but it's empty
+	str, err = dp2.Label.ToString()
 	assert.NoError(t, err)
-	assert.Equal(t, bs, []byte{0xde, 0xad, 0xbe, 0xef})
+	assert.Equal(t, str, "")
 }
 
 func TestDealLabelFromCBOR(t *testing.T) {
