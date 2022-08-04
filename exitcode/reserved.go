@@ -22,8 +22,8 @@ const (
 	// Indicates failure to find a method in an actor.
 	SysErrInvalidMethod = ExitCode(3)
 
-	// Unused.
-	SysErrReserved1 = ExitCode(4)
+	// Indicates the message receiver trapped (panicked
+	SysErrIllegalInstruction = ExitCode(4)
 
 	// Indicates that the receiver of a message is not valid (and cannot be implicitly created).
 	SysErrInvalidReceiver = ExitCode(5)
@@ -48,8 +48,10 @@ const (
 	// Indicates an invalid argument passed to a runtime method.
 	SysErrorIllegalArgument = ExitCode(10)
 
+	// Indicates the actor returned a block handle that doesn't exist
+	SysErrMissingReturn = ExitCode(11)
+
 	// Unused
-	SysErrReserved2 = ExitCode(11)
 	SysErrReserved3 = ExitCode(12)
 	SysErrReserved4 = ExitCode(13)
 	SysErrReserved5 = ExitCode(14)
@@ -65,14 +67,14 @@ var names = map[ExitCode]string{
 	SysErrSenderInvalid:      "SysErrSenderInvalid",
 	SysErrSenderStateInvalid: "SysErrSenderStateInvalid",
 	SysErrInvalidMethod:      "SysErrInvalidMethod",
-	SysErrReserved1:          "SysErrReserved1",
+	SysErrIllegalInstruction: "SysErrIllegalInstruction",
 	SysErrInvalidReceiver:    "SysErrInvalidReceiver",
 	SysErrInsufficientFunds:  "SysErrInsufficientFunds",
 	SysErrOutOfGas:           "SysErrOutOfGas",
 	SysErrForbidden:          "SysErrForbidden",
 	SysErrorIllegalActor:     "SysErrorIllegalActor",
 	SysErrorIllegalArgument:  "SysErrorIllegalArgument",
-	SysErrReserved2:          "SysErrReserved2",
+	SysErrMissingReturn:      "SysErrMissingReturn",
 	SysErrReserved3:          "SysErrReserved3",
 	SysErrReserved4:          "SysErrReserved4",
 	SysErrReserved5:          "SysErrReserved5",
