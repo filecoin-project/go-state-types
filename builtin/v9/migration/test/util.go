@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+
 	"testing"
 
 	block "github.com/ipfs/go-block-format"

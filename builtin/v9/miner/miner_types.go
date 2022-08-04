@@ -53,6 +53,21 @@ type ProveReplicaUpdatesParams struct {
 	Updates []ReplicaUpdate
 }
 
+type ReplicaUpdate2 struct {
+	SectorID             abi.SectorNumber
+	Deadline             uint64
+	Partition            uint64
+	NewSealedSectorCID   cid.Cid `checked:"true"`
+	NewUnsealedSectorCID cid.Cid `checked:"true"`
+	Deals                []abi.DealID
+	UpdateProofType      abi.RegisteredUpdateProof
+	ReplicaProof         []byte
+}
+
+type ProveReplicaUpdatesParams2 struct {
+	Updates []ReplicaUpdate
+}
+
 type PoStPartition struct {
 	// Partitions are numbered per-deadline, from zero.
 	Index uint64
@@ -182,7 +197,25 @@ type PartitionKey struct {
 	Partition uint64
 }
 
+type PreCommitSectorParams struct {
+	SealProof       abi.RegisteredSealProof
+	SectorNumber    abi.SectorNumber
+	SealedCID       cid.Cid `checked:"true"` // CommR
+	SealRandEpoch   abi.ChainEpoch
+	DealIDs         []abi.DealID
+	Expiration      abi.ChainEpoch
+	ReplaceCapacity bool // DEPRECATED: Whether to replace a "committed capacity" no-deal sector (requires non-empty DealIDs)
+	// DEPRECATED: The committed capacity sector to replace, and it's deadline/partition location
+	ReplaceSectorDeadline  uint64
+	ReplaceSectorPartition uint64
+	ReplaceSectorNumber    abi.SectorNumber
+}
+
 type PreCommitSectorBatchParams struct {
+	Sectors []PreCommitSectorParams
+}
+
+type PreCommitSectorBatchParams2 struct {
 	Sectors []SectorPreCommitInfo
 }
 
