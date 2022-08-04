@@ -1,0 +1,147 @@
+package migration
+
+import (
+	"context"
+	"fmt"
+	"testing"
+
+	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/big"
+	"github.com/filecoin-project/go-state-types/builtin"
+	"github.com/filecoin-project/go-state-types/builtin/v8/account"
+	"github.com/filecoin-project/go-state-types/builtin/v8/cron"
+	_init "github.com/filecoin-project/go-state-types/builtin/v8/init"
+	"github.com/filecoin-project/go-state-types/builtin/v8/market"
+	"github.com/filecoin-project/go-state-types/builtin/v8/power"
+	"github.com/filecoin-project/go-state-types/builtin/v8/reward"
+	"github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
+	"github.com/filecoin-project/go-state-types/builtin/v9/migration"
+	"github.com/filecoin-project/go-state-types/builtin/v9/system"
+	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
+	"github.com/filecoin-project/go-state-types/cbor"
+	"github.com/filecoin-project/go-state-types/manifest"
+	"github.com/ipfs/go-cid"
+	mh "github.com/multiformats/go-multihash"
+	"github.com/stretchr/testify/require"
+)
+
+func makeTestManifest(t *testing.T, store adt.Store, prefix string) (cid.Cid, cid.Cid) {
+	builder := cid.V1Builder{Codec: cid.Raw, MhType: mh.IDENTITY}
+
+	newManifestData := manifest.ManifestData{}
+	for _, name := range []string{"system", "init", "cron", "account", "storagepower", "storageminer", "storagemarket", "paymentchannel", "multisig", "reward", "verifiedregistry"} {
+		codeCid, err := builder.Sum([]byte(fmt.Sprintf("%s%s", prefix, name)))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		newManifestData.Entries = append(newManifestData.Entries,
+			manifest.ManifestEntry{
+				Name: name,
+				Code: codeCid,
+			})
+	}
+
+	manifestDataCid, err := store.Put(context.Background(), &newManifestData)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	newManifest := manifest.Manifest{
+		Version: 1,
+		Data:    manifestDataCid,
+	}
+
+	manifestCid, err := store.Put(context.Background(), &newManifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return manifestCid, manifestDataCid
+}
+
+func makeInputTree(ctx context.Context, t *testing.T, store adt.Store) cid.Cid {
+	tree, err := migration.NewTree(store)
+	require.NoError(t, err, "failed to create empty actors tree")
+
+	manifestCid8, manifestDataCid8 := makeTestManifest(t, store, "fil/8/")
+	var manifest8 manifest.Manifest
+	require.NoError(t, store.Get(ctx, manifestCid8, &manifest8), "error reading actor manifest")
+	require.NoError(t, manifest8.Load(ctx, store), "error loading actor manifest")
+
+	accountCid, ok := manifest8.Get("account")
+	require.True(t, ok, "didn't find account actor in manifest")
+
+	systemCid, ok := manifest8.Get("system")
+	require.True(t, ok, "didn't find system actor in manifest")
+
+	systemState, err := system.ConstructState(store)
+	require.NoError(t, err, "failed to construct system state")
+	systemState.BuiltinActors = manifestDataCid8
+	initializeActor(ctx, t, tree, store, systemState, systemCid, builtin.SystemActorAddr, big.Zero())
+
+	initCid, ok := manifest8.Get("init")
+	require.True(t, ok, "didn't find init actor in manifest")
+
+	initState, err := _init.ConstructState(store, "migrationtest")
+	require.NoError(t, err)
+	initializeActor(ctx, t, tree, store, initState, initCid, builtin.InitActorAddr, big.Zero())
+
+	rewardCid, ok := manifest8.Get("reward")
+	require.True(t, ok, "didn't find reward actor in manifest")
+
+	rewardState := reward.ConstructState(abi.NewStoragePower(0))
+	initializeActor(ctx, t, tree, store, rewardState, rewardCid, builtin.RewardActorAddr, big.Mul(big.NewInt(1_100_000_000), big.NewInt(1e18)))
+
+	cronCid, ok := manifest8.Get("cron")
+	require.True(t, ok, "didn't find cron actor in manifest")
+
+	cronState := cron.ConstructState(cron.BuiltInEntries())
+	initializeActor(ctx, t, tree, store, cronState, cronCid, builtin.CronActorAddr, big.Zero())
+
+	powerCid, ok := manifest8.Get("storagepower")
+	require.True(t, ok, "didn't find power actor in manifest")
+
+	powerState, err := power.ConstructState(store)
+	require.NoError(t, err)
+	initializeActor(ctx, t, tree, store, powerState, powerCid, builtin.StoragePowerActorAddr, big.Zero())
+
+	marketCid, ok := manifest8.Get("storagemarket")
+	require.True(t, ok, "didn't find market actor in manifest")
+
+	marketState, err := market.ConstructState(store)
+	require.NoError(t, err)
+	initializeActor(ctx, t, tree, store, marketState, marketCid, builtin.StorageMarketActorAddr, big.Zero())
+
+	// this will need to be replaced with the address of a multisig actor for the verified registry to be tested accurately
+	VerifregRoot, err := address.NewIDAddress(80)
+	require.NoError(t, err, "failed to create verifreg root")
+	initializeActor(ctx, t, tree, store, &account.State{Address: VerifregRoot}, accountCid, VerifregRoot, big.Zero())
+
+	verifregCid, ok := manifest8.Get("verifiedregistry")
+	require.True(t, ok, "didn't find verifreg actor in manifest")
+
+	vrState, err := verifreg.ConstructState(store, VerifregRoot)
+	require.NoError(t, err)
+	initializeActor(ctx, t, tree, store, vrState, verifregCid, builtin.VerifiedRegistryActorAddr, big.Zero())
+
+	// burnt funds
+	initializeActor(ctx, t, tree, store, &account.State{Address: builtin.BurntFundsActorAddr}, accountCid, builtin.BurntFundsActorAddr, big.Zero())
+
+	root, err := tree.Flush()
+	require.NoError(t, err, "failed to flush actors tree")
+	return root
+}
+
+func initializeActor(ctx context.Context, t testing.TB, tree *migration.Tree, store adt.Store, state cbor.Marshaler, code cid.Cid, a address.Address, balance abi.TokenAmount) {
+	stateCID, err := store.Put(ctx, state)
+	require.NoError(t, err)
+	actor := &migration.Actor{
+		Head:    stateCID,
+		Code:    code,
+		Balance: balance,
+	}
+	err = tree.SetActor(a, actor)
+	require.NoError(t, err)
+}
