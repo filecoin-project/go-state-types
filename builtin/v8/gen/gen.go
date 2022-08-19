@@ -199,7 +199,7 @@ func main() {
 		panic(err)
 	}
 
-	if err := gen.WriteTupleEncodersToFile("./builtin/v8/evm/cbor_gen.go", "init",
+	if err := gen.WriteTupleEncodersToFile("./builtin/v8/evm/cbor_gen.go", "evm",
 		// actor state
 		evm.State{},
 		// method params and returns
