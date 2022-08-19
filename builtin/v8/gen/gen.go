@@ -205,7 +205,6 @@ func main() {
 		// method params and returns
 		evm.ConstructorParams{},
 		evm.InvokeParams{},
-		evm.InvokeReturn{},
 	); err != nil {
 		panic(err)
 	}
