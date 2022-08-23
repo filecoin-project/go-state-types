@@ -191,7 +191,6 @@ func main() {
 		// other types
 		verifreg.RemoveDataCapRequest{},
 		verifreg.RemoveDataCapProposal{},
-		verifreg.RmDcProposalID{},
 	); err != nil {
 		panic(err)
 	}
