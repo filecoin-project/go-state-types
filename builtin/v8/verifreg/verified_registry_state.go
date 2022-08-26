@@ -17,9 +17,7 @@ type DataCap = abi.StoragePower
 
 const SignatureDomainSeparation_RemoveDataCap = "fil_removedatacap:"
 
-type RmDcProposalID struct {
-	ProposalID uint64
-}
+type RmDcProposalID = uint64
 
 type State struct {
 	// Root key holder multisig.
