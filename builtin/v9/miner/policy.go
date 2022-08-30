@@ -64,32 +64,6 @@ var WindowPoStProofTypes = map[abi.RegisteredPoStProof]struct{}{
 	abi.RegisteredPoStProof_StackedDrgWindow64GiBV1: {},
 }
 
-// Checks whether a PoSt proof type is supported for new miners.
-func CanWindowPoStProof(s abi.RegisteredPoStProof) bool {
-	_, ok := WindowPoStProofTypes[s]
-	return ok
-}
-
-// List of proof types which may be used when pre-committing a new sector.
-// This is mutable to allow configuration of testing and development networks.
-// From network version 8, sectors sealed with the V1 seal proof types cannot be committed.
-var PreCommitSealProofTypesV8 = map[abi.RegisteredSealProof]struct{}{
-	abi.RegisteredSealProof_StackedDrg32GiBV1_1: {},
-	abi.RegisteredSealProof_StackedDrg64GiBV1_1: {},
-}
-
-// Checks whether a seal proof type is supported for new miners and sectors.
-func CanPreCommitSealProof(s abi.RegisteredSealProof) bool {
-	_, ok := PreCommitSealProofTypesV8[s]
-	return ok
-}
-
-// Checks whether a seal proof type is supported for new miners and sectors.
-// As of network version 11, all permitted seal proof types may be extended.
-func CanExtendSealProofType(_ abi.RegisteredSealProof) bool {
-	return true
-}
-
 // Maximum delay to allow between sector pre-commit and subsequent proof.
 // The allowable delay depends on seal proof algorithm.
 var MaxProveCommitDuration = map[abi.RegisteredSealProof]abi.ChainEpoch{
