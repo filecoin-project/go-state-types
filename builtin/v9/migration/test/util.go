@@ -65,49 +65,49 @@ func makeInputTree(ctx context.Context, t *testing.T, store adt.Store) cid.Cid {
 	tree, err := migration.NewTree(store)
 	require.NoError(t, err, "failed to create empty actors tree")
 
-	manifestCid8, manifestDataCid8 := makeTestManifest(t, store, "fil/8/")
-	var manifest8 manifest.Manifest
-	require.NoError(t, store.Get(ctx, manifestCid8, &manifest8), "error reading actor manifest")
-	require.NoError(t, manifest8.Load(ctx, store), "error loading actor manifest")
+	manifestCid, manifestDataCid := makeTestManifest(t, store, "fil/8/")
+	var actorsManifest manifest.Manifest
+	require.NoError(t, store.Get(ctx, manifestCid, &actorsManifest), "error reading actor manifest")
+	require.NoError(t, actorsManifest.Load(ctx, store), "error loading actor manifest")
 
-	accountCid, ok := manifest8.Get("account")
+	accountCid, ok := actorsManifest.Get("account")
 	require.True(t, ok, "didn't find account actor in manifest")
 
-	systemCid, ok := manifest8.Get("system")
+	systemCid, ok := actorsManifest.Get("system")
 	require.True(t, ok, "didn't find system actor in manifest")
 
 	systemState, err := system.ConstructState(store)
 	require.NoError(t, err, "failed to construct system state")
-	systemState.BuiltinActors = manifestDataCid8
+	systemState.BuiltinActors = manifestDataCid
 	initializeActor(ctx, t, tree, store, systemState, systemCid, builtin.SystemActorAddr, big.Zero())
 
-	initCid, ok := manifest8.Get("init")
+	initCid, ok := actorsManifest.Get("init")
 	require.True(t, ok, "didn't find init actor in manifest")
 
 	initState, err := _init.ConstructState(store, "migrationtest")
 	require.NoError(t, err)
 	initializeActor(ctx, t, tree, store, initState, initCid, builtin.InitActorAddr, big.Zero())
 
-	rewardCid, ok := manifest8.Get("reward")
+	rewardCid, ok := actorsManifest.Get("reward")
 	require.True(t, ok, "didn't find reward actor in manifest")
 
 	rewardState := reward.ConstructState(abi.NewStoragePower(0))
 	initializeActor(ctx, t, tree, store, rewardState, rewardCid, builtin.RewardActorAddr, big.Mul(big.NewInt(1_100_000_000), big.NewInt(1e18)))
 
-	cronCid, ok := manifest8.Get("cron")
+	cronCid, ok := actorsManifest.Get("cron")
 	require.True(t, ok, "didn't find cron actor in manifest")
 
 	cronState := cron.ConstructState(cron.BuiltInEntries())
 	initializeActor(ctx, t, tree, store, cronState, cronCid, builtin.CronActorAddr, big.Zero())
 
-	powerCid, ok := manifest8.Get("storagepower")
+	powerCid, ok := actorsManifest.Get("storagepower")
 	require.True(t, ok, "didn't find power actor in manifest")
 
 	powerState, err := power.ConstructState(store)
 	require.NoError(t, err)
 	initializeActor(ctx, t, tree, store, powerState, powerCid, builtin.StoragePowerActorAddr, big.Zero())
 
-	marketCid, ok := manifest8.Get("storagemarket")
+	marketCid, ok := actorsManifest.Get("storagemarket")
 	require.True(t, ok, "didn't find market actor in manifest")
 
 	marketState, err := market.ConstructState(store)
@@ -119,7 +119,7 @@ func makeInputTree(ctx context.Context, t *testing.T, store adt.Store) cid.Cid {
 	require.NoError(t, err, "failed to create verifreg root")
 	initializeActor(ctx, t, tree, store, &account.State{Address: VerifregRoot}, accountCid, VerifregRoot, big.Zero())
 
-	verifregCid, ok := manifest8.Get("verifiedregistry")
+	verifregCid, ok := actorsManifest.Get("verifiedregistry")
 	require.True(t, ok, "didn't find verifreg actor in manifest")
 
 	vrState, err := verifreg.ConstructState(store, VerifregRoot)

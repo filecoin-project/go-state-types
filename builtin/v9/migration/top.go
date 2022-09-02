@@ -125,22 +125,22 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		simpleMigrations[entry.Name] = entry.Code
 	}
 
-	for name, code7Cid := range simpleMigrations { //nolint:nomaprange
-		code8Cid, ok := newManifest.Get(name)
+	for name, oldCodeCID := range simpleMigrations { //nolint:nomaprange
+		newCodeCID, ok := newManifest.Get(name)
 		if !ok {
 			return cid.Undef, xerrors.Errorf("code cid for %s actor not found in manifest", name)
 		}
 
-		migrations[code7Cid] = codeMigrator{code8Cid}
+		migrations[oldCodeCID] = codeMigrator{newCodeCID}
 	}
 
 	// migrations that migrate both code and state
-	system8Cid, ok := newManifest.Get("system")
+	newSystemCodeCID, ok := newManifest.Get("system")
 	if !ok {
 		return cid.Undef, xerrors.Errorf("code cid for system actor not found in manifest")
 	}
 
-	migrations[systemActor.Code] = systemActorMigrator{system8Cid, newManifest.Data}
+	migrations[systemActor.Code] = systemActorMigrator{newSystemCodeCID, newManifest.Data}
 
 	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations), len(oldManifestData.Entries))

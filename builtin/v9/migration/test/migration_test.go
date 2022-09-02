@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNv16Migration(t *testing.T) {
+func TestMigration(t *testing.T) {
 	ctx := context.Background()
 	bs := cbor.NewMemCborStore()
 	adtStore := adt.WrapStore(ctx, bs)
@@ -56,8 +56,6 @@ func TestNv16Migration(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, cacheRoot.Equals(noCacheRoot))
 
-	// TODO: check all the CIDs
-
 	// check that the system actor state was correctly updated
 
 	newStateTree, err := migration.LoadTree(adtStore, cacheRoot)
@@ -75,6 +73,8 @@ func TestNv16Migration(t *testing.T) {
 	var newManifestData manifest.ManifestData
 	err = adtStore.Get(ctx, newManifestDataCid, &newManifestData)
 	require.NoError(t, err)
+
+	// check all the CIDs
 
 	cidsMap := make(map[cid.Cid]cid.Cid)
 	for _, entry := range newManifestData.Entries {
@@ -95,5 +95,7 @@ func TestNv16Migration(t *testing.T) {
 		require.Equal(t, oldActor.CallSeqNum, newActor.CallSeqNum)
 		return nil
 	})
+
+	// TODO: Add any subsequent state change checks
 
 }
