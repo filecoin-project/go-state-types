@@ -90,6 +90,17 @@ type MinerInfo struct {
 	// The associated pubkey-type address is used to sign blocks and messages on behalf of this miner.
 	Worker addr.Address // Must be an ID-address.
 
+	// Beneficiary address for this miner.
+	// This is the address that tokens will be withdrawn to
+	Beneficiary addr.Address
+
+	// Beneficiary's withdrawl quota, how much of the quota has been withdrawn,
+	// and when the Beneficiary expires.
+	BeneficiaryTerm BeneficiaryTerm
+
+	// A proposal new beneficiary message for this miner
+	PendingBeneficiaryTerm *BeneficiaryTermChange
+
 	// Additional addresses that are permitted to submit messages controlling this actor (optional).
 	ControlAddresses []addr.Address // Must all be ID addresses.
 
@@ -176,6 +187,20 @@ func (st *State) GetInfo(store adt.Store) (*MinerInfo, error) {
 		return nil, xerrors.Errorf("failed to get miner info %w", err)
 	}
 	return &info, nil
+}
+
+type BeneficiaryTerm struct {
+	Quota      abi.TokenAmount
+	UsedQuota  abi.TokenAmount
+	Expiration abi.ChainEpoch
+}
+
+type BeneficiaryTermChange struct {
+	NewBeneficiary        addr.Address
+	NewQuota              abi.TokenAmount
+	NewExpiration         abi.ChainEpoch
+	ApprovedByBeneficiary bool
+	ApprovedByNominee     bool
 }
 
 // Returns deadline calculations for the state recorded proving period and deadline. This is out of date if the a
