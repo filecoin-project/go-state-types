@@ -10,9 +10,10 @@ const (
 )
 
 var MethodsAccount = struct {
-	Constructor   abi.MethodNum
-	PubkeyAddress abi.MethodNum
-}{MethodConstructor, 2}
+	Constructor         abi.MethodNum
+	PubkeyAddress       abi.MethodNum
+	AuthenticateMessage abi.MethodNum
+}{MethodConstructor, 2, 3}
 
 var MethodsInit = struct {
 	Constructor abi.MethodNum
