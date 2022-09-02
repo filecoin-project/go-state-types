@@ -94,12 +94,12 @@ type MinerInfo struct {
 	// This is the address that tokens will be withdrawn to
 	Beneficiary addr.Address
 
-	// Beneficiary's withdrawl quota, how much of the quota has been withdrawn,
+	// Beneficiary's withdrawal quota, how much of the quota has been withdrawn,
 	// and when the Beneficiary expires.
 	BeneficiaryTerm BeneficiaryTerm
 
-	// A proposal new beneficiary message for this miner
-	PendingBeneficiaryTerm *BeneficiaryTermChange
+	// A proposed change to `BenificiaryTerm`
+	PendingBeneficiaryTerm *BeneficiaryChange
 
 	// Additional addresses that are permitted to submit messages controlling this actor (optional).
 	ControlAddresses []addr.Address // Must all be ID addresses.
@@ -195,7 +195,7 @@ type BeneficiaryTerm struct {
 	Expiration abi.ChainEpoch
 }
 
-type BeneficiaryTermChange struct {
+type BeneficiaryChange struct {
 	NewBeneficiary        addr.Address
 	NewQuota              abi.TokenAmount
 	NewExpiration         abi.ChainEpoch
