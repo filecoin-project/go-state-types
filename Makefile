@@ -22,6 +22,8 @@ tidy:
 
 gen:
 	$(GO_BIN) run ./gen/gen.go
+	$(GO_BIN) run ./builtin/v8/gen/gen.go
+	$(GO_BIN) run ./builtin/v9/gen/gen.go
 .PHONY: gen
 
 lint:
