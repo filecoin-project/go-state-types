@@ -147,6 +147,9 @@ func main() {
 		miner.VestingFunds{},
 		miner.VestingFund{},
 		miner.WindowedPoSt{},
+		miner.ActiveBeneficiary{},
+		miner.BeneficiaryTerm{},
+		miner.PendingBeneficiaryChange{},
 		// method params and returns
 		miner.SubmitWindowedPoStParams{},
 		miner.TerminateSectorsParams{},
@@ -176,6 +179,8 @@ func main() {
 		miner.TerminationDeclaration{},
 		miner.PoStPartition{},
 		miner.ReplicaUpdate{},
+		miner.GetBeneficiaryReturn{},
+		miner.ChangeBeneficiaryParams{},
 	); err != nil {
 		panic(err)
 	}

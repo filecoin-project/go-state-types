@@ -186,6 +186,22 @@ type PreCommitSectorBatchParams struct {
 	Sectors []SectorPreCommitInfo
 }
 
+type ChangeBeneficiaryParams struct {
+	NewBeneficiary addr.Address
+	NewQuota       abi.TokenAmount
+	NewExpiration  abi.ChainEpoch
+}
+
+type ActiveBeneficiary struct {
+	Beneficiary addr.Address
+	Term        BeneficiaryTerm
+}
+
+type GetBeneficiaryReturn struct {
+	Active   ActiveBeneficiary
+	Proposed *PendingBeneficiaryChange
+}
+
 // ExpirationSet is a collection of sector numbers that are expiring, either due to
 // expected "on-time" expiration at the end of their life, or unexpected "early" termination
 // due to being faulty for too long consecutively.
