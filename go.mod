@@ -7,6 +7,7 @@ require (
 	github.com/filecoin-project/go-amt-ipld/v4 v4.0.0
 	github.com/filecoin-project/go-bitfield v0.2.4
 	github.com/filecoin-project/go-hamt-ipld/v3 v3.1.0
+	github.com/ipfs/go-block-format v0.0.2
 	github.com/ipfs/go-cid v0.0.7
 	github.com/ipfs/go-ipld-cbor v0.0.6
 	github.com/multiformats/go-multibase v0.0.3

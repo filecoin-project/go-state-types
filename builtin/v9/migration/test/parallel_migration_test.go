@@ -18,10 +18,10 @@ func TestParallelMigrationCalls(t *testing.T) {
 	// Construct simple prior state tree over a synchronized store
 	ctx := context.Background()
 	log := migration.TestLogger{TB: t}
-	bs := cbor.NewMemCborStore()
+	bs := NewSyncBlockStoreInMemory()
 
 	// Run migration
-	adtStore := adt.WrapStore(ctx, bs)
+	adtStore := adt.WrapStore(ctx, cbor.NewCborStore(bs))
 	startRoot := makeInputTree(ctx, t, adtStore)
 	newManifestCid, _ := makeTestManifest(t, adtStore, "fil/9/")
 	endRootSerial, err := migration.MigrateStateTree(ctx, adtStore, newManifestCid, startRoot, abi.ChainEpoch(0), migration.Config{MaxWorkers: 1}, log, migration.NewMemMigrationCache())

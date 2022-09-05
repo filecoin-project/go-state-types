@@ -3,7 +3,11 @@ package migration
 import (
 	"context"
 	"fmt"
+	"sync"
 	"testing"
+
+	block "github.com/ipfs/go-block-format"
+	ipldcbor "github.com/ipfs/go-ipld-cbor"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
@@ -144,4 +148,54 @@ func initializeActor(ctx context.Context, t testing.TB, tree *migration.Tree, st
 	}
 	err = tree.SetActor(a, actor)
 	require.NoError(t, err)
+}
+
+type BlockStoreInMemory struct {
+	data map[cid.Cid]block.Block
+}
+
+func NewBlockStoreInMemory() *BlockStoreInMemory {
+	return &BlockStoreInMemory{make(map[cid.Cid]block.Block)}
+}
+
+func (mb *BlockStoreInMemory) Get(ctx context.Context, c cid.Cid) (block.Block, error) {
+	d, ok := mb.data[c]
+	if ok {
+		return d, nil
+	}
+	return nil, fmt.Errorf("not found")
+}
+
+func (mb *BlockStoreInMemory) Put(ctx context.Context, b block.Block) error {
+	mb.data[b.Cid()] = b
+	return nil
+}
+
+// Creates a new, empty IPLD store in memory.
+func NewADTStore(ctx context.Context) adt.Store {
+	return adt.WrapStore(ctx, ipldcbor.NewCborStore(NewBlockStoreInMemory()))
+
+}
+
+type SyncBlockStoreInMemory struct {
+	bs *BlockStoreInMemory
+	mu sync.Mutex
+}
+
+func NewSyncBlockStoreInMemory() *SyncBlockStoreInMemory {
+	return &SyncBlockStoreInMemory{
+		bs: NewBlockStoreInMemory(),
+	}
+}
+
+func (ss *SyncBlockStoreInMemory) Get(ctx context.Context, c cid.Cid) (block.Block, error) {
+	ss.mu.Lock()
+	defer ss.mu.Unlock()
+	return ss.bs.Get(ctx, c)
+}
+
+func (ss *SyncBlockStoreInMemory) Put(ctx context.Context, b block.Block) error {
+	ss.mu.Lock()
+	defer ss.mu.Unlock()
+	return ss.bs.Put(ctx, b)
 }
