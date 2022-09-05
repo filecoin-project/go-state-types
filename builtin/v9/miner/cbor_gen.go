@@ -359,7 +359,7 @@ func (t *MinerInfo) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.PendingBeneficiaryTerm (miner.BeneficiaryChange) (struct)
+	// t.PendingBeneficiaryTerm (miner.PendingBeneficiaryChange) (struct)
 	if err := t.PendingBeneficiaryTerm.MarshalCBOR(w); err != nil {
 		return err
 	}
@@ -513,7 +513,7 @@ func (t *MinerInfo) UnmarshalCBOR(r io.Reader) error {
 		}
 
 	}
-	// t.PendingBeneficiaryTerm (miner.BeneficiaryChange) (struct)
+	// t.PendingBeneficiaryTerm (miner.PendingBeneficiaryChange) (struct)
 
 	{
 
@@ -525,7 +525,7 @@ func (t *MinerInfo) UnmarshalCBOR(r io.Reader) error {
 			if err := br.UnreadByte(); err != nil {
 				return err
 			}
-			t.PendingBeneficiaryTerm = new(BeneficiaryChange)
+			t.PendingBeneficiaryTerm = new(PendingBeneficiaryChange)
 			if err := t.PendingBeneficiaryTerm.UnmarshalCBOR(br); err != nil {
 				return xerrors.Errorf("unmarshaling t.PendingBeneficiaryTerm pointer: %w", err)
 			}
@@ -2749,14 +2749,14 @@ func (t *BeneficiaryTerm) UnmarshalCBOR(r io.Reader) error {
 	return nil
 }
 
-var lengthBufBeneficiaryChange = []byte{133}
+var lengthBufPendingBeneficiaryChange = []byte{133}
 
-func (t *BeneficiaryChange) MarshalCBOR(w io.Writer) error {
+func (t *PendingBeneficiaryChange) MarshalCBOR(w io.Writer) error {
 	if t == nil {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-	if _, err := w.Write(lengthBufBeneficiaryChange); err != nil {
+	if _, err := w.Write(lengthBufPendingBeneficiaryChange); err != nil {
 		return err
 	}
 
@@ -2795,8 +2795,8 @@ func (t *BeneficiaryChange) MarshalCBOR(w io.Writer) error {
 	return nil
 }
 
-func (t *BeneficiaryChange) UnmarshalCBOR(r io.Reader) error {
-	*t = BeneficiaryChange{}
+func (t *PendingBeneficiaryChange) UnmarshalCBOR(r io.Reader) error {
+	*t = PendingBeneficiaryChange{}
 
 	br := cbg.GetPeeker(r)
 	scratch := make([]byte, 8)
@@ -5407,7 +5407,7 @@ func (t *GetBeneficiaryReturn) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.Proposed (miner.BeneficiaryChange) (struct)
+	// t.Proposed (miner.PendingBeneficiaryChange) (struct)
 	if err := t.Proposed.MarshalCBOR(w); err != nil {
 		return err
 	}
@@ -5441,7 +5441,7 @@ func (t *GetBeneficiaryReturn) UnmarshalCBOR(r io.Reader) error {
 		}
 
 	}
-	// t.Proposed (miner.BeneficiaryChange) (struct)
+	// t.Proposed (miner.PendingBeneficiaryChange) (struct)
 
 	{
 
@@ -5453,7 +5453,7 @@ func (t *GetBeneficiaryReturn) UnmarshalCBOR(r io.Reader) error {
 			if err := br.UnreadByte(); err != nil {
 				return err
 			}
-			t.Proposed = new(BeneficiaryChange)
+			t.Proposed = new(PendingBeneficiaryChange)
 			if err := t.Proposed.UnmarshalCBOR(br); err != nil {
 				return xerrors.Errorf("unmarshaling t.Proposed pointer: %w", err)
 			}

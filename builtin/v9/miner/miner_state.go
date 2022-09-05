@@ -99,7 +99,7 @@ type MinerInfo struct {
 	BeneficiaryTerm BeneficiaryTerm
 
 	// A proposed change to `BenificiaryTerm`
-	PendingBeneficiaryTerm *BeneficiaryChange
+	PendingBeneficiaryTerm *PendingBeneficiaryChange
 
 	// Additional addresses that are permitted to submit messages controlling this actor (optional).
 	ControlAddresses []addr.Address // Must all be ID addresses.
@@ -195,7 +195,7 @@ type BeneficiaryTerm struct {
 	Expiration abi.ChainEpoch
 }
 
-type BeneficiaryChange struct {
+type PendingBeneficiaryChange struct {
 	NewBeneficiary        addr.Address
 	NewQuota              abi.TokenAmount
 	NewExpiration         abi.ChainEpoch

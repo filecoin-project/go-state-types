@@ -149,7 +149,7 @@ func main() {
 		miner.WindowedPoSt{},
 		miner.ActiveBeneficiary{},
 		miner.BeneficiaryTerm{},
-		miner.BeneficiaryChange{},
+		miner.PendingBeneficiaryChange{},
 		// method params and returns
 		miner.SubmitWindowedPoStParams{},
 		miner.TerminateSectorsParams{},

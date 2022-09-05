@@ -199,7 +199,7 @@ type ActiveBeneficiary struct {
 
 type GetBeneficiaryReturn struct {
 	Active   ActiveBeneficiary
-	Proposed *BeneficiaryChange
+	Proposed *PendingBeneficiaryChange
 }
 
 // ExpirationSet is a collection of sector numbers that are expiring, either due to
