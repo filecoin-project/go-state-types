@@ -75,7 +75,7 @@ func (m minerMigrator) migrateState(ctx context.Context, store cbor.IpldStore, i
 			unsealedCid = &commd
 		}
 
-		err = newPrecommitOnChainInfos.Put(miner8.SectorKey(info.Info.SectorNumber), &miner9.SectorPreCommitOnChainInfo{
+		err = newPrecommitOnChainInfos.Put(miner9.SectorKey(info.Info.SectorNumber), &miner9.SectorPreCommitOnChainInfo{
 			Info: miner9.SectorPreCommitInfo{
 				SealProof:     info.Info.SealProof,
 				SectorNumber:  info.Info.SectorNumber,

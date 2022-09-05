@@ -77,15 +77,15 @@ func TestMinerMigration(t *testing.T) {
 	}
 
 	deal0 := baseDeal
-	deal0.PieceCID = migration.MakeCID("0", &market8.PieceCIDPrefix)
+	deal0.PieceCID = MakeCID("0", &market8.PieceCIDPrefix)
 	require.NoError(t, err)
 
 	deal1 := baseDeal
-	deal1.PieceCID = migration.MakeCID("1", &market8.PieceCIDPrefix)
+	deal1.PieceCID = MakeCID("1", &market8.PieceCIDPrefix)
 	require.NoError(t, err)
 
 	deal2 := baseDeal
-	deal2.PieceCID = migration.MakeCID("2", &market8.PieceCIDPrefix)
+	deal2.PieceCID = MakeCID("2", &market8.PieceCIDPrefix)
 	require.NoError(t, err)
 
 	require.NoError(t, proposals.Set(abi.DealID(0), &deal0))
@@ -111,7 +111,7 @@ func TestMinerMigration(t *testing.T) {
 		Info: miner8.SectorPreCommitInfo{
 			SealProof:              abi.RegisteredSealProof_StackedDrg32GiBV1_1,
 			SectorNumber:           0,
-			SealedCID:              migration.MakeCID("100", &miner8.SealedCIDPrefix),
+			SealedCID:              MakeCID("100", &miner8.SealedCIDPrefix),
 			SealRandEpoch:          0,
 			DealIDs:                nil,
 			Expiration:             0,
@@ -218,7 +218,7 @@ func TestMinerMigration(t *testing.T) {
 	require.NoError(t, err)
 
 	newManifestCid, _ := makeTestManifest(t, adtStore, "fil/9/")
-	log := migration.TestLogger{TB: t}
+	log := TestLogger{TB: t}
 
 	cache := migration.NewMemMigrationCache()
 	_, err = migration.MigrateStateTree(ctx, adtStore, newManifestCid, startRoot, 200, migration.Config{MaxWorkers: 1}, log, cache)
