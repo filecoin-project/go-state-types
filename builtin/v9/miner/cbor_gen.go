@@ -5022,7 +5022,7 @@ func (t *ProveReplicaUpdatesParams2) MarshalCBOR(w io.Writer) error {
 
 	scratch := make([]byte, 9)
 
-	// t.Updates ([]miner.ReplicaUpdate) (slice)
+	// t.Updates ([]miner.ReplicaUpdate2) (slice)
 	if len(t.Updates) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Updates was too long")
 	}
@@ -5056,7 +5056,7 @@ func (t *ProveReplicaUpdatesParams2) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	// t.Updates ([]miner.ReplicaUpdate) (slice)
+	// t.Updates ([]miner.ReplicaUpdate2) (slice)
 
 	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
@@ -5072,12 +5072,12 @@ func (t *ProveReplicaUpdatesParams2) UnmarshalCBOR(r io.Reader) error {
 	}
 
 	if extra > 0 {
-		t.Updates = make([]ReplicaUpdate, extra)
+		t.Updates = make([]ReplicaUpdate2, extra)
 	}
 
 	for i := 0; i < int(extra); i++ {
 
-		var v ReplicaUpdate
+		var v ReplicaUpdate2
 		if err := v.UnmarshalCBOR(br); err != nil {
 			return err
 		}

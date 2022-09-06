@@ -9,7 +9,7 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 	xc "github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/proof"
-	"github.com/ipfs/go-cid"
+	cid "github.com/ipfs/go-cid"
 	"golang.org/x/xerrors"
 )
 
@@ -65,7 +65,7 @@ type ReplicaUpdate2 struct {
 }
 
 type ProveReplicaUpdatesParams2 struct {
-	Updates []ReplicaUpdate
+	Updates []ReplicaUpdate2
 }
 
 type PoStPartition struct {
