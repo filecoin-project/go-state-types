@@ -6,6 +6,6 @@ import (
 )
 
 var Methods = []interface{}{
-	1: *new(func(interface{}, *address.Address) *abi.EmptyValue),
-	2: *new(func(interface{}, *abi.EmptyValue) *address.Address),
+	1: *new(func(interface{}, *address.Address) *abi.EmptyValue), // Constructor
+	2: *new(func(interface{}, *abi.EmptyValue) *address.Address), // PubkeyAddress
 }
