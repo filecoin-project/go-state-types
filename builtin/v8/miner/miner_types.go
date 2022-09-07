@@ -7,6 +7,7 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v8/power"
 	"github.com/filecoin-project/go-state-types/builtin/v8/util/adt"
+	"github.com/filecoin-project/go-state-types/builtin/v8/util/smoothing"
 	xc "github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/proof"
 	"github.com/ipfs/go-cid"
@@ -186,6 +187,20 @@ type PreCommitSectorBatchParams struct {
 	Sectors []SectorPreCommitInfo
 }
 
+type PreCommitSectorParams struct {
+	SealProof       abi.RegisteredSealProof
+	SectorNumber    abi.SectorNumber
+	SealedCID       cid.Cid `checked:"true"` // CommR
+	SealRandEpoch   abi.ChainEpoch
+	DealIDs         []abi.DealID
+	Expiration      abi.ChainEpoch
+	ReplaceCapacity bool // DEPRECATED: Whether to replace a "committed capacity" no-deal sector (requires non-empty DealIDs)
+	// DEPRECATED: The committed capacity sector to replace, and it's deadline/partition location
+	ReplaceSectorDeadline  uint64
+	ReplaceSectorPartition uint64
+	ReplaceSectorNumber    abi.SectorNumber
+}
+
 // ExpirationSet is a collection of sector numbers that are expiring, either due to
 // expected "on-time" expiration at the end of their life, or unexpected "early" termination
 // due to being faulty for too long consecutively.
@@ -281,4 +296,22 @@ func ConstructVestingFunds() *VestingFunds {
 	v := new(VestingFunds)
 	v.Funds = nil
 	return v
+}
+
+type DeferredCronEventParams struct {
+	EventPayload            []byte
+	RewardSmoothed          smoothing.FilterEstimate
+	QualityAdjPowerSmoothed smoothing.FilterEstimate
+}
+
+type ApplyRewardParams struct {
+	Reward  abi.TokenAmount
+	Penalty abi.TokenAmount
+}
+
+type ConfirmSectorProofsParams struct {
+	Sectors                 []abi.SectorNumber
+	RewardSmoothed          smoothing.FilterEstimate
+	RewardBaselinePower     abi.StoragePower
+	QualityAdjPowerSmoothed smoothing.FilterEstimate
 }

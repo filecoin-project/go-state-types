@@ -7,6 +7,7 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v9/power"
 	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
+	"github.com/filecoin-project/go-state-types/builtin/v9/util/smoothing"
 	xc "github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/proof"
 	cid "github.com/ipfs/go-cid"
@@ -330,4 +331,22 @@ func ConstructVestingFunds() *VestingFunds {
 	v := new(VestingFunds)
 	v.Funds = nil
 	return v
+}
+
+type DeferredCronEventParams struct {
+	EventPayload            []byte
+	RewardSmoothed          smoothing.FilterEstimate
+	QualityAdjPowerSmoothed smoothing.FilterEstimate
+}
+
+type ApplyRewardParams struct {
+	Reward  abi.TokenAmount
+	Penalty abi.TokenAmount
+}
+
+type ConfirmSectorProofsParams struct {
+	Sectors                 []abi.SectorNumber
+	RewardSmoothed          smoothing.FilterEstimate
+	RewardBaselinePower     abi.StoragePower
+	QualityAdjPowerSmoothed smoothing.FilterEstimate
 }
