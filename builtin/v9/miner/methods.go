@@ -35,4 +35,8 @@ var Methods = []interface{}{
 	25: *new(func(interface{}, *PreCommitSectorBatchParams) *abi.EmptyValue),     // PreCommitSectorBatch
 	26: *new(func(interface{}, *ProveCommitAggregateParams) *abi.EmptyValue),     // ProveCommitAggregate
 	27: *new(func(interface{}, *ProveReplicaUpdatesParams) *bitfield.BitField),   // ProveReplicaUpdates
+	28: *new(func(interface{}, *PreCommitSectorBatchParams2) *abi.EmptyValue),    // PreCommitSectorBatch2
+	29: *new(func(interface{}, *ProveReplicaUpdatesParams2) *bitfield.BitField),  // ProveReplicaUpdates2
+	30: *new(func(interface{}, *ChangeBeneficiaryParams) *abi.EmptyValue),        // ChangeBeneficiary
+	31: *new(func(interface{}, *abi.EmptyValue) *GetBeneficiaryReturn),           // GetBeneficiary
 }
