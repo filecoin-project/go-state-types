@@ -33,6 +33,10 @@ func (m minerMigrator) migrateState(ctx context.Context, store cbor.IpldStore, i
 	if err := store.Get(ctx, in.head, &inState); err != nil {
 		return nil, err
 	}
+	var inInfo miner8.MinerInfo
+	if err := store.Get(ctx, inState.Info, &inInfo); err != nil {
+		return nil, err
+	}
 	wrappedStore := adt.WrapStore(ctx, store)
 
 	oldPrecommitOnChainInfos, err := adt.AsMap(wrappedStore, inState.PreCommittedSectors, builtin.DefaultHamtBitwidth)
@@ -105,8 +109,41 @@ func (m minerMigrator) migrateState(ctx context.Context, store cbor.IpldStore, i
 		return nil, xerrors.Errorf("failed to flush new precommits: %w", err)
 	}
 
+	var newPendingWorkerKey *miner9.WorkerKeyChange
+	if inInfo.PendingWorkerKey != nil {
+		newPendingWorkerKey = &miner9.WorkerKeyChange{
+			NewWorker:   inInfo.PendingWorkerKey.NewWorker,
+			EffectiveAt: inInfo.PendingWorkerKey.EffectiveAt,
+		}
+	}
+
+	outInfo := miner9.MinerInfo{
+		Owner:       inInfo.Owner,
+		Worker:      inInfo.Worker,
+		Beneficiary: inInfo.Owner,
+		BeneficiaryTerm: miner9.BeneficiaryTerm{
+			Quota:      abi.NewTokenAmount(0),
+			UsedQuota:  abi.NewTokenAmount(0),
+			Expiration: 0,
+		},
+		PendingBeneficiaryTerm:     nil,
+		ControlAddresses:           inInfo.ControlAddresses,
+		PendingWorkerKey:           newPendingWorkerKey,
+		PeerId:                     inInfo.PeerId,
+		Multiaddrs:                 inInfo.Multiaddrs,
+		WindowPoStProofType:        inInfo.WindowPoStProofType,
+		SectorSize:                 inInfo.SectorSize,
+		WindowPoStPartitionSectors: inInfo.WindowPoStPartitionSectors,
+		ConsensusFaultElapsed:      inInfo.ConsensusFaultElapsed,
+		PendingOwnerAddress:        inInfo.PendingOwnerAddress,
+	}
+	newInfoCid, err := store.Put(ctx, &outInfo)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to flush new miner info: %w", err)
+	}
+
 	outState := miner9.State{
-		Info:                       inState.Info,
+		Info:                       newInfoCid,
 		PreCommitDeposits:          inState.PreCommitDeposits,
 		LockedFunds:                inState.LockedFunds,
 		VestingFunds:               inState.VestingFunds,
