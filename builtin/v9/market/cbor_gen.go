@@ -756,6 +756,54 @@ func (t *ActivateDealsParams) UnmarshalCBOR(r io.Reader) error {
 	return nil
 }
 
+var lengthBufActivateDealsResult = []byte{129}
+
+func (t *ActivateDealsResult) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufActivateDealsResult); err != nil {
+		return err
+	}
+
+	// t.Weights (market.DealWeights) (struct)
+	if err := t.Weights.MarshalCBOR(w); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *ActivateDealsResult) UnmarshalCBOR(r io.Reader) error {
+	*t = ActivateDealsResult{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Weights (market.DealWeights) (struct)
+
+	{
+
+		if err := t.Weights.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.Weights: %w", err)
+		}
+
+	}
+	return nil
+}
+
 var lengthBufVerifyDealsForActivationParams = []byte{129}
 
 func (t *VerifyDealsForActivationParams) MarshalCBOR(w io.Writer) error {
@@ -848,7 +896,7 @@ func (t *VerifyDealsForActivationReturn) MarshalCBOR(w io.Writer) error {
 
 	scratch := make([]byte, 9)
 
-	// t.Sectors ([]market.SectorWeights) (slice)
+	// t.Sectors ([]market.SectorDealData) (slice)
 	if len(t.Sectors) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Sectors was too long")
 	}
@@ -882,7 +930,7 @@ func (t *VerifyDealsForActivationReturn) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	// t.Sectors ([]market.SectorWeights) (slice)
+	// t.Sectors ([]market.SectorDealData) (slice)
 
 	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
@@ -898,12 +946,12 @@ func (t *VerifyDealsForActivationReturn) UnmarshalCBOR(r io.Reader) error {
 	}
 
 	if extra > 0 {
-		t.Sectors = make([]SectorWeights, extra)
+		t.Sectors = make([]SectorDealData, extra)
 	}
 
 	for i := 0; i < int(extra); i++ {
 
-		var v SectorWeights
+		var v SectorDealData
 		if err := v.UnmarshalCBOR(br); err != nil {
 			return err
 		}
@@ -1624,14 +1672,85 @@ func (t *SectorDeals) UnmarshalCBOR(r io.Reader) error {
 	return nil
 }
 
-var lengthBufSectorWeights = []byte{131}
+var lengthBufSectorDealData = []byte{129}
 
-func (t *SectorWeights) MarshalCBOR(w io.Writer) error {
+func (t *SectorDealData) MarshalCBOR(w io.Writer) error {
 	if t == nil {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-	if _, err := w.Write(lengthBufSectorWeights); err != nil {
+	if _, err := w.Write(lengthBufSectorDealData); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.CommD (cid.Cid) (struct)
+
+	if t.CommD == nil {
+		if _, err := w.Write(cbg.CborNull); err != nil {
+			return err
+		}
+	} else {
+		if err := cbg.WriteCidBuf(scratch, w, *t.CommD); err != nil {
+			return xerrors.Errorf("failed to write cid field t.CommD: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (t *SectorDealData) UnmarshalCBOR(r io.Reader) error {
+	*t = SectorDealData{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.CommD (cid.Cid) (struct)
+
+	{
+
+		b, err := br.ReadByte()
+		if err != nil {
+			return err
+		}
+		if b != cbg.CborNull[0] {
+			if err := br.UnreadByte(); err != nil {
+				return err
+			}
+
+			c, err := cbg.ReadCid(br)
+			if err != nil {
+				return xerrors.Errorf("failed to read cid field t.CommD: %w", err)
+			}
+
+			t.CommD = &c
+		}
+
+	}
+	return nil
+}
+
+var lengthBufDealWeights = []byte{131}
+
+func (t *DealWeights) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufDealWeights); err != nil {
 		return err
 	}
 
@@ -1655,8 +1774,8 @@ func (t *SectorWeights) MarshalCBOR(w io.Writer) error {
 	return nil
 }
 
-func (t *SectorWeights) UnmarshalCBOR(r io.Reader) error {
-	*t = SectorWeights{}
+func (t *DealWeights) UnmarshalCBOR(r io.Reader) error {
+	*t = DealWeights{}
 
 	br := cbg.GetPeeker(r)
 	scratch := make([]byte, 8)

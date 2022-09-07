@@ -141,26 +141,20 @@ type WorkerKeyChange struct {
 
 // Information provided by a miner when pre-committing a sector.
 type SectorPreCommitInfo struct {
-	SealProof       abi.RegisteredSealProof
-	SectorNumber    abi.SectorNumber
-	SealedCID       cid.Cid `checked:"true"` // CommR
-	SealRandEpoch   abi.ChainEpoch
-	DealIDs         []abi.DealID
-	Expiration      abi.ChainEpoch
-	ReplaceCapacity bool // Whether to replace a "committed capacity" no-deal sector (requires non-empty DealIDs)
-	// The committed capacity sector to replace, and it's deadline/partition location
-	ReplaceSectorDeadline  uint64
-	ReplaceSectorPartition uint64
-	ReplaceSectorNumber    abi.SectorNumber
+	SealProof     abi.RegisteredSealProof
+	SectorNumber  abi.SectorNumber
+	SealedCID     cid.Cid `checked:"true"` // CommR
+	SealRandEpoch abi.ChainEpoch
+	DealIDs       []abi.DealID
+	Expiration    abi.ChainEpoch
+	UnsealedCid   *cid.Cid
 }
 
 // Information stored on-chain for a pre-committed sector.
 type SectorPreCommitOnChainInfo struct {
-	Info               SectorPreCommitInfo
-	PreCommitDeposit   abi.TokenAmount
-	PreCommitEpoch     abi.ChainEpoch
-	DealWeight         abi.DealWeight // Integral of active deals over sector lifetime
-	VerifiedDealWeight abi.DealWeight // Integral of active verified deals over sector lifetime
+	Info             SectorPreCommitInfo
+	PreCommitDeposit abi.TokenAmount
+	PreCommitEpoch   abi.ChainEpoch
 }
 
 // Information stored on-chain for a proven sector.

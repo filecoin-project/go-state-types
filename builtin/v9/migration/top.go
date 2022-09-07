@@ -6,6 +6,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	market8 "github.com/filecoin-project/go-state-types/builtin/v8/market"
+
 	"github.com/filecoin-project/go-state-types/builtin/v8/system"
 
 	"github.com/filecoin-project/go-state-types/builtin"
@@ -121,14 +123,22 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	// simple code migrations
 	simpleMigrations := make(map[string]cid.Cid, len(oldManifestData.Entries))
 
+	miner8Cid := cid.Undef
 	for _, entry := range oldManifestData.Entries {
 		simpleMigrations[entry.Name] = entry.Code
+		if entry.Name == "storageminer" {
+			miner8Cid = entry.Code
+		}
+	}
+
+	if miner8Cid == cid.Undef {
+		return cid.Undef, xerrors.Errorf("didn't find miner in old manifest entries")
 	}
 
 	for name, oldCodeCID := range simpleMigrations { //nolint:nomaprange
 		newCodeCID, ok := newManifest.Get(name)
 		if !ok {
-			return cid.Undef, xerrors.Errorf("code cid for %s actor not found in manifest", name)
+			return cid.Undef, xerrors.Errorf("code cid for %s actor not found in new manifest", name)
 		}
 
 		migrations[oldCodeCID] = codeMigrator{newCodeCID}
@@ -140,7 +150,34 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("code cid for system actor not found in manifest")
 	}
 
+	miner9Cid, ok := newManifest.Get("storageminer")
+	if !ok {
+		return cid.Undef, xerrors.Errorf("code cid for miner actor not found in new manifest")
+	}
+
 	migrations[systemActor.Code] = systemActorMigrator{newSystemCodeCID, newManifest.Data}
+
+	// load market proposals
+	marketActor, ok, err := actorsIn.GetActor(builtin.StorageMarketActorAddr)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to get market actor: %w", err)
+	}
+
+	if !ok {
+		return cid.Undef, xerrors.New("didn't find market actor")
+	}
+
+	var marketState market8.State
+	if err := store.Get(ctx, marketActor.Head, &marketState); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to get system actor state: %w", err)
+	}
+
+	proposals, err := market8.AsDealProposalArray(adtStore, marketState.Proposals)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to get proposals: %w", err)
+	}
+
+	migrations[miner8Cid] = minerMigrator{proposals, miner9Cid}
 
 	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations), len(oldManifestData.Entries))

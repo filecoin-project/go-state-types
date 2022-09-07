@@ -106,6 +106,18 @@ func AsDealProposalArray(s adt.Store, r cid.Cid) (*DealArray, error) {
 	return &DealArray{a}, nil
 }
 
+func (d *DealArray) GetDealProposal(dealID abi.DealID) (*DealProposal, error) {
+	proposal, found, err := d.Get(dealID)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to load proposal: %w", err)
+	}
+	if !found {
+		return nil, exitcode.ErrNotFound.Wrapf("no such deal %d", dealID)
+	}
+
+	return proposal, nil
+}
+
 // Returns the root cid of underlying AMT.
 func (t *DealArray) Root() (cid.Cid, error) {
 	return t.Array.Root()

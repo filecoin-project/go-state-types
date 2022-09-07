@@ -17,7 +17,7 @@ import (
 func TestParallelMigrationCalls(t *testing.T) {
 	// Construct simple prior state tree over a synchronized store
 	ctx := context.Background()
-	log := migration.TestLogger{TB: t}
+	log := TestLogger{TB: t}
 	bs := NewSyncBlockStoreInMemory()
 
 	// Run migration

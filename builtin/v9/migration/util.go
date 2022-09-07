@@ -2,9 +2,7 @@ package migration
 
 import (
 	"sync"
-	"testing"
 
-	"github.com/filecoin-project/go-state-types/rt"
 	"github.com/ipfs/go-cid"
 	"golang.org/x/xerrors"
 )
@@ -62,12 +60,4 @@ func (m *MemMigrationCache) Update(other *MemMigrationCache) {
 		m.MigrationMap.Store(key, value)
 		return true
 	})
-}
-
-type TestLogger struct {
-	TB testing.TB
-}
-
-func (t TestLogger) Log(_ rt.LogLevel, msg string, args ...interface{}) {
-	t.TB.Logf(msg, args...)
 }

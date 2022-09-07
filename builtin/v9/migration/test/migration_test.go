@@ -43,7 +43,7 @@ func TestMigration(t *testing.T) {
 	require.NoError(t, oldManifest.Load(ctx, adtStore), "failed to load old manifest")
 
 	newManifestCid, newManifestDataCid := makeTestManifest(t, adtStore, "fil/9/")
-	log := migration.TestLogger{TB: t}
+	log := TestLogger{TB: t}
 
 	cache := migration.NewMemMigrationCache()
 	_, err = migration.MigrateStateTree(ctx, adtStore, newManifestCid, startRoot, 200, migration.Config{MaxWorkers: 1}, log, cache)

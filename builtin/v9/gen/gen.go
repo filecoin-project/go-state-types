@@ -116,6 +116,7 @@ func main() {
 		market.PublishStorageDealsParams{},
 		market.PublishStorageDealsReturn{},
 		market.ActivateDealsParams{},
+		market.ActivateDealsResult{},
 		market.VerifyDealsForActivationParams{},
 		market.VerifyDealsForActivationReturn{},
 		market.ComputeDataCommitmentParams{},
@@ -125,7 +126,8 @@ func main() {
 		market.DealProposal{},
 		market.ClientDealProposal{},
 		market.SectorDeals{},
-		market.SectorWeights{},
+		market.SectorDealData{},
+		market.DealWeights{},
 		market.SectorDataSpec{},
 	); err != nil {
 		panic(err)
@@ -171,7 +173,10 @@ func main() {
 		miner.CronEventPayload{},
 		miner.DisputeWindowedPoStParams{},
 		miner.PreCommitSectorBatchParams{},
+		miner.PreCommitSectorBatchParams2{},
+		miner.PreCommitSectorParams{},
 		miner.ProveReplicaUpdatesParams{},
+		miner.ProveReplicaUpdatesParams2{},
 		// other types
 		miner.FaultDeclaration{},
 		miner.RecoveryDeclaration{},
@@ -179,6 +184,7 @@ func main() {
 		miner.TerminationDeclaration{},
 		miner.PoStPartition{},
 		miner.ReplicaUpdate{},
+		miner.ReplicaUpdate2{},
 		miner.GetBeneficiaryReturn{},
 		miner.ChangeBeneficiaryParams{},
 	); err != nil {
