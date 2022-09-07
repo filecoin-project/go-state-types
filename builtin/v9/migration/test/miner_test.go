@@ -51,6 +51,8 @@ func TestMinerMigration(t *testing.T) {
 	baseAddr := uint64(10000)
 	baseAddrId, err := address.NewIDAddress(baseAddr)
 	require.NoError(t, err)
+	baseWorkerAddrId, err := address.NewIDAddress(baseAddr + 100)
+	require.NoError(t, err)
 
 	// create 3 deal proposals
 
@@ -105,7 +107,7 @@ func TestMinerMigration(t *testing.T) {
 	oldMinerCID, ok := oldManifest.Get("storageminer")
 	require.True(t, ok)
 
-	baseMinerSt := makeBaseMinerState(ctx, t, adtStore, baseAddrId)
+	baseMinerSt := makeBaseMinerState(ctx, t, adtStore, baseAddrId, baseWorkerAddrId)
 
 	basePrecommit := miner8.SectorPreCommitOnChainInfo{
 		Info: miner8.SectorPreCommitInfo{
@@ -313,13 +315,100 @@ func TestMinerMigration(t *testing.T) {
 	require.False(t, ok)
 }
 
-func makeBaseMinerState(ctx context.Context, t *testing.T, adtStore adt.Store, baseAddrId address.Address) miner8.State {
+func TestFip0029MinerMigration(t *testing.T) {
+	ctx := context.Background()
+	bs := cbor.NewMemCborStore()
+	adtStore := adt.WrapStore(ctx, bs)
+
+	startRoot := makeInputTree(ctx, t, adtStore)
+
+	oldStateTree, err := migration.LoadTree(adtStore, startRoot)
+	require.NoError(t, err)
+
+	oldSystemActor, found, err := oldStateTree.GetActor(builtin.SystemActorAddr)
+	require.NoError(t, err)
+	require.True(t, found, "system actor not found")
+
+	var oldSystemState system9.State
+	err = adtStore.Get(ctx, oldSystemActor.Head, &oldSystemState)
+	require.NoError(t, err)
+
+	oldManifestDataCid := oldSystemState.BuiltinActors
+	oldManifest := manifest.Manifest{
+		Version: 1,
+		Data:    oldManifestDataCid,
+	}
+	require.NoError(t, oldManifest.Load(ctx, adtStore), "failed to load old manifest")
+
+	addr, err := address.NewIDAddress(10000)
+	require.NoError(t, err)
+	workerAddr, err := address.NewIDAddress(20000)
+	require.NoError(t, err)
+
+	oldMinerCID, ok := oldManifest.Get("storageminer")
+	require.True(t, ok)
+
+	minerSt := makeBaseMinerState(ctx, t, adtStore, addr, workerAddr)
+
+	minerStCid, err := adtStore.Put(ctx, &minerSt)
+	require.NoError(t, err)
+
+	var minerInfo miner8.MinerInfo
+	require.NoError(t, adtStore.Get(ctx, minerSt.Info, &minerInfo))
+
+	miner := migration.Actor{
+		Code:       oldMinerCID,
+		Head:       minerStCid,
+		CallSeqNum: 0,
+		Balance:    big.Zero(),
+	}
+
+	require.NoError(t, oldStateTree.SetActor(addr, &miner))
+
+	startRoot, err = oldStateTree.Flush()
+	require.NoError(t, err)
+
+	newManifestCid, _ := makeTestManifest(t, adtStore, "fil/9/")
+	log := TestLogger{TB: t}
+
+	cache := migration.NewMemMigrationCache()
+	_, err = migration.MigrateStateTree(ctx, adtStore, newManifestCid, startRoot, 200, migration.Config{MaxWorkers: 1}, log, cache)
+	require.NoError(t, err)
+
+	cacheRoot, err := migration.MigrateStateTree(ctx, adtStore, newManifestCid, startRoot, 200, migration.Config{MaxWorkers: 1}, log, cache)
+	require.NoError(t, err)
+
+	noCacheRoot, err := migration.MigrateStateTree(ctx, adtStore, newManifestCid, startRoot, 200, migration.Config{MaxWorkers: 1}, log, migration.NewMemMigrationCache())
+	require.NoError(t, err)
+	require.True(t, cacheRoot.Equals(noCacheRoot))
+
+	// check that the actor states were correctly updated
+
+	newStateTree, err := migration.LoadTree(adtStore, cacheRoot)
+	require.NoError(t, err)
+
+	newMinerActor, ok, err := newStateTree.GetActor(addr)
+	require.NoError(t, err)
+	require.True(t, ok)
+
+	var newMinerSt miner9.State
+	require.NoError(t, adtStore.Get(ctx, newMinerActor.Head, &newMinerSt))
+
+	var newMinerInfo miner9.MinerInfo
+	require.NoError(t, adtStore.Get(ctx, newMinerSt.Info, &newMinerInfo))
+	require.Equal(t, newMinerInfo.Owner, minerInfo.Owner)
+	require.Equal(t, newMinerInfo.Worker, minerInfo.Worker)
+	require.Equal(t, newMinerInfo.Beneficiary, minerInfo.Owner)
+	require.Nil(t, newMinerInfo.PendingBeneficiaryTerm)
+}
+
+func makeBaseMinerState(ctx context.Context, t *testing.T, adtStore adt.Store, baseAddrId address.Address, baseWorkerAddrId address.Address) miner8.State {
 	emptyPrecommitMapCid, err := adt.StoreEmptyMap(adtStore, builtin.DefaultHamtBitwidth)
 	require.NoError(t, err, "failed to construct empty map")
 
 	emptyMinerInfo := miner8.MinerInfo{
 		Owner:                      baseAddrId,
-		Worker:                     baseAddrId,
+		Worker:                     baseWorkerAddrId,
 		ControlAddresses:           nil,
 		PendingWorkerKey:           nil,
 		PeerId:                     nil,
