@@ -67,7 +67,7 @@ func (m minerMigrator) migrateState(ctx context.Context, store cbor.IpldStore, i
 				}
 			}
 
-			commd, err := generateUnsealedCID(info.Info.SealProof, pieces)
+			commd, err := commp.GenerateUnsealedCID(info.Info.SealProof, pieces)
 			if err != nil {
 				return xerrors.Errorf("failed to generate unsealed CID: %w", err)
 			}
@@ -128,14 +128,4 @@ func (m minerMigrator) migrateState(ctx context.Context, store cbor.IpldStore, i
 		newCodeCID: m.migratedCodeCID(),
 		newHead:    newHead,
 	}, err
-}
-
-func generateUnsealedCID(proofType abi.RegisteredSealProof, pieces []abi.PieceInfo) (cid.Cid, error) {
-	ret, err := commp.GenerateUnsealedCID(proofType, pieces)
-
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("error generating unsealed CID: %w", err)
-	}
-
-	return ret, nil
 }
