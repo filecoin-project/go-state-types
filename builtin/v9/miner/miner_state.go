@@ -90,17 +90,6 @@ type MinerInfo struct {
 	// The associated pubkey-type address is used to sign blocks and messages on behalf of this miner.
 	Worker addr.Address // Must be an ID-address.
 
-	// Beneficiary address for this miner.
-	// This is the address that tokens will be withdrawn to
-	Beneficiary addr.Address
-
-	// Beneficiary's withdrawal quota, how much of the quota has been withdrawn,
-	// and when the Beneficiary expires.
-	BeneficiaryTerm BeneficiaryTerm
-
-	// A proposed change to `BenificiaryTerm`
-	PendingBeneficiaryTerm *PendingBeneficiaryChange
-
 	// Additional addresses that are permitted to submit messages controlling this actor (optional).
 	ControlAddresses []addr.Address // Must all be ID addresses.
 
@@ -132,6 +121,17 @@ type MinerInfo struct {
 	// A proposed new owner account for this miner.
 	// Must be confirmed by a message from the pending address itself.
 	PendingOwnerAddress *addr.Address
+
+	// Beneficiary address for this miner.
+	// This is the address that tokens will be withdrawn to
+	Beneficiary addr.Address
+
+	// Beneficiary's withdrawal quota, how much of the quota has been withdrawn,
+	// and when the Beneficiary expires.
+	BeneficiaryTerm BeneficiaryTerm
+
+	// A proposed change to `BenificiaryTerm`
+	PendingBeneficiaryTerm *PendingBeneficiaryChange
 }
 
 type WorkerKeyChange struct {
