@@ -59,6 +59,8 @@ func main() {
 		// actor state
 		reward.State{},
 		// method params and returns
+		reward.ThisEpochRewardReturn{},
+		reward.AwardBlockRewardParams{},
 	); err != nil {
 		panic(err)
 	}
