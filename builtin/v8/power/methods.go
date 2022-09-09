@@ -12,7 +12,7 @@ var Methods = []interface{}{
 	4: *new(func(interface{}, *EnrollCronEventParams) *abi.EmptyValue),    // EnrollCronEvent
 	5: *new(func(interface{}, *abi.EmptyValue) *abi.EmptyValue),           // CronTick
 	6: *new(func(interface{}, *abi.TokenAmount) *abi.EmptyValue),          // UpdatePledgeTotal
-	// 7: DEPRECATED
+	7: nil,
 	8: *new(func(interface{}, *proof.SealVerifyInfo) *abi.EmptyValue),    // SubmitPoRepForBulkVerify
 	9: *new(func(interface{}, *abi.EmptyValue) *CurrentTotalPowerReturn), // CurrentTotalPower
 }
