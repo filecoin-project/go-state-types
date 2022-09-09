@@ -105,6 +105,11 @@ func main() {
 		power.State{},
 		power.Claim{},
 		// method params and returns
+		power.UpdateClaimedPowerParams{},
+		power.MinerConstructorParams{},
+		power.CreateMinerReturn{},
+		power.CurrentTotalPowerReturn{},
+		power.EnrollCronEventParams{},
 	); err != nil {
 		panic(err)
 	}
