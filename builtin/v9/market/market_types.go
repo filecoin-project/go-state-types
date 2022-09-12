@@ -29,6 +29,7 @@ type VerifyDealsForActivationParams struct {
 }
 
 type SectorDeals struct {
+	SectorType   abi.RegisteredSealProof
 	SectorExpiry abi.ChainEpoch
 	DealIDs      []abi.DealID
 }

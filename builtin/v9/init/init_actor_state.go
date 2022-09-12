@@ -1,7 +1,6 @@
 package init
 
 import (
-	"context"
 	"fmt"
 	"io"
 
@@ -15,10 +14,9 @@ import (
 )
 
 type State struct {
-	AddressMap      cid.Cid // HAMT[addr.Address]abi.ActorID
-	NextID          abi.ActorID
-	NetworkName     string
-	InstalledActors cid.Cid
+	AddressMap  cid.Cid // HAMT[addr.Address]abi.ActorID
+	NextID      abi.ActorID
+	NetworkName string
 }
 
 func ConstructState(store adt.Store, networkName string) (*State, error) {
@@ -27,16 +25,10 @@ func ConstructState(store adt.Store, networkName string) (*State, error) {
 		return nil, xerrors.Errorf("failed to create empty map: %w", err)
 	}
 
-	emptyInstalledActors, err := store.Put(context.TODO(), &InstalledActors{})
-	if err != nil {
-		return nil, xerrors.Errorf("failed to create empty manifest: %w", err)
-	}
-
 	return &State{
-		AddressMap:      emptyAddressMapCid,
-		NextID:          abi.ActorID(builtin.FirstNonSingletonActorId),
-		NetworkName:     networkName,
-		InstalledActors: emptyInstalledActors,
+		AddressMap:  emptyAddressMapCid,
+		NextID:      abi.ActorID(builtin.FirstNonSingletonActorId),
+		NetworkName: networkName,
 	}, nil
 }
 

@@ -174,3 +174,10 @@ type VestSpec struct {
 	StepDuration abi.ChainEpoch // Duration between successive incremental vests (independent of vesting period).
 	Quantization abi.ChainEpoch // Maximum precision of vesting table (limits cardinality of table).
 }
+
+// Returns maximum achievable QA power.
+func QAPowerMax(size abi.SectorSize) abi.StoragePower {
+	return big.Div(
+		big.Mul(big.NewInt(int64(size)), builtin.VerifiedDealWeightMultiplier),
+		builtin.QualityBaseMultiplier)
+}

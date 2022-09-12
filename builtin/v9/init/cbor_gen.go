@@ -13,7 +13,7 @@ import (
 
 var _ = xerrors.Errorf
 
-var lengthBufState = []byte{132}
+var lengthBufState = []byte{131}
 
 func (t *State) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -49,13 +49,6 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 	if _, err := io.WriteString(w, string(t.NetworkName)); err != nil {
 		return err
 	}
-
-	// t.InstalledActors (cid.Cid) (struct)
-
-	if err := cbg.WriteCidBuf(scratch, w, t.InstalledActors); err != nil {
-		return xerrors.Errorf("failed to write cid field t.InstalledActors: %w", err)
-	}
-
 	return nil
 }
 
@@ -73,7 +66,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 4 {
+	if extra != 3 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
@@ -112,18 +105,6 @@ func (t *State) UnmarshalCBOR(r io.Reader) error {
 		}
 
 		t.NetworkName = string(sval)
-	}
-	// t.InstalledActors (cid.Cid) (struct)
-
-	{
-
-		c, err := cbg.ReadCid(br)
-		if err != nil {
-			return xerrors.Errorf("failed to read cid field t.InstalledActors: %w", err)
-		}
-
-		t.InstalledActors = c
-
 	}
 	return nil
 }

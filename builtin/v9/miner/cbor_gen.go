@@ -349,21 +349,6 @@ func (t *MinerInfo) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.Beneficiary (address.Address) (struct)
-	if err := t.Beneficiary.MarshalCBOR(w); err != nil {
-		return err
-	}
-
-	// t.BeneficiaryTerm (miner.BeneficiaryTerm) (struct)
-	if err := t.BeneficiaryTerm.MarshalCBOR(w); err != nil {
-		return err
-	}
-
-	// t.PendingBeneficiaryTerm (miner.PendingBeneficiaryChange) (struct)
-	if err := t.PendingBeneficiaryTerm.MarshalCBOR(w); err != nil {
-		return err
-	}
-
 	// t.ControlAddresses ([]address.Address) (slice)
 	if len(t.ControlAddresses) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.ControlAddresses was too long")
@@ -456,6 +441,21 @@ func (t *MinerInfo) MarshalCBOR(w io.Writer) error {
 	if err := t.PendingOwnerAddress.MarshalCBOR(w); err != nil {
 		return err
 	}
+
+	// t.Beneficiary (address.Address) (struct)
+	if err := t.Beneficiary.MarshalCBOR(w); err != nil {
+		return err
+	}
+
+	// t.BeneficiaryTerm (miner.BeneficiaryTerm) (struct)
+	if err := t.BeneficiaryTerm.MarshalCBOR(w); err != nil {
+		return err
+	}
+
+	// t.PendingBeneficiaryTerm (miner.PendingBeneficiaryChange) (struct)
+	if err := t.PendingBeneficiaryTerm.MarshalCBOR(w); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -492,43 +492,6 @@ func (t *MinerInfo) UnmarshalCBOR(r io.Reader) error {
 
 		if err := t.Worker.UnmarshalCBOR(br); err != nil {
 			return xerrors.Errorf("unmarshaling t.Worker: %w", err)
-		}
-
-	}
-	// t.Beneficiary (address.Address) (struct)
-
-	{
-
-		if err := t.Beneficiary.UnmarshalCBOR(br); err != nil {
-			return xerrors.Errorf("unmarshaling t.Beneficiary: %w", err)
-		}
-
-	}
-	// t.BeneficiaryTerm (miner.BeneficiaryTerm) (struct)
-
-	{
-
-		if err := t.BeneficiaryTerm.UnmarshalCBOR(br); err != nil {
-			return xerrors.Errorf("unmarshaling t.BeneficiaryTerm: %w", err)
-		}
-
-	}
-	// t.PendingBeneficiaryTerm (miner.PendingBeneficiaryChange) (struct)
-
-	{
-
-		b, err := br.ReadByte()
-		if err != nil {
-			return err
-		}
-		if b != cbg.CborNull[0] {
-			if err := br.UnreadByte(); err != nil {
-				return err
-			}
-			t.PendingBeneficiaryTerm = new(PendingBeneficiaryChange)
-			if err := t.PendingBeneficiaryTerm.UnmarshalCBOR(br); err != nil {
-				return xerrors.Errorf("unmarshaling t.PendingBeneficiaryTerm pointer: %w", err)
-			}
 		}
 
 	}
@@ -741,6 +704,43 @@ func (t *MinerInfo) UnmarshalCBOR(r io.Reader) error {
 			t.PendingOwnerAddress = new(address.Address)
 			if err := t.PendingOwnerAddress.UnmarshalCBOR(br); err != nil {
 				return xerrors.Errorf("unmarshaling t.PendingOwnerAddress pointer: %w", err)
+			}
+		}
+
+	}
+	// t.Beneficiary (address.Address) (struct)
+
+	{
+
+		if err := t.Beneficiary.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.Beneficiary: %w", err)
+		}
+
+	}
+	// t.BeneficiaryTerm (miner.BeneficiaryTerm) (struct)
+
+	{
+
+		if err := t.BeneficiaryTerm.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.BeneficiaryTerm: %w", err)
+		}
+
+	}
+	// t.PendingBeneficiaryTerm (miner.PendingBeneficiaryChange) (struct)
+
+	{
+
+		b, err := br.ReadByte()
+		if err != nil {
+			return err
+		}
+		if b != cbg.CborNull[0] {
+			if err := br.UnreadByte(); err != nil {
+				return err
+			}
+			t.PendingBeneficiaryTerm = new(PendingBeneficiaryChange)
+			if err := t.PendingBeneficiaryTerm.UnmarshalCBOR(br); err != nil {
+				return xerrors.Errorf("unmarshaling t.PendingBeneficiaryTerm pointer: %w", err)
 			}
 		}
 

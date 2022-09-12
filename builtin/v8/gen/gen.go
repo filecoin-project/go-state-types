@@ -56,6 +56,8 @@ func main() {
 		// actor state
 		reward.State{},
 		// method params and returns
+		reward.ThisEpochRewardReturn{},
+		reward.AwardBlockRewardParams{},
 	); err != nil {
 		panic(err)
 	}
@@ -100,6 +102,12 @@ func main() {
 		power.State{},
 		power.Claim{},
 		// method params and returns
+		power.UpdateClaimedPowerParams{},
+		power.MinerConstructorParams{},
+		power.CreateMinerParams{},
+		power.CreateMinerReturn{},
+		power.CurrentTotalPowerReturn{},
+		power.EnrollCronEventParams{},
 	); err != nil {
 		panic(err)
 	}
