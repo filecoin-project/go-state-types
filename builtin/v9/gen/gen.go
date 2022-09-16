@@ -221,6 +221,11 @@ func main() {
 		panic(err)
 	}
 
+	if err := gen.WriteTupleEncodersToFile("./builtin/v9/datacap/cbor_gen.go", "datacap"); // TODO
+	err != nil {
+		panic(err)
+	}
+
 	if err := gen.WriteTupleEncodersToFile("./builtin/v9/util/smoothing/cbor_gen.go", "smoothing",
 		smoothing.FilterEstimate{},
 	); err != nil {
