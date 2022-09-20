@@ -5,7 +5,7 @@ import (
 	"github.com/filecoin-project/go-state-types/proof"
 )
 
-var Methods = []interface{}{
+var Methods = map[uint64]interface{}{
 	1: *new(func(interface{}, *abi.EmptyValue) *abi.EmptyValue),           // Constructor
 	2: *new(func(interface{}, *CreateMinerParams) *CreateMinerReturn),     // CreateMiner
 	3: *new(func(interface{}, *UpdateClaimedPowerParams) *abi.EmptyValue), // UpdateClaimedPower

@@ -5,7 +5,7 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 )
 
-var Methods = []interface{}{
+var Methods = map[uint64]interface{}{
 	1: *new(func(interface{}, *abi.EmptyValue) *abi.EmptyValue),                                 // Constructor
 	2: *new(func(interface{}, *address.Address) *abi.EmptyValue),                                // AddBalance
 	3: *new(func(interface{}, *WithdrawBalanceParams) *abi.TokenAmount),                         // WithdrawBalance
