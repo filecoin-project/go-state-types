@@ -214,10 +214,23 @@ func main() {
 		verifreg.RestoreBytesParams{},
 		verifreg.RemoveDataCapParams{},
 		verifreg.RemoveDataCapReturn{},
+		verifreg.RemoveExpiredAllocationsParams{},
+		verifreg.RemoveExpiredAllocationsReturn{},
+		verifreg.BatchReturn{},
+		verifreg.ClaimAllocationsParams{},
+		verifreg.ClaimAllocationsReturn{},
+		verifreg.GetClaimsParams{},
+		verifreg.GetClaimsReturn{},
+		verifreg.UniversalReceiverParams{},
+		verifreg.AllocationsResponse{},
 		// other types
 		verifreg.RemoveDataCapRequest{},
 		verifreg.RemoveDataCapProposal{},
 		verifreg.RmDcProposalID{},
+		verifreg.FailCode{},
+		verifreg.SectorAllocationClaim{},
+		verifreg.Claim{},
+		verifreg.Allocation{},
 	); err != nil {
 		panic(err)
 	}

@@ -6,7 +6,6 @@ import (
 
 	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/go-state-types/crypto"
 	"github.com/ipfs/go-cid"
 	"golang.org/x/xerrors"
 )
@@ -30,13 +29,20 @@ type State struct {
 	// Verifiers delegate their DataCap.
 	Verifiers cid.Cid // HAMT[addr.Address]DataCap
 
-	// VerifiedClients can add VerifiedClientData, up to DataCap.
-	VerifiedClients cid.Cid // HAMT[addr.Address]DataCap
-
 	// RemoveDataCapProposalIDs keeps the counters of the datacap removal proposal a verifier has submitted for a
 	//specific client. Unique proposal ids ensure that removal proposals cannot be replayed.√
 	// AddrPairKey is constructed as <verifier address, client address>, both using ID addresses.
 	RemoveDataCapProposalIDs cid.Cid // HAMT[AddrPairKey]RmDcProposalID
+
+	// Maps client IDs to allocations made by that client.
+	Allocations cid.Cid // HAMT[ActorID]HAMT[AllocationID]Allocation
+
+	// Next allocation identifier to use.
+	// The value 0 is reserved to mean "no allocation".
+	NextAllocationId uint64
+
+	// Maps provider IDs to allocations claimed by that provider.
+	Claims cid.Cid // HAMT[ActorID]HAMT[ClaimID]Claim
 }
 
 var MinVerifiedDealSize = abi.NewStoragePower(1 << 20)
@@ -51,27 +57,9 @@ func ConstructState(store adt.Store, rootKeyAddress addr.Address) (*State, error
 	return &State{
 		RootKey:                  rootKeyAddress,
 		Verifiers:                emptyMapCid,
-		VerifiedClients:          emptyMapCid,
 		RemoveDataCapProposalIDs: emptyMapCid,
+		Allocations:              emptyMapCid,
+		NextAllocationId:         1,
+		Claims:                   emptyMapCid,
 	}, nil
-}
-
-// A verifier who wants to send/agree to a RemoveDataCapRequest should sign a RemoveDataCapProposal and send the signed proposal to the root key holder.
-type RemoveDataCapProposal struct {
-	// VerifiedClient is the client address to remove the DataCap from
-	// The address must be an ID address
-	VerifiedClient addr.Address
-	// DataCapAmount is the amount of DataCap to be removed from the VerifiedClient address
-	DataCapAmount DataCap
-	// RemovalProposalID is the counter of the proposal sent by the Verifier for the VerifiedClient
-	RemovalProposalID RmDcProposalID
-}
-
-// A verifier who wants to submit a request should send their RemoveDataCapRequest to the RKH.
-type RemoveDataCapRequest struct {
-	// Verifier is the verifier address used for VerifierSignature.
-	// The address can be address.SECP256K1 or address.BLS
-	Verifier addr.Address
-	// VerifierSignature is the Verifier's signature over a RemoveDataCapProposal
-	VerifierSignature crypto.Signature
 }
