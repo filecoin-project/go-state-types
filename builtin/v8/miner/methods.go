@@ -7,7 +7,7 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v8/power"
 )
 
-var Methods = []interface{}{
+var Methods = map[uint64]interface{}{
 	1:  *new(func(interface{}, *power.MinerConstructorParams) *abi.EmptyValue),   // Constructor
 	2:  *new(func(interface{}, *abi.EmptyValue) *GetControlAddressesReturn),      // ControlAddresses
 	3:  *new(func(interface{}, *ChangeWorkerAddressParams) *abi.EmptyValue),      // ChangeWorkerAddress
