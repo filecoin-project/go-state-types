@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/filecoin-project/go-state-types/builtin/v9/account"
 	"github.com/filecoin-project/go-state-types/builtin/v9/cron"
+	"github.com/filecoin-project/go-state-types/builtin/v9/datacap"
 	init_ "github.com/filecoin-project/go-state-types/builtin/v9/init"
 	"github.com/filecoin-project/go-state-types/builtin/v9/market"
 	"github.com/filecoin-project/go-state-types/builtin/v9/migration"
@@ -221,8 +222,23 @@ func main() {
 		panic(err)
 	}
 
-	if err := gen.WriteTupleEncodersToFile("./builtin/v9/datacap/cbor_gen.go", "datacap"); // TODO
-	err != nil {
+	if err := gen.WriteTupleEncodersToFile("./builtin/v9/datacap/cbor_gen.go", "datacap",
+		datacap.MintParams{},
+		datacap.MintReturn{},
+		datacap.DestroyParams{},
+		datacap.TransferParams{},
+		datacap.TransferReturn{},
+		datacap.TransferFromParams{},
+		datacap.TransferFromReturn{},
+		datacap.IncreaseAllowanceParams{},
+		datacap.DecreaseAllowanceParams{},
+		datacap.RevokeAllowanceParams{},
+		datacap.GetAllowanceParams{},
+		datacap.BurnParams{},
+		datacap.BurnReturn{},
+		datacap.BurnFromParams{},
+		datacap.BurnFromReturn{},
+	); err != nil {
 		panic(err)
 	}
 
