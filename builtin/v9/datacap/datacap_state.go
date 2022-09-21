@@ -18,10 +18,10 @@ type TokenState struct {
 	Supply       abi.TokenAmount
 	Balances     cid.Cid // HAMT address.Address[abi.TokenAmount]
 	Allowances   cid.Cid // HAMT address.Address[address.Address[abi.TokenAmount]]
-	HamtBitWidth uint32
+	HamtBitWidth uint64  // uint32 in builtin-actors. uint64 here to satisfy cbor-gen
 }
 
-func ConstructState(store adt.Store, governor address.Address, bitWidth uint32) (*State, error) {
+func ConstructState(store adt.Store, governor address.Address, bitWidth uint64) (*State, error) {
 	emptyMapCid, err := adt.StoreEmptyMap(store, int(bitWidth))
 	if err != nil {
 		return nil, xerrors.Errorf("failed to create empty map: %w", err)

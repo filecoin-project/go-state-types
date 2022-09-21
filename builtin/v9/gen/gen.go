@@ -223,6 +223,11 @@ func main() {
 	}
 
 	if err := gen.WriteTupleEncodersToFile("./builtin/v9/datacap/cbor_gen.go", "datacap",
+		// actor state
+		datacap.State{},
+		datacap.TokenState{},
+
+		// method params and returns
 		datacap.MintParams{},
 		datacap.MintReturn{},
 		datacap.DestroyParams{},

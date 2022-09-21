@@ -13,6 +13,175 @@ import (
 
 var _ = xerrors.Errorf
 
+var lengthBufState = []byte{130}
+
+func (t *State) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufState); err != nil {
+		return err
+	}
+
+	// t.Governor (address.Address) (struct)
+	if err := t.Governor.MarshalCBOR(w); err != nil {
+		return err
+	}
+
+	// t.Token (datacap.TokenState) (struct)
+	if err := t.Token.MarshalCBOR(w); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *State) UnmarshalCBOR(r io.Reader) error {
+	*t = State{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Governor (address.Address) (struct)
+
+	{
+
+		if err := t.Governor.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.Governor: %w", err)
+		}
+
+	}
+	// t.Token (datacap.TokenState) (struct)
+
+	{
+
+		if err := t.Token.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.Token: %w", err)
+		}
+
+	}
+	return nil
+}
+
+var lengthBufTokenState = []byte{132}
+
+func (t *TokenState) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufTokenState); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.Supply (big.Int) (struct)
+	if err := t.Supply.MarshalCBOR(w); err != nil {
+		return err
+	}
+
+	// t.Balances (cid.Cid) (struct)
+
+	if err := cbg.WriteCidBuf(scratch, w, t.Balances); err != nil {
+		return xerrors.Errorf("failed to write cid field t.Balances: %w", err)
+	}
+
+	// t.Allowances (cid.Cid) (struct)
+
+	if err := cbg.WriteCidBuf(scratch, w, t.Allowances); err != nil {
+		return xerrors.Errorf("failed to write cid field t.Allowances: %w", err)
+	}
+
+	// t.HamtBitWidth (uint64) (uint64)
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.HamtBitWidth)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *TokenState) UnmarshalCBOR(r io.Reader) error {
+	*t = TokenState{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 4 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Supply (big.Int) (struct)
+
+	{
+
+		if err := t.Supply.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.Supply: %w", err)
+		}
+
+	}
+	// t.Balances (cid.Cid) (struct)
+
+	{
+
+		c, err := cbg.ReadCid(br)
+		if err != nil {
+			return xerrors.Errorf("failed to read cid field t.Balances: %w", err)
+		}
+
+		t.Balances = c
+
+	}
+	// t.Allowances (cid.Cid) (struct)
+
+	{
+
+		c, err := cbg.ReadCid(br)
+		if err != nil {
+			return xerrors.Errorf("failed to read cid field t.Allowances: %w", err)
+		}
+
+		t.Allowances = c
+
+	}
+	// t.HamtBitWidth (uint64) (uint64)
+
+	{
+
+		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.HamtBitWidth = uint64(extra)
+
+	}
+	return nil
+}
+
 var lengthBufMintParams = []byte{131}
 
 func (t *MintParams) MarshalCBOR(w io.Writer) error {
