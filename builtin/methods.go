@@ -118,3 +118,20 @@ var MethodsVerifiedRegistry = struct {
 	RestoreBytes                abi.MethodNum
 	RemoveVerifiedClientDataCap abi.MethodNum
 }{MethodConstructor, 2, 3, 4, 5, 6, 7}
+
+var MethodsDatacap = struct {
+	Constructor       abi.MethodNum
+	Mint              abi.MethodNum
+	Destroy           abi.MethodNum
+	Name              abi.MethodNum
+	Symbol            abi.MethodNum
+	TotalSupply       abi.MethodNum
+	BalanceOf         abi.MethodNum
+	Transfer          abi.MethodNum
+	TransferFrom      abi.MethodNum
+	IncreaseAllowance abi.MethodNum
+	DecreaseAllowance abi.MethodNum
+	RevokeAllowance   abi.MethodNum
+	Burn              abi.MethodNum
+	BurnFrom          abi.MethodNum
+}{MethodConstructor, 2, 3, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
