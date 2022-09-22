@@ -8,6 +8,7 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v9/power"
 	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 	"github.com/filecoin-project/go-state-types/builtin/v9/util/smoothing"
+	"github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
 	xc "github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/proof"
 	cid "github.com/ipfs/go-cid"
@@ -349,4 +350,21 @@ type ConfirmSectorProofsParams struct {
 	RewardSmoothed          smoothing.FilterEstimate
 	RewardBaselinePower     abi.StoragePower
 	QualityAdjPowerSmoothed smoothing.FilterEstimate
+}
+
+type ExtendSectorExpiration2Params struct {
+	Extensions []ExpirationExtension2
+}
+
+type ExpirationExtension2 struct {
+	Deadline          uint64
+	Partition         uint64
+	Sectors           bitfield.BitField
+	SectorsWithClaims []SectorClaim
+	NewExpiration     abi.ChainEpoch
+}
+
+type SectorClaim struct {
+	SectorNumber   abi.SectorNumber
+	MaintainClaims []verifreg.ClaimId
 }

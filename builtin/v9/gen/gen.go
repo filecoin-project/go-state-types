@@ -169,6 +169,7 @@ func main() {
 		miner.PreCommitSectorParams{},
 		miner.ProveCommitSectorParams{},
 		miner.ExtendSectorExpirationParams{},
+		miner.ExtendSectorExpiration2Params{},
 		miner.TerminateSectorsParams{},
 		miner.TerminateSectorsReturn{},
 		miner.DeclareFaultsParams{},
@@ -199,6 +200,8 @@ func main() {
 		miner.PoStPartition{},
 		miner.ReplicaUpdate{},
 		miner.ReplicaUpdate2{},
+		miner.ExpirationExtension2{},
+		miner.SectorClaim{},
 	); err != nil {
 		panic(err)
 	}

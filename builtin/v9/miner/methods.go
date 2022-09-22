@@ -39,4 +39,5 @@ var Methods = map[uint64]interface{}{
 	29: *new(func(interface{}, *ProveReplicaUpdatesParams2) *bitfield.BitField),  // ProveReplicaUpdates2
 	30: *new(func(interface{}, *ChangeBeneficiaryParams) *abi.EmptyValue),        // ChangeBeneficiary
 	31: *new(func(interface{}, *abi.EmptyValue) *GetBeneficiaryReturn),           // GetBeneficiary
+	32: *new(func(interface{}, *ExtendSectorExpiration2Params) *abi.EmptyValue),  // ExtendSectorExpiration2
 }

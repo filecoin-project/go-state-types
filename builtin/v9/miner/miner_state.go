@@ -173,6 +173,7 @@ type SectorOnChainInfo struct {
 	ReplacedSectorAge     abi.ChainEpoch  // Age of sector this sector replaced or zero
 	ReplacedDayReward     abi.TokenAmount // Day reward of sector this sector replace or zero
 	SectorKeyCID          *cid.Cid        // The original SealedSectorCID, only gets set on the first ReplicaUpdate
+	SimpleQaPower         bool            // Flag for QA power mechanism introduced in fip 0045
 }
 
 func (st *State) GetInfo(store adt.Store) (*MinerInfo, error) {
