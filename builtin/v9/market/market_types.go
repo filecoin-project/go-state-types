@@ -49,7 +49,7 @@ type ActivateDealsParams struct {
 }
 
 type ActivateDealsResult struct {
-	Weights DealWeights
+	Spaces DealSpaces
 }
 
 type SectorDataSpec struct {
@@ -57,10 +57,9 @@ type SectorDataSpec struct {
 	SectorType abi.RegisteredSealProof
 }
 
-type DealWeights struct {
-	DealSpace          uint64         // Total space in bytes of submitted deals.
-	DealWeight         abi.DealWeight // Total space*time of submitted deals.
-	VerifiedDealWeight abi.DealWeight // Total space*time of submitted verified deals.
+type DealSpaces struct {
+	DealSpace         abi.DealWeight // Total space of submitted deals.
+	VerifiedDealSpace abi.DealWeight // Total space of submitted verified deals.
 }
 
 type ComputeDataCommitmentParams struct {

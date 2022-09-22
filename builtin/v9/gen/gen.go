@@ -135,7 +135,7 @@ func main() {
 		market.ClientDealProposal{},
 		market.SectorDeals{},
 		market.SectorDealData{},
-		market.DealWeights{},
+		market.DealSpaces{},
 		market.SectorDataSpec{},
 	); err != nil {
 		panic(err)

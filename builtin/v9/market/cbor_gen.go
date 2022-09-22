@@ -13,7 +13,7 @@ import (
 
 var _ = xerrors.Errorf
 
-var lengthBufState = []byte{139}
+var lengthBufState = []byte{140}
 
 func (t *State) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -93,6 +93,13 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 	if err := t.TotalClientStorageFee.MarshalCBOR(w); err != nil {
 		return err
 	}
+
+	// t.PendingDealAllocationIds (cid.Cid) (struct)
+
+	if err := cbg.WriteCidBuf(scratch, w, t.PendingDealAllocationIds); err != nil {
+		return xerrors.Errorf("failed to write cid field t.PendingDealAllocationIds: %w", err)
+	}
+
 	return nil
 }
 
@@ -110,7 +117,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 11 {
+	if extra != 12 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
@@ -250,6 +257,18 @@ func (t *State) UnmarshalCBOR(r io.Reader) error {
 		if err := t.TotalClientStorageFee.UnmarshalCBOR(br); err != nil {
 			return xerrors.Errorf("unmarshaling t.TotalClientStorageFee: %w", err)
 		}
+
+	}
+	// t.PendingDealAllocationIds (cid.Cid) (struct)
+
+	{
+
+		c, err := cbg.ReadCid(br)
+		if err != nil {
+			return xerrors.Errorf("failed to read cid field t.PendingDealAllocationIds: %w", err)
+		}
+
+		t.PendingDealAllocationIds = c
 
 	}
 	return nil
@@ -767,8 +786,8 @@ func (t *ActivateDealsResult) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.Weights (market.DealWeights) (struct)
-	if err := t.Weights.MarshalCBOR(w); err != nil {
+	// t.Spaces (market.DealSpaces) (struct)
+	if err := t.Spaces.MarshalCBOR(w); err != nil {
 		return err
 	}
 	return nil
@@ -792,12 +811,12 @@ func (t *ActivateDealsResult) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	// t.Weights (market.DealWeights) (struct)
+	// t.Spaces (market.DealSpaces) (struct)
 
 	{
 
-		if err := t.Weights.UnmarshalCBOR(br); err != nil {
-			return xerrors.Errorf("unmarshaling t.Weights: %w", err)
+		if err := t.Spaces.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.Spaces: %w", err)
 		}
 
 	}
@@ -1779,39 +1798,31 @@ func (t *SectorDealData) UnmarshalCBOR(r io.Reader) error {
 	return nil
 }
 
-var lengthBufDealWeights = []byte{131}
+var lengthBufDealSpaces = []byte{130}
 
-func (t *DealWeights) MarshalCBOR(w io.Writer) error {
+func (t *DealSpaces) MarshalCBOR(w io.Writer) error {
 	if t == nil {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-	if _, err := w.Write(lengthBufDealWeights); err != nil {
+	if _, err := w.Write(lengthBufDealSpaces); err != nil {
 		return err
 	}
 
-	scratch := make([]byte, 9)
-
-	// t.DealSpace (uint64) (uint64)
-
-	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.DealSpace)); err != nil {
+	// t.DealSpace (big.Int) (struct)
+	if err := t.DealSpace.MarshalCBOR(w); err != nil {
 		return err
 	}
 
-	// t.DealWeight (big.Int) (struct)
-	if err := t.DealWeight.MarshalCBOR(w); err != nil {
-		return err
-	}
-
-	// t.VerifiedDealWeight (big.Int) (struct)
-	if err := t.VerifiedDealWeight.MarshalCBOR(w); err != nil {
+	// t.VerifiedDealSpace (big.Int) (struct)
+	if err := t.VerifiedDealSpace.MarshalCBOR(w); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (t *DealWeights) UnmarshalCBOR(r io.Reader) error {
-	*t = DealWeights{}
+func (t *DealSpaces) UnmarshalCBOR(r io.Reader) error {
+	*t = DealSpaces{}
 
 	br := cbg.GetPeeker(r)
 	scratch := make([]byte, 8)
@@ -1824,39 +1835,25 @@ func (t *DealWeights) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 3 {
+	if extra != 2 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	// t.DealSpace (uint64) (uint64)
+	// t.DealSpace (big.Int) (struct)
 
 	{
 
-		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
-		if err != nil {
-			return err
-		}
-		if maj != cbg.MajUnsignedInt {
-			return fmt.Errorf("wrong type for uint64 field")
-		}
-		t.DealSpace = uint64(extra)
-
-	}
-	// t.DealWeight (big.Int) (struct)
-
-	{
-
-		if err := t.DealWeight.UnmarshalCBOR(br); err != nil {
-			return xerrors.Errorf("unmarshaling t.DealWeight: %w", err)
+		if err := t.DealSpace.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.DealSpace: %w", err)
 		}
 
 	}
-	// t.VerifiedDealWeight (big.Int) (struct)
+	// t.VerifiedDealSpace (big.Int) (struct)
 
 	{
 
-		if err := t.VerifiedDealWeight.UnmarshalCBOR(br); err != nil {
-			return xerrors.Errorf("unmarshaling t.VerifiedDealWeight: %w", err)
+		if err := t.VerifiedDealSpace.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.VerifiedDealSpace: %w", err)
 		}
 
 	}
