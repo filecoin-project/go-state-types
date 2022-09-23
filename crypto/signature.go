@@ -28,7 +28,7 @@ func (t SigType) Name() (string, error) {
 	case SigTypeBLS:
 		return "bls", nil
 	case SigTypeDelegated:
-		return "ethsecp256k1", nil
+		return "delegated", nil
 	default:
 		return "", fmt.Errorf("invalid signature type: %d", t)
 	}
