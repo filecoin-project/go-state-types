@@ -16,7 +16,7 @@ const (
 
 	SigTypeSecp256k1 = SigType(iota)
 	SigTypeBLS
-	SigTypeEthSecp256k1
+	SigTypeDelegated
 )
 
 func (t SigType) Name() (string, error) {
@@ -27,7 +27,7 @@ func (t SigType) Name() (string, error) {
 		return "secp256k1", nil
 	case SigTypeBLS:
 		return "bls", nil
-	case SigTypeEthSecp256k1:
+	case SigTypeDelegated:
 		return "ethsecp256k1", nil
 	default:
 		return "", fmt.Errorf("invalid signature type: %d", t)
@@ -93,8 +93,8 @@ func (s *Signature) UnmarshalCBOR(br io.Reader) error {
 		s.Type = SigTypeSecp256k1
 	case SigTypeBLS:
 		s.Type = SigTypeBLS
-	case SigTypeEthSecp256k1:
-		s.Type = SigTypeEthSecp256k1
+	case SigTypeDelegated:
+		s.Type = SigTypeDelegated
 	}
 	s.Data = buf[1:]
 	return nil
@@ -124,8 +124,8 @@ func (s *Signature) UnmarshalBinary(bs []byte) error {
 		s.Type = SigTypeSecp256k1
 	case SigTypeBLS:
 		s.Type = SigTypeBLS
-	case SigTypeEthSecp256k1:
-		s.Type = SigTypeEthSecp256k1
+	case SigTypeDelegated:
+		s.Type = SigTypeDelegated
 	}
 	s.Data = bs[1:]
 	return nil
