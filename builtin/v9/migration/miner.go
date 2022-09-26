@@ -3,12 +3,11 @@ package migration
 import (
 	"context"
 
-	"github.com/filecoin-project/go-state-types/builtin/v8/market"
-
 	"golang.org/x/xerrors"
 
 	commp "github.com/filecoin-project/go-commp-utils/nonffi"
 	"github.com/filecoin-project/go-state-types/builtin"
+	"github.com/filecoin-project/go-state-types/builtin/v8/market"
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	"github.com/filecoin-project/go-state-types/builtin/v8/util/adt"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"

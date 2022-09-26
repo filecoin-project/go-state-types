@@ -7,6 +7,7 @@ import (
 	"io"
 
 	abi "github.com/filecoin-project/go-state-types/abi"
+	verifreg "github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	xerrors "golang.org/x/xerrors"
 )
@@ -274,7 +275,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) error {
 	return nil
 }
 
-var lengthBufDealState = []byte{131}
+var lengthBufDealState = []byte{132}
 
 func (t *DealState) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -319,6 +320,13 @@ func (t *DealState) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
+	// t.VerifiedClaim (verifreg.AllocationId) (uint64)
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.VerifiedClaim)); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -336,7 +344,7 @@ func (t *DealState) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 3 {
+	if extra != 4 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
@@ -414,6 +422,20 @@ func (t *DealState) UnmarshalCBOR(r io.Reader) error {
 		}
 
 		t.SlashEpoch = abi.ChainEpoch(extraI)
+	}
+	// t.VerifiedClaim (verifreg.AllocationId) (uint64)
+
+	{
+
+		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.VerifiedClaim = verifreg.AllocationId(extra)
+
 	}
 	return nil
 }
