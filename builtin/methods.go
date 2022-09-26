@@ -107,17 +107,22 @@ var MethodsMiner = struct {
 	ProveReplicaUpdates2     abi.MethodNum
 	ChangeBeneficiary        abi.MethodNum
 	GetBeneficiary           abi.MethodNum
-}{MethodConstructor, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
+	ExtendSectorExpiration2  abi.MethodNum
+}{MethodConstructor, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32}
 
 var MethodsVerifiedRegistry = struct {
 	Constructor                 abi.MethodNum
 	AddVerifier                 abi.MethodNum
 	RemoveVerifier              abi.MethodNum
 	AddVerifiedClient           abi.MethodNum
-	UseBytes                    abi.MethodNum
-	RestoreBytes                abi.MethodNum
+	Deprecated1                 abi.MethodNum
+	Deprecated2                 abi.MethodNum
 	RemoveVerifiedClientDataCap abi.MethodNum
-}{MethodConstructor, 2, 3, 4, 5, 6, 7}
+	RemoveExpiredAllocations    abi.MethodNum
+	ClaimAllocations            abi.MethodNum
+	GetClaims                   abi.MethodNum
+	UniversalReceiverHook       abi.MethodNum
+}{MethodConstructor, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}
 
 var MethodsDatacap = struct {
 	Constructor       abi.MethodNum
