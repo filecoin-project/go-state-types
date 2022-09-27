@@ -9,6 +9,8 @@ import (
 	"golang.org/x/xerrors"
 )
 
+var DatacapGranularity = big.Exp(big.NewInt(10), big.NewInt(18))
+
 type State struct {
 	Governor address.Address
 	Token    TokenState
