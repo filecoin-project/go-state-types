@@ -6,6 +6,9 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin"
 )
 
+// The number of epochs between payment and other state processing for deals.
+const DealUpdatesInterval = builtin.EpochsInDay // PARAM_SPEC
+
 // The percentage of normalized cirulating
 // supply that must be covered by provider collateral in a deal
 var ProviderCollateralSupplyTarget = builtin.BigFrac{
