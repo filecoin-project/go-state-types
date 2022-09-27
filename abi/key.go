@@ -21,9 +21,15 @@ func (k AddrKey) Key() string {
 	return string(address.Address(k).Bytes())
 }
 
+type IdAddrKey address.Address
+
+func (k IdAddrKey) Key() string {
+	return string(address.Address(k).Payload())
+}
+
 // Adapts an address tuple as a mapping key.
 type AddrPairKey struct {
-	First address.Address
+	First  address.Address
 	Second address.Address
 }
 
@@ -33,8 +39,8 @@ func (k *AddrPairKey) Key() string {
 	return buf.String()
 }
 
-func NewAddrPairKey(first address.Address, second address.Address) *AddrPairKey{
-	return  &AddrPairKey{
+func NewAddrPairKey(first address.Address, second address.Address) *AddrPairKey {
+	return &AddrPairKey{
 		First:  first,
 		Second: second,
 	}
