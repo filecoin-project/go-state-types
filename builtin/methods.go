@@ -121,8 +121,10 @@ var MethodsVerifiedRegistry = struct {
 	RemoveExpiredAllocations    abi.MethodNum
 	ClaimAllocations            abi.MethodNum
 	GetClaims                   abi.MethodNum
+	ExtendClaimTerms            abi.MethodNum
+	RemoveExpiredClaims         abi.MethodNum
 	UniversalReceiverHook       abi.MethodNum
-}{MethodConstructor, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}
+}{MethodConstructor, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 123 /* FIXME */}
 
 var MethodsDatacap = struct {
 	Constructor       abi.MethodNum

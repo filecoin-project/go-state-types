@@ -1404,6 +1404,384 @@ func (t *AllocationsResponse) UnmarshalCBOR(r io.Reader) error {
 	return nil
 }
 
+var lengthBufExtendClaimTermsParams = []byte{129}
+
+func (t *ExtendClaimTermsParams) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufExtendClaimTermsParams); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.Terms ([]verifreg.ClaimTerm) (slice)
+	if len(t.Terms) > cbg.MaxLength {
+		return xerrors.Errorf("Slice value in field t.Terms was too long")
+	}
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajArray, uint64(len(t.Terms))); err != nil {
+		return err
+	}
+	for _, v := range t.Terms {
+		if err := v.MarshalCBOR(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (t *ExtendClaimTermsParams) UnmarshalCBOR(r io.Reader) error {
+	*t = ExtendClaimTermsParams{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Terms ([]verifreg.ClaimTerm) (slice)
+
+	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("t.Terms: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.Terms = make([]ClaimTerm, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+
+		var v ClaimTerm
+		if err := v.UnmarshalCBOR(br); err != nil {
+			return err
+		}
+
+		t.Terms[i] = v
+	}
+
+	return nil
+}
+
+var lengthBufExtendClaimTermsReturn = []byte{130}
+
+func (t *ExtendClaimTermsReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufExtendClaimTermsReturn); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.SuccessCount (uint64) (uint64)
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.SuccessCount)); err != nil {
+		return err
+	}
+
+	// t.FailCodes ([]verifreg.FailCode) (slice)
+	if len(t.FailCodes) > cbg.MaxLength {
+		return xerrors.Errorf("Slice value in field t.FailCodes was too long")
+	}
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajArray, uint64(len(t.FailCodes))); err != nil {
+		return err
+	}
+	for _, v := range t.FailCodes {
+		if err := v.MarshalCBOR(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (t *ExtendClaimTermsReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = ExtendClaimTermsReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.SuccessCount (uint64) (uint64)
+
+	{
+
+		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.SuccessCount = uint64(extra)
+
+	}
+	// t.FailCodes ([]verifreg.FailCode) (slice)
+
+	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("t.FailCodes: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.FailCodes = make([]FailCode, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+
+		var v FailCode
+		if err := v.UnmarshalCBOR(br); err != nil {
+			return err
+		}
+
+		t.FailCodes[i] = v
+	}
+
+	return nil
+}
+
+var lengthBufRemoveExpiredClaimsParams = []byte{130}
+
+func (t *RemoveExpiredClaimsParams) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufRemoveExpiredClaimsParams); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.Provider (abi.ActorID) (uint64)
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.Provider)); err != nil {
+		return err
+	}
+
+	// t.ClaimIds ([]verifreg.ClaimId) (slice)
+	if len(t.ClaimIds) > cbg.MaxLength {
+		return xerrors.Errorf("Slice value in field t.ClaimIds was too long")
+	}
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajArray, uint64(len(t.ClaimIds))); err != nil {
+		return err
+	}
+	for _, v := range t.ClaimIds {
+		if err := cbg.CborWriteHeader(w, cbg.MajUnsignedInt, uint64(v)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (t *RemoveExpiredClaimsParams) UnmarshalCBOR(r io.Reader) error {
+	*t = RemoveExpiredClaimsParams{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Provider (abi.ActorID) (uint64)
+
+	{
+
+		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.Provider = abi.ActorID(extra)
+
+	}
+	// t.ClaimIds ([]verifreg.ClaimId) (slice)
+
+	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("t.ClaimIds: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.ClaimIds = make([]ClaimId, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+
+		maj, val, err := cbg.CborReadHeaderBuf(br, scratch)
+		if err != nil {
+			return xerrors.Errorf("failed to read uint64 for t.ClaimIds slice: %w", err)
+		}
+
+		if maj != cbg.MajUnsignedInt {
+			return xerrors.Errorf("value read for array t.ClaimIds was not a uint, instead got %d", maj)
+		}
+
+		t.ClaimIds[i] = ClaimId(val)
+	}
+
+	return nil
+}
+
+var lengthBufRemoveExpiredClaimsReturn = []byte{130}
+
+func (t *RemoveExpiredClaimsReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufRemoveExpiredClaimsReturn); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.Considered ([]verifreg.AllocationId) (slice)
+	if len(t.Considered) > cbg.MaxLength {
+		return xerrors.Errorf("Slice value in field t.Considered was too long")
+	}
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajArray, uint64(len(t.Considered))); err != nil {
+		return err
+	}
+	for _, v := range t.Considered {
+		if err := cbg.CborWriteHeader(w, cbg.MajUnsignedInt, uint64(v)); err != nil {
+			return err
+		}
+	}
+
+	// t.Results (verifreg.BatchReturn) (struct)
+	if err := t.Results.MarshalCBOR(w); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *RemoveExpiredClaimsReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = RemoveExpiredClaimsReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Considered ([]verifreg.AllocationId) (slice)
+
+	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("t.Considered: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.Considered = make([]AllocationId, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+
+		maj, val, err := cbg.CborReadHeaderBuf(br, scratch)
+		if err != nil {
+			return xerrors.Errorf("failed to read uint64 for t.Considered slice: %w", err)
+		}
+
+		if maj != cbg.MajUnsignedInt {
+			return xerrors.Errorf("value read for array t.Considered was not a uint, instead got %d", maj)
+		}
+
+		t.Considered[i] = AllocationId(val)
+	}
+
+	// t.Results (verifreg.BatchReturn) (struct)
+
+	{
+
+		if err := t.Results.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.Results: %w", err)
+		}
+
+	}
+	return nil
+}
+
 var lengthBufRemoveDataCapRequest = []byte{130}
 
 func (t *RemoveDataCapRequest) MarshalCBOR(w io.Writer) error {
@@ -2085,6 +2463,118 @@ func (t *Claim) UnmarshalCBOR(r io.Reader) error {
 		}
 		t.Sector = abi.SectorNumber(extra)
 
+	}
+	return nil
+}
+
+var lengthBufClaimTerm = []byte{131}
+
+func (t *ClaimTerm) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufClaimTerm); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.Provider (abi.ActorID) (uint64)
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.Provider)); err != nil {
+		return err
+	}
+
+	// t.ClaimId (verifreg.ClaimId) (uint64)
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.ClaimId)); err != nil {
+		return err
+	}
+
+	// t.TermMax (abi.ChainEpoch) (int64)
+	if t.TermMax >= 0 {
+		if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.TermMax)); err != nil {
+			return err
+		}
+	} else {
+		if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajNegativeInt, uint64(-t.TermMax-1)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (t *ClaimTerm) UnmarshalCBOR(r io.Reader) error {
+	*t = ClaimTerm{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 3 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Provider (abi.ActorID) (uint64)
+
+	{
+
+		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.Provider = abi.ActorID(extra)
+
+	}
+	// t.ClaimId (verifreg.ClaimId) (uint64)
+
+	{
+
+		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.ClaimId = ClaimId(extra)
+
+	}
+	// t.TermMax (abi.ChainEpoch) (int64)
+	{
+		maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+		var extraI int64
+		if err != nil {
+			return err
+		}
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
+			}
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative oveflow")
+			}
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
+		}
+
+		t.TermMax = abi.ChainEpoch(extraI)
 	}
 	return nil
 }

@@ -156,3 +156,25 @@ type ReceiverType uint64
 type AllocationsResponse struct {
 	Allocations []AllocationId
 }
+
+type ExtendClaimTermsParams struct {
+	Terms []ClaimTerm
+}
+
+type ClaimTerm struct {
+	Provider abi.ActorID
+	ClaimId  ClaimId
+	TermMax  abi.ChainEpoch
+}
+
+type ExtendClaimTermsReturn BatchReturn
+
+type RemoveExpiredClaimsParams struct {
+	Provider abi.ActorID
+	ClaimIds []ClaimId
+}
+
+type RemoveExpiredClaimsReturn struct {
+	Considered []AllocationId
+	Results    BatchReturn
+}

@@ -5,7 +5,7 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 )
 
-const UniversalReceiverHookMethodNum = 302636343
+const UniversalReceiverHookMethodNum = 123 /* FIXME */
 
 var Methods = map[uint64]interface{}{
 	1:                              *new(func(interface{}, *address.Address) *abi.EmptyValue),         // Constructor
@@ -18,5 +18,7 @@ var Methods = map[uint64]interface{}{
 	8:                              *new(func(interface{}, *RemoveExpiredAllocationsParams) *RemoveExpiredAllocationsReturn), // RemoveExpiredAllocations
 	9:                              *new(func(interface{}, *ClaimAllocationsParams) *ClaimAllocationsReturn),                 // ClaimAllocations
 	10:                             *new(func(interface{}, *GetClaimsParams) *GetClaimsReturn),                               // GetClaims
+	11:                             *new(func(interface{}, *ExtendClaimTermsParams) *ExtendClaimTermsReturn),                 // ExtendClaimTerms
+	12:                             *new(func(interface{}, *RemoveExpiredClaimsParams) *RemoveExpiredClaimsReturn),           // RemoveExpiredClaims
 	UniversalReceiverHookMethodNum: *new(func(interface{}, *UniversalReceiverParams) *AllocationsResponse),                   // UniversalReceiverHook
 }

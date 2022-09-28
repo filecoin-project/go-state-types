@@ -226,6 +226,10 @@ func main() {
 		verifreg.GetClaimsReturn{},
 		verifreg.UniversalReceiverParams{},
 		verifreg.AllocationsResponse{},
+		verifreg.ExtendClaimTermsParams{},
+		verifreg.ExtendClaimTermsReturn{},
+		verifreg.RemoveExpiredClaimsParams{},
+		verifreg.RemoveExpiredClaimsReturn{},
 		// other types
 		verifreg.RemoveDataCapRequest{},
 		verifreg.RemoveDataCapProposal{},
@@ -233,6 +237,7 @@ func main() {
 		verifreg.FailCode{},
 		verifreg.SectorAllocationClaim{},
 		verifreg.Claim{},
+		verifreg.ClaimTerm{},
 		verifreg.Allocation{},
 	); err != nil {
 		panic(err)
