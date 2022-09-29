@@ -2,6 +2,7 @@ package multisig
 
 import (
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/builtin"
 )
 
 var Methods = map[uint64]interface{}{
@@ -14,4 +15,5 @@ var Methods = map[uint64]interface{}{
 	7: *new(func(interface{}, *SwapSignerParams) *abi.EmptyValue),                  // SwapSigner
 	8: *new(func(interface{}, *ChangeNumApprovalsThresholdParams) *abi.EmptyValue), // ChangeNumApprovalsThreshold
 	9: *new(func(interface{}, *LockBalanceParams) *abi.EmptyValue),                 // LockBalance
+	uint64(builtin.UniversalReceiverHookMethodNum): *new(func(interface{}, *[]byte) *abi.EmptyValue), // UniversalReceiverHook
 }

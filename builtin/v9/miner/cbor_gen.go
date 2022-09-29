@@ -1909,8 +1909,8 @@ func (t *SectorOnChainInfo) MarshalCBOR(w io.Writer) error {
 		}
 	}
 
-	// t.SimpleQaPower (bool) (bool)
-	if err := cbg.WriteBool(w, t.SimpleQaPower); err != nil {
+	// t.SimpleQAPower (bool) (bool)
+	if err := cbg.WriteBool(w, t.SimpleQAPower); err != nil {
 		return err
 	}
 	return nil
@@ -2169,7 +2169,7 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) error {
 		}
 
 	}
-	// t.SimpleQaPower (bool) (bool)
+	// t.SimpleQAPower (bool) (bool)
 
 	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
@@ -2180,9 +2180,9 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) error {
 	}
 	switch extra {
 	case 20:
-		t.SimpleQaPower = false
+		t.SimpleQAPower = false
 	case 21:
-		t.SimpleQaPower = true
+		t.SimpleQAPower = true
 	default:
 		return fmt.Errorf("booleans are either major type 7, value 20 or 21 (got %d)", extra)
 	}
@@ -6761,7 +6761,7 @@ func (t *ExpirationExtension2) UnmarshalCBOR(r io.Reader) error {
 	return nil
 }
 
-var lengthBufSectorClaim = []byte{130}
+var lengthBufSectorClaim = []byte{131}
 
 func (t *SectorClaim) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -6793,6 +6793,20 @@ func (t *SectorClaim) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
+	// t.DropClaims ([]verifreg.ClaimId) (slice)
+	if len(t.DropClaims) > cbg.MaxLength {
+		return xerrors.Errorf("Slice value in field t.DropClaims was too long")
+	}
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajArray, uint64(len(t.DropClaims))); err != nil {
+		return err
+	}
+	for _, v := range t.DropClaims {
+		if err := cbg.CborWriteHeader(w, cbg.MajUnsignedInt, uint64(v)); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -6810,7 +6824,7 @@ func (t *SectorClaim) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 2 {
+	if extra != 3 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
@@ -6859,6 +6873,39 @@ func (t *SectorClaim) UnmarshalCBOR(r io.Reader) error {
 		}
 
 		t.MaintainClaims[i] = verifreg.ClaimId(val)
+	}
+
+	// t.DropClaims ([]verifreg.ClaimId) (slice)
+
+	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("t.DropClaims: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.DropClaims = make([]verifreg.ClaimId, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+
+		maj, val, err := cbg.CborReadHeaderBuf(br, scratch)
+		if err != nil {
+			return xerrors.Errorf("failed to read uint64 for t.DropClaims slice: %w", err)
+		}
+
+		if maj != cbg.MajUnsignedInt {
+			return xerrors.Errorf("value read for array t.DropClaims was not a uint, instead got %d", maj)
+		}
+
+		t.DropClaims[i] = verifreg.ClaimId(val)
 	}
 
 	return nil

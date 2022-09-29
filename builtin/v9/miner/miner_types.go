@@ -367,4 +367,5 @@ type ExpirationExtension2 struct {
 type SectorClaim struct {
 	SectorNumber   abi.SectorNumber
 	MaintainClaims []verifreg.ClaimId
+	DropClaims     []verifreg.ClaimId
 }

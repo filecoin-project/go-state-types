@@ -659,7 +659,7 @@ func (t *RemoveExpiredAllocationsParams) UnmarshalCBOR(r io.Reader) error {
 	return nil
 }
 
-var lengthBufRemoveExpiredAllocationsReturn = []byte{130}
+var lengthBufRemoveExpiredAllocationsReturn = []byte{131}
 
 func (t *RemoveExpiredAllocationsReturn) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -672,24 +672,28 @@ func (t *RemoveExpiredAllocationsReturn) MarshalCBOR(w io.Writer) error {
 
 	scratch := make([]byte, 9)
 
-	// t.SuccessCount (uint64) (uint64)
+	// t.Considered ([]verifreg.AllocationId) (slice)
+	if len(t.Considered) > cbg.MaxLength {
+		return xerrors.Errorf("Slice value in field t.Considered was too long")
+	}
 
-	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.SuccessCount)); err != nil {
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajArray, uint64(len(t.Considered))); err != nil {
 		return err
 	}
-
-	// t.FailCodes ([]verifreg.FailCode) (slice)
-	if len(t.FailCodes) > cbg.MaxLength {
-		return xerrors.Errorf("Slice value in field t.FailCodes was too long")
-	}
-
-	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajArray, uint64(len(t.FailCodes))); err != nil {
-		return err
-	}
-	for _, v := range t.FailCodes {
-		if err := v.MarshalCBOR(w); err != nil {
+	for _, v := range t.Considered {
+		if err := cbg.CborWriteHeader(w, cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
 		}
+	}
+
+	// t.Results (verifreg.BatchReturn) (struct)
+	if err := t.Results.MarshalCBOR(w); err != nil {
+		return err
+	}
+
+	// t.DataCapRecovered (big.Int) (struct)
+	if err := t.DataCapRecovered.MarshalCBOR(w); err != nil {
+		return err
 	}
 	return nil
 }
@@ -708,25 +712,11 @@ func (t *RemoveExpiredAllocationsReturn) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 2 {
+	if extra != 3 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	// t.SuccessCount (uint64) (uint64)
-
-	{
-
-		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
-		if err != nil {
-			return err
-		}
-		if maj != cbg.MajUnsignedInt {
-			return fmt.Errorf("wrong type for uint64 field")
-		}
-		t.SuccessCount = uint64(extra)
-
-	}
-	// t.FailCodes ([]verifreg.FailCode) (slice)
+	// t.Considered ([]verifreg.AllocationId) (slice)
 
 	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
@@ -734,7 +724,7 @@ func (t *RemoveExpiredAllocationsReturn) UnmarshalCBOR(r io.Reader) error {
 	}
 
 	if extra > cbg.MaxLength {
-		return fmt.Errorf("t.FailCodes: array too large (%d)", extra)
+		return fmt.Errorf("t.Considered: array too large (%d)", extra)
 	}
 
 	if maj != cbg.MajArray {
@@ -742,19 +732,41 @@ func (t *RemoveExpiredAllocationsReturn) UnmarshalCBOR(r io.Reader) error {
 	}
 
 	if extra > 0 {
-		t.FailCodes = make([]FailCode, extra)
+		t.Considered = make([]AllocationId, extra)
 	}
 
 	for i := 0; i < int(extra); i++ {
 
-		var v FailCode
-		if err := v.UnmarshalCBOR(br); err != nil {
-			return err
+		maj, val, err := cbg.CborReadHeaderBuf(br, scratch)
+		if err != nil {
+			return xerrors.Errorf("failed to read uint64 for t.Considered slice: %w", err)
 		}
 
-		t.FailCodes[i] = v
+		if maj != cbg.MajUnsignedInt {
+			return xerrors.Errorf("value read for array t.Considered was not a uint, instead got %d", maj)
+		}
+
+		t.Considered[i] = AllocationId(val)
 	}
 
+	// t.Results (verifreg.BatchReturn) (struct)
+
+	{
+
+		if err := t.Results.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.Results: %w", err)
+		}
+
+	}
+	// t.DataCapRecovered (big.Int) (struct)
+
+	{
+
+		if err := t.DataCapRecovered.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.DataCapRecovered: %w", err)
+		}
+
+	}
 	return nil
 }
 

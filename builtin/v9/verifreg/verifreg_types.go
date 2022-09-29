@@ -66,7 +66,11 @@ type RemoveExpiredAllocationsParams struct {
 	AllocationIds []AllocationId
 }
 
-type RemoveExpiredAllocationsReturn BatchReturn
+type RemoveExpiredAllocationsReturn struct {
+	Considered       []AllocationId
+	Results          BatchReturn
+	DataCapRecovered DataCap
+}
 
 type BatchReturn struct {
 	SuccessCount uint64

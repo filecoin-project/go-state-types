@@ -5,15 +5,17 @@ import (
 )
 
 const (
-	MethodSend        = abi.MethodNum(0)
-	MethodConstructor = abi.MethodNum(1)
+	MethodSend                     = abi.MethodNum(0)
+	MethodConstructor              = abi.MethodNum(1)
+	UniversalReceiverHookMethodNum = abi.MethodNum(3726118371)
 )
 
 var MethodsAccount = struct {
-	Constructor         abi.MethodNum
-	PubkeyAddress       abi.MethodNum
-	AuthenticateMessage abi.MethodNum
-}{MethodConstructor, 2, 3}
+	Constructor           abi.MethodNum
+	PubkeyAddress         abi.MethodNum
+	AuthenticateMessage   abi.MethodNum
+	UniversalReceiverHook abi.MethodNum
+}{MethodConstructor, 2, 3, UniversalReceiverHookMethodNum}
 
 var MethodsInit = struct {
 	Constructor abi.MethodNum
@@ -42,7 +44,8 @@ var MethodsMultisig = struct {
 	SwapSigner                  abi.MethodNum
 	ChangeNumApprovalsThreshold abi.MethodNum
 	LockBalance                 abi.MethodNum
-}{MethodConstructor, 2, 3, 4, 5, 6, 7, 8, 9}
+	UniversalReceiverHook       abi.MethodNum
+}{MethodConstructor, 2, 3, 4, 5, 6, 7, 8, 9, UniversalReceiverHookMethodNum}
 
 var MethodsPaych = struct {
 	Constructor        abi.MethodNum
