@@ -189,36 +189,36 @@ func (t *ConstructorParams) UnmarshalCBOR(r io.Reader) error {
 	return nil
 }
 
-var lengthBufInvokeParams = []byte{129}
+var lengthBufGetStorageAtParams = []byte{129}
 
-func (t *InvokeParams) MarshalCBOR(w io.Writer) error {
+func (t *GetStorageAtParams) MarshalCBOR(w io.Writer) error {
 	if t == nil {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-	if _, err := w.Write(lengthBufInvokeParams); err != nil {
+	if _, err := w.Write(lengthBufGetStorageAtParams); err != nil {
 		return err
 	}
 
 	scratch := make([]byte, 9)
 
-	// t.InputData ([]uint8) (slice)
-	if len(t.InputData) > cbg.ByteArrayMaxLen {
-		return xerrors.Errorf("Byte array in field t.InputData was too long")
+	// t.StorageKey ([]uint8) (slice)
+	if len(t.StorageKey) > cbg.ByteArrayMaxLen {
+		return xerrors.Errorf("Byte array in field t.StorageKey was too long")
 	}
 
-	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajByteString, uint64(len(t.InputData))); err != nil {
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajByteString, uint64(len(t.StorageKey))); err != nil {
 		return err
 	}
 
-	if _, err := w.Write(t.InputData[:]); err != nil {
+	if _, err := w.Write(t.StorageKey[:]); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (t *InvokeParams) UnmarshalCBOR(r io.Reader) error {
-	*t = InvokeParams{}
+func (t *GetStorageAtParams) UnmarshalCBOR(r io.Reader) error {
+	*t = GetStorageAtParams{}
 
 	br := cbg.GetPeeker(r)
 	scratch := make([]byte, 8)
@@ -235,7 +235,7 @@ func (t *InvokeParams) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	// t.InputData ([]uint8) (slice)
+	// t.StorageKey ([]uint8) (slice)
 
 	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
@@ -243,17 +243,17 @@ func (t *InvokeParams) UnmarshalCBOR(r io.Reader) error {
 	}
 
 	if extra > cbg.ByteArrayMaxLen {
-		return fmt.Errorf("t.InputData: byte array too large (%d)", extra)
+		return fmt.Errorf("t.StorageKey: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {
 		return fmt.Errorf("expected byte array")
 	}
 
 	if extra > 0 {
-		t.InputData = make([]uint8, extra)
+		t.StorageKey = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(br, t.InputData[:]); err != nil {
+	if _, err := io.ReadFull(br, t.StorageKey[:]); err != nil {
 		return err
 	}
 	return nil

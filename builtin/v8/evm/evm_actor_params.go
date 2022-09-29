@@ -5,6 +5,6 @@ type ConstructorParams struct {
 	InputData []byte
 }
 
-type InvokeParams struct {
-	InputData []byte
+type GetStorageAtParams struct {
+	StorageKey []byte
 }

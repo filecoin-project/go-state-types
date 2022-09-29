@@ -204,7 +204,7 @@ func main() {
 		evm.State{},
 		// method params and returns
 		evm.ConstructorParams{},
-		evm.InvokeParams{},
+		evm.GetStorageAtParams{},
 	); err != nil {
 		panic(err)
 	}
