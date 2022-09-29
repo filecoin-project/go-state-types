@@ -135,8 +135,9 @@ func main() {
 		market.ClientDealProposal{},
 		market.SectorDeals{},
 		market.SectorDealData{},
-		market.DealWeights{},
+		market.DealSpaces{},
 		market.SectorDataSpec{},
+		market.VerifiedDealInfo{},
 	); err != nil {
 		panic(err)
 	}
@@ -169,6 +170,7 @@ func main() {
 		miner.PreCommitSectorParams{},
 		miner.ProveCommitSectorParams{},
 		miner.ExtendSectorExpirationParams{},
+		miner.ExtendSectorExpiration2Params{},
 		miner.TerminateSectorsParams{},
 		miner.TerminateSectorsReturn{},
 		miner.DeclareFaultsParams{},
@@ -199,6 +201,8 @@ func main() {
 		miner.PoStPartition{},
 		miner.ReplicaUpdate{},
 		miner.ReplicaUpdate2{},
+		miner.ExpirationExtension2{},
+		miner.SectorClaim{},
 	); err != nil {
 		panic(err)
 	}
@@ -214,10 +218,28 @@ func main() {
 		verifreg.RestoreBytesParams{},
 		verifreg.RemoveDataCapParams{},
 		verifreg.RemoveDataCapReturn{},
+		verifreg.RemoveExpiredAllocationsParams{},
+		verifreg.RemoveExpiredAllocationsReturn{},
+		verifreg.BatchReturn{},
+		verifreg.ClaimAllocationsParams{},
+		verifreg.ClaimAllocationsReturn{},
+		verifreg.GetClaimsParams{},
+		verifreg.GetClaimsReturn{},
+		verifreg.UniversalReceiverParams{},
+		verifreg.AllocationsResponse{},
+		verifreg.ExtendClaimTermsParams{},
+		verifreg.ExtendClaimTermsReturn{},
+		verifreg.RemoveExpiredClaimsParams{},
+		verifreg.RemoveExpiredClaimsReturn{},
 		// other types
 		verifreg.RemoveDataCapRequest{},
 		verifreg.RemoveDataCapProposal{},
 		verifreg.RmDcProposalID{},
+		verifreg.FailCode{},
+		verifreg.SectorAllocationClaim{},
+		verifreg.Claim{},
+		verifreg.ClaimTerm{},
+		verifreg.Allocation{},
 	); err != nil {
 		panic(err)
 	}

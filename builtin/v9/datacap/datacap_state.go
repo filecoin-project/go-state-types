@@ -4,10 +4,13 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
+	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 	"github.com/ipfs/go-cid"
 	"golang.org/x/xerrors"
 )
+
+var DatacapGranularity = builtin.TokenPrecision
 
 type State struct {
 	Governor address.Address

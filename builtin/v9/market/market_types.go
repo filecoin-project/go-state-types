@@ -4,6 +4,8 @@ import (
 	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/big"
+	"github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
 	"github.com/ipfs/go-cid"
 	cbg "github.com/whyrusleeping/cbor-gen"
 )
@@ -49,7 +51,15 @@ type ActivateDealsParams struct {
 }
 
 type ActivateDealsResult struct {
-	Weights DealWeights
+	NonVerifiedDealSpace big.Int
+	VerifiedInfos        []VerifiedDealInfo
+}
+
+type VerifiedDealInfo struct {
+	Client       abi.ActorID
+	AllocationId verifreg.AllocationId
+	Data         cid.Cid
+	Size         abi.PaddedPieceSize
 }
 
 type SectorDataSpec struct {
@@ -57,10 +67,9 @@ type SectorDataSpec struct {
 	SectorType abi.RegisteredSealProof
 }
 
-type DealWeights struct {
-	DealSpace          uint64         // Total space in bytes of submitted deals.
-	DealWeight         abi.DealWeight // Total space*time of submitted deals.
-	VerifiedDealWeight abi.DealWeight // Total space*time of submitted verified deals.
+type DealSpaces struct {
+	DealSpace         abi.DealWeight // Total space of submitted deals.
+	VerifiedDealSpace abi.DealWeight // Total space of submitted verified deals.
 }
 
 type ComputeDataCommitmentParams struct {

@@ -5,15 +5,17 @@ import (
 )
 
 const (
-	MethodSend        = abi.MethodNum(0)
-	MethodConstructor = abi.MethodNum(1)
+	MethodSend                     = abi.MethodNum(0)
+	MethodConstructor              = abi.MethodNum(1)
+	UniversalReceiverHookMethodNum = abi.MethodNum(3726118371)
 )
 
 var MethodsAccount = struct {
-	Constructor         abi.MethodNum
-	PubkeyAddress       abi.MethodNum
-	AuthenticateMessage abi.MethodNum
-}{MethodConstructor, 2, 3}
+	Constructor           abi.MethodNum
+	PubkeyAddress         abi.MethodNum
+	AuthenticateMessage   abi.MethodNum
+	UniversalReceiverHook abi.MethodNum
+}{MethodConstructor, 2, 3, UniversalReceiverHookMethodNum}
 
 var MethodsInit = struct {
 	Constructor abi.MethodNum
@@ -42,7 +44,8 @@ var MethodsMultisig = struct {
 	SwapSigner                  abi.MethodNum
 	ChangeNumApprovalsThreshold abi.MethodNum
 	LockBalance                 abi.MethodNum
-}{MethodConstructor, 2, 3, 4, 5, 6, 7, 8, 9}
+	UniversalReceiverHook       abi.MethodNum
+}{MethodConstructor, 2, 3, 4, 5, 6, 7, 8, 9, UniversalReceiverHookMethodNum}
 
 var MethodsPaych = struct {
 	Constructor        abi.MethodNum
@@ -107,17 +110,24 @@ var MethodsMiner = struct {
 	ProveReplicaUpdates2     abi.MethodNum
 	ChangeBeneficiary        abi.MethodNum
 	GetBeneficiary           abi.MethodNum
-}{MethodConstructor, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
+	ExtendSectorExpiration2  abi.MethodNum
+}{MethodConstructor, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32}
 
 var MethodsVerifiedRegistry = struct {
 	Constructor                 abi.MethodNum
 	AddVerifier                 abi.MethodNum
 	RemoveVerifier              abi.MethodNum
 	AddVerifiedClient           abi.MethodNum
-	UseBytes                    abi.MethodNum
-	RestoreBytes                abi.MethodNum
+	Deprecated1                 abi.MethodNum
+	Deprecated2                 abi.MethodNum
 	RemoveVerifiedClientDataCap abi.MethodNum
-}{MethodConstructor, 2, 3, 4, 5, 6, 7}
+	RemoveExpiredAllocations    abi.MethodNum
+	ClaimAllocations            abi.MethodNum
+	GetClaims                   abi.MethodNum
+	ExtendClaimTerms            abi.MethodNum
+	RemoveExpiredClaims         abi.MethodNum
+	UniversalReceiverHook       abi.MethodNum
+}{MethodConstructor, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, UniversalReceiverHookMethodNum}
 
 var MethodsDatacap = struct {
 	Constructor       abi.MethodNum

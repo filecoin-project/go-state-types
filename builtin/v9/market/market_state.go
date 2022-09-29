@@ -50,6 +50,9 @@ type State struct {
 	TotalProviderLockedCollateral abi.TokenAmount
 	// Total storage fee that is locked in escrow -> unlocked when payments are made
 	TotalClientStorageFee abi.TokenAmount
+
+	// Verified registry allocation IDs for deals that are not yet activated.
+	PendingDealAllocationIds cid.Cid
 }
 
 func ConstructState(store adt.Store) (*State, error) {
@@ -74,16 +77,21 @@ func ConstructState(store adt.Store) (*State, error) {
 	if err != nil {
 		return nil, xerrors.Errorf("failed to create empty balance table: %w", err)
 	}
+	emptyPendingDealAllocationMapCid, err := adt.StoreEmptyMap(store, builtin.DefaultHamtBitwidth)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to create empty map: %w", err)
+	}
 
 	return &State{
-		Proposals:        emptyProposalsArrayCid,
-		States:           emptyStatesArrayCid,
-		PendingProposals: emptyPendingProposalsMapCid,
-		EscrowTable:      emptyBalanceTableCid,
-		LockedTable:      emptyBalanceTableCid,
-		NextID:           abi.DealID(0),
-		DealOpsByEpoch:   emptyDealOpsHamtCid,
-		LastCron:         abi.ChainEpoch(-1),
+		Proposals:                emptyProposalsArrayCid,
+		States:                   emptyStatesArrayCid,
+		PendingProposals:         emptyPendingProposalsMapCid,
+		EscrowTable:              emptyBalanceTableCid,
+		LockedTable:              emptyBalanceTableCid,
+		NextID:                   abi.DealID(0),
+		DealOpsByEpoch:           emptyDealOpsHamtCid,
+		LastCron:                 abi.ChainEpoch(-1),
+		PendingDealAllocationIds: emptyPendingDealAllocationMapCid,
 
 		TotalClientLockedCollateral:   abi.NewTokenAmount(0),
 		TotalProviderLockedCollateral: abi.NewTokenAmount(0),
