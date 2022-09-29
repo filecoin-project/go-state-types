@@ -137,6 +137,7 @@ func main() {
 		market.SectorDealData{},
 		market.DealSpaces{},
 		market.SectorDataSpec{},
+		market.VerifiedDealInfo{},
 	); err != nil {
 		panic(err)
 	}

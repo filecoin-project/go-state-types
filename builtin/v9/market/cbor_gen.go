@@ -797,7 +797,7 @@ func (t *ActivateDealsParams) UnmarshalCBOR(r io.Reader) error {
 	return nil
 }
 
-var lengthBufActivateDealsResult = []byte{129}
+var lengthBufActivateDealsResult = []byte{130}
 
 func (t *ActivateDealsResult) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -808,9 +808,25 @@ func (t *ActivateDealsResult) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.Spaces (market.DealSpaces) (struct)
-	if err := t.Spaces.MarshalCBOR(w); err != nil {
+	scratch := make([]byte, 9)
+
+	// t.NonVerifiedDealSpace (big.Int) (struct)
+	if err := t.NonVerifiedDealSpace.MarshalCBOR(w); err != nil {
 		return err
+	}
+
+	// t.VerifiedInfos ([]market.VerifiedDealInfo) (slice)
+	if len(t.VerifiedInfos) > cbg.MaxLength {
+		return xerrors.Errorf("Slice value in field t.VerifiedInfos was too long")
+	}
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajArray, uint64(len(t.VerifiedInfos))); err != nil {
+		return err
+	}
+	for _, v := range t.VerifiedInfos {
+		if err := v.MarshalCBOR(w); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -829,19 +845,48 @@ func (t *ActivateDealsResult) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 1 {
+	if extra != 2 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	// t.Spaces (market.DealSpaces) (struct)
+	// t.NonVerifiedDealSpace (big.Int) (struct)
 
 	{
 
-		if err := t.Spaces.UnmarshalCBOR(br); err != nil {
-			return xerrors.Errorf("unmarshaling t.Spaces: %w", err)
+		if err := t.NonVerifiedDealSpace.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.NonVerifiedDealSpace: %w", err)
 		}
 
 	}
+	// t.VerifiedInfos ([]market.VerifiedDealInfo) (slice)
+
+	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("t.VerifiedInfos: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.VerifiedInfos = make([]VerifiedDealInfo, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+
+		var v VerifiedDealInfo
+		if err := v.UnmarshalCBOR(br); err != nil {
+			return err
+		}
+
+		t.VerifiedInfos[i] = v
+	}
+
 	return nil
 }
 
@@ -1997,6 +2042,121 @@ func (t *SectorDataSpec) UnmarshalCBOR(r io.Reader) error {
 		}
 
 		t.SectorType = abi.RegisteredSealProof(extraI)
+	}
+	return nil
+}
+
+var lengthBufVerifiedDealInfo = []byte{132}
+
+func (t *VerifiedDealInfo) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufVerifiedDealInfo); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.Client (abi.ActorID) (uint64)
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.Client)); err != nil {
+		return err
+	}
+
+	// t.AllocationId (verifreg.AllocationId) (uint64)
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.AllocationId)); err != nil {
+		return err
+	}
+
+	// t.Data (cid.Cid) (struct)
+
+	if err := cbg.WriteCidBuf(scratch, w, t.Data); err != nil {
+		return xerrors.Errorf("failed to write cid field t.Data: %w", err)
+	}
+
+	// t.Size (abi.PaddedPieceSize) (uint64)
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.Size)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *VerifiedDealInfo) UnmarshalCBOR(r io.Reader) error {
+	*t = VerifiedDealInfo{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 4 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Client (abi.ActorID) (uint64)
+
+	{
+
+		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.Client = abi.ActorID(extra)
+
+	}
+	// t.AllocationId (verifreg.AllocationId) (uint64)
+
+	{
+
+		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.AllocationId = verifreg.AllocationId(extra)
+
+	}
+	// t.Data (cid.Cid) (struct)
+
+	{
+
+		c, err := cbg.ReadCid(br)
+		if err != nil {
+			return xerrors.Errorf("failed to read cid field t.Data: %w", err)
+		}
+
+		t.Data = c
+
+	}
+	// t.Size (abi.PaddedPieceSize) (uint64)
+
+	{
+
+		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.Size = abi.PaddedPieceSize(extra)
+
 	}
 	return nil
 }

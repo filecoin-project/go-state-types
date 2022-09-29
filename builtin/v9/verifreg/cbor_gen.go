@@ -869,7 +869,7 @@ func (t *BatchReturn) UnmarshalCBOR(r io.Reader) error {
 	return nil
 }
 
-var lengthBufClaimAllocationsParams = []byte{129}
+var lengthBufClaimAllocationsParams = []byte{130}
 
 func (t *ClaimAllocationsParams) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -895,6 +895,11 @@ func (t *ClaimAllocationsParams) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
+	// t.AllOrNothing (bool) (bool)
+	if err := cbg.WriteBool(w, t.AllOrNothing); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -912,7 +917,7 @@ func (t *ClaimAllocationsParams) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 1 {
+	if extra != 2 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
@@ -945,6 +950,23 @@ func (t *ClaimAllocationsParams) UnmarshalCBOR(r io.Reader) error {
 		t.Sectors[i] = v
 	}
 
+	// t.AllOrNothing (bool) (bool)
+
+	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajOther {
+		return fmt.Errorf("booleans must be major type 7")
+	}
+	switch extra {
+	case 20:
+		t.AllOrNothing = false
+	case 21:
+		t.AllOrNothing = true
+	default:
+		return fmt.Errorf("booleans are either major type 7, value 20 or 21 (got %d)", extra)
+	}
 	return nil
 }
 
@@ -959,26 +981,14 @@ func (t *ClaimAllocationsReturn) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	scratch := make([]byte, 9)
-
-	// t.SuccessCount (uint64) (uint64)
-
-	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.SuccessCount)); err != nil {
+	// t.BatchInfo (verifreg.BatchReturn) (struct)
+	if err := t.BatchInfo.MarshalCBOR(w); err != nil {
 		return err
 	}
 
-	// t.FailCodes ([]verifreg.FailCode) (slice)
-	if len(t.FailCodes) > cbg.MaxLength {
-		return xerrors.Errorf("Slice value in field t.FailCodes was too long")
-	}
-
-	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajArray, uint64(len(t.FailCodes))); err != nil {
+	// t.ClaimedSpace (big.Int) (struct)
+	if err := t.ClaimedSpace.MarshalCBOR(w); err != nil {
 		return err
-	}
-	for _, v := range t.FailCodes {
-		if err := v.MarshalCBOR(w); err != nil {
-			return err
-		}
 	}
 	return nil
 }
@@ -1001,49 +1011,24 @@ func (t *ClaimAllocationsReturn) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	// t.SuccessCount (uint64) (uint64)
+	// t.BatchInfo (verifreg.BatchReturn) (struct)
 
 	{
 
-		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
-		if err != nil {
-			return err
-		}
-		if maj != cbg.MajUnsignedInt {
-			return fmt.Errorf("wrong type for uint64 field")
-		}
-		t.SuccessCount = uint64(extra)
-
-	}
-	// t.FailCodes ([]verifreg.FailCode) (slice)
-
-	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
-	if err != nil {
-		return err
-	}
-
-	if extra > cbg.MaxLength {
-		return fmt.Errorf("t.FailCodes: array too large (%d)", extra)
-	}
-
-	if maj != cbg.MajArray {
-		return fmt.Errorf("expected cbor array")
-	}
-
-	if extra > 0 {
-		t.FailCodes = make([]FailCode, extra)
-	}
-
-	for i := 0; i < int(extra); i++ {
-
-		var v FailCode
-		if err := v.UnmarshalCBOR(br); err != nil {
-			return err
+		if err := t.BatchInfo.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.BatchInfo: %w", err)
 		}
 
-		t.FailCodes[i] = v
 	}
+	// t.ClaimedSpace (big.Int) (struct)
 
+	{
+
+		if err := t.ClaimedSpace.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.ClaimedSpace: %w", err)
+		}
+
+	}
 	return nil
 }
 
@@ -1333,7 +1318,7 @@ func (t *UniversalReceiverParams) UnmarshalCBOR(r io.Reader) error {
 	return nil
 }
 
-var lengthBufAllocationsResponse = []byte{129}
+var lengthBufAllocationsResponse = []byte{131}
 
 func (t *AllocationsResponse) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -1346,15 +1331,25 @@ func (t *AllocationsResponse) MarshalCBOR(w io.Writer) error {
 
 	scratch := make([]byte, 9)
 
-	// t.Allocations ([]verifreg.AllocationId) (slice)
-	if len(t.Allocations) > cbg.MaxLength {
-		return xerrors.Errorf("Slice value in field t.Allocations was too long")
-	}
-
-	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajArray, uint64(len(t.Allocations))); err != nil {
+	// t.AllocationResults (verifreg.BatchReturn) (struct)
+	if err := t.AllocationResults.MarshalCBOR(w); err != nil {
 		return err
 	}
-	for _, v := range t.Allocations {
+
+	// t.ExtensionResults (verifreg.BatchReturn) (struct)
+	if err := t.ExtensionResults.MarshalCBOR(w); err != nil {
+		return err
+	}
+
+	// t.NewAllocations ([]verifreg.AllocationId) (slice)
+	if len(t.NewAllocations) > cbg.MaxLength {
+		return xerrors.Errorf("Slice value in field t.NewAllocations was too long")
+	}
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajArray, uint64(len(t.NewAllocations))); err != nil {
+		return err
+	}
+	for _, v := range t.NewAllocations {
 		if err := cbg.CborWriteHeader(w, cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
 		}
@@ -1376,11 +1371,29 @@ func (t *AllocationsResponse) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 1 {
+	if extra != 3 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	// t.Allocations ([]verifreg.AllocationId) (slice)
+	// t.AllocationResults (verifreg.BatchReturn) (struct)
+
+	{
+
+		if err := t.AllocationResults.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.AllocationResults: %w", err)
+		}
+
+	}
+	// t.ExtensionResults (verifreg.BatchReturn) (struct)
+
+	{
+
+		if err := t.ExtensionResults.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.ExtensionResults: %w", err)
+		}
+
+	}
+	// t.NewAllocations ([]verifreg.AllocationId) (slice)
 
 	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
@@ -1388,7 +1401,7 @@ func (t *AllocationsResponse) UnmarshalCBOR(r io.Reader) error {
 	}
 
 	if extra > cbg.MaxLength {
-		return fmt.Errorf("t.Allocations: array too large (%d)", extra)
+		return fmt.Errorf("t.NewAllocations: array too large (%d)", extra)
 	}
 
 	if maj != cbg.MajArray {
@@ -1396,21 +1409,21 @@ func (t *AllocationsResponse) UnmarshalCBOR(r io.Reader) error {
 	}
 
 	if extra > 0 {
-		t.Allocations = make([]AllocationId, extra)
+		t.NewAllocations = make([]AllocationId, extra)
 	}
 
 	for i := 0; i < int(extra); i++ {
 
 		maj, val, err := cbg.CborReadHeaderBuf(br, scratch)
 		if err != nil {
-			return xerrors.Errorf("failed to read uint64 for t.Allocations slice: %w", err)
+			return xerrors.Errorf("failed to read uint64 for t.NewAllocations slice: %w", err)
 		}
 
 		if maj != cbg.MajUnsignedInt {
-			return xerrors.Errorf("value read for array t.Allocations was not a uint, instead got %d", maj)
+			return xerrors.Errorf("value read for array t.NewAllocations was not a uint, instead got %d", maj)
 		}
 
-		t.Allocations[i] = AllocationId(val)
+		t.NewAllocations[i] = AllocationId(val)
 	}
 
 	return nil

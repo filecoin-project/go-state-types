@@ -3,6 +3,7 @@ package verifreg
 import (
 	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/crypto"
 	"github.com/ipfs/go-cid"
 )
@@ -88,7 +89,8 @@ type AllocationId uint64
 type ClaimId uint64
 
 type ClaimAllocationsParams struct {
-	Sectors []SectorAllocationClaim
+	Sectors      []SectorAllocationClaim
+	AllOrNothing bool
 }
 
 type SectorAllocationClaim struct {
@@ -100,7 +102,10 @@ type SectorAllocationClaim struct {
 	SectorExpiry abi.ChainEpoch
 }
 
-type ClaimAllocationsReturn BatchReturn
+type ClaimAllocationsReturn struct {
+	BatchInfo    BatchReturn
+	ClaimedSpace big.Int
+}
 
 type GetClaimsParams struct {
 	Provider abi.ActorID
@@ -158,7 +163,9 @@ type UniversalReceiverParams struct {
 type ReceiverType uint64
 
 type AllocationsResponse struct {
-	Allocations []AllocationId
+	AllocationResults BatchReturn
+	ExtensionResults  BatchReturn
+	NewAllocations    []AllocationId
 }
 
 type ExtendClaimTermsParams struct {
@@ -181,4 +188,32 @@ type RemoveExpiredClaimsParams struct {
 type RemoveExpiredClaimsReturn struct {
 	Considered []AllocationId
 	Results    BatchReturn
+}
+
+type AllocationRequest struct {
+	// The provider (miner actor) which may claim the allocation.
+	Provider abi.ActorID
+	// Identifier of the data to be committed.
+	Data cid.Cid
+	// The (padded) size of data.
+	Size abi.PaddedPieceSize
+	// The minimum duration which the provider must commit to storing the piece to avoid
+	// early-termination penalties (epochs).
+	TermMin abi.ChainEpoch
+	// The maximum period for which a provider can earn quality-adjusted power
+	// for the piece (epochs).
+	TermMax abi.ChainEpoch
+	// The latest epoch by which a provider must commit data before the allocation expires.
+	Expiration abi.ChainEpoch
+}
+
+type ClaimExtensionRequest struct {
+	Provider addr.Address
+	Claim    ClaimId
+	TermMax  abi.ChainEpoch
+}
+
+type AllocationRequests struct {
+	Allocations []AllocationRequest
+	Extensions  []ClaimExtensionRequest
 }
