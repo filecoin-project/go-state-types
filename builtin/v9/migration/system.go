@@ -15,6 +15,10 @@ type systemActorMigrator struct {
 	ManifestData cid.Cid
 }
 
+func (m systemActorMigrator) migratedCodeCID() cid.Cid {
+	return m.OutCodeCID
+}
+
 func (m systemActorMigrator) migrateState(ctx context.Context, store cbor.IpldStore, in actorMigrationInput) (*actorMigrationResult, error) {
 	// The ManifestData itself is already in the blockstore
 	state := system.State{BuiltinActors: m.ManifestData}
