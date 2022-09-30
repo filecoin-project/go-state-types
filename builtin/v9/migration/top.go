@@ -63,6 +63,23 @@ func ActorHeadKey(addr address.Address, head cid.Cid) string {
 	return addr.String() + "-head-" + headKey
 }
 
+func SectorsAmtKey(sectorsAmt cid.Cid) string {
+	sectorsAmtKey, err := sectorsAmt.StringOfBase(multibase.Base32)
+	if err != nil {
+		panic(err)
+	}
+
+	return "sectorsAmt-" + sectorsAmtKey
+}
+
+func MinerPrevSectorsInKey(m address.Address) string {
+	return "prevSectorsIn-" + m.String()
+}
+
+func MinerPrevSectorsOutKey(m address.Address) string {
+	return "prevSectorsOut-" + m.String()
+}
+
 // Migrates the filecoin state tree starting from the global state tree and upgrading all actor state.
 // The store must support concurrent writes (even if the configured worker count is 1).
 func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID cid.Cid, actorsRootIn cid.Cid, priorEpoch abi.ChainEpoch, cfg Config, log Logger, cache MigrationCache) (cid.Cid, error) {
@@ -144,18 +161,18 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		migrations[oldCodeCID] = codeMigrator{newCodeCID}
 	}
 
-	// migrations that migrate both code and state
+	// migrations that migrate both code and state, override entries in `migrations`
+
+	// The System Actor
+
 	newSystemCodeCID, ok := newManifest.Get("system")
 	if !ok {
 		return cid.Undef, xerrors.Errorf("code cid for system actor not found in manifest")
 	}
 
-	miner9Cid, ok := newManifest.Get("storageminer")
-	if !ok {
-		return cid.Undef, xerrors.Errorf("code cid for miner actor not found in new manifest")
-	}
-
 	migrations[systemActor.Code] = systemActorMigrator{newSystemCodeCID, newManifest.Data}
+
+	// The Miner Actor
 
 	// load market proposals
 	marketActor, ok, err := actorsIn.GetActor(builtin.StorageMarketActorAddr)
@@ -177,7 +194,17 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("failed to get proposals: %w", err)
 	}
 
-	migrations[miner8Cid] = minerMigrator{proposals, miner9Cid}
+	miner9Cid, ok := newManifest.Get("storageminer")
+	if !ok {
+		return cid.Undef, xerrors.Errorf("code cid for miner actor not found in new manifest")
+	}
+
+	mm, err := newMinerMigrator(ctx, store, proposals, miner9Cid)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to create miner migrator: %w", err)
+	}
+
+	migrations[miner8Cid] = cachedMigration(cache, *mm)
 
 	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations), len(oldManifestData.Entries))
@@ -327,6 +354,7 @@ type actorMigration interface {
 	// Loads an actor's state from an input store and writes new state to an output store.
 	// Returns the new state head CID.
 	migrateState(ctx context.Context, store cbor.IpldStore, input actorMigrationInput) (result *actorMigrationResult, err error)
+	migratedCodeCID() cid.Cid
 }
 
 type migrationJob struct {
@@ -375,4 +403,38 @@ func (n codeMigrator) migrateState(_ context.Context, _ cbor.IpldStore, in actor
 		newCodeCID: n.OutCodeCID,
 		newHead:    in.head,
 	}, nil
+}
+
+func (n codeMigrator) migratedCodeCID() cid.Cid {
+	return n.OutCodeCID
+}
+
+// Migrator that uses cached transformation if it exists
+type cachedMigrator struct {
+	cache MigrationCache
+	actorMigration
+}
+
+func (c cachedMigrator) migrateState(ctx context.Context, store cbor.IpldStore, in actorMigrationInput) (*actorMigrationResult, error) {
+	newHead, err := c.cache.Load(ActorHeadKey(in.address, in.head), func() (cid.Cid, error) {
+		result, err := c.actorMigration.migrateState(ctx, store, in)
+		if err != nil {
+			return cid.Undef, err
+		}
+		return result.newHead, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &actorMigrationResult{
+		newCodeCID: c.migratedCodeCID(),
+		newHead:    newHead,
+	}, nil
+}
+
+func cachedMigration(cache MigrationCache, m actorMigration) actorMigration {
+	return cachedMigrator{
+		actorMigration: m,
+		cache:          cache,
+	}
 }
