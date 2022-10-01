@@ -87,7 +87,7 @@ func TestMigration(t *testing.T) {
 	_ = oldStateTree.ForEach(func(addr address.Address, oldActor *migration.Actor) error {
 		newActor, ok, err := newStateTree.GetActor(addr)
 		require.NoError(t, err, "failed to get actor")
-		require.True(t, ok, "didn't find actor")
+		require.True(t, ok, "didn't find actor: %s", addr)
 		expectedCid, ok := cidsMap[oldActor.Code]
 		require.True(t, ok, "didn't find code in cidsmap")
 		require.Equal(t, expectedCid, newActor.Code)

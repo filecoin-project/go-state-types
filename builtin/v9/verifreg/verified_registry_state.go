@@ -1,6 +1,7 @@
 package verifreg
 
 import (
+	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 
@@ -13,6 +14,16 @@ import (
 // DataCap is an integer number of bytes.
 // We can introduce policy changes and replace this in the future.
 type DataCap = abi.StoragePower
+
+var DatacapGranularity = builtin.TokenPrecision
+
+func DataCapToTokens(d DataCap) abi.TokenAmount {
+	return big.Mul(d, DatacapGranularity)
+}
+
+func TokensToDatacap(t abi.TokenAmount) DataCap {
+	return big.Div(t, DatacapGranularity)
+}
 
 const SignatureDomainSeparation_RemoveDataCap = "fil_removedatacap:"
 

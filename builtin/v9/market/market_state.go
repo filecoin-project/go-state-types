@@ -52,7 +52,7 @@ type State struct {
 	TotalClientStorageFee abi.TokenAmount
 
 	// Verified registry allocation IDs for deals that are not yet activated.
-	PendingDealAllocationIds cid.Cid
+	PendingDealAllocationIds cid.Cid // HAMT[DealID]AllocationID
 }
 
 func ConstructState(store adt.Store) (*State, error) {
