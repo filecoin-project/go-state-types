@@ -38,7 +38,7 @@ func makeTestManifest(t *testing.T, store adt.Store, prefix string) (cid.Cid, ci
 	builder := cid.V1Builder{Codec: cid.Raw, MhType: mh.IDENTITY}
 
 	newManifestData := manifest.ManifestData{}
-	for _, name := range []string{"system", "init", "cron", "account", "storagepower", "storageminer", "storagemarket", "paymentchannel", "multisig", "reward", "verifiedregistry"} {
+	for _, name := range manifest.GetBuiltinActorsKeys() {
 		codeCid, err := builder.Sum([]byte(fmt.Sprintf("%s%s", prefix, name)))
 		if err != nil {
 			t.Fatal(err)

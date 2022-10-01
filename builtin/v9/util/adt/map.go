@@ -3,6 +3,7 @@ package adt
 import (
 	"bytes"
 	"crypto/sha256"
+	"io"
 
 	hamt "github.com/filecoin-project/go-hamt-ipld/v3"
 	"github.com/filecoin-project/go-state-types/abi"
@@ -26,6 +27,16 @@ type Map struct {
 	lastCid cid.Cid
 	root    *hamt.Node
 	store   Store
+}
+
+func (m *Map) MarshalCBOR(w io.Writer) error {
+	rootCid, err := m.Root()
+	if err != nil {
+		return xerrors.Errorf("failed to flush map: %w", err)
+	}
+
+	scratch := make([]byte, 9)
+	return cbg.WriteCidBuf(scratch, w, rootCid)
 }
 
 // AsMap interprets a store as a HAMT-based map with root `r`.

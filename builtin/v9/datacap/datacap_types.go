@@ -3,7 +3,11 @@ package datacap
 import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/big"
+	"github.com/filecoin-project/go-state-types/builtin"
 )
+
+var InfiniteAllowance = big.Mul(big.MustFromString("1000000000000000000000"), builtin.TokenPrecision)
 
 type MintParams struct {
 	To        address.Address

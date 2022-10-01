@@ -6,6 +6,15 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/filecoin-project/go-state-types/builtin/v9/datacap"
+
+	"github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
+
+	"github.com/filecoin-project/go-state-types/big"
+	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
+
+	verifreg8 "github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
+
 	market8 "github.com/filecoin-project/go-state-types/builtin/v8/market"
 
 	"github.com/filecoin-project/go-state-types/builtin/v8/system"
@@ -131,19 +140,16 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 	// Maps prior version code CIDs to migration functions.
 	migrations := make(map[cid.Cid]actorMigration)
-
 	// Set of prior version code CIDs for actors to defer during iteration, for explicit migration afterwards.
-	var deferredCodeIDs = map[cid.Cid]struct{}{
-		// None
-	}
+	deferredCodeIDs := make(map[cid.Cid]struct{})
 
-	// simple code migrations
-	simpleMigrations := make(map[string]cid.Cid, len(oldManifestData.Entries))
+	// Populated from oldManifestData
+	oldCodeIDMap := make(map[string]cid.Cid, len(oldManifestData.Entries))
 
 	miner8Cid := cid.Undef
 	for _, entry := range oldManifestData.Entries {
-		simpleMigrations[entry.Name] = entry.Code
-		if entry.Name == "storageminer" {
+		oldCodeIDMap[entry.Name] = entry.Code
+		if entry.Name == manifest.MinerKey {
 			miner8Cid = entry.Code
 		}
 	}
@@ -152,13 +158,17 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("didn't find miner in old manifest entries")
 	}
 
-	for name, oldCodeCID := range simpleMigrations { //nolint:nomaprange
-		newCodeCID, ok := newManifest.Get(name)
-		if !ok {
-			return cid.Undef, xerrors.Errorf("code cid for %s actor not found in new manifest", name)
-		}
+	for name, oldCodeCID := range oldCodeIDMap { //nolint:nomaprange
+		if name == manifest.MarketKey || name == manifest.VerifregKey {
+			deferredCodeIDs[oldCodeCID] = struct{}{}
+		} else {
+			newCodeCID, ok := newManifest.Get(name)
+			if !ok {
+				return cid.Undef, xerrors.Errorf("code cid for %s actor not found in new manifest", name)
+			}
 
-		migrations[oldCodeCID] = codeMigrator{newCodeCID}
+			migrations[oldCodeCID] = codeMigrator{newCodeCID}
+		}
 	}
 
 	// migrations that migrate both code and state, override entries in `migrations`
@@ -175,7 +185,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	// The Miner Actor
 
 	// load market proposals
-	marketActor, ok, err := actorsIn.GetActor(builtin.StorageMarketActorAddr)
+	marketActorV8, ok, err := actorsIn.GetActor(builtin.StorageMarketActorAddr)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to get market actor: %w", err)
 	}
@@ -184,17 +194,17 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.New("didn't find market actor")
 	}
 
-	var marketState market8.State
-	if err := store.Get(ctx, marketActor.Head, &marketState); err != nil {
-		return cid.Undef, xerrors.Errorf("failed to get system actor state: %w", err)
+	var marketStateV8 market8.State
+	if err := store.Get(ctx, marketActorV8.Head, &marketStateV8); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to get market actor state: %w", err)
 	}
 
-	proposals, err := market8.AsDealProposalArray(adtStore, marketState.Proposals)
+	proposals, err := market8.AsDealProposalArray(adtStore, marketStateV8.Proposals)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to get proposals: %w", err)
 	}
 
-	miner9Cid, ok := newManifest.Get("storageminer")
+	miner9Cid, ok := newManifest.Get(manifest.MinerKey)
 	if !ok {
 		return cid.Undef, xerrors.Errorf("code cid for miner actor not found in new manifest")
 	}
@@ -334,7 +344,150 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 	elapsed := time.Since(startTime)
 	rate := float64(doneCount) / elapsed.Seconds()
-	log.Log(rt.INFO, "All %d done after %v (%.0f/s). Flushing state tree root.", doneCount, elapsed, rate)
+	log.Log(rt.INFO, "All %d done after %v (%.0f/s). Starting deferred migrations.", doneCount, elapsed, rate)
+
+	// Create the Datacap actor
+
+	verifregActorV8, ok, err := actorsIn.GetActor(builtin.VerifiedRegistryActorAddr)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to get verifreg actor: %w", err)
+	}
+
+	if !ok {
+		return cid.Undef, xerrors.New("didn't find verifreg actor")
+	}
+
+	var verifregStateV8 verifreg8.State
+	if err = store.Get(ctx, verifregActorV8.Head, &verifregStateV8); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to get verifreg actor state: %w", err)
+	}
+
+	verifiedClients, err := adt8.AsMap(adtStore, verifregStateV8.VerifiedClients, builtin.DefaultHamtBitwidth)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to get verified clients: %w", err)
+	}
+
+	tokenSupply := big.Zero()
+
+	emptyMapCid, err := adt9.StoreEmptyMap(adtStore, builtin.DefaultHamtBitwidth)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to create empty map: %w", err)
+	}
+
+	balancesMap, err := adt9.AsMap(adtStore, emptyMapCid, builtin.DefaultHamtBitwidth)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to load empty map: %w", err)
+	}
+
+	allowancesMap, err := adt9.AsMap(adtStore, emptyMapCid, builtin.DefaultHamtBitwidth)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to load empty map: %w", err)
+	}
+
+	var dcap abi.StoragePower
+	if err = verifiedClients.ForEach(&dcap, func(key string) error {
+		a, err := address.NewFromBytes([]byte(key))
+		if err != nil {
+			return err
+		}
+
+		tokenAmount := verifreg.DataCapToTokens(dcap)
+		tokenSupply = big.Add(tokenSupply, tokenAmount)
+		if err = balancesMap.Put(abi.IdAddrKey(a), &tokenAmount); err != nil {
+			return xerrors.Errorf("failed to put new balancesMap entry: %w", err)
+		}
+
+		allowancesMapEntry, err := adt9.AsMap(adtStore, emptyMapCid, builtin.DefaultHamtBitwidth)
+		if err != nil {
+			return xerrors.Errorf("failed to load empty map: %w", err)
+		}
+
+		if err = allowancesMapEntry.Put(abi.IdAddrKey(builtin.StorageMarketActorAddr), &datacap.InfiniteAllowance); err != nil {
+			return xerrors.Errorf("failed to populate allowance map: %w", err)
+		}
+
+		return allowancesMap.Put(abi.IdAddrKey(a), allowancesMapEntry)
+	}); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to loop over verified clients: %w", err)
+	}
+
+	balancesMapRoot, err := balancesMap.Root()
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to flush balances map: %w", err)
+	}
+
+	allowancesMapRoot, err := allowancesMap.Root()
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to flush allowances map: %w", err)
+	}
+
+	dataCapState := datacap.State{
+		Governor: builtin.VerifiedRegistryActorAddr,
+		Token: datacap.TokenState{
+			Supply:       tokenSupply,
+			Balances:     balancesMapRoot,
+			Allowances:   allowancesMapRoot,
+			HamtBitWidth: builtin.DefaultHamtBitwidth,
+		},
+	}
+
+	dataCapHead, err := adtStore.Put(ctx, &dataCapState)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to put data cap state: %w", err)
+	}
+
+	dataCapCode, ok := newManifest.Get(manifest.DataCapKey)
+	if !ok {
+		return cid.Undef, xerrors.Errorf("failed to find datacap code ID: %w", err)
+	}
+
+	if err = actorsOut.SetActor(builtin.DatacapActorAddr, &Actor{
+		Code:       dataCapCode,
+		Head:       dataCapHead,
+		CallSeqNum: 0,
+		Balance:    big.Zero(),
+	}); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to set datacap actor: %w", err)
+	}
+
+	// Migrate the Verified Registry Actor
+
+	verifregCode, ok := newManifest.Get(manifest.VerifregKey)
+	if !ok {
+		return cid.Undef, xerrors.Errorf("failed to find verifreg code ID: %w", err)
+	}
+
+	if err = actorsOut.SetActor(builtin.VerifiedRegistryActorAddr, &Actor{
+		Code: verifregCode,
+		// TODO: Actual head after migrate
+		Head: dataCapHead,
+		// TODO: Actual nonce from old state (should just be 0)
+		CallSeqNum: 0,
+		// TODO: Actual balance from old state
+		Balance: big.Zero(),
+	}); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to set datacap actor: %w", err)
+	}
+
+	// Migrate the Market Actor
+
+	marketCode, ok := newManifest.Get(manifest.MarketKey)
+	if !ok {
+		return cid.Undef, xerrors.Errorf("failed to find market code ID: %w", err)
+	}
+
+	if err = actorsOut.SetActor(builtin.StorageMarketActorAddr, &Actor{
+		Code: marketCode,
+		// TODO: Actual head after migrate
+		Head: dataCapHead,
+		// TODO: Actual nonce from old state (should just be 0)
+		CallSeqNum: 0,
+		// TODO: Actual balance from old state
+		Balance: big.Zero(),
+	}); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to set market actor: %w", err)
+	}
+
 	return actorsOut.Flush()
 }
 
