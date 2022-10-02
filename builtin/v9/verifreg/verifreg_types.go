@@ -1,11 +1,16 @@
 package verifreg
 
 import (
+	"io"
+
+	cbg "github.com/whyrusleeping/cbor-gen"
+
 	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/crypto"
 	"github.com/ipfs/go-cid"
+	"github.com/multiformats/go-varint"
 )
 
 // RemoveDataCapProposal A verifier who wants to send/agree to a RemoveDataCapRequest should sign a RemoveDataCapProposal and send the signed proposal to the root key holder.
@@ -83,9 +88,20 @@ type FailCode struct {
 	Code ExitCode
 }
 
+// TODO: this shouldn't be here?
 type ExitCode uint64
 
 type AllocationId uint64
+
+func (a AllocationId) MarshalCBOR(w io.Writer) error {
+	scratch := make([]byte, 9)
+	return cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(a))
+}
+
+func (a AllocationId) Key() string {
+	return string(varint.ToUvarint(uint64(a)))
+}
+
 type ClaimId uint64
 
 type ClaimAllocationsParams struct {

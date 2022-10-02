@@ -6,9 +6,13 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/filecoin-project/go-state-types/builtin/v9/datacap"
+	market9 "github.com/filecoin-project/go-state-types/builtin/v9/market"
 
-	"github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
+	init9 "github.com/filecoin-project/go-state-types/builtin/v9/init"
+
+	datacap9 "github.com/filecoin-project/go-state-types/builtin/v9/datacap"
+
+	verifreg9 "github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
 
 	"github.com/filecoin-project/go-state-types/big"
 	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
@@ -17,7 +21,7 @@ import (
 
 	market8 "github.com/filecoin-project/go-state-types/builtin/v8/market"
 
-	"github.com/filecoin-project/go-state-types/builtin/v8/system"
+	system8 "github.com/filecoin-project/go-state-types/builtin/v8/system"
 
 	"github.com/filecoin-project/go-state-types/builtin"
 
@@ -118,7 +122,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.New("didn't find system actor")
 	}
 
-	var systemState system.State
+	var systemState system8.State
 	if err := store.Get(ctx, systemActor.Head, &systemState); err != nil {
 		return cid.Undef, xerrors.Errorf("failed to get system actor state: %w", err)
 	}
@@ -391,7 +395,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 			return err
 		}
 
-		tokenAmount := verifreg.DataCapToTokens(dcap)
+		tokenAmount := verifreg9.DataCapToTokens(dcap)
 		tokenSupply = big.Add(tokenSupply, tokenAmount)
 		if err = balancesMap.Put(abi.IdAddrKey(a), &tokenAmount); err != nil {
 			return xerrors.Errorf("failed to put new balancesMap entry: %w", err)
@@ -402,7 +406,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 			return xerrors.Errorf("failed to load empty map: %w", err)
 		}
 
-		if err = allowancesMapEntry.Put(abi.IdAddrKey(builtin.StorageMarketActorAddr), &datacap.InfiniteAllowance); err != nil {
+		if err = allowancesMapEntry.Put(abi.IdAddrKey(builtin.StorageMarketActorAddr), &datacap9.InfiniteAllowance); err != nil {
 			return xerrors.Errorf("failed to populate allowance map: %w", err)
 		}
 
@@ -421,9 +425,9 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("failed to flush allowances map: %w", err)
 	}
 
-	dataCapState := datacap.State{
+	dataCapState := datacap9.State{
 		Governor: builtin.VerifiedRegistryActorAddr,
-		Token: datacap.TokenState{
+		Token: datacap9.TokenState{
 			Supply:       tokenSupply,
 			Balances:     balancesMapRoot,
 			Allowances:   allowancesMapRoot,
@@ -452,24 +456,185 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 	// Migrate the Verified Registry Actor
 
+	initActorV9, ok, err := actorsOut.GetActor(builtin.InitActorAddr)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to load init actor: %w", err)
+	}
+
+	if !ok {
+		return cid.Undef, xerrors.New("failed to find init actor")
+	}
+
+	var initStateV9 init9.State
+	if err = adtStore.Get(ctx, initActorV9.Head, &initStateV9); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to load init state: %w", err)
+	}
+
+	pendingProposals, err := adt8.AsSet(adtStore, marketStateV8.PendingProposals, builtin.DefaultHamtBitwidth)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to load pending proposals: %w", err)
+	}
+
+	pendingMap := make(map[abi.DealID]market8.DealProposal)
+	var proposal market8.DealProposal
+	if err = proposals.ForEach(&proposal, func(dealID int64) error {
+		pcid, err := proposal.Cid()
+		if err != nil {
+			return err
+		}
+
+		isPending, err := pendingProposals.Has(abi.CidKey(pcid))
+		if err != nil {
+			return xerrors.Errorf("failed to check pending: %w", err)
+		}
+
+		if isPending {
+			pendingMap[abi.DealID(dealID)] = proposal
+		}
+
+		return nil
+	}); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to iterate over proposals: %w", err)
+	}
+
+	nextAllocationID := verifreg9.AllocationId(1)
+	allocationsMapMap := make(map[address.Address]*adt9.Map)
+	dealsToAllocations := make(map[abi.DealID]verifreg9.AllocationId)
+	for dealID, proposal := range pendingMap {
+		clientIDAddress, ok, err := initStateV9.ResolveAddress(adtStore, proposal.Client)
+		if err != nil {
+			return cid.Undef, xerrors.Errorf("failed to resolve client %s: %w", proposal.Client, err)
+		}
+
+		if !ok {
+			return cid.Undef, xerrors.New("failed to find client in init actor map")
+		}
+
+		clientIDu64, err := address.IDFromAddress(clientIDAddress)
+		if err != nil {
+			return cid.Undef, err
+		}
+
+		providerIDAddress, ok, err := initStateV9.ResolveAddress(adtStore, proposal.Provider)
+		if err != nil {
+			return cid.Undef, xerrors.Errorf("failed to resolve provider %s: %w", proposal.Provider, err)
+		}
+
+		if !ok {
+			return cid.Undef, xerrors.New("failed to find provider in init actor map")
+		}
+
+		providerIDu64, err := address.IDFromAddress(providerIDAddress)
+		if err != nil {
+			return cid.Undef, err
+		}
+
+		clientAllocationMap, ok := allocationsMapMap[clientIDAddress]
+		if !ok {
+			clientAllocationMap, err = adt9.AsMap(adtStore, emptyMapCid, builtin.DefaultHamtBitwidth)
+			if err != nil {
+				return cid.Undef, xerrors.Errorf("failed to load empty map: %w", err)
+			}
+		}
+
+		if err = clientAllocationMap.Put(nextAllocationID, &verifreg9.Allocation{
+			Client:   abi.ActorID(clientIDu64),
+			Provider: abi.ActorID(providerIDu64),
+			Data:     proposal.PieceCID,
+			Size:     proposal.PieceSize,
+			TermMin:  proposal.Duration(),
+			TermMax:  market9.DealMaxDuration,
+			// TODO: priorEpoch + 1???
+			Expiration: verifreg9.MaximumVerifiedAllocationExpiration + priorEpoch,
+		}); err != nil {
+			return cid.Undef, xerrors.Errorf("failed to put new allocation obj: %w", err)
+		}
+
+		dealsToAllocations[dealID] = nextAllocationID
+		nextAllocationID++
+	}
+
+	allocationsMap, err := adt9.AsMap(adtStore, emptyMapCid, builtin.DefaultHamtBitwidth)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to load empty map: %w", err)
+	}
+
+	for clientID, clientAllocationsMap := range allocationsMapMap {
+		if err = allocationsMap.Put(abi.IdAddrKey(clientID), clientAllocationsMap); err != nil {
+			return cid.Undef, xerrors.Errorf("failed to populate allocationsMap: %w", err)
+		}
+	}
+
+	allocationsMapRoot, err := allocationsMap.Root()
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to flush allocations map: %w", err)
+	}
+
+	verifregStateV9 := verifreg9.State{
+		RootKey:                  verifregStateV8.RootKey,
+		Verifiers:                verifregStateV8.Verifiers,
+		RemoveDataCapProposalIDs: verifregStateV8.RemoveDataCapProposalIDs,
+		Allocations:              allocationsMapRoot,
+		NextAllocationId:         1,
+		Claims:                   emptyMapCid,
+	}
+
+	verifregHead, err := adtStore.Put(ctx, &verifregStateV9)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to put verifreg9 state: %w", err)
+	}
+
 	verifregCode, ok := newManifest.Get(manifest.VerifregKey)
 	if !ok {
 		return cid.Undef, xerrors.Errorf("failed to find verifreg code ID: %w", err)
 	}
 
 	if err = actorsOut.SetActor(builtin.VerifiedRegistryActorAddr, &Actor{
-		Code: verifregCode,
-		// TODO: Actual head after migrate
-		Head: dataCapHead,
-		// TODO: Actual nonce from old state (should just be 0)
-		CallSeqNum: 0,
-		// TODO: Actual balance from old state
-		Balance: big.Zero(),
+		Code:       verifregCode,
+		Head:       verifregHead,
+		CallSeqNum: verifregActorV8.CallSeqNum,
+		Balance:    verifregActorV8.Balance,
 	}); err != nil {
-		return cid.Undef, xerrors.Errorf("failed to set datacap actor: %w", err)
+		return cid.Undef, xerrors.Errorf("failed to set verifreg actor: %w", err)
 	}
 
 	// Migrate the Market Actor
+
+	pendingDealAllocationIdsMap, err := adt9.AsMap(adtStore, emptyMapCid, builtin.DefaultHamtBitwidth)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to load empty map: %w", err)
+	}
+
+	for dealID, allocationID := range dealsToAllocations {
+		if err = pendingDealAllocationIdsMap.Put(abi.UIntKey(uint64(dealID)), allocationID); err != nil {
+			return cid.Undef, xerrors.Errorf("failed to populate pending deal allocations map: %w", err)
+		}
+	}
+
+	pendingDealAllocationIdsMapRoot, err := pendingDealAllocationIdsMap.Root()
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to flush pending deal allocations map: %w", err)
+	}
+
+	marketStateV9 := market9.State{
+		Proposals:                     marketStateV8.Proposals,
+		States:                        marketStateV8.States,
+		PendingProposals:              marketStateV8.PendingProposals,
+		EscrowTable:                   marketStateV8.EscrowTable,
+		LockedTable:                   marketStateV8.LockedTable,
+		NextID:                        marketStateV8.NextID,
+		DealOpsByEpoch:                marketStateV8.DealOpsByEpoch,
+		LastCron:                      marketStateV8.LastCron,
+		TotalClientLockedCollateral:   marketStateV8.TotalClientLockedCollateral,
+		TotalProviderLockedCollateral: marketStateV8.TotalProviderLockedCollateral,
+		TotalClientStorageFee:         marketStateV8.TotalClientStorageFee,
+		PendingDealAllocationIds:      pendingDealAllocationIdsMapRoot,
+	}
+
+	marketHead, err := adtStore.Put(ctx, &marketStateV9)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to put market state: %w", err)
+	}
 
 	marketCode, ok := newManifest.Get(manifest.MarketKey)
 	if !ok {
@@ -477,13 +642,10 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 
 	if err = actorsOut.SetActor(builtin.StorageMarketActorAddr, &Actor{
-		Code: marketCode,
-		// TODO: Actual head after migrate
-		Head: dataCapHead,
-		// TODO: Actual nonce from old state (should just be 0)
-		CallSeqNum: 0,
-		// TODO: Actual balance from old state
-		Balance: big.Zero(),
+		Code:       marketCode,
+		Head:       marketHead,
+		CallSeqNum: marketActorV8.CallSeqNum,
+		Balance:    marketActorV8.Balance,
 	}); err != nil {
 		return cid.Undef, xerrors.Errorf("failed to set market actor: %w", err)
 	}
