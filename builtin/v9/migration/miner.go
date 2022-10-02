@@ -3,6 +3,8 @@ package migration
 import (
 	"context"
 
+	"github.com/filecoin-project/go-state-types/exitcode"
+
 	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 
 	"github.com/filecoin-project/go-address"
@@ -192,20 +194,26 @@ func (m minerMigrator) migratePrecommits(ctx context.Context, wrappedStore adt8.
 	var info miner8.SectorPreCommitOnChainInfo
 	err = oldPrecommitOnChainInfos.ForEach(&info, func(key string) error {
 		var unsealedCid *cid.Cid
-		if len(info.Info.DealIDs) != 0 {
-			pieces := make([]abi.PieceInfo, len(info.Info.DealIDs))
-			for i, dealID := range info.Info.DealIDs {
-				deal, err := m.proposals.GetDealProposal(dealID)
-				if err != nil {
-					return xerrors.Errorf("error getting deal proposal: %w", err)
+		var pieces []abi.PieceInfo
+		for _, dealID := range info.Info.DealIDs {
+			deal, err := m.proposals.GetDealProposal(dealID)
+			if err != nil {
+				// Possible for the proposal to be missing if it's expired (but the deal is still in a precommit that's yet to be cleaned up)
+				// Just continue in this case, the sector is unProveCommitable anyway, will just fail later
+				if exitcode.Unwrap(err, exitcode.ErrIllegalState) != exitcode.ErrNotFound {
+					return xerrors.Errorf("error getting deal proposal for sector: %d: %w", info.Info.SectorNumber, err)
 				}
 
-				pieces[i] = abi.PieceInfo{
-					PieceCID: deal.PieceCID,
-					Size:     deal.PieceSize,
-				}
+				continue
 			}
 
+			pieces = append(pieces, abi.PieceInfo{
+				PieceCID: deal.PieceCID,
+				Size:     deal.PieceSize,
+			})
+		}
+
+		if len(pieces) != 0 {
 			commd, err := commp.GenerateUnsealedCID(info.Info.SealProof, pieces)
 			if err != nil {
 				return xerrors.Errorf("failed to generate unsealed CID: %w", err)

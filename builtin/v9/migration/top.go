@@ -352,6 +352,8 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 	// Create the Datacap actor
 
+	log.Log(rt.INFO, "Migrating datacap actor")
+
 	verifregActorV8, ok, err := actorsIn.GetActor(builtin.VerifiedRegistryActorAddr)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to get verifreg actor: %w", err)
@@ -455,6 +457,8 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 
 	// Migrate the Verified Registry Actor
+
+	log.Log(rt.INFO, "Migrating the verified registry actor")
 
 	initActorV9, ok, err := actorsOut.GetActor(builtin.InitActorAddr)
 	if err != nil {
@@ -600,6 +604,8 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 	// Migrate the Market Actor
 
+	log.Log(rt.INFO, "Migrating the market actor")
+
 	pendingDealAllocationIdsMap, err := adt9.AsMap(adtStore, emptyMapCid, builtin.DefaultHamtBitwidth)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to load empty map: %w", err)
@@ -649,6 +655,8 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}); err != nil {
 		return cid.Undef, xerrors.Errorf("failed to set market actor: %w", err)
 	}
+
+	log.Log(rt.INFO, "Done all migrations, flushing state root")
 
 	return actorsOut.Flush()
 }
