@@ -6,6 +6,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	typegen "github.com/whyrusleeping/cbor-gen"
+
 	market9 "github.com/filecoin-project/go-state-types/builtin/v9/market"
 
 	init9 "github.com/filecoin-project/go-state-types/builtin/v9/init"
@@ -612,7 +614,8 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 
 	for dealID, allocationID := range dealsToAllocations {
-		if err = pendingDealAllocationIdsMap.Put(abi.UIntKey(uint64(dealID)), allocationID); err != nil {
+		cborAllocationID := typegen.CborInt(allocationID)
+		if err = pendingDealAllocationIdsMap.Put(abi.UIntKey(uint64(dealID)), &cborAllocationID); err != nil {
 			return cid.Undef, xerrors.Errorf("failed to populate pending deal allocations map: %w", err)
 		}
 	}

@@ -1,10 +1,6 @@
 package verifreg
 
 import (
-	"io"
-
-	cbg "github.com/whyrusleeping/cbor-gen"
-
 	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
@@ -92,11 +88,6 @@ type FailCode struct {
 type ExitCode uint64
 
 type AllocationId uint64
-
-func (a AllocationId) MarshalCBOR(w io.Writer) error {
-	scratch := make([]byte, 9)
-	return cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(a))
-}
 
 func (a AllocationId) Key() string {
 	return string(varint.ToUvarint(uint64(a)))
