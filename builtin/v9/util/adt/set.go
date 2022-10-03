@@ -1,3 +1,5 @@
+// Ported from specs-actors: https://github.com/filecoin-project/specs-actors/blob/845089a6d2580e46055c24415a6c32ee688e5186/actors/util/adt/set.go#L8
+
 package adt
 
 import (

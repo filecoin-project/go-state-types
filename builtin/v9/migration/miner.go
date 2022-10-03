@@ -117,7 +117,7 @@ func (m minerMigrator) migrateState(ctx context.Context, store cbor.IpldStore, i
 		return nil, xerrors.Errorf("failed to migrate sectors for miner: %s: %w", in.address, err)
 	}
 
-	deadlinesOut, err := m.migrateDeadlines(ctx, wrappedStore, in.cache, inState.Deadlines)
+	newDeadlines, err := m.migrateDeadlines(ctx, wrappedStore, in.cache, inState.Deadlines)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to migrate deadlines: %w", err)
 	}
@@ -168,7 +168,7 @@ func (m minerMigrator) migrateState(ctx context.Context, store cbor.IpldStore, i
 		Sectors:                    newSectors,
 		ProvingPeriodStart:         inState.ProvingPeriodStart,
 		CurrentDeadline:            inState.CurrentDeadline,
-		Deadlines:                  deadlinesOut,
+		Deadlines:                  newDeadlines,
 		EarlyTerminations:          inState.EarlyTerminations,
 		DeadlineCronActive:         inState.DeadlineCronActive,
 	}
@@ -322,7 +322,6 @@ func migrateSectorsWithCache(ctx context.Context, store adt8.Store, cache Migrat
 			if err != nil {
 				return cid.Undef, xerrors.Errorf("failed to migrate sectors from scratch: %w", err)
 			}
-
 		}
 
 		outRoot, err := outArray.Root()
@@ -330,9 +329,14 @@ func migrateSectorsWithCache(ctx context.Context, store adt8.Store, cache Migrat
 			return cid.Undef, xerrors.Errorf("error writing new sectors AMT: %w", err)
 		}
 
-		_ = cache.Write(MinerPrevSectorsInKey(minerAddr), inRoot)
+		if err = cache.Write(MinerPrevSectorsInKey(minerAddr), inRoot); err != nil {
+			return cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
+		}
 
-		_ = cache.Write(MinerPrevSectorsOutKey(minerAddr), outRoot)
+		if err = cache.Write(MinerPrevSectorsOutKey(minerAddr), outRoot); err != nil {
+			return cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
+		}
+
 		return outRoot, nil
 	})
 }
@@ -353,7 +357,6 @@ func migrateSectorsFromScratch(ctx context.Context, store adt8.Store, inArray *a
 	return outArray, err
 }
 
-// Need to introduce caching here too
 func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt8.Store, cache MigrationCache, deadlines cid.Cid) (cid.Cid, error) {
 	if deadlines == m.emptyDeadlinesV8 {
 		return m.emptyDeadlinesV9, nil

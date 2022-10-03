@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 
+	actorstypes "github.com/filecoin-project/go-state-types/actors"
+
 	"github.com/filecoin-project/go-state-types/builtin/v8/util/adt"
 
 	"github.com/ipfs/go-cid"
@@ -27,11 +29,10 @@ const (
 	VerifregKey = "verifiedregistry"
 )
 
-func GetBuiltinActorsKeys() []string {
+func GetBuiltinActorsKeys(av actorstypes.Version) []string {
 	keys := []string{
 		AccountKey,
 		CronKey,
-		DataCapKey,
 		InitKey,
 		MarketKey,
 		MinerKey,
@@ -41,6 +42,9 @@ func GetBuiltinActorsKeys() []string {
 		RewardKey,
 		SystemKey,
 		VerifregKey,
+	}
+	if av >= 9 {
+		keys = append(keys, DataCapKey)
 	}
 	return keys
 }
