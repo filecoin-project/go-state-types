@@ -1,11 +1,13 @@
 package verifreg
 
 import (
+	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
+	cbg "github.com/whyrusleeping/cbor-gen"
 
-	addr "github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/ipfs/go-cid"
 	"golang.org/x/xerrors"
@@ -34,7 +36,7 @@ type RmDcProposalID struct {
 type State struct {
 	// Root key holder multisig.
 	// Authorize and remove verifiers.
-	RootKey addr.Address
+	RootKey address.Address
 
 	// Verifiers authorize VerifiedClients.
 	// Verifiers delegate their DataCap.
@@ -73,4 +75,70 @@ func ConstructState(store adt.Store, rootKeyAddress addr.Address) (*State, error
 		NextAllocationId:         1,
 		Claims:                   emptyMapCid,
 	}, nil
+}
+
+func (st *State) FindAllocation(store adt.Store, addr address.Address, allocationId AllocationId) (*Allocation, bool, error) {
+	if addr.Protocol() != address.ID {
+		return nil, false, xerrors.Errorf("can only look up ID addresses")
+	}
+
+	innerHamtCid, err := GetInnerHamtCid(store, abi.IdAddrKey(addr), st.Allocations)
+	if err != nil {
+		return nil, false, err
+	}
+
+	idToAllocationMap, err := adt.AsMap(store, innerHamtCid, builtin.DefaultHamtBitwidth)
+	if err != nil {
+		return nil, false, xerrors.Errorf("couldn't get inner map: %x", err)
+	}
+
+	var allocation Allocation
+	if found, err := idToAllocationMap.Get(allocationId, &allocation); err != nil {
+		return nil, false, xerrors.Errorf("looking up allocation ID: %d: %w", allocationId, err)
+	} else if !found {
+		return nil, false, nil
+	}
+
+	return &allocation, true, nil
+}
+
+func (st *State) FindClaim(store adt.Store, addr address.Address, claimId ClaimId) (*Claim, bool, error) {
+	if addr.Protocol() != address.ID {
+		return nil, false, xerrors.Errorf("can only look up ID addresses")
+	}
+
+	innerHamtCid, err := GetInnerHamtCid(store, abi.IdAddrKey(addr), st.Claims)
+	if err != nil {
+		return nil, false, err
+	}
+
+	idToClaimsMap, err := adt.AsMap(store, innerHamtCid, builtin.DefaultHamtBitwidth)
+	if err != nil {
+		return nil, false, xerrors.Errorf("couldn't get inner map: %x", err)
+	}
+
+	var claim Claim
+	if found, err := idToClaimsMap.Get(claimId, &claim); err != nil {
+		return nil, false, xerrors.Errorf("looking up allocation ID: %d: %w", claimId, err)
+	} else if !found {
+		return nil, false, nil
+	}
+
+	return &claim, true, nil
+}
+
+func GetInnerHamtCid(store adt.Store, addr abi.Keyer, mapCid cid.Cid) (cid.Cid, error) {
+	actorToHamtMap, err := adt.AsMap(store, mapCid, builtin.DefaultHamtBitwidth)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("couldn't get outer map: %x", err)
+	}
+
+	var innerHamtCid cbg.CborCid
+	if found, err := actorToHamtMap.Get(addr, &innerHamtCid); err != nil {
+		return cid.Undef, xerrors.Errorf("looking up key: %s: %w", addr, err)
+	} else if !found {
+		return cid.Undef, xerrors.Errorf("did not find key: %s", addr)
+	}
+
+	return cid.Cid(innerHamtCid), nil
 }
