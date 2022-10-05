@@ -95,6 +95,10 @@ func (a AllocationId) Key() string {
 
 type ClaimId uint64
 
+func (a ClaimId) Key() string {
+	return string(varint.ToUvarint(uint64(a)))
+}
+
 type ClaimAllocationsParams struct {
 	Sectors      []SectorAllocationClaim
 	AllOrNothing bool
