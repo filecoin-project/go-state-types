@@ -89,16 +89,17 @@ func migrateVerifreg(ctx context.Context, adtStore adt8.Store, priorEpoch abi.Ch
 			if err != nil {
 				return cid.Undef, nil, xerrors.Errorf("failed to load empty map: %w", err)
 			}
+
+			allocationsMapMap[clientIDAddress] = clientAllocationMap
 		}
 
 		if err = clientAllocationMap.Put(nextAllocationID, &verifreg9.Allocation{
-			Client:   abi.ActorID(clientIDu64),
-			Provider: abi.ActorID(providerIDu64),
-			Data:     proposal.PieceCID,
-			Size:     proposal.PieceSize,
-			TermMin:  proposal.Duration(),
-			TermMax:  market9.DealMaxDuration,
-			// TODO: priorEpoch + 1???
+			Client:     abi.ActorID(clientIDu64),
+			Provider:   abi.ActorID(providerIDu64),
+			Data:       proposal.PieceCID,
+			Size:       proposal.PieceSize,
+			TermMin:    proposal.Duration(),
+			TermMax:    market9.DealMaxDuration,
 			Expiration: verifreg9.MaximumVerifiedAllocationExpiration + priorEpoch,
 		}); err != nil {
 			return cid.Undef, nil, xerrors.Errorf("failed to put new allocation obj: %w", err)

@@ -5,6 +5,7 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/crypto"
+	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/ipfs/go-cid"
 	"github.com/multiformats/go-varint"
 )
@@ -81,11 +82,8 @@ type BatchReturn struct {
 
 type FailCode struct {
 	Idx  uint64
-	Code ExitCode
+	Code exitcode.ExitCode
 }
-
-// TODO: this shouldn't be here?
-type ExitCode uint64
 
 type AllocationId uint64
 
