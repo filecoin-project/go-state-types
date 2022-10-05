@@ -1,7 +1,6 @@
 package verifreg
 
 import (
-	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
@@ -61,7 +60,7 @@ type State struct {
 var MinVerifiedDealSize = abi.NewStoragePower(1 << 20)
 
 // rootKeyAddress comes from genesis.
-func ConstructState(store adt.Store, rootKeyAddress addr.Address) (*State, error) {
+func ConstructState(store adt.Store, rootKeyAddress address.Address) (*State, error) {
 	emptyMapCid, err := adt.StoreEmptyMap(store, builtin.DefaultHamtBitwidth)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to create empty map: %w", err)
@@ -77,12 +76,12 @@ func ConstructState(store adt.Store, rootKeyAddress addr.Address) (*State, error
 	}, nil
 }
 
-func (st *State) FindAllocation(store adt.Store, addr address.Address, allocationId AllocationId) (*Allocation, bool, error) {
-	if addr.Protocol() != address.ID {
+func (st *State) FindAllocation(store adt.Store, clientIdAddr address.Address, allocationId AllocationId) (*Allocation, bool, error) {
+	if clientIdAddr.Protocol() != address.ID {
 		return nil, false, xerrors.Errorf("can only look up ID addresses")
 	}
 
-	innerHamtCid, err := GetInnerHamtCid(store, abi.IdAddrKey(addr), st.Allocations)
+	innerHamtCid, err := getInnerHamtCid(store, abi.IdAddrKey(clientIdAddr), st.Allocations)
 	if err != nil {
 		return nil, false, err
 	}
@@ -99,15 +98,24 @@ func (st *State) FindAllocation(store adt.Store, addr address.Address, allocatio
 		return nil, false, nil
 	}
 
+	clientId, err := address.IDFromAddress(clientIdAddr)
+	if err != nil {
+		return nil, false, xerrors.Errorf("couldn't get ID from clientIdAddr: %s", clientIdAddr)
+	}
+
+	if uint64(allocation.Client) != clientId {
+		return nil, false, xerrors.Errorf("clientId: %d did not match client in allocation: %d", clientId, allocation.Client)
+	}
+
 	return &allocation, true, nil
 }
 
-func (st *State) FindClaim(store adt.Store, addr address.Address, claimId ClaimId) (*Claim, bool, error) {
-	if addr.Protocol() != address.ID {
+func (st *State) FindClaim(store adt.Store, providerIdAddr address.Address, claimId ClaimId) (*Claim, bool, error) {
+	if providerIdAddr.Protocol() != address.ID {
 		return nil, false, xerrors.Errorf("can only look up ID addresses")
 	}
 
-	innerHamtCid, err := GetInnerHamtCid(store, abi.IdAddrKey(addr), st.Claims)
+	innerHamtCid, err := getInnerHamtCid(store, abi.IdAddrKey(providerIdAddr), st.Claims)
 	if err != nil {
 		return nil, false, err
 	}
@@ -124,10 +132,19 @@ func (st *State) FindClaim(store adt.Store, addr address.Address, claimId ClaimI
 		return nil, false, nil
 	}
 
+	providerId, err := address.IDFromAddress(providerIdAddr)
+	if err != nil {
+		return nil, false, xerrors.Errorf("couldn't get ID from providerIdAddr: %s", providerIdAddr)
+	}
+
+	if uint64(claim.Provider) != providerId {
+		return nil, false, xerrors.Errorf("providerId: %d did not match provider in claim: %d", providerId, claim.Provider)
+	}
+
 	return &claim, true, nil
 }
 
-func GetInnerHamtCid(store adt.Store, addr abi.Keyer, mapCid cid.Cid) (cid.Cid, error) {
+func getInnerHamtCid(store adt.Store, addr abi.Keyer, mapCid cid.Cid) (cid.Cid, error) {
 	actorToHamtMap, err := adt.AsMap(store, mapCid, builtin.DefaultHamtBitwidth)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("couldn't get outer map: %x", err)
