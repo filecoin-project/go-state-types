@@ -144,18 +144,82 @@ func (st *State) FindClaim(store adt.Store, providerIdAddr address.Address, clai
 	return &claim, true, nil
 }
 
-func getInnerHamtCid(store adt.Store, addr abi.Keyer, mapCid cid.Cid) (cid.Cid, error) {
+func getInnerHamtCid(store adt.Store, key abi.Keyer, mapCid cid.Cid) (cid.Cid, error) {
 	actorToHamtMap, err := adt.AsMap(store, mapCid, builtin.DefaultHamtBitwidth)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("couldn't get outer map: %x", err)
 	}
 
 	var innerHamtCid cbg.CborCid
-	if found, err := actorToHamtMap.Get(addr, &innerHamtCid); err != nil {
-		return cid.Undef, xerrors.Errorf("looking up key: %s: %w", addr, err)
+	if found, err := actorToHamtMap.Get(key, &innerHamtCid); err != nil {
+		return cid.Undef, xerrors.Errorf("looking up key: %s: %w", key, err)
 	} else if !found {
-		return cid.Undef, xerrors.Errorf("did not find key: %s", addr)
+		return cid.Undef, xerrors.Errorf("did not find key: %s", key)
 	}
 
 	return cid.Cid(innerHamtCid), nil
+}
+
+func (st *State) AllocationsMap(store adt.Store, clientIdAddr address.Address) (map[AllocationId]Allocation, error) {
+	if clientIdAddr.Protocol() != address.ID {
+		return nil, xerrors.Errorf("can only look up ID addresses")
+	}
+
+	innerHamtCid, err := getInnerHamtCid(store, abi.IdAddrKey(clientIdAddr), st.Allocations)
+	if err != nil {
+		return nil, err
+	}
+
+	adtMap, err := adt.AsMap(store, innerHamtCid, builtin.DefaultHamtBitwidth)
+	if err != nil {
+		return nil, xerrors.Errorf("couldn't get map: %x", err)
+	}
+
+	var goMap = make(map[AllocationId]Allocation)
+	var out Allocation
+	err = adtMap.ForEach(&out, func(key string) error {
+		uintKey, err := abi.ParseUIntKey(key)
+		if err != nil {
+			return xerrors.Errorf("couldn't parse key to uint: %x", err)
+		}
+		goMap[AllocationId(uintKey)] = out
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return goMap, nil
+}
+
+func (st *State) ClaimsMap(store adt.Store, providerIdAddr address.Address) (map[ClaimId]Claim, error) {
+	if providerIdAddr.Protocol() != address.ID {
+		return nil, xerrors.Errorf("can only look up ID addresses")
+	}
+
+	innerHamtCid, err := getInnerHamtCid(store, abi.IdAddrKey(providerIdAddr), st.Claims)
+	if err != nil {
+		return nil, err
+	}
+
+	adtMap, err := adt.AsMap(store, innerHamtCid, builtin.DefaultHamtBitwidth)
+	if err != nil {
+		return nil, xerrors.Errorf("couldn't get map: %x", err)
+	}
+
+	var goMap = make(map[ClaimId]Claim)
+	var out Claim
+	err = adtMap.ForEach(&out, func(key string) error {
+		uintKey, err := abi.ParseUIntKey(key)
+		if err != nil {
+			return xerrors.Errorf("couldn't parse key to uint: %x", err)
+		}
+		goMap[ClaimId(uintKey)] = out
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return goMap, nil
 }
