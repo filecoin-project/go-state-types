@@ -3,6 +3,8 @@ package migration
 import (
 	"context"
 
+	init8 "github.com/filecoin-project/go-state-types/builtin/v8/init"
+
 	verifreg8 "github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
 
 	"github.com/filecoin-project/go-address"
@@ -10,7 +12,6 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin"
 	market8 "github.com/filecoin-project/go-state-types/builtin/v8/market"
 	adt8 "github.com/filecoin-project/go-state-types/builtin/v8/util/adt"
-	init9 "github.com/filecoin-project/go-state-types/builtin/v9/init"
 	market9 "github.com/filecoin-project/go-state-types/builtin/v9/market"
 	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 	verifreg9 "github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
@@ -18,7 +19,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
-func migrateVerifreg(ctx context.Context, adtStore adt8.Store, priorEpoch abi.ChainEpoch, initStateV9 init9.State, marketStateV8 market8.State, verifregStateV8 verifreg8.State, emptyMapCid cid.Cid) (cid.Cid, map[abi.DealID]verifreg9.AllocationId, error) {
+func migrateVerifreg(ctx context.Context, adtStore adt8.Store, priorEpoch abi.ChainEpoch, initStateV9 init8.State, marketStateV8 market8.State, verifregStateV8 verifreg8.State, emptyMapCid cid.Cid) (cid.Cid, map[abi.DealID]verifreg9.AllocationId, error) {
 	pendingProposals, err := adt8.AsSet(adtStore, marketStateV8.PendingProposals, builtin.DefaultHamtBitwidth)
 	if err != nil {
 		return cid.Undef, nil, xerrors.Errorf("failed to load pending proposals: %w", err)

@@ -6,9 +6,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	verifreg8 "github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
+	init8 "github.com/filecoin-project/go-state-types/builtin/v8/init"
 
-	init9 "github.com/filecoin-project/go-state-types/builtin/v9/init"
+	verifreg8 "github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
 
 	"github.com/filecoin-project/go-state-types/big"
 	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
@@ -245,8 +245,9 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 
 	if err = actorsOut.SetActor(builtin.DatacapActorAddr, &Actor{
-		Code:       dataCapCode,
-		Head:       cid.Undef,
+		Code: dataCapCode,
+		// we just need to put _something_ defined, this never gets read
+		Head:       emptyMapCid,
 		CallSeqNum: 0,
 		Balance:    big.Zero(),
 	}); err != nil {
@@ -258,6 +259,55 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		verifregStateV8: verifregStateV8,
 		OutCodeCID:      dataCapCode,
 	})
+
+	// The Verifreg & Market Actor need special handling,
+	// - they need to load the init actor state
+	// - they need to be done in order -- the output of the verifreg migration is input to the market migration
+
+	initActorV8, ok, err := actorsIn.GetActor(builtin.InitActorAddr)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to load init actor: %w", err)
+	}
+
+	if !ok {
+		return cid.Undef, xerrors.New("failed to find init actor")
+	}
+
+	var initStateV8 init8.State
+	if err = adtStore.Get(ctx, initActorV8.Head, &initStateV8); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to load init state: %w", err)
+	}
+
+	type verifregMarketResult struct {
+		verifregHead cid.Cid
+		marketHead   cid.Cid
+		err          error
+	}
+
+	verifregMarketResultCh := make(chan verifregMarketResult)
+	go func() {
+		ret := verifregMarketResult{
+			verifregHead: cid.Undef,
+			marketHead:   cid.Undef,
+			err:          nil,
+		}
+		verifregHead, dealsToAllocations, err := migrateVerifreg(ctx, adtStore, priorEpoch, initStateV8, marketStateV8, verifregStateV8, emptyMapCid)
+		if err != nil {
+			ret.err = xerrors.Errorf("failed to migrate verifreg actor: %w", err)
+			verifregMarketResultCh <- ret
+		}
+
+		ret.verifregHead = verifregHead
+
+		marketHead, err := migrateMarket(ctx, adtStore, dealsToAllocations, marketStateV8, emptyMapCid)
+		if err != nil {
+			ret.err = xerrors.Errorf("failed to migrate market state: %w", err)
+			verifregMarketResultCh <- ret
+		}
+
+		ret.marketHead = marketHead
+		verifregMarketResultCh <- ret
+	}()
 
 	// Setup synchronization
 	grp, ctx := errgroup.WithContext(ctx)
@@ -380,56 +430,9 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, err
 	}
 
-	elapsed := time.Since(startTime)
-	rate := float64(doneCount) / elapsed.Seconds()
-	log.Log(rt.INFO, "All %d done after %v (%.0f/s). Starting deferred migrations.", doneCount, elapsed, rate)
-
-	// Fetch actor states needed for deferred migrations
-
-	initActorV9, ok, err := actorsOut.GetActor(builtin.InitActorAddr)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to load init actor: %w", err)
-	}
-
-	if !ok {
-		return cid.Undef, xerrors.New("failed to find init actor")
-	}
-
-	var initStateV9 init9.State
-	if err = adtStore.Get(ctx, initActorV9.Head, &initStateV9); err != nil {
-		return cid.Undef, xerrors.Errorf("failed to load init state: %w", err)
-	}
-
-	// Migrate the Verified Registry Actor
-
-	log.Log(rt.INFO, "Migrating the verified registry actor")
-
-	verifregHead, dealsToAllocations, err := migrateVerifreg(ctx, adtStore, priorEpoch, initStateV9, marketStateV8, verifregStateV8, emptyMapCid)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to migrate verifreg actor: %w", err)
-	}
-
 	verifregCode, ok := newManifest.Get(manifest.VerifregKey)
 	if !ok {
 		return cid.Undef, xerrors.Errorf("failed to find verifreg code ID: %w", err)
-	}
-
-	if err = actorsOut.SetActor(builtin.VerifiedRegistryActorAddr, &Actor{
-		Code:       verifregCode,
-		Head:       verifregHead,
-		CallSeqNum: verifregActorV8.CallSeqNum,
-		Balance:    verifregActorV8.Balance,
-	}); err != nil {
-		return cid.Undef, xerrors.Errorf("failed to set verifreg actor: %w", err)
-	}
-
-	// Migrate the Market Actor
-
-	log.Log(rt.INFO, "Migrating the market actor")
-
-	marketHead, err := migrateMarket(ctx, adtStore, dealsToAllocations, marketStateV8, emptyMapCid)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to migrate market state: %w", err)
 	}
 
 	marketCode, ok := newManifest.Get(manifest.MarketKey)
@@ -437,16 +440,32 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("failed to find market code ID: %w", err)
 	}
 
+	verifregMarketHeads := <-verifregMarketResultCh
+	if verifregMarketHeads.err != nil {
+		return cid.Undef, xerrors.Errorf("failed to migrate verifreg and market: %w", err)
+	}
+
+	if err = actorsOut.SetActor(builtin.VerifiedRegistryActorAddr, &Actor{
+		Code:       verifregCode,
+		Head:       verifregMarketHeads.verifregHead,
+		CallSeqNum: verifregActorV8.CallSeqNum,
+		Balance:    verifregActorV8.Balance,
+	}); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to set verifreg actor: %w", err)
+	}
+
 	if err = actorsOut.SetActor(builtin.StorageMarketActorAddr, &Actor{
 		Code:       marketCode,
-		Head:       marketHead,
+		Head:       verifregMarketHeads.marketHead,
 		CallSeqNum: marketActorV8.CallSeqNum,
 		Balance:    marketActorV8.Balance,
 	}); err != nil {
 		return cid.Undef, xerrors.Errorf("failed to set market actor: %w", err)
 	}
 
-	log.Log(rt.INFO, "Done all migrations, flushing state root")
+	elapsed := time.Since(startTime)
+	rate := float64(doneCount) / elapsed.Seconds()
+	log.Log(rt.INFO, "All %d done after %v (%.0f/s), flushing state root.", doneCount, elapsed, rate)
 
 	return actorsOut.Flush()
 }
