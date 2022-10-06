@@ -212,7 +212,7 @@ func (st *State) ClaimsMap(store adt.Store, providerIdAddr address.Address) (map
 	err = adtMap.ForEach(&out, func(key string) error {
 		uintKey, err := abi.ParseUIntKey(key)
 		if err != nil {
-			return xerrors.Errorf("couldn't parse key to uint: %x", err)
+			return xerrors.Errorf("couldn't parse key to uint: %w", err)
 		}
 		goMap[ClaimId(uintKey)] = out
 		return nil
