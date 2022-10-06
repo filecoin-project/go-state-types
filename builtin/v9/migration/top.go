@@ -95,6 +95,10 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 
 	adtStore := adt8.WrapStore(ctx, store)
+	emptyMapCid, err := adt9.StoreEmptyMap(adtStore, builtin.DefaultHamtBitwidth)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to create empty map: %w", err)
+	}
 
 	// Load input and output state trees
 	actorsIn, err := LoadTree(adtStore, actorsRootIn)
@@ -180,7 +184,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 	migrations[systemActor.Code] = systemActorMigrator{newSystemCodeCID, newManifest.Data}
 
-	// The Miner Actor
+	// The Miner Actor -- needs loading the market state
 
 	// load market proposals
 	marketActorV8, ok, err := actorsIn.GetActor(builtin.StorageMarketActorAddr)
@@ -218,6 +222,42 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations), len(oldManifestData.Entries))
 	}
 	startTime := time.Now()
+
+	// The DataCap actor -- needs to be created, and loading the verified registry state
+
+	verifregActorV8, ok, err := actorsIn.GetActor(builtin.VerifiedRegistryActorAddr)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to get verifreg actor: %w", err)
+	}
+
+	if !ok {
+		return cid.Undef, xerrors.New("didn't find verifreg actor")
+	}
+
+	var verifregStateV8 verifreg8.State
+	if err := adtStore.Get(ctx, verifregActorV8.Head, &verifregStateV8); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to get verifreg actor state: %w", err)
+	}
+
+	dataCapCode, ok := newManifest.Get(manifest.DataCapKey)
+	if !ok {
+		return cid.Undef, xerrors.Errorf("failed to find datacap code ID: %w", err)
+	}
+
+	if err = actorsOut.SetActor(builtin.DatacapActorAddr, &Actor{
+		Code:       dataCapCode,
+		Head:       cid.Undef,
+		CallSeqNum: 0,
+		Balance:    big.Zero(),
+	}); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to set datacap actor: %w", err)
+	}
+
+	migrations[dataCapCode] = cachedMigration(cache, &datacapMigrator{
+		emptyMapCid:     emptyMapCid,
+		verifregStateV8: verifregStateV8,
+		OutCodeCID:      dataCapCode,
+	})
 
 	// Setup synchronization
 	grp, ctx := errgroup.WithContext(ctx)
@@ -346,20 +386,6 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 	// Fetch actor states needed for deferred migrations
 
-	verifregActorV8, ok, err := actorsIn.GetActor(builtin.VerifiedRegistryActorAddr)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to get verifreg actor: %w", err)
-	}
-
-	if !ok {
-		return cid.Undef, xerrors.New("didn't find verifreg actor")
-	}
-
-	var verifregStateV8 verifreg8.State
-	if err := adtStore.Get(ctx, verifregActorV8.Head, &verifregStateV8); err != nil {
-		return cid.Undef, xerrors.Errorf("failed to get verifreg actor state: %w", err)
-	}
-
 	initActorV9, ok, err := actorsOut.GetActor(builtin.InitActorAddr)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to load init actor: %w", err)
@@ -372,34 +398,6 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	var initStateV9 init9.State
 	if err = adtStore.Get(ctx, initActorV9.Head, &initStateV9); err != nil {
 		return cid.Undef, xerrors.Errorf("failed to load init state: %w", err)
-	}
-
-	emptyMapCid, err := adt9.StoreEmptyMap(adtStore, builtin.DefaultHamtBitwidth)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to create empty map: %w", err)
-	}
-
-	// Create the Datacap actor
-
-	log.Log(rt.INFO, "Creating datacap actor")
-
-	dataCapCode, ok := newManifest.Get(manifest.DataCapKey)
-	if !ok {
-		return cid.Undef, xerrors.Errorf("failed to find datacap code ID: %w", err)
-	}
-
-	dataCapHead, err := createDatacap(ctx, adtStore, verifregStateV8, emptyMapCid)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to create datacap actor: %w", err)
-	}
-
-	if err = actorsOut.SetActor(builtin.DatacapActorAddr, &Actor{
-		Code:       dataCapCode,
-		Head:       dataCapHead,
-		CallSeqNum: 0,
-		Balance:    big.Zero(),
-	}); err != nil {
-		return cid.Undef, xerrors.Errorf("failed to set datacap actor: %w", err)
 	}
 
 	// Migrate the Verified Registry Actor

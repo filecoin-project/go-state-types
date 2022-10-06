@@ -3,12 +3,15 @@ package migration
 import (
 	"context"
 
+	verifreg8 "github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
+
+	cbor "github.com/ipfs/go-ipld-cbor"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin"
 	adt8 "github.com/filecoin-project/go-state-types/builtin/v8/util/adt"
-	verifreg8 "github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
 	datacap9 "github.com/filecoin-project/go-state-types/builtin/v9/datacap"
 	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 	verifreg9 "github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
@@ -16,23 +19,33 @@ import (
 	"golang.org/x/xerrors"
 )
 
-func createDatacap(ctx context.Context, adtStore adt8.Store, verifregStateV8 verifreg8.State, emptyMapCid cid.Cid) (cid.Cid, error) {
+type datacapMigrator struct {
+	emptyMapCid     cid.Cid
+	verifregStateV8 verifreg8.State
+	OutCodeCID      cid.Cid
+}
 
-	verifiedClients, err := adt8.AsMap(adtStore, verifregStateV8.VerifiedClients, builtin.DefaultHamtBitwidth)
+func (d *datacapMigrator) migratedCodeCID() cid.Cid {
+	return d.OutCodeCID
+
+}
+func (d *datacapMigrator) migrateState(ctx context.Context, store cbor.IpldStore, input actorMigrationInput) (result *actorMigrationResult, err error) {
+	adtStore := adt9.WrapStore(ctx, store)
+	verifiedClients, err := adt8.AsMap(adtStore, d.verifregStateV8.VerifiedClients, builtin.DefaultHamtBitwidth)
 	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to get verified clients: %w", err)
+		return nil, xerrors.Errorf("failed to get verified clients: %w", err)
 	}
 
 	tokenSupply := big.Zero()
 
-	balancesMap, err := adt9.AsMap(adtStore, emptyMapCid, builtin.DefaultHamtBitwidth)
+	balancesMap, err := adt9.AsMap(adtStore, d.emptyMapCid, builtin.DefaultHamtBitwidth)
 	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to load empty map: %w", err)
+		return nil, xerrors.Errorf("failed to load empty map: %w", err)
 	}
 
-	allowancesMap, err := adt9.AsMap(adtStore, emptyMapCid, builtin.DefaultHamtBitwidth)
+	allowancesMap, err := adt9.AsMap(adtStore, d.emptyMapCid, builtin.DefaultHamtBitwidth)
 	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to load empty map: %w", err)
+		return nil, xerrors.Errorf("failed to load empty map: %w", err)
 	}
 
 	var dcap abi.StoragePower
@@ -48,7 +61,7 @@ func createDatacap(ctx context.Context, adtStore adt8.Store, verifregStateV8 ver
 			return xerrors.Errorf("failed to put new balancesMap entry: %w", err)
 		}
 
-		allowancesMapEntry, err := adt9.AsMap(adtStore, emptyMapCid, builtin.DefaultHamtBitwidth)
+		allowancesMapEntry, err := adt9.AsMap(adtStore, d.emptyMapCid, builtin.DefaultHamtBitwidth)
 		if err != nil {
 			return xerrors.Errorf("failed to load empty map: %w", err)
 		}
@@ -59,17 +72,17 @@ func createDatacap(ctx context.Context, adtStore adt8.Store, verifregStateV8 ver
 
 		return allowancesMap.Put(abi.IdAddrKey(a), allowancesMapEntry)
 	}); err != nil {
-		return cid.Undef, xerrors.Errorf("failed to loop over verified clients: %w", err)
+		return nil, xerrors.Errorf("failed to loop over verified clients: %w", err)
 	}
 
 	balancesMapRoot, err := balancesMap.Root()
 	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to flush balances map: %w", err)
+		return nil, xerrors.Errorf("failed to flush balances map: %w", err)
 	}
 
 	allowancesMapRoot, err := allowancesMap.Root()
 	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to flush allowances map: %w", err)
+		return nil, xerrors.Errorf("failed to flush allowances map: %w", err)
 	}
 
 	dataCapState := datacap9.State{
@@ -84,9 +97,12 @@ func createDatacap(ctx context.Context, adtStore adt8.Store, verifregStateV8 ver
 
 	dataCapHead, err := adtStore.Put(ctx, &dataCapState)
 	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to put data cap state: %w", err)
+		return nil, xerrors.Errorf("failed to put data cap state: %w", err)
 	}
 
-	return dataCapHead, nil
+	return &actorMigrationResult{
+		newCodeCID: d.OutCodeCID,
+		newHead:    dataCapHead,
+	}, nil
 
 }
