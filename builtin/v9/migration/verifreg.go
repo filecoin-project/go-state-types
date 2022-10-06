@@ -32,6 +32,11 @@ func migrateVerifreg(ctx context.Context, adtStore adt8.Store, priorEpoch abi.Ch
 	pendingMap := make(map[abi.DealID]market8.DealProposal)
 	var proposal market8.DealProposal
 	if err = proposals.ForEach(&proposal, func(dealID int64) error {
+		// Nothing to do for unverified deals
+		if !proposal.VerifiedDeal {
+			return nil
+		}
+
 		pcid, err := proposal.Cid()
 		if err != nil {
 			return err
