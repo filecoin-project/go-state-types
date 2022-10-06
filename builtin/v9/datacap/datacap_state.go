@@ -16,8 +16,8 @@ type State struct {
 
 type TokenState struct {
 	Supply       abi.TokenAmount
-	Balances     cid.Cid // HAMT address.Address[abi.TokenAmount]
-	Allowances   cid.Cid // HAMT address.Address[address.Address[abi.TokenAmount]]
+	Balances     cid.Cid // HAMT abi.ActorID[abi.TokenAmount]
+	Allowances   cid.Cid // HAMT abi.ActorID[abi.ActorID[abi.TokenAmount]]
 	HamtBitWidth uint64  // uint32 in builtin-actors. uint64 here to satisfy cbor-gen
 }
 

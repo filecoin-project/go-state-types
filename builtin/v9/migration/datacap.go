@@ -55,7 +55,7 @@ func (d *datacapMigrator) migrateState(ctx context.Context, store cbor.IpldStore
 			return err
 		}
 
-		tokenAmount := verifreg9.DataCapToTokens(dcap)
+		tokenAmount := big.Mul(dcap, verifreg9.DataCapGranularity)
 		tokenSupply = big.Add(tokenSupply, tokenAmount)
 		if err = balancesMap.Put(abi.IdAddrKey(a), &tokenAmount); err != nil {
 			return xerrors.Errorf("failed to put new balancesMap entry: %w", err)

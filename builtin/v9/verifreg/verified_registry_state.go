@@ -1,7 +1,6 @@
 package verifreg
 
 import (
-	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 	cbg "github.com/whyrusleeping/cbor-gen"
@@ -17,14 +16,6 @@ import (
 type DataCap = abi.StoragePower
 
 var DataCapGranularity = builtin.TokenPrecision
-
-func DataCapToTokens(d DataCap) abi.TokenAmount {
-	return big.Mul(d, DataCapGranularity)
-}
-
-func TokensToDatacap(t abi.TokenAmount) DataCap {
-	return big.Div(t, DataCapGranularity)
-}
 
 const SignatureDomainSeparation_RemoveDataCap = "fil_removedatacap:"
 
@@ -51,7 +42,7 @@ type State struct {
 
 	// Next allocation identifier to use.
 	// The value 0 is reserved to mean "no allocation".
-	NextAllocationId uint64
+	NextAllocationId AllocationId
 
 	// Maps provider IDs to allocations claimed by that provider.
 	Claims cid.Cid // HAMT[ActorID]HAMT[ClaimID]Claim
@@ -160,7 +151,7 @@ func getInnerHamtCid(store adt.Store, key abi.Keyer, mapCid cid.Cid) (cid.Cid, e
 	return cid.Cid(innerHamtCid), nil
 }
 
-func (st *State) AllocationsMap(store adt.Store, clientIdAddr address.Address) (map[AllocationId]Allocation, error) {
+func (st *State) LoadAllocationsToMap(store adt.Store, clientIdAddr address.Address) (map[AllocationId]Allocation, error) {
 	if clientIdAddr.Protocol() != address.ID {
 		return nil, xerrors.Errorf("can only look up ID addresses")
 	}
@@ -192,7 +183,7 @@ func (st *State) AllocationsMap(store adt.Store, clientIdAddr address.Address) (
 	return goMap, nil
 }
 
-func (st *State) ClaimsMap(store adt.Store, providerIdAddr address.Address) (map[ClaimId]Claim, error) {
+func (st *State) LoadClaimsToMap(store adt.Store, providerIdAddr address.Address) (map[ClaimId]Claim, error) {
 	if providerIdAddr.Protocol() != address.ID {
 		return nil, xerrors.Errorf("can only look up ID addresses")
 	}

@@ -19,7 +19,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
-func migrateVerifreg(ctx context.Context, adtStore adt8.Store, priorEpoch abi.ChainEpoch, initStateV9 init8.State, marketStateV8 market8.State, verifregStateV8 verifreg8.State, emptyMapCid cid.Cid) (cid.Cid, map[abi.DealID]verifreg9.AllocationId, error) {
+func migrateVerifreg(ctx context.Context, adtStore adt8.Store, priorEpoch abi.ChainEpoch, initStateV8 init8.State, marketStateV8 market8.State, verifregStateV8 verifreg8.State, emptyMapCid cid.Cid) (cid.Cid, map[abi.DealID]verifreg9.AllocationId, error) {
 	pendingProposals, err := adt8.AsSet(adtStore, marketStateV8.PendingProposals, builtin.DefaultHamtBitwidth)
 	if err != nil {
 		return cid.Undef, nil, xerrors.Errorf("failed to load pending proposals: %w", err)
@@ -61,32 +61,9 @@ func migrateVerifreg(ctx context.Context, adtStore adt8.Store, priorEpoch abi.Ch
 	allocationsMapMap := make(map[address.Address]*adt9.Map)
 	dealsToAllocations := make(map[abi.DealID]verifreg9.AllocationId)
 	for dealID, proposal := range pendingMap {
-		clientIDAddress, ok, err := initStateV9.ResolveAddress(adtStore, proposal.Client)
+		clientIDAddress, clientIDu64, _, providerIDu64, err := resolveDealAddresses(adtStore, initStateV8, proposal)
 		if err != nil {
-			return cid.Undef, nil, xerrors.Errorf("failed to resolve client %s: %w", proposal.Client, err)
-		}
-
-		if !ok {
-			return cid.Undef, nil, xerrors.New("failed to find client in init actor map")
-		}
-
-		clientIDu64, err := address.IDFromAddress(clientIDAddress)
-		if err != nil {
-			return cid.Undef, nil, err
-		}
-
-		providerIDAddress, ok, err := initStateV9.ResolveAddress(adtStore, proposal.Provider)
-		if err != nil {
-			return cid.Undef, nil, xerrors.Errorf("failed to resolve provider %s: %w", proposal.Provider, err)
-		}
-
-		if !ok {
-			return cid.Undef, nil, xerrors.New("failed to find provider in init actor map")
-		}
-
-		providerIDu64, err := address.IDFromAddress(providerIDAddress)
-		if err != nil {
-			return cid.Undef, nil, err
+			return cid.Undef, nil, xerrors.Errorf("failed to resolve proposal addresses %w: ", err)
 		}
 
 		clientAllocationMap, ok := allocationsMapMap[clientIDAddress]
@@ -99,14 +76,19 @@ func migrateVerifreg(ctx context.Context, adtStore adt8.Store, priorEpoch abi.Ch
 			allocationsMapMap[clientIDAddress] = clientAllocationMap
 		}
 
+		expiration := verifreg9.MaximumVerifiedAllocationExpiration + priorEpoch
+		if expiration > proposal.StartEpoch {
+			expiration = proposal.StartEpoch
+		}
+
 		if err = clientAllocationMap.Put(nextAllocationID, &verifreg9.Allocation{
 			Client:     abi.ActorID(clientIDu64),
 			Provider:   abi.ActorID(providerIDu64),
 			Data:       proposal.PieceCID,
 			Size:       proposal.PieceSize,
 			TermMin:    proposal.Duration(),
-			TermMax:    market9.DealMaxDuration,
-			Expiration: verifreg9.MaximumVerifiedAllocationExpiration + priorEpoch,
+			TermMax:    market9.DealMaxDuration + market9.MarketDefaultAllocationTermBuffer,
+			Expiration: expiration,
 		}); err != nil {
 			return cid.Undef, nil, xerrors.Errorf("failed to put new allocation obj: %w", err)
 		}
@@ -136,7 +118,7 @@ func migrateVerifreg(ctx context.Context, adtStore adt8.Store, priorEpoch abi.Ch
 		Verifiers:                verifregStateV8.Verifiers,
 		RemoveDataCapProposalIDs: verifregStateV8.RemoveDataCapProposalIDs,
 		Allocations:              allocationsMapRoot,
-		NextAllocationId:         1,
+		NextAllocationId:         nextAllocationID,
 		Claims:                   emptyMapCid,
 	}
 
@@ -146,4 +128,36 @@ func migrateVerifreg(ctx context.Context, adtStore adt8.Store, priorEpoch abi.Ch
 	}
 
 	return verifregHead, dealsToAllocations, nil
+}
+
+func resolveDealAddresses(adtStore adt9.Store, initStateV8 init8.State, proposal market8.DealProposal) (address.Address, uint64, address.Address, uint64, error) {
+	clientIDAddress, ok, err := initStateV8.ResolveAddress(adtStore, proposal.Client)
+	if err != nil {
+		return address.Undef, 0, address.Undef, 0, xerrors.Errorf("failed to resolve client %s: %w", proposal.Client, err)
+	}
+
+	if !ok {
+		return address.Undef, 0, address.Undef, 0, xerrors.New("failed to find client in init actor map")
+	}
+
+	clientIDu64, err := address.IDFromAddress(clientIDAddress)
+	if err != nil {
+		return address.Undef, 0, address.Undef, 0, err
+	}
+
+	providerIDAddress, ok, err := initStateV8.ResolveAddress(adtStore, proposal.Provider)
+	if err != nil {
+		return address.Undef, 0, address.Undef, 0, xerrors.Errorf("failed to resolve provider %s: %w", proposal.Provider, err)
+	}
+
+	if !ok {
+		return address.Undef, 0, address.Undef, 0, xerrors.New("failed to find provider in init actor map")
+	}
+
+	providerIDu64, err := address.IDFromAddress(providerIDAddress)
+	if err != nil {
+		return address.Undef, 0, address.Undef, 0, err
+	}
+
+	return clientIDAddress, clientIDu64, providerIDAddress, providerIDu64, nil
 }

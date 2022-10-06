@@ -50,7 +50,7 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 		return xerrors.Errorf("failed to write cid field t.Allocations: %w", err)
 	}
 
-	// t.NextAllocationId (uint64) (uint64)
+	// t.NextAllocationId (verifreg.AllocationId) (uint64)
 
 	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.NextAllocationId)); err != nil {
 		return err
@@ -128,7 +128,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) error {
 		t.Allocations = c
 
 	}
-	// t.NextAllocationId (uint64) (uint64)
+	// t.NextAllocationId (verifreg.AllocationId) (uint64)
 
 	{
 
@@ -139,7 +139,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) error {
 		if maj != cbg.MajUnsignedInt {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
-		t.NextAllocationId = uint64(extra)
+		t.NextAllocationId = AllocationId(extra)
 
 	}
 	// t.Claims (cid.Cid) (struct)
