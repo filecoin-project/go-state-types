@@ -9,21 +9,20 @@ import (
 	adt8 "github.com/filecoin-project/go-state-types/builtin/v8/util/adt"
 	market9 "github.com/filecoin-project/go-state-types/builtin/v9/market"
 	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
-	verifreg9 "github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
 	"github.com/ipfs/go-cid"
 	typegen "github.com/whyrusleeping/cbor-gen"
 	"golang.org/x/xerrors"
 )
 
-func migrateMarket(ctx context.Context, adtStore adt8.Store, dealsToAllocations map[abi.DealID]verifreg9.AllocationId, marketStateV8 market8.State, emptyMapCid cid.Cid) (cid.Cid, error) {
+func migrateMarket(ctx context.Context, adtStore adt8.Store, dealAllocationTuples []DealAllocationTuple, marketStateV8 market8.State, emptyMapCid cid.Cid) (cid.Cid, error) {
 	pendingDealAllocationIdsMap, err := adt9.AsMap(adtStore, emptyMapCid, builtin.DefaultHamtBitwidth)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to load empty map: %w", err)
 	}
 
-	for dealID, allocationID := range dealsToAllocations {
-		cborAllocationID := typegen.CborInt(allocationID)
-		if err = pendingDealAllocationIdsMap.Put(abi.UIntKey(uint64(dealID)), &cborAllocationID); err != nil {
+	for _, tuple := range dealAllocationTuples {
+		cborAllocationID := typegen.CborInt(tuple.Allocation)
+		if err = pendingDealAllocationIdsMap.Put(abi.UIntKey(uint64(tuple.Deal)), &cborAllocationID); err != nil {
 			return cid.Undef, xerrors.Errorf("failed to populate pending deal allocations map: %w", err)
 		}
 	}
