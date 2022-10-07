@@ -19,7 +19,7 @@ import (
 
 func TestMigration(t *testing.T) {
 	ctx := context.Background()
-	bs := cbor.NewMemCborStore()
+	bs := cbor.NewCborStore(NewSyncBlockStoreInMemory())
 	adtStore := adt.WrapStore(ctx, bs)
 
 	startRoot := makeInputTree(ctx, t, adtStore)
