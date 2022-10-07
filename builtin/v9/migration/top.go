@@ -246,21 +246,19 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 	if err = actorsIn.SetActor(builtin.DatacapActorAddr, &Actor{
 		Code: dataCapCode,
-		// we supply the verified registry's head here for caching purposes
-		// if the verifreg head has changed, a fresh migration is needed
-		// if not, the cached datacap migration can be used
-		Head:       verifregActorV8.Head,
+		// we just need to put _something_ defined, this never gets read
+		Head:       emptyMapCid,
 		CallSeqNum: 0,
 		Balance:    big.Zero(),
 	}); err != nil {
 		return cid.Undef, xerrors.Errorf("failed to set datacap actor: %w", err)
 	}
 
-	migrations[dataCapCode] = cachedMigration(cache, &datacapMigrator{
+	migrations[dataCapCode] = &datacapMigrator{
 		emptyMapCid:     emptyMapCid,
 		verifregStateV8: verifregStateV8,
 		OutCodeCID:      dataCapCode,
-	})
+	}
 
 	// The Verifreg & Market Actor need special handling,
 	// - they need to load the init actor state
