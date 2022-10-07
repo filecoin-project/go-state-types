@@ -5,7 +5,9 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/crypto"
+	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/ipfs/go-cid"
+	"github.com/multiformats/go-varint"
 )
 
 // RemoveDataCapProposal A verifier who wants to send/agree to a RemoveDataCapRequest should sign a RemoveDataCapProposal and send the signed proposal to the root key holder.
@@ -80,13 +82,20 @@ type BatchReturn struct {
 
 type FailCode struct {
 	Idx  uint64
-	Code ExitCode
+	Code exitcode.ExitCode
 }
 
-type ExitCode uint64
-
 type AllocationId uint64
+
+func (a AllocationId) Key() string {
+	return string(varint.ToUvarint(uint64(a)))
+}
+
 type ClaimId uint64
+
+func (a ClaimId) Key() string {
+	return string(varint.ToUvarint(uint64(a)))
+}
 
 type ClaimAllocationsParams struct {
 	Sectors      []SectorAllocationClaim

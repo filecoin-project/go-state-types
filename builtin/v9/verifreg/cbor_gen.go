@@ -7,6 +7,7 @@ import (
 	"io"
 
 	abi "github.com/filecoin-project/go-state-types/abi"
+	exitcode "github.com/filecoin-project/go-state-types/exitcode"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	xerrors "golang.org/x/xerrors"
 )
@@ -49,7 +50,7 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 		return xerrors.Errorf("failed to write cid field t.Allocations: %w", err)
 	}
 
-	// t.NextAllocationId (uint64) (uint64)
+	// t.NextAllocationId (verifreg.AllocationId) (uint64)
 
 	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.NextAllocationId)); err != nil {
 		return err
@@ -127,7 +128,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) error {
 		t.Allocations = c
 
 	}
-	// t.NextAllocationId (uint64) (uint64)
+	// t.NextAllocationId (verifreg.AllocationId) (uint64)
 
 	{
 
@@ -138,7 +139,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) error {
 		if maj != cbg.MajUnsignedInt {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
-		t.NextAllocationId = uint64(extra)
+		t.NextAllocationId = AllocationId(extra)
 
 	}
 	// t.Claims (cid.Cid) (struct)
@@ -2021,12 +2022,16 @@ func (t *FailCode) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.Code (verifreg.ExitCode) (uint64)
-
-	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.Code)); err != nil {
-		return err
+	// t.Code (exitcode.ExitCode) (int64)
+	if t.Code >= 0 {
+		if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.Code)); err != nil {
+			return err
+		}
+	} else {
+		if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajNegativeInt, uint64(-t.Code-1)); err != nil {
+			return err
+		}
 	}
-
 	return nil
 }
 
@@ -2062,19 +2067,30 @@ func (t *FailCode) UnmarshalCBOR(r io.Reader) error {
 		t.Idx = uint64(extra)
 
 	}
-	// t.Code (verifreg.ExitCode) (uint64)
-
+	// t.Code (exitcode.ExitCode) (int64)
 	{
-
-		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+		maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+		var extraI int64
 		if err != nil {
 			return err
 		}
-		if maj != cbg.MajUnsignedInt {
-			return fmt.Errorf("wrong type for uint64 field")
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
+			}
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative oveflow")
+			}
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
 		}
-		t.Code = ExitCode(extra)
 
+		t.Code = exitcode.ExitCode(extraI)
 	}
 	return nil
 }

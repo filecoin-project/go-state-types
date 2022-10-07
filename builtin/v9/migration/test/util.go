@@ -8,6 +8,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/filecoin-project/go-state-types/actors"
+
 	"github.com/filecoin-project/go-state-types/rt"
 
 	block "github.com/ipfs/go-block-format"
@@ -38,7 +40,7 @@ func makeTestManifest(t *testing.T, store adt.Store, prefix string) (cid.Cid, ci
 	builder := cid.V1Builder{Codec: cid.Raw, MhType: mh.IDENTITY}
 
 	newManifestData := manifest.ManifestData{}
-	for _, name := range []string{"system", "init", "cron", "account", "storagepower", "storageminer", "storagemarket", "paymentchannel", "multisig", "reward", "verifiedregistry"} {
+	for _, name := range manifest.GetBuiltinActorsKeys(actors.Version9) {
 		codeCid, err := builder.Sum([]byte(fmt.Sprintf("%s%s", prefix, name)))
 		if err != nil {
 			t.Fatal(err)

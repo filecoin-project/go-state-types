@@ -6,9 +6,16 @@ import (
 	"sync/atomic"
 	"time"
 
+	init8 "github.com/filecoin-project/go-state-types/builtin/v8/init"
+
+	verifreg8 "github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
+
+	"github.com/filecoin-project/go-state-types/big"
+	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
+
 	market8 "github.com/filecoin-project/go-state-types/builtin/v8/market"
 
-	"github.com/filecoin-project/go-state-types/builtin/v8/system"
+	system8 "github.com/filecoin-project/go-state-types/builtin/v8/system"
 
 	"github.com/filecoin-project/go-state-types/builtin"
 
@@ -63,6 +70,23 @@ func ActorHeadKey(addr address.Address, head cid.Cid) string {
 	return addr.String() + "-head-" + headKey
 }
 
+func SectorsAmtKey(sectorsAmt cid.Cid) string {
+	sectorsAmtKey, err := sectorsAmt.StringOfBase(multibase.Base32)
+	if err != nil {
+		panic(err)
+	}
+
+	return "sectorsAmt-" + sectorsAmtKey
+}
+
+func MinerPrevSectorsInKey(m address.Address) string {
+	return "prevSectorsIn-" + m.String()
+}
+
+func MinerPrevSectorsOutKey(m address.Address) string {
+	return "prevSectorsOut-" + m.String()
+}
+
 // Migrates the filecoin state tree starting from the global state tree and upgrading all actor state.
 // The store must support concurrent writes (even if the configured worker count is 1).
 func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID cid.Cid, actorsRootIn cid.Cid, priorEpoch abi.ChainEpoch, cfg Config, log Logger, cache MigrationCache) (cid.Cid, error) {
@@ -71,6 +95,10 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 
 	adtStore := adt8.WrapStore(ctx, store)
+	emptyMapCid, err := adt9.StoreEmptyMap(adtStore, builtin.DefaultHamtBitwidth)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to create empty map: %w", err)
+	}
 
 	// Load input and output state trees
 	actorsIn, err := LoadTree(adtStore, actorsRootIn)
@@ -92,7 +120,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.New("didn't find system actor")
 	}
 
-	var systemState system.State
+	var systemState system8.State
 	if err := store.Get(ctx, systemActor.Head, &systemState); err != nil {
 		return cid.Undef, xerrors.Errorf("failed to get system actor state: %w", err)
 	}
@@ -114,19 +142,16 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 	// Maps prior version code CIDs to migration functions.
 	migrations := make(map[cid.Cid]actorMigration)
-
 	// Set of prior version code CIDs for actors to defer during iteration, for explicit migration afterwards.
-	var deferredCodeIDs = map[cid.Cid]struct{}{
-		// None
-	}
+	deferredCodeIDs := make(map[cid.Cid]struct{})
 
-	// simple code migrations
-	simpleMigrations := make(map[string]cid.Cid, len(oldManifestData.Entries))
+	// Populated from oldManifestData
+	oldCodeIDMap := make(map[string]cid.Cid, len(oldManifestData.Entries))
 
 	miner8Cid := cid.Undef
 	for _, entry := range oldManifestData.Entries {
-		simpleMigrations[entry.Name] = entry.Code
-		if entry.Name == "storageminer" {
+		oldCodeIDMap[entry.Name] = entry.Code
+		if entry.Name == manifest.MinerKey {
 			miner8Cid = entry.Code
 		}
 	}
@@ -135,30 +160,34 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("didn't find miner in old manifest entries")
 	}
 
-	for name, oldCodeCID := range simpleMigrations { //nolint:nomaprange
-		newCodeCID, ok := newManifest.Get(name)
-		if !ok {
-			return cid.Undef, xerrors.Errorf("code cid for %s actor not found in new manifest", name)
-		}
+	for name, oldCodeCID := range oldCodeIDMap { //nolint:nomaprange
+		if name == manifest.MarketKey || name == manifest.VerifregKey {
+			deferredCodeIDs[oldCodeCID] = struct{}{}
+		} else {
+			newCodeCID, ok := newManifest.Get(name)
+			if !ok {
+				return cid.Undef, xerrors.Errorf("code cid for %s actor not found in new manifest", name)
+			}
 
-		migrations[oldCodeCID] = codeMigrator{newCodeCID}
+			migrations[oldCodeCID] = codeMigrator{newCodeCID}
+		}
 	}
 
-	// migrations that migrate both code and state
+	// migrations that migrate both code and state, override entries in `migrations`
+
+	// The System Actor
+
 	newSystemCodeCID, ok := newManifest.Get("system")
 	if !ok {
 		return cid.Undef, xerrors.Errorf("code cid for system actor not found in manifest")
 	}
 
-	miner9Cid, ok := newManifest.Get("storageminer")
-	if !ok {
-		return cid.Undef, xerrors.Errorf("code cid for miner actor not found in new manifest")
-	}
-
 	migrations[systemActor.Code] = systemActorMigrator{newSystemCodeCID, newManifest.Data}
 
+	// The Miner Actor -- needs loading the market state
+
 	// load market proposals
-	marketActor, ok, err := actorsIn.GetActor(builtin.StorageMarketActorAddr)
+	marketActorV8, ok, err := actorsIn.GetActor(builtin.StorageMarketActorAddr)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to get market actor: %w", err)
 	}
@@ -167,22 +196,118 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.New("didn't find market actor")
 	}
 
-	var marketState market8.State
-	if err := store.Get(ctx, marketActor.Head, &marketState); err != nil {
-		return cid.Undef, xerrors.Errorf("failed to get system actor state: %w", err)
+	var marketStateV8 market8.State
+	if err := store.Get(ctx, marketActorV8.Head, &marketStateV8); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to get market actor state: %w", err)
 	}
 
-	proposals, err := market8.AsDealProposalArray(adtStore, marketState.Proposals)
+	proposals, err := market8.AsDealProposalArray(adtStore, marketStateV8.Proposals)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to get proposals: %w", err)
 	}
 
-	migrations[miner8Cid] = minerMigrator{proposals, miner9Cid}
+	miner9Cid, ok := newManifest.Get(manifest.MinerKey)
+	if !ok {
+		return cid.Undef, xerrors.Errorf("code cid for miner actor not found in new manifest")
+	}
+
+	mm, err := newMinerMigrator(ctx, store, proposals, miner9Cid)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to create miner migrator: %w", err)
+	}
+
+	migrations[miner8Cid] = cachedMigration(cache, *mm)
 
 	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations), len(oldManifestData.Entries))
 	}
 	startTime := time.Now()
+
+	// The DataCap actor -- needs to be created, and loading the verified registry state
+
+	verifregActorV8, ok, err := actorsIn.GetActor(builtin.VerifiedRegistryActorAddr)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to get verifreg actor: %w", err)
+	}
+
+	if !ok {
+		return cid.Undef, xerrors.New("didn't find verifreg actor")
+	}
+
+	var verifregStateV8 verifreg8.State
+	if err := adtStore.Get(ctx, verifregActorV8.Head, &verifregStateV8); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to get verifreg actor state: %w", err)
+	}
+
+	dataCapCode, ok := newManifest.Get(manifest.DataCapKey)
+	if !ok {
+		return cid.Undef, xerrors.Errorf("failed to find datacap code ID: %w", err)
+	}
+
+	if err = actorsOut.SetActor(builtin.DatacapActorAddr, &Actor{
+		Code: dataCapCode,
+		// we just need to put _something_ defined, this never gets read
+		Head:       emptyMapCid,
+		CallSeqNum: 0,
+		Balance:    big.Zero(),
+	}); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to set datacap actor: %w", err)
+	}
+
+	migrations[dataCapCode] = cachedMigration(cache, &datacapMigrator{
+		emptyMapCid:     emptyMapCid,
+		verifregStateV8: verifregStateV8,
+		OutCodeCID:      dataCapCode,
+	})
+
+	// The Verifreg & Market Actor need special handling,
+	// - they need to load the init actor state
+	// - they need to be done in order -- the output of the verifreg migration is input to the market migration
+
+	initActorV8, ok, err := actorsIn.GetActor(builtin.InitActorAddr)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to load init actor: %w", err)
+	}
+
+	if !ok {
+		return cid.Undef, xerrors.New("failed to find init actor")
+	}
+
+	var initStateV8 init8.State
+	if err = adtStore.Get(ctx, initActorV8.Head, &initStateV8); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to load init state: %w", err)
+	}
+
+	type verifregMarketResult struct {
+		verifregHead cid.Cid
+		marketHead   cid.Cid
+		err          error
+	}
+
+	verifregMarketResultCh := make(chan verifregMarketResult)
+	go func() {
+		ret := verifregMarketResult{
+			verifregHead: cid.Undef,
+			marketHead:   cid.Undef,
+			err:          nil,
+		}
+		verifregHead, dealsToAllocations, err := migrateVerifreg(ctx, adtStore, priorEpoch, initStateV8, marketStateV8, verifregStateV8, emptyMapCid)
+		if err != nil {
+			ret.err = xerrors.Errorf("failed to migrate verifreg actor: %w", err)
+			verifregMarketResultCh <- ret
+		}
+
+		ret.verifregHead = verifregHead
+
+		marketHead, err := migrateMarket(ctx, adtStore, dealsToAllocations, marketStateV8, emptyMapCid)
+		if err != nil {
+			ret.err = xerrors.Errorf("failed to migrate market state: %w", err)
+			verifregMarketResultCh <- ret
+		}
+
+		ret.marketHead = marketHead
+		verifregMarketResultCh <- ret
+	}()
 
 	// Setup synchronization
 	grp, ctx := errgroup.WithContext(ctx)
@@ -305,9 +430,43 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, err
 	}
 
+	verifregCode, ok := newManifest.Get(manifest.VerifregKey)
+	if !ok {
+		return cid.Undef, xerrors.Errorf("failed to find verifreg code ID: %w", err)
+	}
+
+	marketCode, ok := newManifest.Get(manifest.MarketKey)
+	if !ok {
+		return cid.Undef, xerrors.Errorf("failed to find market code ID: %w", err)
+	}
+
+	verifregMarketHeads := <-verifregMarketResultCh
+	if verifregMarketHeads.err != nil {
+		return cid.Undef, xerrors.Errorf("failed to migrate verifreg and market: %w", err)
+	}
+
+	if err = actorsOut.SetActor(builtin.VerifiedRegistryActorAddr, &Actor{
+		Code:       verifregCode,
+		Head:       verifregMarketHeads.verifregHead,
+		CallSeqNum: verifregActorV8.CallSeqNum,
+		Balance:    verifregActorV8.Balance,
+	}); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to set verifreg actor: %w", err)
+	}
+
+	if err = actorsOut.SetActor(builtin.StorageMarketActorAddr, &Actor{
+		Code:       marketCode,
+		Head:       verifregMarketHeads.marketHead,
+		CallSeqNum: marketActorV8.CallSeqNum,
+		Balance:    marketActorV8.Balance,
+	}); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to set market actor: %w", err)
+	}
+
 	elapsed := time.Since(startTime)
 	rate := float64(doneCount) / elapsed.Seconds()
-	log.Log(rt.INFO, "All %d done after %v (%.0f/s). Flushing state tree root.", doneCount, elapsed, rate)
+	log.Log(rt.INFO, "All %d done after %v (%.0f/s), flushing state root.", doneCount, elapsed, rate)
+
 	return actorsOut.Flush()
 }
 
@@ -327,6 +486,7 @@ type actorMigration interface {
 	// Loads an actor's state from an input store and writes new state to an output store.
 	// Returns the new state head CID.
 	migrateState(ctx context.Context, store cbor.IpldStore, input actorMigrationInput) (result *actorMigrationResult, err error)
+	migratedCodeCID() cid.Cid
 }
 
 type migrationJob struct {
@@ -375,4 +535,38 @@ func (n codeMigrator) migrateState(_ context.Context, _ cbor.IpldStore, in actor
 		newCodeCID: n.OutCodeCID,
 		newHead:    in.head,
 	}, nil
+}
+
+func (n codeMigrator) migratedCodeCID() cid.Cid {
+	return n.OutCodeCID
+}
+
+// Migrator that uses cached transformation if it exists
+type cachedMigrator struct {
+	cache MigrationCache
+	actorMigration
+}
+
+func (c cachedMigrator) migrateState(ctx context.Context, store cbor.IpldStore, in actorMigrationInput) (*actorMigrationResult, error) {
+	newHead, err := c.cache.Load(ActorHeadKey(in.address, in.head), func() (cid.Cid, error) {
+		result, err := c.actorMigration.migrateState(ctx, store, in)
+		if err != nil {
+			return cid.Undef, err
+		}
+		return result.newHead, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &actorMigrationResult{
+		newCodeCID: c.migratedCodeCID(),
+		newHead:    newHead,
+	}, nil
+}
+
+func cachedMigration(cache MigrationCache, m actorMigration) actorMigration {
+	return cachedMigrator{
+		actorMigration: m,
+		cache:          cache,
+	}
 }

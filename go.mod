@@ -13,6 +13,7 @@ require (
 	github.com/ipfs/go-ipld-cbor v0.0.6
 	github.com/multiformats/go-multibase v0.0.3
 	github.com/multiformats/go-multihash v0.0.15
+	github.com/multiformats/go-varint v0.0.6
 	github.com/stretchr/testify v1.7.0
 	github.com/whyrusleeping/cbor-gen v0.0.0-20210118024343-169e9d70c0c2
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4

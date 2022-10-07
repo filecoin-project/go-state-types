@@ -5,12 +5,49 @@ import (
 	"fmt"
 	"io"
 
+	actorstypes "github.com/filecoin-project/go-state-types/actors"
+
 	"github.com/filecoin-project/go-state-types/builtin/v8/util/adt"
 
 	"github.com/ipfs/go-cid"
 
 	cbg "github.com/whyrusleeping/cbor-gen"
 )
+
+const (
+	AccountKey  = "account"
+	CronKey     = "cron"
+	DataCapKey  = "datacap"
+	InitKey     = "init"
+	MarketKey   = "storagemarket"
+	MinerKey    = "storageminer"
+	MultisigKey = "multisig"
+	PaychKey    = "paymentchannel"
+	PowerKey    = "storagepower"
+	RewardKey   = "reward"
+	SystemKey   = "system"
+	VerifregKey = "verifiedregistry"
+)
+
+func GetBuiltinActorsKeys(av actorstypes.Version) []string {
+	keys := []string{
+		AccountKey,
+		CronKey,
+		InitKey,
+		MarketKey,
+		MinerKey,
+		MultisigKey,
+		PaychKey,
+		PowerKey,
+		RewardKey,
+		SystemKey,
+		VerifregKey,
+	}
+	if av >= 9 {
+		keys = append(keys, DataCapKey)
+	}
+	return keys
+}
 
 type Manifest struct {
 	Version uint64 // this is really u32, but cbor-gen can't deal with it

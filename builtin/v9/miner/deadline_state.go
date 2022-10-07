@@ -63,7 +63,7 @@ type Deadline struct {
 
 	// Snapshot of the miner's sectors AMT at the end of the previous challenge
 	// window for this deadline.
-	SectorsSnapshot cid.Cid
+	SectorsSnapshot cid.Cid // Array, AMT[SectorNumber]SectorOnChainInfo (sparse)
 
 	// Snapshot of partition state at the end of the previous challenge
 	// window for this deadline.
@@ -96,8 +96,55 @@ const DeadlineExpirationAmtBitwidth = 5
 const DeadlineOptimisticPoStSubmissionsAmtBitwidth = 2
 
 //
+// Deadline (singular)
+//
+
+func ConstructDeadline(store adt.Store) (*Deadline, error) {
+	emptyPartitionsArrayCid, err := adt.StoreEmptyArray(store, DeadlinePartitionsAmtBitwidth)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to construct empty partitions array: %w", err)
+	}
+	emptyDeadlineExpirationArrayCid, err := adt.StoreEmptyArray(store, DeadlineExpirationAmtBitwidth)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to construct empty deadline expiration array: %w", err)
+	}
+
+	emptySectorsSnapshotArrayCid, err := adt.StoreEmptyArray(store, SectorsAmtBitwidth)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to construct empty sectors snapshot array: %w", err)
+	}
+
+	emptyPoStSubmissionsArrayCid, err := adt.StoreEmptyArray(store, DeadlineOptimisticPoStSubmissionsAmtBitwidth)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to construct empty proofs array: %w", err)
+	}
+
+	return &Deadline{
+		Partitions:                        emptyPartitionsArrayCid,
+		ExpirationsEpochs:                 emptyDeadlineExpirationArrayCid,
+		EarlyTerminations:                 bitfield.New(),
+		LiveSectors:                       0,
+		TotalSectors:                      0,
+		FaultyPower:                       NewPowerPairZero(),
+		PartitionsPoSted:                  bitfield.New(),
+		OptimisticPoStSubmissions:         emptyPoStSubmissionsArrayCid,
+		PartitionsSnapshot:                emptyPartitionsArrayCid,
+		SectorsSnapshot:                   emptySectorsSnapshotArrayCid,
+		OptimisticPoStSubmissionsSnapshot: emptyPoStSubmissionsArrayCid,
+	}, nil
+}
+
+//
 // Deadlines (plural)
 //
+
+func ConstructDeadlines(emptyDeadlineCid cid.Cid) *Deadlines {
+	d := new(Deadlines)
+	for i := range d.Due {
+		d.Due[i] = emptyDeadlineCid
+	}
+	return d
+}
 
 func (d *Deadlines) LoadDeadline(store adt.Store, dlIdx uint64) (*Deadline, error) {
 	if dlIdx >= uint64(len(d.Due)) {
