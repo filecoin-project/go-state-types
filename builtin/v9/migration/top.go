@@ -244,10 +244,12 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("failed to find datacap code ID: %w", err)
 	}
 
-	if err = actorsOut.SetActor(builtin.DatacapActorAddr, &Actor{
+	if err = actorsIn.SetActor(builtin.DatacapActorAddr, &Actor{
 		Code: dataCapCode,
-		// we just need to put _something_ defined, this never gets read
-		Head:       emptyMapCid,
+		// we supply the verified registry's head here for caching purposes
+		// if the verifreg head has changed, a fresh migration is needed
+		// if not, the cached datacap migration can be used
+		Head:       verifregActorV8.Head,
 		CallSeqNum: 0,
 		Balance:    big.Zero(),
 	}); err != nil {
@@ -291,7 +293,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 			marketHead:   cid.Undef,
 			err:          nil,
 		}
-		verifregHead, dealsToAllocations, err := migrateVerifreg(ctx, adtStore, priorEpoch, initStateV8, marketStateV8, verifregStateV8, emptyMapCid)
+		verifregHead, dealAllocationTuples, err := migrateVerifreg(ctx, adtStore, priorEpoch, initStateV8, marketStateV8, verifregStateV8, emptyMapCid)
 		if err != nil {
 			ret.err = xerrors.Errorf("failed to migrate verifreg actor: %w", err)
 			verifregMarketResultCh <- ret
@@ -299,7 +301,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 		ret.verifregHead = verifregHead
 
-		marketHead, err := migrateMarket(ctx, adtStore, dealsToAllocations, marketStateV8, emptyMapCid)
+		marketHead, err := migrateMarket(ctx, adtStore, dealAllocationTuples, marketStateV8, emptyMapCid)
 		if err != nil {
 			ret.err = xerrors.Errorf("failed to migrate market state: %w", err)
 			verifregMarketResultCh <- ret
@@ -370,6 +372,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 				case <-ctx.Done():
 					return ctx.Err()
 				}
+
 				atomic.AddUint32(&doneCount, 1)
 			}
 			log.Log(rt.INFO, "Worker %d done", workerId)
