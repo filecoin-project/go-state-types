@@ -25,7 +25,7 @@ import (
 
 func TestMinerMigration(t *testing.T) {
 	ctx := context.Background()
-	bs := cbor.NewMemCborStore()
+	bs := cbor.NewCborStore(NewSyncBlockStoreInMemory())
 	adtStore := adt.WrapStore(ctx, bs)
 
 	startRoot := makeInputTree(ctx, t, adtStore)
@@ -317,7 +317,7 @@ func TestMinerMigration(t *testing.T) {
 
 func TestFip0029MinerMigration(t *testing.T) {
 	ctx := context.Background()
-	bs := cbor.NewMemCborStore()
+	bs := cbor.NewCborStore(NewSyncBlockStoreInMemory())
 	adtStore := adt.WrapStore(ctx, bs)
 
 	startRoot := makeInputTree(ctx, t, adtStore)
