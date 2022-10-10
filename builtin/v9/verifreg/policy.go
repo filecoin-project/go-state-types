@@ -11,3 +11,5 @@ const MaximumVerifiedAllocationExpiration = 60 * builtin.EpochsInDay
 const MinimumVerifiedAllocationTerm = 180 * builtin.EpochsInDay
 
 const MaximumVerifiedAllocationTerm = 5 * builtin.EpochsInYear
+
+const NoAllocationID = AllocationId(0)
