@@ -111,6 +111,8 @@ func main() {
 		power.CreateMinerReturn{},
 		power.CurrentTotalPowerReturn{},
 		power.EnrollCronEventParams{},
+		// other types
+		power.CronEvent{},
 	); err != nil {
 		panic(err)
 	}
