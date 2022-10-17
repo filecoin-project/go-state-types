@@ -76,6 +76,12 @@ func migrateVerifreg(ctx context.Context, adtStore adt8.Store, priorEpoch abi.Ch
 			allocationsMapMap[clientIDAddress] = clientAllocationMap
 		}
 
+		termMin := proposal.Duration()
+		termMax := termMin + market9.MarketDefaultAllocationTermBuffer
+		if termMax > verifreg9.MaximumVerifiedAllocationTerm {
+			termMax = verifreg9.MaximumVerifiedAllocationTerm
+		}
+
 		expiration := verifreg9.MaximumVerifiedAllocationExpiration + priorEpoch
 		if expiration > proposal.StartEpoch {
 			expiration = proposal.StartEpoch
@@ -86,8 +92,8 @@ func migrateVerifreg(ctx context.Context, adtStore adt8.Store, priorEpoch abi.Ch
 			Provider:   abi.ActorID(providerIDu64),
 			Data:       proposal.PieceCID,
 			Size:       proposal.PieceSize,
-			TermMin:    proposal.Duration(),
-			TermMax:    market9.DealMaxDuration,
+			TermMin:    termMin,
+			TermMax:    termMax,
 			Expiration: expiration,
 		}); err != nil {
 			return xerrors.Errorf("failed to put new allocation obj: %w", err)
