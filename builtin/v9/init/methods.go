@@ -6,6 +6,6 @@ import (
 )
 
 var Methods = map[uint64]builtin.MethodMeta{
-	1: {"", *new(func(*ConstructorParams) *abi.EmptyValue)}, // Constructor
-	2: {"", *new(func(*ExecParams) *ExecReturn)},            // Exec
+	1: {"Constructor", *new(func(*ConstructorParams) *abi.EmptyValue)}, // Constructor
+	2: {"Exec", *new(func(*ExecParams) *ExecReturn)},                   // Exec
 }

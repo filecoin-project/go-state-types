@@ -6,8 +6,8 @@ import (
 )
 
 var Methods = map[uint64]builtin.MethodMeta{
-	1: {"", *new(func(*abi.StoragePower) *abi.EmptyValue)}, // Constructor
-	2: {"", *new(func(*AwardBlockRewardParams) *abi.EmptyValue)},            // AwardBlockReward
-	3: {"", *new(func(*abi.EmptyValue) *ThisEpochRewardReturn)},             // ThisEpochReward
-	4: {"", *new(func(*abi.StoragePower) *abi.EmptyValue)},                  // UpdateNetworkKPI
+	1: {"Constructor", *new(func(*abi.StoragePower) *abi.EmptyValue)},            // Constructor
+	2: {"AwardBlockReward", *new(func(*AwardBlockRewardParams) *abi.EmptyValue)}, // AwardBlockReward
+	3: {"ThisEpochReward", *new(func(*abi.EmptyValue) *ThisEpochRewardReturn)},   // ThisEpochReward
+	4: {"UpdateNetworkKPI", *new(func(*abi.StoragePower) *abi.EmptyValue)},       // UpdateNetworkKPI
 }

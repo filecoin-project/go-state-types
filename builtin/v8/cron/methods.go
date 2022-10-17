@@ -6,6 +6,6 @@ import (
 )
 
 var Methods = map[uint64]builtin.MethodMeta{
-	1: {"", *new(func(*ConstructorParams) *abi.EmptyValue)}, // Constructor
-	2: {"", *new(func(*abi.EmptyValue) *abi.EmptyValue)},    // EpochTick
+	1: {"Constructor", *new(func(*ConstructorParams) *abi.EmptyValue)}, // Constructor
+	2: {"EpochTick", *new(func(*abi.EmptyValue) *abi.EmptyValue)},      // EpochTick
 }

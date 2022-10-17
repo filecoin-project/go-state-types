@@ -6,8 +6,8 @@ import (
 )
 
 var Methods = map[uint64]builtin.MethodMeta{
-	1: {"", *new(func(*ConstructorParams) *abi.EmptyValue)},        // Constructor
-	2: {"", *new(func(*UpdateChannelStateParams) *abi.EmptyValue)}, // UpdateChannelState
-	3: {"", *new(func(*abi.EmptyValue) *abi.EmptyValue)},           // Settle
-	4: {"", *new(func(*abi.EmptyValue) *abi.EmptyValue)},           // Collect
+	1: {"Constructor", *new(func(*ConstructorParams) *abi.EmptyValue)},               // Constructor
+	2: {"UpdateChannelState", *new(func(*UpdateChannelStateParams) *abi.EmptyValue)}, // UpdateChannelState
+	3: {"Settle", *new(func(*abi.EmptyValue) *abi.EmptyValue)},                       // Settle
+	4: {"Collect", *new(func(*abi.EmptyValue) *abi.EmptyValue)},                      // Collect
 }
