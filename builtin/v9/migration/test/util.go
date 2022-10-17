@@ -26,7 +26,6 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v8/power"
 	"github.com/filecoin-project/go-state-types/builtin/v8/reward"
 	"github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
-	"github.com/filecoin-project/go-state-types/builtin/v9/migration"
 	"github.com/filecoin-project/go-state-types/builtin/v9/system"
 	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 	"github.com/filecoin-project/go-state-types/cbor"
@@ -72,7 +71,7 @@ func makeTestManifest(t *testing.T, store adt.Store, prefix string) (cid.Cid, ci
 }
 
 func makeInputTree(ctx context.Context, t *testing.T, store adt.Store) cid.Cid {
-	tree, err := migration.NewTree(store)
+	tree, err := builtin.NewTree(store)
 	require.NoError(t, err, "failed to create empty actors tree")
 
 	manifestCid, manifestDataCid := makeTestManifest(t, store, "fil/8/")
@@ -144,10 +143,10 @@ func makeInputTree(ctx context.Context, t *testing.T, store adt.Store) cid.Cid {
 	return root
 }
 
-func initializeActor(ctx context.Context, t testing.TB, tree *migration.Tree, store adt.Store, state cbor.Marshaler, code cid.Cid, a address.Address, balance abi.TokenAmount) {
+func initializeActor(ctx context.Context, t testing.TB, tree *builtin.ActorTree, store adt.Store, state cbor.Marshaler, code cid.Cid, a address.Address, balance abi.TokenAmount) {
 	stateCID, err := store.Put(ctx, state)
 	require.NoError(t, err)
-	actor := &migration.Actor{
+	actor := &builtin.Actor{
 		Head:    stateCID,
 		Code:    code,
 		Balance: balance,

@@ -32,7 +32,13 @@ const ProofValidationBatchAmtBitwidth = 4
 // The number of miners that must meet the consensus minimum miner power before that minimum power is enforced
 // as a condition of leader election.
 // This ensures a network still functions before any miners reach that threshold.
-const ConsensusMinerMinMiners = 4 // PARAM_SPEC
+const ConsensusMinerMinMiners = 4
+
+// PARAM_SPEC// Maximum number of prove-commits each miner can submit in one epoch.
+//
+// This limits the number of proof partitions we may need to load in the cron call path.
+// Onboarding 1EiB/year requires at least 32 prove-commits per epoch.
+const MaxMinerProveCommitsPerEpoch = 200 // PARAM_SPEC
 
 type State struct {
 	TotalRawBytePower abi.StoragePower
@@ -104,6 +110,11 @@ type Claim struct {
 
 	// Sum of quality adjusted power for a miner's sectors.
 	QualityAdjPower abi.StoragePower
+}
+
+type CronEvent struct {
+	MinerAddr       addr.Address
+	CallbackPayload []byte
 }
 
 // MinerNominalPowerMeetsConsensusMinimum is used to validate Election PoSt

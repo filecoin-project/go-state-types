@@ -299,3 +299,15 @@ func (st *State) GetAvailableBalance(actorBalance abi.TokenAmount) (abi.TokenAmo
 func SectorKey(e abi.SectorNumber) abi.Keyer {
 	return abi.UIntKey(uint64(e))
 }
+
+// pre-commit clean up
+func (st *State) QuantSpecEveryDeadline() builtin.QuantSpec {
+	return builtin.NewQuantSpec(WPoStChallengeWindow, st.ProvingPeriodStart)
+}
+
+// Return true when the miner actor needs to continue scheduling deadline crons
+func (st *State) ContinueDeadlineCron() bool {
+	return !st.PreCommitDeposits.IsZero() ||
+		!st.InitialPledge.IsZero() ||
+		!st.LockedFunds.IsZero()
+}

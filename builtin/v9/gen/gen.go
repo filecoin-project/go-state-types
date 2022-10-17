@@ -1,12 +1,12 @@
 package main
 
 import (
+	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v9/account"
 	"github.com/filecoin-project/go-state-types/builtin/v9/cron"
 	"github.com/filecoin-project/go-state-types/builtin/v9/datacap"
 	init_ "github.com/filecoin-project/go-state-types/builtin/v9/init"
 	"github.com/filecoin-project/go-state-types/builtin/v9/market"
-	"github.com/filecoin-project/go-state-types/builtin/v9/migration"
 	"github.com/filecoin-project/go-state-types/builtin/v9/miner"
 	"github.com/filecoin-project/go-state-types/builtin/v9/multisig"
 	"github.com/filecoin-project/go-state-types/builtin/v9/paych"
@@ -276,7 +276,7 @@ func main() {
 	}
 
 	if err := gen.WriteTupleEncodersToFile("./builtin/v9/migration/cbor_gen.go", "migration",
-		migration.Actor{},
+		builtin.Actor{},
 	); err != nil {
 		panic(err)
 	}
