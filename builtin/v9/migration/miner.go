@@ -438,6 +438,6 @@ func migrateSectorInfo(sectorInfo miner8.SectorOnChainInfo) *miner9.SectorOnChai
 		ReplacedSectorAge:     sectorInfo.ReplacedSectorAge,
 		ReplacedDayReward:     sectorInfo.ReplacedDayReward,
 		SectorKeyCID:          sectorInfo.SectorKeyCID,
-		SimpleQAPower:         sectorInfo.DealWeight.IsZero() && sectorInfo.VerifiedDealWeight.IsZero(),
+		SimpleQAPower:         !sectorInfo.VerifiedDealWeight.IsZero(),
 	}
 }
