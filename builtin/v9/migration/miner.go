@@ -27,8 +27,8 @@ import (
 // The minerMigrator performs the following migrations:
 // FIP-0029: Sets the Beneficary to the Owner, and sets empty values for BeneficiaryTerm and PendingBeneficiaryTerm
 // FIP-0034: For each SectorPreCommitOnChainInfo in PreCommitedSectors, calculates the unsealed CID (assuming there are deals)
-// FIP-0045: For each SectorOnChainInfo in Sectors, set SimpleQAPower = (DealWeight == 0 && VerifiedDealWeight == 0)
-// FIP-0045: For each Deadline in Deadlines: for each SectorOnChainInfo in SectorsSnapshot, set SimpleQAPower = (DealWeight == 0 && VerifiedDealWeight == 0)
+// FIP-0045: For each SectorOnChainInfo in Sectors, set SimpleQAPower = (VerifiedDealWeight != 0)
+// FIP-0045: For each Deadline in Deadlines: for each SectorOnChainInfo in SectorsSnapshot, set SimpleQAPower = (VerifiedDealWeight != 0)
 
 type minerMigrator struct {
 	emptyPrecommitOnChainInfosV9 cid.Cid
