@@ -2,11 +2,12 @@ package reward
 
 import (
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/builtin"
 )
 
-var Methods = map[uint64]interface{}{
-	1: *new(func(interface{}, *abi.StoragePower) *abi.EmptyValue),       // Constructor
-	2: *new(func(interface{}, *AwardBlockRewardParams) *abi.EmptyValue), // AwardBlockReward
-	3: *new(func(interface{}, *abi.EmptyValue) *ThisEpochRewardReturn),  // ThisEpochReward
-	4: *new(func(interface{}, *abi.StoragePower) *abi.EmptyValue),       // UpdateNetworkKPI
+var Methods = map[uint64]builtin.MethodMeta{
+	1: {"Constructor", *new(func(*abi.StoragePower) *abi.EmptyValue)},            // Constructor
+	2: {"AwardBlockReward", *new(func(*AwardBlockRewardParams) *abi.EmptyValue)}, // AwardBlockReward
+	3: {"ThisEpochReward", *new(func(*abi.EmptyValue) *ThisEpochRewardReturn)},   // ThisEpochReward
+	4: {"UpdateNetworkKPI", *new(func(*abi.StoragePower) *abi.EmptyValue)},       // UpdateNetworkKPI
 }
