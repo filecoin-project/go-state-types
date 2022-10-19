@@ -56,7 +56,7 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount) (
 	if err := store.Get(store.Context(), st.AllocatedSectors, &allocatedSectors); err != nil {
 		acc.Addf("error loading allocated sector bitfield: %v", err)
 	} else {
-		allocatedSectorsMap, err = allocatedSectors.AllMap(1 << 30)
+		allocatedSectorsMap, err = allocatedSectors.AllMap(abi.MaxSectorNumber)
 		if err != nil {
 			acc.Addf("error expanding allocated sector bitfield: %v", err)
 			allocatedSectorsMap = nil
