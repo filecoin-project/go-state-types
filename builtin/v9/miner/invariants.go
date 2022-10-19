@@ -5,10 +5,10 @@ import (
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
-	"github.com/filecoin-project/go-state-types/builtin/v8/util"
+	"github.com/filecoin-project/go-state-types/builtin/v9/util"
 
 	"github.com/filecoin-project/go-state-types/builtin"
-	"github.com/filecoin-project/go-state-types/builtin/v8/util/adt"
+	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 )
 
 type DealSummary struct {
@@ -23,6 +23,7 @@ type StateSummary struct {
 	Deals               map[abi.DealID]DealSummary
 	WindowPoStProofType abi.RegisteredPoStProof
 	DeadlineCronActive  bool
+	SectorsWithDeals    map[abi.SectorNumber]bool
 }
 
 // Checks internal invariants of init state.
@@ -66,6 +67,7 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount) (
 
 	minerSummary.Deals = map[abi.DealID]DealSummary{}
 	var allSectors map[abi.SectorNumber]*SectorOnChainInfo
+	sectorsWithDeals := make(map[abi.SectorNumber]bool)
 	if sectorsArr, err := adt.AsArray(store, st.Sectors, SectorsAmtBitwidth); err != nil {
 		acc.Addf("error loading sectors")
 	} else {
@@ -82,6 +84,10 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount) (
 					SectorStart:      sector.Activation,
 					SectorExpiration: sector.Expiration,
 				}
+			}
+
+			if len(sector.DealIDs) > 0 {
+				sectorsWithDeals[abi.SectorNumber(sno)] = true
 			}
 
 			return nil

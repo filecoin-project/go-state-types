@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v9/account"
 	"github.com/filecoin-project/go-state-types/builtin/v9/cron"
 	"github.com/filecoin-project/go-state-types/builtin/v9/datacap"
@@ -273,12 +272,6 @@ func main() {
 
 	if err := gen.WriteTupleEncodersToFile("./builtin/v9/util/smoothing/cbor_gen.go", "smoothing",
 		smoothing.FilterEstimate{},
-	); err != nil {
-		panic(err)
-	}
-
-	if err := gen.WriteTupleEncodersToFile("./builtin/v9/migration/cbor_gen.go", "migration",
-		builtin.Actor{},
 	); err != nil {
 		panic(err)
 	}

@@ -1,21 +1,23 @@
-package v8
+package v9
 
 import (
 	"bytes"
 
+	"github.com/filecoin-project/go-state-types/builtin/v9/datacap"
+
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/ipfs/go-cid"
 
-	"github.com/filecoin-project/go-state-types/builtin/v8/account"
-	"github.com/filecoin-project/go-state-types/builtin/v8/cron"
-	init_ "github.com/filecoin-project/go-state-types/builtin/v8/init"
-	"github.com/filecoin-project/go-state-types/builtin/v8/market"
-	"github.com/filecoin-project/go-state-types/builtin/v8/miner"
-	"github.com/filecoin-project/go-state-types/builtin/v8/multisig"
-	"github.com/filecoin-project/go-state-types/builtin/v8/paych"
-	"github.com/filecoin-project/go-state-types/builtin/v8/power"
-	"github.com/filecoin-project/go-state-types/builtin/v8/reward"
-	"github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
+	"github.com/filecoin-project/go-state-types/builtin/v9/account"
+	"github.com/filecoin-project/go-state-types/builtin/v9/cron"
+	init_ "github.com/filecoin-project/go-state-types/builtin/v9/init"
+	"github.com/filecoin-project/go-state-types/builtin/v9/market"
+	"github.com/filecoin-project/go-state-types/builtin/v9/miner"
+	"github.com/filecoin-project/go-state-types/builtin/v9/multisig"
+	"github.com/filecoin-project/go-state-types/builtin/v9/paych"
+	"github.com/filecoin-project/go-state-types/builtin/v9/power"
+	"github.com/filecoin-project/go-state-types/builtin/v9/reward"
+	"github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
 
 	"github.com/filecoin-project/go-state-types/builtin"
 
@@ -34,6 +36,7 @@ func CheckStateInvariants(tree *builtin.ActorTree, priorEpoch abi.ChainEpoch, ac
 	var initSummary *init_.StateSummary
 	var cronSummary *cron.StateSummary
 	var verifregSummary *verifreg.StateSummary
+	var datacapSummary *datacap.StateSummary
 	var marketSummary *market.StateSummary
 	var rewardSummary *reward.StateSummary
 	var accountSummaries []*account.StateSummary
@@ -129,9 +132,17 @@ func CheckStateInvariants(tree *builtin.ActorTree, priorEpoch abi.ChainEpoch, ac
 			if err := tree.Store.Get(tree.Store.Context(), actor.Head, &st); err != nil {
 				return err
 			}
-			summary, msgs := verifreg.CheckStateInvariants(&st, tree.Store)
+			summary, msgs := verifreg.CheckStateInvariants(&st, tree.Store, priorEpoch)
 			acc.WithPrefix("verifreg: ").AddAll(msgs)
 			verifregSummary = summary
+		case actorCodes[manifest.DataCapKey]:
+			var st datacap.State
+			if err := tree.Store.Get(tree.Store.Context(), actor.Head, &st); err != nil {
+				return err
+			}
+			summary, msgs := datacap.CheckStateInvariants(&st, tree.Store)
+			acc.WithPrefix("datacap: ").AddAll(msgs)
+			datacapSummary = summary
 		default:
 			return xerrors.Errorf("unexpected actor code CID %v for address %v", actor.Code, key)
 		}
@@ -146,12 +157,16 @@ func CheckStateInvariants(tree *builtin.ActorTree, priorEpoch abi.ChainEpoch, ac
 
 	CheckMinersAgainstPower(acc, minerSummaries, powerSummary)
 	CheckDealStatesAgainstSectors(acc, minerSummaries, marketSummary)
+	CheckVerifregAgainstMiners(acc, verifregSummary, minerSummaries)
+	CheckMarketAgainstVerifreg(acc, verifregSummary, marketSummary)
+	CheckVerifregAgainstDatacap(acc, verifregSummary, datacapSummary)
 
 	_ = initSummary
 	_ = verifregSummary
 	_ = cronSummary
 	_ = marketSummary
 	_ = rewardSummary
+	_ = datacapSummary
 
 	if !totalFIl.Equals(builtin.TotalFilecoin) {
 		acc.Addf("total token balance is %v, expected %v", totalFIl, builtin.TotalFilecoin)
@@ -241,5 +256,78 @@ func CheckDealStatesAgainstSectors(acc *builtin.MessageAccumulator, minerSummari
 		acc.Require(deal.SlashEpoch <= sectorDeal.SectorExpiration,
 			"deal state slashed at %d after sector expiration %d for miner %v",
 			deal.SlashEpoch, sectorDeal.SectorExpiration, deal.Provider)
+	}
+}
+
+func CheckVerifregAgainstDatacap(acc *builtin.MessageAccumulator, verifregSummary *verifreg.StateSummary, datacapSummary *datacap.StateSummary) {
+	// Check verifiers and clients are disjoint.
+	for verifier := range verifregSummary.Verifiers {
+		actorId, err := address.IDFromAddress(verifier)
+		if err != nil {
+			acc.Addf("error getting actor ID: %v", err)
+		}
+		_, found := datacapSummary.Balances[abi.ActorID(actorId)]
+		acc.Require(!found, "verifier %v is also a client", verifier)
+	}
+
+	// Check verifreg token balance matches unclaimed allocations
+	var pendingAllocationsTotal = big.Zero()
+	for _, allocation := range verifregSummary.Allocations {
+		pendingAllocationsTotal = big.Add(pendingAllocationsTotal, big.NewIntUnsigned(uint64(allocation.Size)))
+	}
+	verifregId, err := address.IDFromAddress(builtin.VerifiedRegistryActorAddr)
+	acc.RequireNoError(err, "could not get verifreg ID from address")
+	verifregBalance, found := datacapSummary.Balances[abi.ActorID(verifregId)]
+	acc.Require(found, "verifreg not found in datacap actor balances map")
+	acc.Require(verifregBalance.Equals(pendingAllocationsTotal), "verifreg datacap balance %d does not match pending allocation size %d", verifregBalance, pendingAllocationsTotal)
+}
+
+func CheckVerifregAgainstMiners(acc *builtin.MessageAccumulator, verifregSummary *verifreg.StateSummary, minerSummaries map[address.Address]*miner.StateSummary) {
+	for _, claim := range verifregSummary.Claims {
+		// all claims are indexed by valid providers
+		maddr, err := address.NewIDAddress(uint64(claim.Provider))
+		acc.RequireNoError(err, "error creating ID address: %v", err)
+
+		minerSummary, ok := minerSummaries[maddr]
+		acc.Require(ok, "claim provider %s is not found in miner summaries", maddr)
+
+		// all claims are linked to a valid sector number
+		_, found := minerSummary.SectorsWithDeals[claim.Sector]
+		acc.Require(found, "claim sector number %d not recorded as a sector with deals for miner %s", claim.Sector, maddr)
+	}
+}
+
+func CheckMarketAgainstVerifreg(acc *builtin.MessageAccumulator, verifregSummary *verifreg.StateSummary, marketSummary *market.StateSummary) {
+	// all activated verified deals with claim ids reference a claim in verifreg state
+	// note that it is possible for claims to exist with no matching deal if the deal expires
+	for claimId, dealId := range marketSummary.ClaimIdToDealId {
+		claim, found := verifregSummary.Claims[claimId]
+		acc.Require(found, "claim %d not found for activated deal %d", claimId, dealId)
+
+		info, found := marketSummary.Deals[dealId]
+		acc.Require(found, "internal invariant error invalid market state references missing deal %d", dealId)
+
+		providerId, err := address.IDFromAddress(info.Provider)
+		acc.RequireNoError(err, "error getting ID from provider address")
+		acc.Require(abi.ActorID(providerId) == claim.Provider, "mismatches providers %d %d on claim %d and deal %d", providerId, claim.Provider, claimId, dealId)
+
+		acc.Require(info.PieceCid == claim.Data, "mismatches piece cid %s %s on claim %d and deal %d", info.PieceCid, claim.Data, claimId, dealId)
+	}
+
+	// all pending deal allocation ids have an associated allocation
+	// note that it is possible for allocations to exist that don't match any deal
+	// if they are created from a direct DataCap transfer
+	for allocationId, dealId := range marketSummary.AllocIdToDealId {
+		alloc, found := verifregSummary.Allocations[allocationId]
+		acc.Require(found, "allocation %d not found for pending deal %d", allocationId, dealId)
+
+		info, found := marketSummary.Deals[dealId]
+		acc.Require(found, "internal invariant error invalid market state references missing deal %d", dealId)
+
+		providerId, err := address.IDFromAddress(info.Provider)
+		acc.RequireNoError(err, "error getting ID from provider address")
+		acc.Require(abi.ActorID(providerId) == alloc.Provider, "mismatched providers %d %d on alloc %d and deal %d", providerId, alloc.Provider, allocationId, dealId)
+
+		acc.Require(info.PieceCid == alloc.Data, "mismatched piece cid %s %s on alloc %d and deal %d", info.PieceCid, alloc.Data, allocationId, dealId)
 	}
 }

@@ -214,3 +214,77 @@ func (st *State) LoadClaimsToMap(store adt.Store, providerIdAddr address.Address
 
 	return goMap, nil
 }
+
+func (st *State) GetAllClaims(store adt.Store) (map[ClaimId]Claim, error) {
+	allClaims := make(map[ClaimId]Claim)
+
+	actorToHamtMap, err := adt.AsMap(store, st.Claims, builtin.DefaultHamtBitwidth)
+	if err != nil {
+		return nil, xerrors.Errorf("couldn't get outer map: %x", err)
+	}
+
+	var innerHamtCid cbg.CborCid
+	err = actorToHamtMap.ForEach(&innerHamtCid, func(idKey string) error {
+		innerMap, err := adt.AsMap(store, cid.Cid(innerHamtCid), builtin.DefaultHamtBitwidth)
+		if err != nil {
+			return xerrors.Errorf("couldn't get inner map: %x", err)
+		}
+
+		var out Claim
+		err = innerMap.ForEach(&out, func(key string) error {
+			uintKey, err := abi.ParseUIntKey(key)
+			if err != nil {
+				return xerrors.Errorf("couldn't parse idKey to uint: %w", err)
+			}
+			allClaims[ClaimId(uintKey)] = out
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return allClaims, nil
+}
+
+func (st *State) GetAllAllocations(store adt.Store) (map[AllocationId]Allocation, error) {
+	allAllocations := make(map[AllocationId]Allocation)
+
+	actorToHamtMap, err := adt.AsMap(store, st.Allocations, builtin.DefaultHamtBitwidth)
+	if err != nil {
+		return nil, xerrors.Errorf("couldn't get outer map: %x", err)
+	}
+
+	var innerHamtCid cbg.CborCid
+	err = actorToHamtMap.ForEach(&innerHamtCid, func(idKey string) error {
+		innerMap, err := adt.AsMap(store, cid.Cid(innerHamtCid), builtin.DefaultHamtBitwidth)
+		if err != nil {
+			return xerrors.Errorf("couldn't get inner map: %x", err)
+		}
+
+		var out Allocation
+		err = innerMap.ForEach(&out, func(key string) error {
+			uintKey, err := abi.ParseUIntKey(key)
+			if err != nil {
+				return xerrors.Errorf("couldn't parse idKey to uint: %w", err)
+			}
+			allAllocations[AllocationId(uintKey)] = out
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return allAllocations, nil
+}

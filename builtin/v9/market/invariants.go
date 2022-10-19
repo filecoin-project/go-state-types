@@ -4,16 +4,16 @@ import (
 	"bytes"
 	"encoding/binary"
 
-	"github.com/ipfs/go-cid"
-	cbg "github.com/whyrusleeping/cbor-gen"
-	"golang.org/x/xerrors"
+	"github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
+	"github.com/ipfs/go-cid"
+	cbg "github.com/whyrusleeping/cbor-gen"
 
 	"github.com/filecoin-project/go-state-types/builtin"
-	"github.com/filecoin-project/go-state-types/builtin/v8/util/adt"
+	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 )
 
 type DealSummary struct {
@@ -23,15 +23,19 @@ type DealSummary struct {
 	SectorStartEpoch abi.ChainEpoch
 	LastUpdatedEpoch abi.ChainEpoch
 	SlashEpoch       abi.ChainEpoch
+	PieceCid         cid.Cid
 }
 
 type StateSummary struct {
-	Deals                map[abi.DealID]*DealSummary
-	PendingProposalCount uint64
-	DealStateCount       uint64
-	LockTableCount       uint64
-	DealOpEpochCount     uint64
-	DealOpCount          uint64
+	Deals                    map[abi.DealID]*DealSummary
+	PendingDealAllocationIds map[abi.DealID]verifreg.AllocationId
+	ClaimIdToDealId          map[verifreg.ClaimId]abi.DealID
+	AllocIdToDealId          map[verifreg.AllocationId]abi.DealID
+	PendingProposalCount     uint64
+	DealStateCount           uint64
+	LockTableCount           uint64
+	DealOpEpochCount         uint64
+	DealOpCount              uint64
 }
 
 // Checks internal invariants of market state.
@@ -66,9 +70,7 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 		var proposal DealProposal
 		err = proposals.ForEach(&proposal, func(dealID int64) error {
 			pcid, err := proposal.Cid()
-			if err != nil {
-				return err
-			}
+			acc.RequireNoError(err, "error getting cid from proposal")
 
 			if proposal.StartEpoch >= currEpoch {
 				expectedDealOps[abi.DealID(dealID)] = struct{}{}
@@ -86,6 +88,7 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 				SectorStartEpoch: abi.ChainEpoch(-1),
 				LastUpdatedEpoch: abi.ChainEpoch(-1),
 				SlashEpoch:       abi.ChainEpoch(-1),
+				PieceCid:         proposal.PieceCID,
 			}
 
 			totalProposalCollateral = big.Sum(totalProposalCollateral, proposal.ClientCollateral, proposal.ProviderCollateral)
@@ -104,7 +107,19 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 	// Deal States
 	//
 
+	pendingDealAllocationIds, err := st.GetPendingDealAllocationIds(store)
+	acc.RequireNoError(err, "error loading pending deal proposal Ids")
+
+	allocationIdToDealId := make(map[verifreg.AllocationId]abi.DealID)
+	for dealId, allocationId := range pendingDealAllocationIds {
+		_, found := proposalStats[dealId]
+		acc.Require(found, "pending deal allocation %d not found in proposals", dealId)
+
+		allocationIdToDealId[allocationId] = dealId
+	}
+
 	dealStateCount := uint64(0)
+	claimIdToDealId := make(map[verifreg.ClaimId]abi.DealID)
 	if dealStates, err := adt.AsArray(store, st.States, StatesAmtBitwidth); err != nil {
 		acc.Addf("error loading deal states: %v", err)
 	} else {
@@ -138,8 +153,15 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 				stats.LastUpdatedEpoch = dealState.LastUpdatedEpoch
 				stats.SlashEpoch = dealState.SlashEpoch
 			}
+			_, found = pendingDealAllocationIds[abi.DealID(dealID)]
+			acc.Require(!found, "deal %d has pending allocation", dealID)
 
 			dealStateCount++
+
+			if dealState.VerifiedClaim != verifreg.NoAllocationID {
+				claimIdToDealId[verifreg.ClaimId(dealState.VerifiedClaim)] = abi.DealID(dealID)
+			}
+
 			return nil
 		})
 		acc.RequireNoError(err, "error iterating deal states")
@@ -155,9 +177,7 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 	} else {
 		err = pendingProposals.ForEach(nil, func(key string) error {
 			proposalCID, err := cid.Parse([]byte(key))
-			if err != nil {
-				return err
-			}
+			acc.RequireNoError(err, "error getting cid from proposal")
 
 			_, found := proposalCids[proposalCID]
 			acc.Require(found, "pending proposal with cid %v not found within proposals %v", proposalCID, pendingProposals)
@@ -182,16 +202,12 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 		lockedTotal := abi.NewTokenAmount(0)
 		err = (*adt.Map)(lockTable).ForEach(&lockedAmount, func(key string) error {
 			addr, err := address.NewFromBytes([]byte(key))
-			if err != nil {
-				return err
-			}
+			acc.RequireNoError(err, "error getting address from bytes")
 			lockedTotal = big.Add(lockedTotal, lockedAmount)
 
 			// every entry in locked table should have a corresponding entry in escrow table that is at least as high
 			escrowAmount, err := escrowTable.Get(addr)
-			if err != nil {
-				return err
-			}
+			acc.RequireNoError(err, "error escrow amount from table for %s", addr)
 			acc.Require(escrowAmount.GreaterThanEqual(lockedAmount),
 				"locked funds for %s, %s, greater than escrow amount, %s", addr, lockedAmount, escrowAmount)
 
@@ -227,9 +243,7 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 		var setRoot cbg.CborCid
 		err = dealOps.mp.ForEach(&setRoot, func(key string) error {
 			epoch, err := binary.ReadUvarint(bytes.NewReader([]byte(key)))
-			if err != nil {
-				return xerrors.Errorf("deal ops has key that is not an int: %s: %w", key, err)
-			}
+			acc.RequireNoError(err, "error epoch from bytes")
 
 			dealOpEpochCount++
 			return dealOps.ForEach(abi.ChainEpoch(epoch), func(id abi.DealID) error {
@@ -246,11 +260,14 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 	acc.Require(len(expectedDealOps) == 0, "missing deal ops for proposals: %v", expectedDealOps)
 
 	return &StateSummary{
-		Deals:                proposalStats,
-		PendingProposalCount: pendingProposalCount,
-		DealStateCount:       dealStateCount,
-		LockTableCount:       lockTableCount,
-		DealOpEpochCount:     dealOpEpochCount,
-		DealOpCount:          dealOpCount,
+		Deals:                    proposalStats,
+		PendingDealAllocationIds: pendingDealAllocationIds,
+		PendingProposalCount:     pendingProposalCount,
+		DealStateCount:           dealStateCount,
+		LockTableCount:           lockTableCount,
+		DealOpEpochCount:         dealOpEpochCount,
+		DealOpCount:              dealOpCount,
+		ClaimIdToDealId:          claimIdToDealId,
+		AllocIdToDealId:          allocationIdToDealId,
 	}, acc
 }
