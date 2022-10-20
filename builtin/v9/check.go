@@ -291,8 +291,7 @@ func CheckVerifregAgainstMiners(acc *builtin.MessageAccumulator, verifregSummary
 		acc.Require(ok, "claim provider %s is not found in miner summaries", maddr)
 
 		// all claims are linked to a valid sector number
-		_, found := minerSummary.SectorsWithDeals[claim.Sector]
-		acc.Require(found, "claim sector number %d not recorded as a sector with deals for miner %s", claim.Sector, maddr)
+		acc.Require(minerSummary.SectorsWithDeals[claim.Sector], "claim sector number %d not recorded as a sector with deals for miner %s", claim.Sector, maddr)
 	}
 }
 

@@ -166,21 +166,21 @@ func (st *State) LoadAllocationsToMap(store adt.Store, clientIdAddr address.Addr
 		return nil, xerrors.Errorf("couldn't get map: %x", err)
 	}
 
-	var goMap = make(map[AllocationId]Allocation)
+	var allocIdToAlloc = make(map[AllocationId]Allocation)
 	var out Allocation
 	err = adtMap.ForEach(&out, func(key string) error {
 		uintKey, err := abi.ParseUIntKey(key)
 		if err != nil {
 			return xerrors.Errorf("couldn't parse key to uint: %x", err)
 		}
-		goMap[AllocationId(uintKey)] = out
+		allocIdToAlloc[AllocationId(uintKey)] = out
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return goMap, nil
+	return allocIdToAlloc, nil
 }
 
 func (st *State) LoadClaimsToMap(store adt.Store, providerIdAddr address.Address) (map[ClaimId]Claim, error) {
@@ -198,21 +198,21 @@ func (st *State) LoadClaimsToMap(store adt.Store, providerIdAddr address.Address
 		return nil, xerrors.Errorf("couldn't get map: %x", err)
 	}
 
-	var goMap = make(map[ClaimId]Claim)
+	var claimIdToClaim = make(map[ClaimId]Claim)
 	var out Claim
 	err = adtMap.ForEach(&out, func(key string) error {
 		uintKey, err := abi.ParseUIntKey(key)
 		if err != nil {
 			return xerrors.Errorf("couldn't parse key to uint: %w", err)
 		}
-		goMap[ClaimId(uintKey)] = out
+		claimIdToClaim[ClaimId(uintKey)] = out
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return goMap, nil
+	return claimIdToClaim, nil
 }
 
 func (st *State) GetAllClaims(store adt.Store) (map[ClaimId]Claim, error) {

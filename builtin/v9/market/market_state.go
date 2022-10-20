@@ -209,19 +209,19 @@ func (st *State) GetPendingDealAllocationIds(store adt.Store) (map[abi.DealID]ve
 		return nil, xerrors.Errorf("couldn't get map: %x", err)
 	}
 
-	var goMap = make(map[abi.DealID]verifreg.AllocationId)
+	var dealIdToAllocId = make(map[abi.DealID]verifreg.AllocationId)
 	var out cbg.CborInt
 	err = adtMap.ForEach(&out, func(key string) error {
 		uintKey, err := abi.ParseUIntKey(key)
 		if err != nil {
 			return xerrors.Errorf("couldn't parse key to uint: %w", err)
 		}
-		goMap[abi.DealID(uintKey)] = verifreg.AllocationId(out)
+		dealIdToAllocId[abi.DealID(uintKey)] = verifreg.AllocationId(out)
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return goMap, nil
+	return dealIdToAllocId, nil
 }
