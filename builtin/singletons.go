@@ -16,6 +16,10 @@ var (
 	VerifiedRegistryActorAddr = mustMakeAddress(6)
 	// Distinguished AccountActor that is the destination of all burnt funds.
 	BurntFundsActorAddr = mustMakeAddress(99)
+
+	// EthereumAddressManagerActorID is the actor ID of the Ethereum Address Manager singleton.
+	EthereumAddressManagerActorID   = uint64(10)
+	EthereumAddressManagerActorAddr = mustMakeAddress(EthereumAddressManagerActorID)
 )
 
 const FirstNonSingletonActorId = 100
