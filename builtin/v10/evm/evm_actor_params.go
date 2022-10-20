@@ -1,7 +1,7 @@
 package evm
 
 type ConstructorParams struct {
-	Bytecode []byte
+	Initcode []byte
 }
 
 type GetStorageAtParams struct {
