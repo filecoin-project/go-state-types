@@ -5,7 +5,9 @@ import (
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
+	"github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
 	"github.com/filecoin-project/go-state-types/exitcode"
+	cbg "github.com/whyrusleeping/cbor-gen"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/ipfs/go-cid"
@@ -199,4 +201,27 @@ func validateDealCanActivate(proposal *DealProposal, minerAddr addr.Address, sec
 		return exitcode.ErrIllegalArgument.Wrapf("proposal expiration %d exceeds sector expiration %d", proposal.EndEpoch, sectorExpiration)
 	}
 	return nil
+}
+
+func (st *State) GetPendingDealAllocationIds(store adt.Store) (map[abi.DealID]verifreg.AllocationId, error) {
+	adtMap, err := adt.AsMap(store, st.PendingDealAllocationIds, builtin.DefaultHamtBitwidth)
+	if err != nil {
+		return nil, xerrors.Errorf("couldn't get map: %x", err)
+	}
+
+	var dealIdToAllocId = make(map[abi.DealID]verifreg.AllocationId)
+	var out cbg.CborInt
+	err = adtMap.ForEach(&out, func(key string) error {
+		uintKey, err := abi.ParseUIntKey(key)
+		if err != nil {
+			return xerrors.Errorf("couldn't parse key to uint: %w", err)
+		}
+		dealIdToAllocId[abi.DealID(uintKey)] = verifreg.AllocationId(out)
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return dealIdToAllocId, nil
 }

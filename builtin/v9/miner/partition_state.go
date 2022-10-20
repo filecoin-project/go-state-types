@@ -4,6 +4,7 @@ import (
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
+	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 	"github.com/ipfs/go-cid"
 	"golang.org/x/xerrors"
 )
@@ -89,6 +90,14 @@ func (p *Partition) ActivateUnproven() PowerPair {
 	return newPower
 }
 
+func (d *Deadline) PartitionsSnapshotArray(store adt.Store) (*adt.Array, error) {
+	arr, err := adt.AsArray(store, d.PartitionsSnapshot, DeadlinePartitionsAmtBitwidth)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to load partitions snapshot: %w", err)
+	}
+	return arr, nil
+}
+
 //
 // PowerPair
 //
@@ -113,4 +122,17 @@ func (pp PowerPair) Sub(other PowerPair) PowerPair {
 		Raw: big.Sub(pp.Raw, other.Raw),
 		QA:  big.Sub(pp.QA, other.QA),
 	}
+}
+
+func (pp *PowerPair) Equals(other PowerPair) bool {
+	return pp.Raw.Equals(other.Raw) && pp.QA.Equals(other.QA)
+}
+
+func (pp PowerPair) IsZero() bool {
+	return pp.Raw.IsZero() && pp.QA.IsZero()
+}
+
+// Active power is power of non-faulty sectors.
+func (p *Partition) ActivePower() PowerPair {
+	return p.LivePower.Sub(p.FaultyPower).Sub(p.UnprovenPower)
 }

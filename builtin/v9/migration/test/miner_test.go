@@ -30,7 +30,7 @@ func TestMinerMigration(t *testing.T) {
 
 	startRoot := makeInputTree(ctx, t, adtStore)
 
-	oldStateTree, err := migration.LoadTree(adtStore, startRoot)
+	oldStateTree, err := builtin.LoadTree(adtStore, startRoot)
 	require.NoError(t, err)
 
 	oldSystemActor, found, err := oldStateTree.GetActor(builtin.SystemActorAddr)
@@ -138,7 +138,7 @@ func TestMinerMigration(t *testing.T) {
 	miner1StCid, err := adtStore.Put(ctx, &baseMinerSt)
 	require.NoError(t, err)
 
-	miner1 := migration.Actor{
+	miner1 := builtin.Actor{
 		Code:       oldMinerCID,
 		Head:       miner1StCid,
 		CallSeqNum: 0,
@@ -166,7 +166,7 @@ func TestMinerMigration(t *testing.T) {
 	miner2StCid, err := adtStore.Put(ctx, &miner2St)
 	require.NoError(t, err)
 
-	miner2 := migration.Actor{
+	miner2 := builtin.Actor{
 		Code:       oldMinerCID,
 		Head:       miner2StCid,
 		CallSeqNum: 0,
@@ -205,7 +205,7 @@ func TestMinerMigration(t *testing.T) {
 	miner3StCid, err := adtStore.Put(ctx, &miner3St)
 	require.NoError(t, err)
 
-	miner3 := migration.Actor{
+	miner3 := builtin.Actor{
 		Code:       oldMinerCID,
 		Head:       miner3StCid,
 		CallSeqNum: 0,
@@ -235,7 +235,7 @@ func TestMinerMigration(t *testing.T) {
 
 	// check that the actor states were correctly updated
 
-	newStateTree, err := migration.LoadTree(adtStore, cacheRoot)
+	newStateTree, err := builtin.LoadTree(adtStore, cacheRoot)
 	require.NoError(t, err)
 
 	// miner 1 is just empty precommits
@@ -322,7 +322,7 @@ func TestFip0029MinerMigration(t *testing.T) {
 
 	startRoot := makeInputTree(ctx, t, adtStore)
 
-	oldStateTree, err := migration.LoadTree(adtStore, startRoot)
+	oldStateTree, err := builtin.LoadTree(adtStore, startRoot)
 	require.NoError(t, err)
 
 	oldSystemActor, found, err := oldStateTree.GetActor(builtin.SystemActorAddr)
@@ -356,7 +356,7 @@ func TestFip0029MinerMigration(t *testing.T) {
 	var minerInfo miner8.MinerInfo
 	require.NoError(t, adtStore.Get(ctx, minerSt.Info, &minerInfo))
 
-	miner := migration.Actor{
+	miner := builtin.Actor{
 		Code:       oldMinerCID,
 		Head:       minerStCid,
 		CallSeqNum: 0,
@@ -384,7 +384,7 @@ func TestFip0029MinerMigration(t *testing.T) {
 
 	// check that the actor states were correctly updated
 
-	newStateTree, err := migration.LoadTree(adtStore, cacheRoot)
+	newStateTree, err := builtin.LoadTree(adtStore, cacheRoot)
 	require.NoError(t, err)
 
 	newMinerActor, ok, err := newStateTree.GetActor(addr)

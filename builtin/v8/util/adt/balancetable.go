@@ -38,3 +38,14 @@ func (t *BalanceTable) Get(key addr.Address) (abi.TokenAmount, error) {
 
 	return value, err
 }
+
+// Returns the total balance held by this BalanceTable
+func (t *BalanceTable) Total() (abi.TokenAmount, error) {
+	total := big.Zero()
+	var cur abi.TokenAmount
+	err := (*Map)(t).ForEach(&cur, func(key string) error {
+		total = big.Add(total, cur)
+		return nil
+	})
+	return total, err
+}

@@ -163,6 +163,12 @@ func QAPowerForWeight(size abi.SectorSize, duration abi.ChainEpoch, dealWeight, 
 	return big.Rsh(big.Mul(big.NewIntUnsigned(uint64(size)), quality), builtin.SectorQualityPrecision)
 }
 
+// The quality-adjusted power for a sector.
+func QAPowerForSector(size abi.SectorSize, sector *SectorOnChainInfo) abi.StoragePower {
+	duration := sector.Expiration - sector.Activation
+	return QAPowerForWeight(size, duration, sector.DealWeight, sector.VerifiedDealWeight)
+}
+
 const MaxAggregatedSectors = 819
 const MinAggregatedSectors = 4
 const MaxAggregateProofSize = 81960
