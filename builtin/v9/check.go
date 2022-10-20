@@ -263,9 +263,8 @@ func CheckVerifregAgainstDatacap(acc *builtin.MessageAccumulator, verifregSummar
 	// Check verifiers and clients are disjoint.
 	for verifier := range verifregSummary.Verifiers {
 		actorId, err := address.IDFromAddress(verifier)
-		if err != nil {
-			acc.Addf("error getting actor ID: %v", err)
-		}
+		acc.RequireNoError(err, "error getting actor ID: %v", err)
+
 		_, found := datacapSummary.Balances[abi.ActorID(actorId)]
 		acc.Require(!found, "verifier %v is also a client", verifier)
 	}
