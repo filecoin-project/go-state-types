@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/filecoin-project/go-state-types/builtin/v8/account"
 	"github.com/filecoin-project/go-state-types/builtin/v8/cron"
+	"github.com/filecoin-project/go-state-types/builtin/v8/eam"
 	"github.com/filecoin-project/go-state-types/builtin/v8/evm"
 	init_ "github.com/filecoin-project/go-state-types/builtin/v8/init"
 	"github.com/filecoin-project/go-state-types/builtin/v8/market"
@@ -87,12 +88,12 @@ func main() {
 		// actor state
 		paych.State{},
 		paych.LaneState{},
-		//method params and returns
+		// method params and returns
 		paych.ConstructorParams{},
 		paych.UpdateChannelStateParams{},
 		paych.SignedVoucher{},
 		paych.ModVerifyParams{},
-		//other types
+		// other types
 		paych.Merge{},
 	); err != nil {
 		panic(err)
@@ -205,6 +206,18 @@ func main() {
 		// method params and returns
 		evm.ConstructorParams{},
 		evm.GetStorageAtParams{},
+	); err != nil {
+		panic(err)
+	}
+
+	if err := gen.WriteTupleEncodersToFile("./builtin/v8/eam/cbor_gen.go", "eam",
+		// method params and returns
+		eam.CreateParams{},
+		eam.CreateReturn{},
+		eam.Create2Params{},
+		eam.Create2Return{},
+		eam.CreateAccount{},
+		// TODO eam.CreateAccountReturn{},
 	); err != nil {
 		panic(err)
 	}
