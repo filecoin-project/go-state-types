@@ -77,7 +77,9 @@ func (d *datacapMigrator) migrateState(ctx context.Context, store cbor.IpldStore
 	}
 	verifregBalance := big.Mul(big.NewIntUnsigned(d.pendingVerifiedDealSize), verifreg9.DataCapGranularity)
 	tokenSupply = big.Add(tokenSupply, verifregBalance)
-	balancesMap.Put(abi.IdAddrKey(builtin.VerifiedRegistryActorAddr), &verifregBalance)
+	if err = balancesMap.Put(abi.IdAddrKey(builtin.VerifiedRegistryActorAddr), &verifregBalance); err != nil {
+		return nil, xerrors.Errorf("failed to put verifreg balance in balancesMap: %w", err)
+	}
 
 	balancesMapRoot, err := balancesMap.Root()
 	if err != nil {
