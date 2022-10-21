@@ -59,3 +59,107 @@ func (t *State) UnmarshalCBOR(r io.Reader) error {
 	}
 	return nil
 }
+
+var lengthBufAuthenticateMessageParams = []byte{130}
+
+func (t *AuthenticateMessageParams) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufAuthenticateMessageParams); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.Signature ([]uint8) (slice)
+	if len(t.Signature) > cbg.ByteArrayMaxLen {
+		return xerrors.Errorf("Byte array in field t.Signature was too long")
+	}
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajByteString, uint64(len(t.Signature))); err != nil {
+		return err
+	}
+
+	if _, err := w.Write(t.Signature[:]); err != nil {
+		return err
+	}
+
+	// t.Message ([]uint8) (slice)
+	if len(t.Message) > cbg.ByteArrayMaxLen {
+		return xerrors.Errorf("Byte array in field t.Message was too long")
+	}
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajByteString, uint64(len(t.Message))); err != nil {
+		return err
+	}
+
+	if _, err := w.Write(t.Message[:]); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *AuthenticateMessageParams) UnmarshalCBOR(r io.Reader) error {
+	*t = AuthenticateMessageParams{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Signature ([]uint8) (slice)
+
+	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+
+	if extra > cbg.ByteArrayMaxLen {
+		return fmt.Errorf("t.Signature: byte array too large (%d)", extra)
+	}
+	if maj != cbg.MajByteString {
+		return fmt.Errorf("expected byte array")
+	}
+
+	if extra > 0 {
+		t.Signature = make([]uint8, extra)
+	}
+
+	if _, err := io.ReadFull(br, t.Signature[:]); err != nil {
+		return err
+	}
+	// t.Message ([]uint8) (slice)
+
+	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+
+	if extra > cbg.ByteArrayMaxLen {
+		return fmt.Errorf("t.Message: byte array too large (%d)", extra)
+	}
+	if maj != cbg.MajByteString {
+		return fmt.Errorf("expected byte array")
+	}
+
+	if extra > 0 {
+		t.Message = make([]uint8, extra)
+	}
+
+	if _, err := io.ReadFull(br, t.Message[:]); err != nil {
+		return err
+	}
+	return nil
+}

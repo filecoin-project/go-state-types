@@ -29,6 +29,8 @@ func main() {
 	if err := gen.WriteTupleEncodersToFile("./builtin/v9/account/cbor_gen.go", "account",
 		// actor state
 		account.State{},
+		// method params and returns
+		account.AuthenticateMessageParams{},
 	); err != nil {
 		panic(err)
 	}
@@ -107,6 +109,7 @@ func main() {
 		// method params and returns
 		power.UpdateClaimedPowerParams{},
 		power.MinerConstructorParams{},
+		power.CreateMinerParams{},
 		power.CreateMinerReturn{},
 		power.CurrentTotalPowerReturn{},
 		power.EnrollCronEventParams{},
