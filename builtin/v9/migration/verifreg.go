@@ -25,11 +25,7 @@ type DealAllocationTuple struct {
 	Allocation verifreg9.AllocationId
 }
 
-func migrateVerifreg(ctx context.Context, adtStore adt8.Store, priorEpoch abi.ChainEpoch, initStateV8 init8.State, marketStateV8 market8.State, verifregStateV8 verifreg8.State, emptyMapCid cid.Cid) (cid.Cid, []DealAllocationTuple, error) {
-	pendingProposals, err := adt8.AsSet(adtStore, marketStateV8.PendingProposals, builtin.DefaultHamtBitwidth)
-	if err != nil {
-		return cid.Undef, nil, xerrors.Errorf("failed to load pending proposals: %w", err)
-	}
+func migrateVerifreg(ctx context.Context, adtStore adt8.Store, priorEpoch abi.ChainEpoch, initStateV8 init8.State, marketStateV8 market8.State, pendingDeals []abi.DealID, verifregStateV8 verifreg8.State, emptyMapCid cid.Cid) (cid.Cid, []DealAllocationTuple, error) {
 
 	proposals, err := market8.AsDealProposalArray(adtStore, marketStateV8.Proposals)
 	if err != nil {
@@ -39,38 +35,23 @@ func migrateVerifreg(ctx context.Context, adtStore adt8.Store, priorEpoch abi.Ch
 	nextAllocationID := verifreg9.AllocationId(1)
 	allocationsMapMap := make(map[address.Address]*adt9.Map)
 	var dealAllocationTuples []DealAllocationTuple
-	var proposal market8.DealProposal
-	if err = proposals.ForEach(&proposal, func(dealID int64) error {
-		// Nothing to do for unverified deals
-		if !proposal.VerifiedDeal {
-			return nil
+
+	for _, dealID := range pendingDeals {
+		proposal, err := proposals.GetDealProposal(dealID)
+		if err != nil || proposal == nil {
+			return cid.Undef, nil, xerrors.Errorf("failed to get pending deal proposal %d: %w", dealID, err)
 		}
 
-		pcid, err := proposal.Cid()
+		clientIDAddress, clientIDu64, _, providerIDu64, err := resolveDealAddresses(adtStore, initStateV8, *proposal)
 		if err != nil {
-			return err
-		}
-
-		isPending, err := pendingProposals.Has(abi.CidKey(pcid))
-		if err != nil {
-			return xerrors.Errorf("failed to check pending: %w", err)
-		}
-
-		// Nothing to do for not-pending deals
-		if !isPending {
-			return nil
-		}
-
-		clientIDAddress, clientIDu64, _, providerIDu64, err := resolveDealAddresses(adtStore, initStateV8, proposal)
-		if err != nil {
-			return xerrors.Errorf("failed to resolve proposal addresses %w: ", err)
+			return cid.Undef, nil, xerrors.Errorf("failed to resolve proposal addresses %w: ", err)
 		}
 
 		clientAllocationMap, ok := allocationsMapMap[clientIDAddress]
 		if !ok {
 			clientAllocationMap, err = adt9.AsMap(adtStore, emptyMapCid, builtin.DefaultHamtBitwidth)
 			if err != nil {
-				return xerrors.Errorf("failed to load empty map: %w", err)
+				return cid.Undef, nil, xerrors.Errorf("failed to load empty map: %w", err)
 			}
 
 			allocationsMapMap[clientIDAddress] = clientAllocationMap
@@ -90,7 +71,7 @@ func migrateVerifreg(ctx context.Context, adtStore adt8.Store, priorEpoch abi.Ch
 			TermMax:    market9.DealMaxDuration,
 			Expiration: expiration,
 		}); err != nil {
-			return xerrors.Errorf("failed to put new allocation obj: %w", err)
+			return cid.Undef, nil, xerrors.Errorf("failed to put new allocation obj: %w", err)
 		}
 
 		dealAllocationTuples = append(dealAllocationTuples, DealAllocationTuple{
@@ -100,9 +81,6 @@ func migrateVerifreg(ctx context.Context, adtStore adt8.Store, priorEpoch abi.Ch
 
 		nextAllocationID++
 
-		return nil
-	}); err != nil {
-		return cid.Undef, nil, xerrors.Errorf("failed to iterate over proposals: %w", err)
 	}
 
 	allocationsMap, err := adt9.AsMap(adtStore, emptyMapCid, builtin.DefaultHamtBitwidth)

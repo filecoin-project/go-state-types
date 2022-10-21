@@ -201,6 +201,12 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("failed to get market actor state: %w", err)
 	}
 
+	// Find verified pending deals for both datacap and verifreg migrations
+	pendingVerifiedDeals, pendingVerifiedDealSize, err := getPendingVerifiedDealsAndTotalSize(ctx, adtStore, marketStateV8)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to get pending verified deals")
+	}
+
 	proposals, err := market8.AsDealProposalArray(adtStore, marketStateV8.Proposals)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to get proposals: %w", err)
@@ -255,9 +261,10 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 
 	migrations[dataCapCode] = &datacapMigrator{
-		emptyMapCid:     emptyMapCid,
-		verifregStateV8: verifregStateV8,
-		OutCodeCID:      dataCapCode,
+		emptyMapCid:             emptyMapCid,
+		verifregStateV8:         verifregStateV8,
+		OutCodeCID:              dataCapCode,
+		pendingVerifiedDealSize: pendingVerifiedDealSize,
 	}
 
 	// The Verifreg & Market Actor need special handling,
@@ -291,7 +298,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 			marketHead:   cid.Undef,
 			err:          nil,
 		}
-		verifregHead, dealAllocationTuples, err := migrateVerifreg(ctx, adtStore, priorEpoch, initStateV8, marketStateV8, verifregStateV8, emptyMapCid)
+		verifregHead, dealAllocationTuples, err := migrateVerifreg(ctx, adtStore, priorEpoch, initStateV8, marketStateV8, pendingVerifiedDeals, verifregStateV8, emptyMapCid)
 		if err != nil {
 			ret.err = xerrors.Errorf("failed to migrate verifreg actor: %w", err)
 			verifregMarketResultCh <- ret
