@@ -20,7 +20,7 @@ type CreateAccount struct {
 type Return struct {
 	ActorID       uint64
 	RobustAddress address.Address
-	EthAddress    address.Address
+	EthAddress    [20]byte
 }
 
 type CreateReturn Return

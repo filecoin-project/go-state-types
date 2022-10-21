@@ -127,8 +127,16 @@ func (t *CreateReturn) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.EthAddress (address.Address) (struct)
-	if err := t.EthAddress.MarshalCBOR(w); err != nil {
+	// t.EthAddress ([20]uint8) (array)
+	if len(t.EthAddress) > cbg.ByteArrayMaxLen {
+		return xerrors.Errorf("Byte array in field t.EthAddress was too long")
+	}
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajByteString, uint64(len(t.EthAddress))); err != nil {
+		return err
+	}
+
+	if _, err := w.Write(t.EthAddress[:]); err != nil {
 		return err
 	}
 	return nil
@@ -175,14 +183,28 @@ func (t *CreateReturn) UnmarshalCBOR(r io.Reader) error {
 		}
 
 	}
-	// t.EthAddress (address.Address) (struct)
+	// t.EthAddress ([20]uint8) (array)
 
-	{
+	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
 
-		if err := t.EthAddress.UnmarshalCBOR(br); err != nil {
-			return xerrors.Errorf("unmarshaling t.EthAddress: %w", err)
-		}
+	if extra > cbg.ByteArrayMaxLen {
+		return fmt.Errorf("t.EthAddress: byte array too large (%d)", extra)
+	}
+	if maj != cbg.MajByteString {
+		return fmt.Errorf("expected byte array")
+	}
 
+	if extra != 20 {
+		return fmt.Errorf("expected array to have 20 elements")
+	}
+
+	t.EthAddress = [20]uint8{}
+
+	if _, err := io.ReadFull(br, t.EthAddress[:]); err != nil {
+		return err
 	}
 	return nil
 }
@@ -317,8 +339,16 @@ func (t *Create2Return) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.EthAddress (address.Address) (struct)
-	if err := t.EthAddress.MarshalCBOR(w); err != nil {
+	// t.EthAddress ([20]uint8) (array)
+	if len(t.EthAddress) > cbg.ByteArrayMaxLen {
+		return xerrors.Errorf("Byte array in field t.EthAddress was too long")
+	}
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajByteString, uint64(len(t.EthAddress))); err != nil {
+		return err
+	}
+
+	if _, err := w.Write(t.EthAddress[:]); err != nil {
 		return err
 	}
 	return nil
@@ -365,14 +395,28 @@ func (t *Create2Return) UnmarshalCBOR(r io.Reader) error {
 		}
 
 	}
-	// t.EthAddress (address.Address) (struct)
+	// t.EthAddress ([20]uint8) (array)
 
-	{
+	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
 
-		if err := t.EthAddress.UnmarshalCBOR(br); err != nil {
-			return xerrors.Errorf("unmarshaling t.EthAddress: %w", err)
-		}
+	if extra > cbg.ByteArrayMaxLen {
+		return fmt.Errorf("t.EthAddress: byte array too large (%d)", extra)
+	}
+	if maj != cbg.MajByteString {
+		return fmt.Errorf("expected byte array")
+	}
 
+	if extra != 20 {
+		return fmt.Errorf("expected array to have 20 elements")
+	}
+
+	t.EthAddress = [20]uint8{}
+
+	if _, err := io.ReadFull(br, t.EthAddress[:]); err != nil {
+		return err
 	}
 	return nil
 }
