@@ -32,9 +32,42 @@ func migrateMarket(ctx context.Context, adtStore adt8.Store, dealAllocationTuple
 		return cid.Undef, xerrors.Errorf("failed to flush pending deal allocations map: %w", err)
 	}
 
+	dealStates8, err := adt9.AsArray(adtStore, marketStateV8.States, market8.StatesAmtBitwidth)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to load v8 states array: %w", err)
+	}
+
+	emptyStatesArrayCid, err := adt9.StoreEmptyArray(adtStore, market9.StatesAmtBitwidth)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to create empty states array: %w", err)
+	}
+
+	dealStates9, err := adt9.AsArray(adtStore, emptyStatesArrayCid, market9.StatesAmtBitwidth)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to load v9 states array: %w", err)
+	}
+
+	var dealState8 market8.DealState
+	err = dealStates8.ForEach(&dealState8, func(i int64) error {
+		return dealStates9.Set(uint64(i), &market9.DealState{
+			SectorStartEpoch: dealState8.SectorStartEpoch,
+			LastUpdatedEpoch: dealState8.LastUpdatedEpoch,
+			SlashEpoch:       dealState8.SlashEpoch,
+			VerifiedClaim:    0,
+		})
+	})
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to iterate over v8 states: %w", err)
+	}
+
+	dealStates9Root, err := dealStates9.Root()
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to flush dealStates 9: %w", err)
+	}
+
 	marketStateV9 := market9.State{
 		Proposals:                     marketStateV8.Proposals,
-		States:                        marketStateV8.States,
+		States:                        dealStates9Root,
 		PendingProposals:              marketStateV8.PendingProposals,
 		EscrowTable:                   marketStateV8.EscrowTable,
 		LockedTable:                   marketStateV8.LockedTable,
