@@ -9,6 +9,7 @@ import (
 	adt8 "github.com/filecoin-project/go-state-types/builtin/v8/util/adt"
 	market9 "github.com/filecoin-project/go-state-types/builtin/v9/market"
 	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
+	"github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
 	"github.com/ipfs/go-cid"
 	typegen "github.com/whyrusleeping/cbor-gen"
 	"golang.org/x/xerrors"
@@ -53,7 +54,7 @@ func migrateMarket(ctx context.Context, adtStore adt8.Store, dealAllocationTuple
 			SectorStartEpoch: dealState8.SectorStartEpoch,
 			LastUpdatedEpoch: dealState8.LastUpdatedEpoch,
 			SlashEpoch:       dealState8.SlashEpoch,
-			VerifiedClaim:    0,
+			VerifiedClaim:    verifreg.NoAllocationID,
 		})
 	})
 	if err != nil {
