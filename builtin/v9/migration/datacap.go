@@ -20,9 +20,10 @@ import (
 )
 
 type datacapMigrator struct {
-	emptyMapCid     cid.Cid
-	verifregStateV8 verifreg8.State
-	OutCodeCID      cid.Cid
+	emptyMapCid             cid.Cid
+	verifregStateV8         verifreg8.State
+	OutCodeCID              cid.Cid
+	pendingVerifiedDealSize uint64
 }
 
 func (d *datacapMigrator) migratedCodeCID() cid.Cid {
@@ -73,6 +74,11 @@ func (d *datacapMigrator) migrateState(ctx context.Context, store cbor.IpldStore
 		return allowancesMap.Put(abi.IdAddrKey(a), allowancesMapEntry)
 	}); err != nil {
 		return nil, xerrors.Errorf("failed to loop over verified clients: %w", err)
+	}
+	verifregBalance := big.Mul(big.NewIntUnsigned(d.pendingVerifiedDealSize), verifreg9.DataCapGranularity)
+	tokenSupply = big.Add(tokenSupply, verifregBalance)
+	if err = balancesMap.Put(abi.IdAddrKey(builtin.VerifiedRegistryActorAddr), &verifregBalance); err != nil {
+		return nil, xerrors.Errorf("failed to put verifreg balance in balancesMap: %w", err)
 	}
 
 	balancesMapRoot, err := balancesMap.Root()
