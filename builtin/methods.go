@@ -113,3 +113,18 @@ var MethodsVerifiedRegistry = struct {
 	RestoreBytes                abi.MethodNum
 	RemoveVerifiedClientDataCap abi.MethodNum
 }{MethodConstructor, 2, 3, 4, 5, 6, 7}
+
+var MethodsEVM = struct {
+	Constructor            abi.MethodNum
+	InvokeContract         abi.MethodNum
+	GetBytecode            abi.MethodNum
+	GetStorageAt           abi.MethodNum
+	InvokeContractReadOnly abi.MethodNum
+	InvokeContractDelegate abi.MethodNum
+}{MethodConstructor, 2, 3, 4, 5, 6}
+
+var MethodsEAM = struct {
+	Constructor abi.MethodNum
+	Create      abi.MethodNum
+	Create2     abi.MethodNum
+}{MethodConstructor, 2, 3}
