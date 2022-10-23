@@ -6,6 +6,7 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin/v9/util"
+	"golang.org/x/xerrors"
 
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
@@ -56,14 +57,15 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount) (
 	if err := store.Get(store.Context(), st.AllocatedSectors, &allocatedSectors); err != nil {
 		acc.Addf("error loading allocated sector bitfield: %v", err)
 	} else {
-		allocatedSectorsMap, err = allocatedSectors.AllMap(abi.MaxSectorNumber)
-		if err != nil {
+		allocatedSectorsMap, err = allocatedSectors.AllMap(1 << 30)
+		// if it's too big to expand, we'll fall back on the bitfield directly
+		if err != nil && !xerrors.Is(err, bitfield.ErrBitFieldTooMany) {
 			acc.Addf("error expanding allocated sector bitfield: %v", err)
 			allocatedSectorsMap = nil
 		}
 	}
 
-	CheckPreCommits(st, store, allocatedSectorsMap, acc)
+	CheckPreCommits(st, store, allocatedSectorsMap, allocatedSectors, acc)
 
 	minerSummary.Deals = map[abi.DealID]DealSummary{}
 	var allSectors map[abi.SectorNumber]*SectorOnChainInfo
@@ -76,7 +78,19 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount) (
 		err = sectorsArr.ForEach(&sector, func(sno int64) error {
 			cpy := sector
 			allSectors[abi.SectorNumber(sno)] = &cpy
-			acc.Require(allocatedSectorsMap == nil || allocatedSectorsMap[uint64(sno)],
+
+			allocated := false
+			if allocatedSectorsMap != nil {
+				allocated = allocatedSectorsMap[uint64(sno)]
+			} else {
+				allocated, err = allocatedSectors.IsSet(uint64(sno))
+				if err != nil {
+					acc.Addf("error checking allocated sectors: %v", err)
+					return nil
+				}
+			}
+
+			acc.Require(allocated,
 				"on chain sector's sector number has not been allocated %d", sno)
 
 			for _, dealID := range sector.DealIDs {
@@ -760,7 +774,7 @@ func CheckMinerBalances(st *State, store adt.Store, balance abi.TokenAmount, acc
 	}
 }
 
-func CheckPreCommits(st *State, store adt.Store, allocatedSectors map[uint64]bool, acc *builtin.MessageAccumulator) {
+func CheckPreCommits(st *State, store adt.Store, allocatedSectorsMap map[uint64]bool, allocatedSectorsBf bitfield.BitField, acc *builtin.MessageAccumulator) {
 	quant := st.QuantSpecEveryDeadline()
 
 	// invert pre-commit clean up queue into a lookup by sector number
@@ -794,7 +808,17 @@ func CheckPreCommits(st *State, store adt.Store, allocatedSectors map[uint64]boo
 				return nil
 			}
 
-			acc.Require(allocatedSectors[secNum], "pre-committed sector number has not been allocated %d", secNum)
+			allocated := false
+			if allocatedSectorsMap != nil {
+				allocated = allocatedSectorsMap[secNum]
+			} else {
+				allocated, err = allocatedSectorsBf.IsSet(secNum)
+				if err != nil {
+					acc.Addf("error checking allocated sectors: %v", err)
+					return nil
+				}
+			}
+			acc.Require(allocated, "pre-committed sector number has not been allocated %d", secNum)
 
 			_, found := cleanUpEpochs[secNum]
 			acc.Require(found, "no clean up epoch for pre-commit at %d", precommit.PreCommitEpoch)
