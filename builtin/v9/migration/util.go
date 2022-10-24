@@ -4,6 +4,8 @@ import (
 	"context"
 	"sync"
 
+	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
+
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
 	market8 "github.com/filecoin-project/go-state-types/builtin/v8/market"
@@ -77,6 +79,13 @@ func getPendingVerifiedDealsAndTotalSize(ctx context.Context, adtStore adt8.Stor
 	if err != nil {
 		return nil, 0, xerrors.Errorf("failed to get proposals: %w", err)
 	}
+
+	// We only want those pending deals that haven't been activated -- an activated deal has an entry in dealStates8
+	dealStates8, err := adt9.AsArray(adtStore, marketStateV8.States, market8.StatesAmtBitwidth)
+	if err != nil {
+		return nil, 0, xerrors.Errorf("failed to load v8 states array: %w", err)
+	}
+
 	var pendingVerifiedDeals []abi.DealID
 	pendingSize := uint64(0)
 	var proposal market8.DealProposal
@@ -100,6 +109,18 @@ func getPendingVerifiedDealsAndTotalSize(ctx context.Context, adtStore adt8.Stor
 		if !isPending {
 			return nil
 		}
+
+		var _dealState8 market8.DealState
+		found, err := dealStates8.Get(uint64(dealID), &_dealState8)
+		if err != nil {
+			return xerrors.Errorf("failed to lookup deal state: %w", err)
+		}
+
+		// the deal has an entry in deal states, which means it's already been allocated, nothing to do
+		if found {
+			return nil
+		}
+
 		pendingVerifiedDeals = append(pendingVerifiedDeals, abi.DealID(dealID))
 		pendingSize += uint64(proposal.PieceSize)
 		return nil
