@@ -274,6 +274,8 @@ func CheckVerifregAgainstDatacap(acc *builtin.MessageAccumulator, verifregSummar
 	for _, allocation := range verifregSummary.Allocations {
 		pendingAllocationsTotal = big.Add(pendingAllocationsTotal, big.NewIntUnsigned(uint64(allocation.Size)))
 	}
+
+	pendingAllocationsTotal = big.Mul(pendingAllocationsTotal, verifreg.DataCapGranularity)
 	verifregId, err := address.IDFromAddress(builtin.VerifiedRegistryActorAddr)
 	acc.RequireNoError(err, "could not get verifreg ID from address")
 	verifregBalance, found := datacapSummary.Balances[abi.ActorID(verifregId)]
