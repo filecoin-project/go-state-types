@@ -23,4 +23,5 @@ var Methods = map[uint64]builtin.MethodMeta{
 	18: {"RevokeAllowance", *new(func(*RevokeAllowanceParams) *abi.TokenAmount)},     // RevokeAllowance
 	19: {"Burn", *new(func(*BurnParams) *BurnReturn)},                                // Burn
 	20: {"BurnFrom", *new(func(*BurnFromParams) *BurnFromReturn)},                    // BurnFrom
+	21: {"Allowance", *new(func(*GetAllowanceParams) *abi.TokenAmount)},              // Allowance
 }

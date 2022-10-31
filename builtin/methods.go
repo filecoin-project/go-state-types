@@ -144,4 +144,5 @@ var MethodsDatacap = struct {
 	RevokeAllowance   abi.MethodNum
 	Burn              abi.MethodNum
 	BurnFrom          abi.MethodNum
-}{MethodConstructor, 2, 3, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
+	Allowance         abi.MethodNum
+}{MethodConstructor, 2, 3, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21}
