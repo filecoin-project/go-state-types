@@ -59,6 +59,9 @@ type ExpirationQueue = miner9.ExpirationQueue
 func LoadExpirationQueue(store adt.Store, root cid.Cid, quant builtin.QuantSpec, bitwidth int) (ExpirationQueue, error) {
 	return miner9.LoadExpirationQueue(store, root, quant, bitwidth)
 }
+func LoadSectors(store adt.Store, root cid.Cid) (Sectors, error) {
+	return miner9.LoadSectors(store, root)
+}
 
 type Sectors = miner9.Sectors
 type VestingFunds = miner9.VestingFunds
