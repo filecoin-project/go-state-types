@@ -98,16 +98,16 @@ func (t *ConstructorParams) MarshalCBOR(w io.Writer) error {
 
 	scratch := make([]byte, 9)
 
-	// t.Bytecode ([]uint8) (slice)
-	if len(t.Bytecode) > cbg.ByteArrayMaxLen {
-		return xerrors.Errorf("Byte array in field t.Bytecode was too long")
+	// t.Initcode ([]uint8) (slice)
+	if len(t.Initcode) > cbg.ByteArrayMaxLen {
+		return xerrors.Errorf("Byte array in field t.Initcode was too long")
 	}
 
-	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajByteString, uint64(len(t.Bytecode))); err != nil {
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajByteString, uint64(len(t.Initcode))); err != nil {
 		return err
 	}
 
-	if _, err := w.Write(t.Bytecode[:]); err != nil {
+	if _, err := w.Write(t.Initcode[:]); err != nil {
 		return err
 	}
 	return nil
@@ -131,7 +131,7 @@ func (t *ConstructorParams) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	// t.Bytecode ([]uint8) (slice)
+	// t.Initcode ([]uint8) (slice)
 
 	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
@@ -139,17 +139,17 @@ func (t *ConstructorParams) UnmarshalCBOR(r io.Reader) error {
 	}
 
 	if extra > cbg.ByteArrayMaxLen {
-		return fmt.Errorf("t.Bytecode: byte array too large (%d)", extra)
+		return fmt.Errorf("t.Initcode: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {
 		return fmt.Errorf("expected byte array")
 	}
 
 	if extra > 0 {
-		t.Bytecode = make([]uint8, extra)
+		t.Initcode = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(br, t.Bytecode[:]); err != nil {
+	if _, err := io.ReadFull(br, t.Initcode[:]); err != nil {
 		return err
 	}
 	return nil
