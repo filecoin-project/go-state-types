@@ -2,11 +2,12 @@ package init
 
 import (
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/builtin"
 )
 
-var Methods = map[uint64]interface{}{
-	1: *new(func(interface{}, *ConstructorParams) *abi.EmptyValue), // Constructor
-	2: *new(func(interface{}, *ExecParams) *ExecReturn),            // Exec
-	3: *new(func(interface{}, *Exec4Params) *ExecReturn),           // Exec4
-	4: *new(func(interface{}, *InstallParams) *InstallReturn),      // Install
+var Methods = map[uint64]builtin.MethodMeta{
+	1: {"Constructor", *new(func(*ConstructorParams) *abi.EmptyValue)}, // Constructor
+	2: {"Exec", *new(func(*ExecParams) *ExecReturn)},                   // Exec
+	3: {"Exec4", *new(func(*Exec4Params) *ExecReturn)},                 // Exec4
+	4: {"Install", *new(func(*InstallParams) *InstallReturn)},          // Install
 }
