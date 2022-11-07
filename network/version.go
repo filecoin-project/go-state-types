@@ -25,6 +25,7 @@ const (
 	Version15                 // ???
 	Version16                 // ???
 	Version17                 // ???
+	Version18                 // FVM M2.1
 
 	// VersionMax is the maximum version number
 	VersionMax = Version(math.MaxUint32)
