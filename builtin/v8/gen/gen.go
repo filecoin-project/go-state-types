@@ -209,18 +209,6 @@ func main() {
 		panic(err)
 	}
 
-	if err := gen.WriteTupleEncodersToFile("./builtin/v8/eam/cbor_gen.go", "eam",
-		// method params and returns
-		eam.CreateParams{},
-		eam.CreateReturn{},
-		eam.Create2Params{},
-		eam.Create2Return{},
-		eam.CreateAccount{},
-		// TODO eam.CreateAccountReturn{},
-	); err != nil {
-		panic(err)
-	}
-
 	if err := gen.WriteTupleEncodersToFile("./builtin/v8/util/smoothing/cbor_gen.go", "smoothing",
 		smoothing.FilterEstimate{},
 	); err != nil {
