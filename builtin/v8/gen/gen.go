@@ -86,12 +86,12 @@ func main() {
 		// actor state
 		paych.State{},
 		paych.LaneState{},
-		//method params and returns
+		// method params and returns
 		paych.ConstructorParams{},
 		paych.UpdateChannelStateParams{},
 		paych.SignedVoucher{},
 		paych.ModVerifyParams{},
-		//other types
+		// other types
 		paych.Merge{},
 	); err != nil {
 		panic(err)
@@ -205,6 +205,18 @@ func main() {
 		// other types
 		verifreg.RemoveDataCapRequest{},
 		verifreg.RemoveDataCapProposal{},
+	); err != nil {
+		panic(err)
+	}
+
+	if err := gen.WriteTupleEncodersToFile("./builtin/v8/eam/cbor_gen.go", "eam",
+		// method params and returns
+		eam.CreateParams{},
+		eam.CreateReturn{},
+		eam.Create2Params{},
+		eam.Create2Return{},
+		eam.CreateAccount{},
+		// TODO eam.CreateAccountReturn{},
 	); err != nil {
 		panic(err)
 	}
