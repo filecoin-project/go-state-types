@@ -146,3 +146,18 @@ var MethodsDatacap = struct {
 	BurnFrom          abi.MethodNum
 	Allowance         abi.MethodNum
 }{MethodConstructor, 2, 3, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21}
+
+var MethodsEVM = struct {
+	Constructor            abi.MethodNum
+	InvokeContract         abi.MethodNum
+	GetBytecode            abi.MethodNum
+	GetStorageAt           abi.MethodNum
+	InvokeContractReadOnly abi.MethodNum
+	InvokeContractDelegate abi.MethodNum
+}{MethodConstructor, 2, 3, 4, 5, 6}
+
+var MethodsEAM = struct {
+	Constructor abi.MethodNum
+	Create      abi.MethodNum
+	Create2     abi.MethodNum
+}{MethodConstructor, 2, 3}
