@@ -5,12 +5,16 @@ package account
 import (
 	"fmt"
 	"io"
+	"sort"
 
+	cid "github.com/ipfs/go-cid"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	xerrors "golang.org/x/xerrors"
 )
 
 var _ = xerrors.Errorf
+var _ = cid.Undef
+var _ = sort.Sort
 
 var lengthBufState = []byte{129}
 

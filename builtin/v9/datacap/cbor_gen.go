@@ -5,13 +5,17 @@ package datacap
 import (
 	"fmt"
 	"io"
+	"sort"
 
 	address "github.com/filecoin-project/go-address"
+	cid "github.com/ipfs/go-cid"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	xerrors "golang.org/x/xerrors"
 )
 
 var _ = xerrors.Errorf
+var _ = cid.Undef
+var _ = sort.Sort
 
 var lengthBufState = []byte{130}
 
