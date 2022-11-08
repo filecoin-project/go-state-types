@@ -16,8 +16,6 @@ func main() {
 		init_.ExecParams{},
 		init_.ExecReturn{},
 		init_.Exec4Params{},
-		init_.InstallParams{},
-		init_.InstallReturn{},
 	); err != nil {
 		panic(err)
 	}

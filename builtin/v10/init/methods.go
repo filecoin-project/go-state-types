@@ -9,5 +9,4 @@ var Methods = map[uint64]builtin.MethodMeta{
 	1: {"Constructor", *new(func(*ConstructorParams) *abi.EmptyValue)}, // Constructor
 	2: {"Exec", *new(func(*ExecParams) *ExecReturn)},                   // Exec
 	3: {"Exec4", *new(func(*Exec4Params) *ExecReturn)},                 // Exec4
-	4: {"Install", *new(func(*InstallParams) *InstallReturn)},          // Install
 }
