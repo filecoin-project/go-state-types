@@ -111,7 +111,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 
 	// load old manifest data
-	systemActor, ok, err := actorsIn.GetActor(builtin.SystemActorAddr)
+	systemActor, ok, err := actorsIn.GetActorV4(builtin.SystemActorAddr)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to get system actor: %w", err)
 	}
@@ -187,7 +187,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	// The Miner Actor -- needs loading the market state
 
 	// load market proposals
-	marketActorV8, ok, err := actorsIn.GetActor(builtin.StorageMarketActorAddr)
+	marketActorV8, ok, err := actorsIn.GetActorV4(builtin.StorageMarketActorAddr)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to get market actor: %w", err)
 	}
@@ -231,7 +231,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 	// The DataCap actor -- needs to be created, and loading the verified registry state
 
-	verifregActorV8, ok, err := actorsIn.GetActor(builtin.VerifiedRegistryActorAddr)
+	verifregActorV8, ok, err := actorsIn.GetActorV4(builtin.VerifiedRegistryActorAddr)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to get verifreg actor: %w", err)
 	}
@@ -250,7 +250,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("failed to find datacap code ID: %w", err)
 	}
 
-	if err = actorsIn.SetActor(builtin.DatacapActorAddr, &builtin.Actor{
+	if err = actorsIn.SetActorV4(builtin.DatacapActorAddr, &builtin.ActorV4{
 		Code: dataCapCode,
 		// we just need to put _something_ defined, this never gets read
 		Head:       emptyMapCid,
@@ -271,7 +271,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	// - they need to load the init actor state
 	// - they need to be done in order -- the output of the verifreg migration is input to the market migration
 
-	initActorV8, ok, err := actorsIn.GetActor(builtin.InitActorAddr)
+	initActorV8, ok, err := actorsIn.GetActorV4(builtin.InitActorAddr)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to load init actor: %w", err)
 	}
@@ -329,7 +329,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	grp.Go(func() error {
 		defer close(jobCh)
 		log.Log(rt.INFO, "Creating migration jobs for tree %s", actorsRootIn)
-		if err = actorsIn.ForEach(func(addr address.Address, actorIn *builtin.Actor) error {
+		if err = actorsIn.ForEachV4(func(addr address.Address, actorIn *builtin.ActorV4) error {
 			if _, ok := deferredCodeIDs[actorIn.Code]; ok {
 				return nil
 			}
@@ -341,7 +341,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 			nextInput := &migrationJob{
 				Address:        addr,
-				Actor:          *actorIn, // Must take a copy, the pointer is not stable.
+				ActorV4:        *actorIn, // Must take a copy, the pointer is not stable.
 				cache:          cache,
 				actorMigration: migration,
 			}
@@ -425,7 +425,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		log.Log(rt.INFO, "Result writer started")
 		resultCount := 0
 		for result := range jobResultCh {
-			if err := actorsOut.SetActor(result.Address, &result.Actor); err != nil {
+			if err := actorsOut.SetActorV4(result.Address, &result.ActorV4); err != nil {
 				return err
 			}
 			resultCount++
@@ -453,7 +453,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("failed to migrate verifreg and market: %w", err)
 	}
 
-	if err = actorsOut.SetActor(builtin.VerifiedRegistryActorAddr, &builtin.Actor{
+	if err = actorsOut.SetActorV4(builtin.VerifiedRegistryActorAddr, &builtin.ActorV4{
 		Code:       verifregCode,
 		Head:       verifregMarketHeads.verifregHead,
 		CallSeqNum: verifregActorV8.CallSeqNum,
@@ -462,7 +462,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("failed to set verifreg actor: %w", err)
 	}
 
-	if err = actorsOut.SetActor(builtin.StorageMarketActorAddr, &builtin.Actor{
+	if err = actorsOut.SetActorV4(builtin.StorageMarketActorAddr, &builtin.ActorV4{
 		Code:       marketCode,
 		Head:       verifregMarketHeads.marketHead,
 		CallSeqNum: marketActorV8.CallSeqNum,
@@ -499,36 +499,36 @@ type actorMigration interface {
 
 type migrationJob struct {
 	address.Address
-	builtin.Actor
+	builtin.ActorV4
 	actorMigration
 	cache MigrationCache
 }
 
 type migrationJobResult struct {
 	address.Address
-	builtin.Actor
+	builtin.ActorV4
 }
 
 func (job *migrationJob) run(ctx context.Context, store cbor.IpldStore, priorEpoch abi.ChainEpoch) (*migrationJobResult, error) {
 	result, err := job.migrateState(ctx, store, actorMigrationInput{
 		address:    job.Address,
-		head:       job.Actor.Head,
+		head:       job.ActorV4.Head,
 		priorEpoch: priorEpoch,
 		cache:      job.cache,
 	})
 	if err != nil {
 		return nil, xerrors.Errorf("state migration failed for actor code %s, addr %s: %w",
-			job.Actor.Code, job.Address, err)
+			job.ActorV4.Code, job.Address, err)
 	}
 
 	// Set up new actor record with the migrated state.
 	return &migrationJobResult{
 		job.Address, // Unchanged
-		builtin.Actor{
+		builtin.ActorV4{
 			Code:       result.newCodeCID,
 			Head:       result.newHead,
-			CallSeqNum: job.Actor.CallSeqNum, // Unchanged
-			Balance:    job.Actor.Balance,    // Unchanged
+			CallSeqNum: job.ActorV4.CallSeqNum, // Unchanged
+			Balance:    job.ActorV4.Balance,    // Unchanged
 		},
 	}, nil
 }

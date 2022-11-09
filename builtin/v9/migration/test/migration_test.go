@@ -27,7 +27,7 @@ func TestMigration(t *testing.T) {
 	oldStateTree, err := builtin.LoadTree(adtStore, startRoot)
 	require.NoError(t, err)
 
-	oldSystemActor, found, err := oldStateTree.GetActor(builtin.SystemActorAddr)
+	oldSystemActor, found, err := oldStateTree.GetActorV4(builtin.SystemActorAddr)
 	require.NoError(t, err)
 	require.True(t, found, "system actor not found")
 
@@ -61,7 +61,7 @@ func TestMigration(t *testing.T) {
 	newStateTree, err := builtin.LoadTree(adtStore, cacheRoot)
 	require.NoError(t, err)
 
-	newSystemActor, found, err := newStateTree.GetActor(builtin.SystemActorAddr)
+	newSystemActor, found, err := newStateTree.GetActorV4(builtin.SystemActorAddr)
 	require.NoError(t, err)
 	require.True(t, found, "system actor not found")
 
@@ -84,8 +84,8 @@ func TestMigration(t *testing.T) {
 		cidsMap[oldCid] = newCid
 	}
 
-	_ = oldStateTree.ForEach(func(addr address.Address, oldActor *builtin.Actor) error {
-		newActor, ok, err := newStateTree.GetActor(addr)
+	_ = oldStateTree.ForEachV4(func(addr address.Address, oldActor *builtin.ActorV4) error {
+		newActor, ok, err := newStateTree.GetActorV4(addr)
 		require.NoError(t, err, "failed to get actor")
 		require.True(t, ok, "didn't find actor: %s", addr)
 		expectedCid, ok := cidsMap[oldActor.Code]
