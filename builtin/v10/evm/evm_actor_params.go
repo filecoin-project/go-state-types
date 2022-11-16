@@ -1,6 +1,7 @@
 package evm
 
 type ConstructorParams struct {
+	Creator  []byte
 	Initcode []byte
 }
 
