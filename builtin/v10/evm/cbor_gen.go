@@ -16,7 +16,7 @@ var _ = xerrors.Errorf
 var _ = cid.Undef
 var _ = sort.Sort
 
-var lengthBufState = []byte{130}
+var lengthBufState = []byte{131}
 
 func (t *State) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -41,6 +41,12 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 		return xerrors.Errorf("failed to write cid field t.ContractState: %w", err)
 	}
 
+	// t.Nonce (uint64) (uint64)
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.Nonce)); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -58,7 +64,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 2 {
+	if extra != 3 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
@@ -84,6 +90,20 @@ func (t *State) UnmarshalCBOR(r io.Reader) error {
 		}
 
 		t.ContractState = c
+
+	}
+	// t.Nonce (uint64) (uint64)
+
+	{
+
+		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.Nonce = uint64(extra)
 
 	}
 	return nil
