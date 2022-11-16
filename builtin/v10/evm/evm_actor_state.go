@@ -7,4 +7,5 @@ import (
 type State struct {
 	Bytecode      cid.Cid
 	ContractState cid.Cid
+	Nonce         uint64
 }
