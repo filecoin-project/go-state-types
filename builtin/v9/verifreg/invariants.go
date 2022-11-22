@@ -103,7 +103,7 @@ func checkAllocationState(id AllocationId, alloc *Allocation, client abi.ActorID
 
 	acc.Require(alloc.Client == client, "allocation %d client %d doesn't match key %d", id, alloc.Client, client)
 
-	acc.Require(alloc.Size >= MinimumVerifiedAllocationSize, "allocation %d size %d too small", id, alloc.Size)
+	acc.Require(alloc.Size >= builtin.MinVerifiedDealSize, "allocation %d size %d too small", id, alloc.Size)
 
 	acc.Require(alloc.TermMin >= MinimumVerifiedAllocationTerm, "allocation %d term min %d too small", id, alloc.TermMin)
 
@@ -119,7 +119,7 @@ func checkClaimState(id ClaimId, claim *Claim, provider abi.ActorID, nextAllocId
 
 	acc.Require(claim.Provider == provider, "claim %d provider %d doesn't match key %d", id, claim.Provider, provider)
 
-	acc.Require(claim.Size >= MinimumVerifiedAllocationSize, "claim %d size %d too small", id, claim.Size)
+	acc.Require(claim.Size >= builtin.MinVerifiedDealSize, "claim %d size %d too small", id, claim.Size)
 
 	acc.Require(claim.TermMin >= MinimumVerifiedAllocationTerm, "claim %d term min %d too small", id, claim.TermMin)
 
