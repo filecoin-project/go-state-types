@@ -1,7 +1,7 @@
 package paych
 
 import (
-	paych9 "github.com/filecoin-project/go-state-types/builtin/v9/paych"
+	"github.com/filecoin-project/go-state-types/builtin"
 )
 
-const SettleDelay = paych9.SettleDelay
+const SettleDelay = builtin.EpochsInHour * 12

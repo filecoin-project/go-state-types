@@ -1,7 +1,13 @@
 package paych
 
 import (
-	paych9 "github.com/filecoin-project/go-state-types/builtin/v9/paych"
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/builtin"
 )
 
-var Methods = paych9.Methods
+var Methods = map[uint64]builtin.MethodMeta{
+	1: {"Constructor", *new(func(*ConstructorParams) *abi.EmptyValue)},               // Constructor
+	2: {"UpdateChannelState", *new(func(*UpdateChannelStateParams) *abi.EmptyValue)}, // UpdateChannelState
+	3: {"Settle", *new(func(*abi.EmptyValue) *abi.EmptyValue)},                       // Settle
+	4: {"Collect", *new(func(*abi.EmptyValue) *abi.EmptyValue)},                      // Collect
+}

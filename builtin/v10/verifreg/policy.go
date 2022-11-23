@@ -1,10 +1,17 @@
 package verifreg
 
 import (
-	verifreg9 "github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
+	"github.com/filecoin-project/go-state-types/builtin"
 )
 
-const EndOfLifeClaimDropPeriod = verifreg9.EndOfLifeClaimDropPeriod
-const MaximumVerifiedAllocationExpiration = verifreg9.MaximumVerifiedAllocationExpiration
-const MinimumVerifiedAllocationTerm = verifreg9.MinimumVerifiedAllocationTerm
-const MaximumVerifiedAllocationTerm = verifreg9.MaximumVerifiedAllocationTerm
+const EndOfLifeClaimDropPeriod = 30 * builtin.EpochsInDay
+
+const MaximumVerifiedAllocationExpiration = 60 * builtin.EpochsInDay
+
+const MinimumVerifiedAllocationTerm = 180 * builtin.EpochsInDay
+
+const MaximumVerifiedAllocationTerm = 5 * builtin.EpochsInYear
+
+const NoAllocationID = AllocationId(0)
+
+const MinimumVerifiedAllocationSize = 1 << 20

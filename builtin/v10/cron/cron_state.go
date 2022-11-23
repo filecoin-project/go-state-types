@@ -1,18 +1,34 @@
 package cron
 
 import (
-	cron9 "github.com/filecoin-project/go-state-types/builtin/v9/cron"
+	addr "github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/builtin"
 )
 
-type State = cron9.State
+type State struct {
+	Entries []Entry
+}
 
-type Entry = cron9.Entry
+type Entry struct {
+	Receiver  addr.Address  // The actor to call (must be an ID-address)
+	MethodNum abi.MethodNum // The method number to call (must accept empty parameters)
+}
 
 func ConstructState(entries []Entry) *State {
-	return cron9.ConstructState(entries)
+	return &State{Entries: entries}
 }
 
 // The default entries to install in the cron actor's state at genesis.
 func BuiltInEntries() []Entry {
-	return cron9.BuiltInEntries()
+	return []Entry{
+		{
+			Receiver:  builtin.StoragePowerActorAddr,
+			MethodNum: builtin.MethodsPower.CronTick,
+		},
+		{
+			Receiver:  builtin.StorageMarketActorAddr,
+			MethodNum: builtin.MethodsMarket.CronTick,
+		},
+	}
 }

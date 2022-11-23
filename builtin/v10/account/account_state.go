@@ -1,7 +1,9 @@
 package account
 
 import (
-	account9 "github.com/filecoin-project/go-state-types/builtin/v9/account"
+	addr "github.com/filecoin-project/go-address"
 )
 
-type State = account9.State
+type State struct {
+	Address addr.Address
+}

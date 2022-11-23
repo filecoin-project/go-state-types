@@ -1,7 +1,11 @@
 package cron
 
 import (
-	cron9 "github.com/filecoin-project/go-state-types/builtin/v9/cron"
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/builtin"
 )
 
-var Methods = cron9.Methods
+var Methods = map[uint64]builtin.MethodMeta{
+	1: {"Constructor", *new(func(*ConstructorParams) *abi.EmptyValue)}, // Constructor
+	2: {"EpochTick", *new(func(*abi.EmptyValue) *abi.EmptyValue)},      // EpochTick
+}

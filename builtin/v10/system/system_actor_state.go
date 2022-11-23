@@ -1,13 +1,25 @@
 package system
 
 import (
-	system9 "github.com/filecoin-project/go-state-types/builtin/v9/system"
+	"context"
+
+	"github.com/filecoin-project/go-state-types/manifest"
 
 	"github.com/filecoin-project/go-state-types/builtin/v10/util/adt"
+
+	"github.com/ipfs/go-cid"
+	"golang.org/x/xerrors"
 )
 
-type State = system9.State
+type State struct {
+	BuiltinActors cid.Cid // ManifestData
+}
 
 func ConstructState(store adt.Store) (*State, error) {
-	return system9.ConstructState(store)
+	empty, err := store.Put(context.TODO(), &manifest.ManifestData{})
+	if err != nil {
+		return nil, xerrors.Errorf("failed to create empty manifest: %w", err)
+	}
+
+	return &State{BuiltinActors: empty}, nil
 }

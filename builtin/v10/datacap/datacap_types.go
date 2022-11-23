@@ -1,23 +1,90 @@
 package datacap
 
 import (
-	datacap9 "github.com/filecoin-project/go-state-types/builtin/v9/datacap"
+	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/big"
+	"github.com/filecoin-project/go-state-types/builtin"
 )
 
-var InfiniteAllowance = datacap9.InfiniteAllowance
+var InfiniteAllowance = big.Mul(big.MustFromString("1000000000000000000000"), builtin.TokenPrecision)
 
-type MintParams = datacap9.MintParams
-type DestroyParams = datacap9.DestroyParams
-type MintReturn = datacap9.MintReturn
-type TransferParams = datacap9.TransferParams
-type TransferReturn = datacap9.TransferReturn
-type TransferFromParams = datacap9.TransferFromParams
-type TransferFromReturn = datacap9.TransferFromReturn
-type IncreaseAllowanceParams = datacap9.IncreaseAllowanceParams
-type DecreaseAllowanceParams = datacap9.DecreaseAllowanceParams
-type RevokeAllowanceParams = datacap9.RevokeAllowanceParams
-type GetAllowanceParams = datacap9.GetAllowanceParams
-type BurnParams = datacap9.BurnParams
-type BurnReturn = datacap9.BurnReturn
-type BurnFromParams = datacap9.BurnFromParams
-type BurnFromReturn = datacap9.BurnFromReturn
+type MintParams struct {
+	To        address.Address
+	Amount    abi.TokenAmount
+	Operators []address.Address
+}
+
+type DestroyParams struct {
+	Owner  address.Address
+	Amount abi.TokenAmount
+}
+
+type MintReturn struct {
+	Balance       abi.TokenAmount
+	Supply        abi.TokenAmount
+	RecipientData []byte
+}
+
+type TransferParams struct {
+	To           address.Address
+	Amount       abi.TokenAmount
+	OperatorData []byte
+}
+
+type TransferReturn struct {
+	FromBalance   abi.TokenAmount
+	ToBalance     abi.TokenAmount
+	RecipientData []byte
+}
+
+type TransferFromParams struct {
+	From         address.Address
+	To           address.Address
+	Amount       abi.TokenAmount
+	OperatorData []byte
+}
+
+type TransferFromReturn struct {
+	FromBalance   abi.TokenAmount
+	ToBalance     abi.TokenAmount
+	Allowance     abi.TokenAmount
+	RecipientData []byte
+}
+
+type IncreaseAllowanceParams struct {
+	Operator address.Address
+	Increase abi.TokenAmount
+}
+
+type DecreaseAllowanceParams struct {
+	Operator address.Address
+	Decrease abi.TokenAmount
+}
+
+type RevokeAllowanceParams struct {
+	Operator address.Address
+}
+
+type GetAllowanceParams struct {
+	Owner    address.Address
+	Operator address.Address
+}
+
+type BurnParams struct {
+	Amount abi.TokenAmount
+}
+
+type BurnReturn struct {
+	Balance abi.TokenAmount
+}
+
+type BurnFromParams struct {
+	Owner  address.Address
+	Amount abi.TokenAmount
+}
+
+type BurnFromReturn struct {
+	Balance   abi.TokenAmount
+	Allowance abi.TokenAmount
+}
