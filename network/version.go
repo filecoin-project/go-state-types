@@ -22,10 +22,10 @@ const (
 	Version12                 // turbo      (specs-actors v4.0.0)
 	Version13                 // hyperdrive (specs-actors v5.0.1)
 	Version14                 // chocolate (specs-actors v6.0.0)
-	Version15                 // ???
-	Version16                 // ???
-	Version17                 // ???
-	Version18                 // FVM M2.1
+	Version15                 // OhSnap
+	Version16                 // Skyr
+	Version17                 // Shark
+	Version18                 // Hygge (FVM M2.1)
 
 	// VersionMax is the maximum version number
 	VersionMax = Version(math.MaxUint32)
