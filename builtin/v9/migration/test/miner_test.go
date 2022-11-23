@@ -33,7 +33,7 @@ func TestMinerMigration(t *testing.T) {
 	oldStateTree, err := builtin.LoadTree(adtStore, startRoot)
 	require.NoError(t, err)
 
-	oldSystemActor, found, err := oldStateTree.GetActor(builtin.SystemActorAddr)
+	oldSystemActor, found, err := oldStateTree.GetActorV4(builtin.SystemActorAddr)
 	require.NoError(t, err)
 	require.True(t, found, "system actor not found")
 
@@ -56,7 +56,7 @@ func TestMinerMigration(t *testing.T) {
 
 	// create 3 deal proposals
 
-	oldMarketAct, ok, err := oldStateTree.GetActor(builtin.StorageMarketActorAddr)
+	oldMarketAct, ok, err := oldStateTree.GetActorV4(builtin.StorageMarketActorAddr)
 	require.NoError(t, err)
 	require.True(t, ok)
 
@@ -100,7 +100,7 @@ func TestMinerMigration(t *testing.T) {
 	oldMarketStCID, err := adtStore.Put(ctx, &oldMarketSt)
 	require.NoError(t, err)
 	oldMarketAct.Head = oldMarketStCID
-	require.NoError(t, oldStateTree.SetActor(builtin.StorageMarketActorAddr, oldMarketAct))
+	require.NoError(t, oldStateTree.SetActorV4(builtin.StorageMarketActorAddr, oldMarketAct))
 
 	// base stuff to create miners
 
@@ -138,7 +138,7 @@ func TestMinerMigration(t *testing.T) {
 	miner1StCid, err := adtStore.Put(ctx, &baseMinerSt)
 	require.NoError(t, err)
 
-	miner1 := builtin.Actor{
+	miner1 := builtin.ActorV4{
 		Code:       oldMinerCID,
 		Head:       miner1StCid,
 		CallSeqNum: 0,
@@ -147,7 +147,7 @@ func TestMinerMigration(t *testing.T) {
 
 	addr1, err := address.NewIDAddress(baseAddr + 1)
 	require.NoError(t, err)
-	require.NoError(t, oldStateTree.SetActor(addr1, &miner1))
+	require.NoError(t, oldStateTree.SetActorV4(addr1, &miner1))
 
 	// miner2 has precommits, but they have no deals
 
@@ -166,7 +166,7 @@ func TestMinerMigration(t *testing.T) {
 	miner2StCid, err := adtStore.Put(ctx, &miner2St)
 	require.NoError(t, err)
 
-	miner2 := builtin.Actor{
+	miner2 := builtin.ActorV4{
 		Code:       oldMinerCID,
 		Head:       miner2StCid,
 		CallSeqNum: 0,
@@ -175,7 +175,7 @@ func TestMinerMigration(t *testing.T) {
 
 	addr2, err := address.NewIDAddress(baseAddr + 2)
 	require.NoError(t, err)
-	require.NoError(t, oldStateTree.SetActor(addr2, &miner2))
+	require.NoError(t, oldStateTree.SetActorV4(addr2, &miner2))
 
 	// miner 3 has precommits, some of which have deals
 
@@ -205,7 +205,7 @@ func TestMinerMigration(t *testing.T) {
 	miner3StCid, err := adtStore.Put(ctx, &miner3St)
 	require.NoError(t, err)
 
-	miner3 := builtin.Actor{
+	miner3 := builtin.ActorV4{
 		Code:       oldMinerCID,
 		Head:       miner3StCid,
 		CallSeqNum: 0,
@@ -214,7 +214,7 @@ func TestMinerMigration(t *testing.T) {
 
 	addr3, err := address.NewIDAddress(baseAddr + 3)
 	require.NoError(t, err)
-	require.NoError(t, oldStateTree.SetActor(addr3, &miner3))
+	require.NoError(t, oldStateTree.SetActorV4(addr3, &miner3))
 
 	startRoot, err = oldStateTree.Flush()
 	require.NoError(t, err)
@@ -240,7 +240,7 @@ func TestMinerMigration(t *testing.T) {
 
 	// miner 1 is just empty precommits
 
-	newMiner1Actor, ok, err := newStateTree.GetActor(addr1)
+	newMiner1Actor, ok, err := newStateTree.GetActorV4(addr1)
 	require.NoError(t, err)
 	require.True(t, ok)
 
@@ -250,7 +250,7 @@ func TestMinerMigration(t *testing.T) {
 
 	// miner 2's precommits all have nil unsealedCID
 
-	newMiner2Actor, ok, err := newStateTree.GetActor(addr2)
+	newMiner2Actor, ok, err := newStateTree.GetActorV4(addr2)
 	require.NoError(t, err)
 	require.True(t, ok)
 
@@ -272,7 +272,7 @@ func TestMinerMigration(t *testing.T) {
 	// Sector 1 has deals [1,2]
 	// Sector 2 is empty
 
-	newMiner3Actor, ok, err := newStateTree.GetActor(addr3)
+	newMiner3Actor, ok, err := newStateTree.GetActorV4(addr3)
 	require.NoError(t, err)
 	require.True(t, ok)
 
@@ -325,7 +325,7 @@ func TestFip0029MinerMigration(t *testing.T) {
 	oldStateTree, err := builtin.LoadTree(adtStore, startRoot)
 	require.NoError(t, err)
 
-	oldSystemActor, found, err := oldStateTree.GetActor(builtin.SystemActorAddr)
+	oldSystemActor, found, err := oldStateTree.GetActorV4(builtin.SystemActorAddr)
 	require.NoError(t, err)
 	require.True(t, found, "system actor not found")
 
@@ -356,14 +356,14 @@ func TestFip0029MinerMigration(t *testing.T) {
 	var minerInfo miner8.MinerInfo
 	require.NoError(t, adtStore.Get(ctx, minerSt.Info, &minerInfo))
 
-	miner := builtin.Actor{
+	miner := builtin.ActorV4{
 		Code:       oldMinerCID,
 		Head:       minerStCid,
 		CallSeqNum: 0,
 		Balance:    big.Zero(),
 	}
 
-	require.NoError(t, oldStateTree.SetActor(addr, &miner))
+	require.NoError(t, oldStateTree.SetActorV4(addr, &miner))
 
 	startRoot, err = oldStateTree.Flush()
 	require.NoError(t, err)
@@ -387,7 +387,7 @@ func TestFip0029MinerMigration(t *testing.T) {
 	newStateTree, err := builtin.LoadTree(adtStore, cacheRoot)
 	require.NoError(t, err)
 
-	newMinerActor, ok, err := newStateTree.GetActor(addr)
+	newMinerActor, ok, err := newStateTree.GetActorV4(addr)
 	require.NoError(t, err)
 	require.True(t, ok)
 

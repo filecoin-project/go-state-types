@@ -17,7 +17,8 @@ func main() {
 		panic(err)
 	}
 	if err := gen.WriteTupleEncodersToFile("./builtin/cbor_gen.go", "builtin",
-		builtin.Actor{},
+		builtin.ActorV4{},
+		builtin.ActorV5{},
 	); err != nil {
 		panic(err)
 	}

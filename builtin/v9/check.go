@@ -45,7 +45,7 @@ func CheckStateInvariants(tree *builtin.ActorTree, priorEpoch abi.ChainEpoch, ac
 	var multisigSummaries []*multisig.StateSummary
 	minerSummaries := make(map[address.Address]*miner.StateSummary)
 
-	if err := tree.ForEach(func(key address.Address, actor *builtin.Actor) error {
+	if err := tree.ForEachV4(func(key address.Address, actor *builtin.ActorV4) error {
 		acc := acc.WithPrefix("%v ", key) // Intentional shadow
 		if key.Protocol() != address.ID {
 			acc.Addf("unexpected address protocol in state tree root: %v", key)

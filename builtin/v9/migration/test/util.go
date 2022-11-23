@@ -146,12 +146,12 @@ func makeInputTree(ctx context.Context, t *testing.T, store adt.Store) cid.Cid {
 func initializeActor(ctx context.Context, t testing.TB, tree *builtin.ActorTree, store adt.Store, state cbor.Marshaler, code cid.Cid, a address.Address, balance abi.TokenAmount) {
 	stateCID, err := store.Put(ctx, state)
 	require.NoError(t, err)
-	actor := &builtin.Actor{
+	actor := &builtin.ActorV4{
 		Head:    stateCID,
 		Code:    code,
 		Balance: balance,
 	}
-	err = tree.SetActor(a, actor)
+	err = tree.SetActorV4(a, actor)
 	require.NoError(t, err)
 }
 
