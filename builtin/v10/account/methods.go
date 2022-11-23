@@ -11,5 +11,5 @@ var Methods = map[uint64]builtin.MethodMeta{
 	1: {"Constructor", *new(func(*address.Address) *abi.EmptyValue)},                   // Constructor
 	2: {"PubkeyAddress", *new(func(*abi.EmptyValue) *address.Address)},                 // PubkeyAddress
 	3: {"AuthenticateMessage", *new(func(*AuthenticateMessageParams) *abi.EmptyValue)}, // AuthenticateMessage
-	uint64(builtin.UniversalReceiverHookMethodNum): {"UniversalReceiverHook", *new(func(*[]byte) *abi.EmptyValue)}, // UniversalReceiverHook
+	uint64(builtin.UniversalReceiverHookMethodNum): {"UniversalReceiverHook", *new(func(*abi.CborBytesTransparent) *abi.EmptyValue)}, // UniversalReceiverHook
 }
