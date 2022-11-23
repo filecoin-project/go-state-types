@@ -15,5 +15,5 @@ var Methods = map[uint64]builtin.MethodMeta{
 	7: {"SwapSigner", *new(func(*SwapSignerParams) *abi.EmptyValue)},                                   // SwapSigner
 	8: {"ChangeNumApprovalsThreshold", *new(func(*ChangeNumApprovalsThresholdParams) *abi.EmptyValue)}, // ChangeNumApprovalsThreshold
 	9: {"LockBalance", *new(func(*LockBalanceParams) *abi.EmptyValue)},                                 // LockBalance
-	uint64(builtin.UniversalReceiverHookMethodNum): {"UniversalReceiverHook", *new(func(*[]byte) *abi.EmptyValue)}, // UniversalReceiverHook
+	uint64(builtin.UniversalReceiverHookMethodNum): {"UniversalReceiverHook", *new(func(*abi.CborBytesTransparent) *abi.EmptyValue)}, // UniversalReceiverHook
 }
