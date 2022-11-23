@@ -20,6 +20,8 @@ func AddressValidForNetworkVersion(addr address.Address, nv network.Version) boo
 	switch addr.Protocol() {
 	case address.ID, address.SECP256K1, address.Actor, address.BLS:
 		return true
+	case address.Delegated:
+		return nv >= network.Version18
 	default:
 		return false
 	}

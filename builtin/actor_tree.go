@@ -11,11 +11,21 @@ import (
 
 // Value type of the top level of the state tree.
 // Represents the on-chain state of a single actor.
-type Actor struct {
+// This is the actor state for state tree version up to 4
+type ActorV4 struct {
 	Code       cid.Cid // CID representing the code associated with the actor
 	Head       cid.Cid // CID of the head state object for the actor
 	CallSeqNum uint64  // CallSeqNum for the next message to be received by the actor (non-zero for accounts only)
 	Balance    big.Int // Token balance of the actor
+}
+
+// As above, but this is the actor state for state tree version 5 and above.
+type ActorV5 struct {
+	Code       cid.Cid          // CID representing the code associated with the actor
+	Head       cid.Cid          // CID of the head state object for the actor
+	CallSeqNum uint64           // CallSeqNum for the next message to be received by the actor (non-zero for accounts only)
+	Balance    big.Int          // Token balance of the actor
+	Address    *address.Address // Predictable actor address
 }
 
 // A specialization of a map of ID-addresses to actor heads.
@@ -54,17 +64,33 @@ func (t *ActorTree) Flush() (cid.Cid, error) {
 }
 
 // Loads the state associated with an address.
-func (t *ActorTree) GetActor(addr address.Address) (*Actor, bool, error) {
+func (t *ActorTree) GetActorV4(addr address.Address) (*ActorV4, bool, error) {
 	if addr.Protocol() != address.ID {
 		return nil, false, xerrors.Errorf("non-ID address %v invalid as actor key", addr)
 	}
-	var actor Actor
+	var actor ActorV4
+	found, err := t.Map.Get(abi.AddrKey(addr), &actor)
+	return &actor, found, err
+}
+
+func (t *ActorTree) GetActorV5(addr address.Address) (*ActorV5, bool, error) {
+	if addr.Protocol() != address.ID {
+		return nil, false, xerrors.Errorf("non-ID address %v invalid as actor key", addr)
+	}
+	var actor ActorV5
 	found, err := t.Map.Get(abi.AddrKey(addr), &actor)
 	return &actor, found, err
 }
 
 // Sets the state associated with an address, overwriting if it already present.
-func (t *ActorTree) SetActor(addr address.Address, actor *Actor) error {
+func (t *ActorTree) SetActorV4(addr address.Address, actor *ActorV4) error {
+	if addr.Protocol() != address.ID {
+		return xerrors.Errorf("non-ID address %v invalid as actor key", addr)
+	}
+	return t.Map.Put(abi.AddrKey(addr), actor)
+}
+
+func (t *ActorTree) SetActorV5(addr address.Address, actor *ActorV5) error {
 	if addr.Protocol() != address.ID {
 		return xerrors.Errorf("non-ID address %v invalid as actor key", addr)
 	}
@@ -72,8 +98,19 @@ func (t *ActorTree) SetActor(addr address.Address, actor *Actor) error {
 }
 
 // Traverses all entries in the tree.
-func (t *ActorTree) ForEach(fn func(addr address.Address, actor *Actor) error) error {
-	var val Actor
+func (t *ActorTree) ForEachV4(fn func(addr address.Address, actor *ActorV4) error) error {
+	var val ActorV4
+	return t.Map.ForEach(&val, func(key string) error {
+		addr, err := address.NewFromBytes([]byte(key))
+		if err != nil {
+			return err
+		}
+		return fn(addr, &val)
+	})
+}
+
+func (t *ActorTree) ForEachV5(fn func(addr address.Address, actor *ActorV5) error) error {
+	var val ActorV5
 	return t.Map.ForEach(&val, func(key string) error {
 		addr, err := address.NewFromBytes([]byte(key))
 		if err != nil {
