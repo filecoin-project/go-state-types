@@ -26,6 +26,8 @@ const (
 	Version16                 // Skyr
 	Version17                 // Shark
 	Version18                 // Hygge (FVM M2.1)
+	Version19                 // tentative
+	Version20                 // tentative
 
 	// VersionMax is the maximum version number
 	VersionMax = Version(math.MaxUint32)
