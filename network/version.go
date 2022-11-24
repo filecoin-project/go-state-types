@@ -25,7 +25,7 @@ const (
 	Version15                 // OhSnap
 	Version16                 // Skyr
 	Version17                 // Shark
-	Version18                 // Hygge (FVM M2.1)
+	Version18                 // tentative
 	Version19                 // tentative
 	Version20                 // tentative
 
