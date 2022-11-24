@@ -5,18 +5,16 @@ import (
 
 	"github.com/filecoin-project/go-state-types/exitcode"
 
-	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
-
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-amt-ipld/v4"
 	"golang.org/x/xerrors"
 
 	commp "github.com/filecoin-project/go-commp-utils/nonffi"
 	"github.com/filecoin-project/go-state-types/builtin"
-	"github.com/filecoin-project/go-state-types/builtin/v8/market"
-	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
-	adt8 "github.com/filecoin-project/go-state-types/builtin/v8/util/adt"
+	miner10 "github.com/filecoin-project/go-state-types/builtin/v10/miner"
+	adt10 "github.com/filecoin-project/go-state-types/builtin/v10/util/adt"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
+	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 
 	"github.com/ipfs/go-cid"
 	cbor "github.com/ipfs/go-ipld-cbor"
@@ -25,70 +23,65 @@ import (
 )
 
 // The minerMigrator performs the following migrations:
-// FIP-0029: Sets the Beneficary to the Owner, and sets empty values for BeneficiaryTerm and PendingBeneficiaryTerm
-// FIP-0034: For each SectorPreCommitOnChainInfo in PreCommitedSectors, calculates the unsealed CID (assuming there are deals)
-// FIP-0045: For each SectorOnChainInfo in Sectors, set SimpleQAPower = (DealWeight == 0 && VerifiedDealWeight == 0)
-// FIP-0045: For each Deadline in Deadlines: for each SectorOnChainInfo in SectorsSnapshot, set SimpleQAPower = (DealWeight == 0 && VerifiedDealWeight == 0)
+// TODO
 
 type minerMigrator struct {
-	emptyPrecommitOnChainInfosV9 cid.Cid
-	emptyDeadlineV8              cid.Cid
-	emptyDeadlinesV8             cid.Cid
-	emptyDeadlineV9              cid.Cid
-	emptyDeadlinesV9             cid.Cid
-	proposals                    *market.DealArray
-	OutCodeCID                   cid.Cid
+	emptyPrecommitOnChainInfosV10 cid.Cid
+	emptyDeadlineV9               cid.Cid
+	emptyDeadlinesV9              cid.Cid
+	emptyDeadlineV10              cid.Cid
+	emptyDeadlinesV10             cid.Cid
+	OutCodeCID                    cid.Cid
 }
 
-func newMinerMigrator(ctx context.Context, store cbor.IpldStore, marketProposals *market.DealArray, outCode cid.Cid) (*minerMigrator, error) {
-	ctxStore := adt8.WrapStore(ctx, store)
+func newMinerMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid) (*minerMigrator, error) {
+	ctxStore := adt9.WrapStore(ctx, store)
 
-	emptyPrecommitMapCidV9, err := adt9.StoreEmptyMap(ctxStore, builtin.DefaultHamtBitwidth)
+	emptyPrecommitMapCidV10, err := adt10.StoreEmptyMap(ctxStore, builtin.DefaultHamtBitwidth)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to construct empty precommit map v9: %w", err)
 	}
 
-	edv8, err := miner8.ConstructDeadline(ctxStore)
+	edv9, err := miner9.ConstructDeadline(ctxStore)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to construct empty deadline v8: %w", err)
 	}
 
-	edv8cid, err := store.Put(ctx, edv8)
+	edv9cid, err := store.Put(ctx, edv9)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to put empty deadline v8: %w", err)
 	}
 
-	edsv8 := miner8.ConstructDeadlines(edv8cid)
-	edsv8cid, err := store.Put(ctx, edsv8)
+	edsv9 := miner9.ConstructDeadlines(edv9cid)
+	edsv9cid, err := store.Put(ctx, edsv9)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to construct empty deadlines v8: %w", err)
 	}
 
-	edv9, err := miner9.ConstructDeadline(ctxStore)
+	edv10, err := miner10.ConstructDeadline(ctxStore)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to construct empty deadline v9: %w", err)
 	}
 
-	edv9cid, err := store.Put(ctx, edv9)
+	edv10cid, err := store.Put(ctx, edv10)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to put empty deadline v9: %w", err)
 	}
 
-	edsv9 := miner9.ConstructDeadlines(edv9cid)
-	edsv9cid, err := store.Put(ctx, edsv9)
+	edsv10 := miner10.ConstructDeadlines(edv10cid)
+	edsv10cid, err := store.Put(ctx, edsv10)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to construct empty deadlines v9: %w", err)
 
 	}
 
 	return &minerMigrator{
-		emptyPrecommitOnChainInfosV9: emptyPrecommitMapCidV9,
-		emptyDeadlineV8:              edv8cid,
-		emptyDeadlinesV8:             edsv8cid,
-		emptyDeadlineV9:              edv9cid,
-		emptyDeadlinesV9:             edsv9cid,
-		proposals:                    marketProposals,
-		OutCodeCID:                   outCode,
+		emptyPrecommitOnChainInfosV10: emptyPrecommitMapCidV10,
+		emptyDeadlineV9:               edv9cid,
+		emptyDeadlinesV9:              edsv9cid,
+		emptyDeadlineV10:              edv10cid,
+		emptyDeadlinesV10:             edsv10cid,
+		OutCodeCID:                    outCode,
 	}, nil
 }
 
@@ -97,15 +90,15 @@ func (m minerMigrator) migratedCodeCID() cid.Cid {
 }
 
 func (m minerMigrator) migrateState(ctx context.Context, store cbor.IpldStore, in actorMigrationInput) (*actorMigrationResult, error) {
-	var inState miner8.State
+	var inState miner9.State
 	if err := store.Get(ctx, in.head, &inState); err != nil {
 		return nil, err
 	}
-	var inInfo miner8.MinerInfo
+	var inInfo miner9.MinerInfo
 	if err := store.Get(ctx, inState.Info, &inInfo); err != nil {
 		return nil, err
 	}
-	wrappedStore := adt8.WrapStore(ctx, store)
+	wrappedStore := adt9.WrapStore(ctx, store)
 
 	newPrecommits, err := m.migratePrecommits(ctx, wrappedStore, inState.PreCommittedSectors)
 	if err != nil {
@@ -122,19 +115,19 @@ func (m minerMigrator) migrateState(ctx context.Context, store cbor.IpldStore, i
 		return nil, xerrors.Errorf("failed to migrate deadlines: %w", err)
 	}
 
-	var newPendingWorkerKey *miner9.WorkerKeyChange
+	var newPendingWorkerKey *miner10.WorkerKeyChange
 	if inInfo.PendingWorkerKey != nil {
-		newPendingWorkerKey = &miner9.WorkerKeyChange{
+		newPendingWorkerKey = &miner10.WorkerKeyChange{
 			NewWorker:   inInfo.PendingWorkerKey.NewWorker,
 			EffectiveAt: inInfo.PendingWorkerKey.EffectiveAt,
 		}
 	}
 
-	outInfo := miner9.MinerInfo{
+	outInfo := miner10.MinerInfo{
 		Owner:       inInfo.Owner,
 		Worker:      inInfo.Worker,
 		Beneficiary: inInfo.Owner,
-		BeneficiaryTerm: miner9.BeneficiaryTerm{
+		BeneficiaryTerm: miner10.BeneficiaryTerm{
 			Quota:      abi.NewTokenAmount(0),
 			UsedQuota:  abi.NewTokenAmount(0),
 			Expiration: 0,
@@ -155,7 +148,7 @@ func (m minerMigrator) migrateState(ctx context.Context, store cbor.IpldStore, i
 		return nil, xerrors.Errorf("failed to flush new miner info: %w", err)
 	}
 
-	outState := miner9.State{
+	outState := miner10.State{
 		Info:                       newInfoCid,
 		PreCommitDeposits:          inState.PreCommitDeposits,
 		LockedFunds:                inState.LockedFunds,
@@ -180,18 +173,18 @@ func (m minerMigrator) migrateState(ctx context.Context, store cbor.IpldStore, i
 	}, err
 }
 
-func (m minerMigrator) migratePrecommits(ctx context.Context, wrappedStore adt8.Store, inRoot cid.Cid) (cid.Cid, error) {
-	oldPrecommitOnChainInfos, err := adt8.AsMap(wrappedStore, inRoot, builtin.DefaultHamtBitwidth)
+func (m minerMigrator) migratePrecommits(ctx context.Context, wrappedStore adt9.Store, inRoot cid.Cid) (cid.Cid, error) {
+	oldPrecommitOnChainInfos, err := adt9.AsMap(wrappedStore, inRoot, builtin.DefaultHamtBitwidth)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to load old precommit onchain infos: %w", err)
 	}
 
-	newPrecommitOnChainInfos, err := adt9.AsMap(wrappedStore, m.emptyPrecommitOnChainInfosV9, builtin.DefaultHamtBitwidth)
+	newPrecommitOnChainInfos, err := adt10.AsMap(wrappedStore, m.emptyPrecommitOnChainInfosV10, builtin.DefaultHamtBitwidth)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to load empty map: %w", err)
 	}
 
-	var info miner8.SectorPreCommitOnChainInfo
+	var info miner9.SectorPreCommitOnChainInfo
 	err = oldPrecommitOnChainInfos.ForEach(&info, func(key string) error {
 		var unsealedCid *cid.Cid
 		var pieces []abi.PieceInfo
@@ -222,8 +215,8 @@ func (m minerMigrator) migratePrecommits(ctx context.Context, wrappedStore adt8.
 			unsealedCid = &commd
 		}
 
-		err = newPrecommitOnChainInfos.Put(miner9.SectorKey(info.Info.SectorNumber), &miner9.SectorPreCommitOnChainInfo{
-			Info: miner9.SectorPreCommitInfo{
+		err = newPrecommitOnChainInfos.Put(miner10.SectorKey(info.Info.SectorNumber), &miner10.SectorPreCommitOnChainInfo{
+			Info: miner10.SectorPreCommitInfo{
 				SealProof:     info.Info.SealProof,
 				SectorNumber:  info.Info.SectorNumber,
 				SealedCID:     info.Info.SealedCID,
@@ -255,9 +248,9 @@ func (m minerMigrator) migratePrecommits(ctx context.Context, wrappedStore adt8.
 	return newPrecommits, nil
 }
 
-func migrateSectorsWithCache(ctx context.Context, store adt8.Store, cache MigrationCache, minerAddr address.Address, inRoot cid.Cid) (cid.Cid, error) {
+func migrateSectorsWithCache(ctx context.Context, store adt9.Store, cache MigrationCache, minerAddr address.Address, inRoot cid.Cid) (cid.Cid, error) {
 	return cache.Load(SectorsAmtKey(inRoot), func() (cid.Cid, error) {
-		inArray, err := adt8.AsArray(store, inRoot, miner8.SectorsAmtBitwidth)
+		inArray, err := adt9.AsArray(store, inRoot, miner9.SectorsAmtBitwidth)
 		if err != nil {
 			return cid.Undef, xerrors.Errorf("failed to read sectors array: %w", err)
 		}
@@ -272,20 +265,20 @@ func migrateSectorsWithCache(ctx context.Context, store adt8.Store, cache Migrat
 			return cid.Undef, xerrors.Errorf("failed to get previous outRoot from cache: %w", err)
 		}
 
-		var outArray *adt9.Array
+		var outArray *adt10.Array
 		if okIn && okOut {
 			// we have previous work, but the AMT has changed -- diff them
-			diffs, err := amt.Diff(ctx, store, store, prevInRoot, inRoot, amt.UseTreeBitWidth(miner9.SectorsAmtBitwidth))
+			diffs, err := amt.Diff(ctx, store, store, prevInRoot, inRoot, amt.UseTreeBitWidth(miner10.SectorsAmtBitwidth))
 			if err != nil {
 				return cid.Undef, xerrors.Errorf("failed to diff old and new Sector AMTs: %w", err)
 			}
 
-			inSectors, err := miner8.LoadSectors(store, inRoot)
+			inSectors, err := miner9.LoadSectors(store, inRoot)
 			if err != nil {
 				return cid.Undef, xerrors.Errorf("failed to load inSectors: %w", err)
 			}
 
-			prevOutSectors, err := miner9.LoadSectors(store, prevOutRoot)
+			prevOutSectors, err := miner10.LoadSectors(store, prevOutRoot)
 			if err != nil {
 				return cid.Undef, xerrors.Errorf("failed to load prevOutSectors: %w", err)
 			}
@@ -341,13 +334,13 @@ func migrateSectorsWithCache(ctx context.Context, store adt8.Store, cache Migrat
 	})
 }
 
-func migrateSectorsFromScratch(ctx context.Context, store adt8.Store, inArray *adt8.Array) (*adt9.Array, error) {
-	outArray, err := adt9.MakeEmptyArray(store, miner9.SectorsAmtBitwidth)
+func migrateSectorsFromScratch(ctx context.Context, store adt9.Store, inArray *adt9.Array) (*adt10.Array, error) {
+	outArray, err := adt10.MakeEmptyArray(store, miner10.SectorsAmtBitwidth)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to construct new sectors array: %w", err)
 	}
 
-	var sectorInfo miner8.SectorOnChainInfo
+	var sectorInfo miner9.SectorOnChainInfo
 	if err = inArray.ForEach(&sectorInfo, func(k int64) error {
 		return outArray.Set(uint64(k), migrateSectorInfo(sectorInfo))
 	}); err != nil {
@@ -357,29 +350,29 @@ func migrateSectorsFromScratch(ctx context.Context, store adt8.Store, inArray *a
 	return outArray, err
 }
 
-func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt8.Store, cache MigrationCache, deadlines cid.Cid) (cid.Cid, error) {
-	if deadlines == m.emptyDeadlinesV8 {
-		return m.emptyDeadlinesV9, nil
+func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt9.Store, cache MigrationCache, deadlines cid.Cid) (cid.Cid, error) {
+	if deadlines == m.emptyDeadlinesV9 {
+		return m.emptyDeadlinesV10, nil
 	}
 
-	var inDeadlines miner8.Deadlines
+	var inDeadlines miner9.Deadlines
 	err := store.Get(store.Context(), deadlines, &inDeadlines)
 	if err != nil {
 		return cid.Undef, err
 	}
 
-	var outDeadlines miner9.Deadlines
+	var outDeadlines miner10.Deadlines
 	for i, c := range inDeadlines.Due {
-		if c == m.emptyDeadlineV8 {
-			outDeadlines.Due[i] = m.emptyDeadlineV9
+		if c == m.emptyDeadlineV9 {
+			outDeadlines.Due[i] = m.emptyDeadlineV10
 		} else {
-			var inDeadline miner8.Deadline
+			var inDeadline miner9.Deadline
 			if err = store.Get(ctx, c, &inDeadline); err != nil {
 				return cid.Undef, err
 			}
 
 			outSectorsSnapshotCid, err := cache.Load(SectorsAmtKey(inDeadline.SectorsSnapshot), func() (cid.Cid, error) {
-				inSectorsSnapshot, err := adt8.AsArray(store, inDeadline.SectorsSnapshot, miner8.SectorsAmtBitwidth)
+				inSectorsSnapshot, err := adt9.AsArray(store, inDeadline.SectorsSnapshot, miner9.SectorsAmtBitwidth)
 				if err != nil {
 					return cid.Undef, err
 				}
@@ -396,14 +389,14 @@ func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt8.Store, c
 				return cid.Undef, xerrors.Errorf("failed to migrate sectors snapshot: %w", err)
 			}
 
-			outDeadline := miner9.Deadline{
+			outDeadline := miner10.Deadline{
 				Partitions:                        inDeadline.Partitions,
 				ExpirationsEpochs:                 inDeadline.ExpirationsEpochs,
 				PartitionsPoSted:                  inDeadline.PartitionsPoSted,
 				EarlyTerminations:                 inDeadline.EarlyTerminations,
 				LiveSectors:                       inDeadline.LiveSectors,
 				TotalSectors:                      inDeadline.TotalSectors,
-				FaultyPower:                       miner9.PowerPair(inDeadline.FaultyPower),
+				FaultyPower:                       miner10.PowerPair(inDeadline.FaultyPower),
 				OptimisticPoStSubmissions:         inDeadline.OptimisticPoStSubmissions,
 				SectorsSnapshot:                   outSectorsSnapshotCid,
 				PartitionsSnapshot:                inDeadline.PartitionsSnapshot,
@@ -422,8 +415,8 @@ func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt8.Store, c
 	return store.Put(ctx, &outDeadlines)
 }
 
-func migrateSectorInfo(sectorInfo miner8.SectorOnChainInfo) *miner9.SectorOnChainInfo {
-	return &miner9.SectorOnChainInfo{
+func migrateSectorInfo(sectorInfo miner9.SectorOnChainInfo) *miner10.SectorOnChainInfo {
+	return &miner10.SectorOnChainInfo{
 		SectorNumber:          sectorInfo.SectorNumber,
 		SealProof:             sectorInfo.SealProof,
 		SealedCID:             sectorInfo.SealedCID,

@@ -6,24 +6,14 @@ import (
 	"sync/atomic"
 	"time"
 
-	init8 "github.com/filecoin-project/go-state-types/builtin/v8/init"
-
-	verifreg8 "github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
-
-	"github.com/filecoin-project/go-state-types/big"
-	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
-
-	market8 "github.com/filecoin-project/go-state-types/builtin/v8/market"
-
-	system8 "github.com/filecoin-project/go-state-types/builtin/v8/system"
-
 	"github.com/filecoin-project/go-state-types/builtin"
 
 	"github.com/multiformats/go-multibase"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
-	adt8 "github.com/filecoin-project/go-state-types/builtin/v8/util/adt"
+	system8 "github.com/filecoin-project/go-state-types/builtin/v8/system"
+	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/go-state-types/rt"
 
@@ -94,11 +84,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("invalid migration config with %d workers", cfg.MaxWorkers)
 	}
 
-	adtStore := adt8.WrapStore(ctx, store)
-	emptyMapCid, err := adt9.StoreEmptyMap(adtStore, builtin.DefaultHamtBitwidth)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to create empty map: %w", err)
-	}
+	adtStore := adt9.WrapStore(ctx, store)
 
 	// Load input and output state trees
 	actorsIn, err := builtin.LoadTree(adtStore, actorsRootIn)
@@ -148,29 +134,25 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	// Populated from oldManifestData
 	oldCodeIDMap := make(map[string]cid.Cid, len(oldManifestData.Entries))
 
-	miner8Cid := cid.Undef
+	miner9Cid := cid.Undef
 	for _, entry := range oldManifestData.Entries {
 		oldCodeIDMap[entry.Name] = entry.Code
 		if entry.Name == manifest.MinerKey {
-			miner8Cid = entry.Code
+			miner9Cid = entry.Code
 		}
 	}
 
-	if miner8Cid == cid.Undef {
+	if miner9Cid == cid.Undef {
 		return cid.Undef, xerrors.Errorf("didn't find miner in old manifest entries")
 	}
 
 	for name, oldCodeCID := range oldCodeIDMap { //nolint:nomaprange
-		if name == manifest.MarketKey || name == manifest.VerifregKey {
-			deferredCodeIDs[oldCodeCID] = struct{}{}
-		} else {
-			newCodeCID, ok := newManifest.Get(name)
-			if !ok {
-				return cid.Undef, xerrors.Errorf("code cid for %s actor not found in new manifest", name)
-			}
-
-			migrations[oldCodeCID] = codeMigrator{newCodeCID}
+		newCodeCID, ok := newManifest.Get(name)
+		if !ok {
+			return cid.Undef, xerrors.Errorf("code cid for %s actor not found in new manifest", name)
 		}
+
+		migrations[oldCodeCID] = codeMigrator{newCodeCID}
 	}
 
 	// migrations that migrate both code and state, override entries in `migrations`
@@ -186,135 +168,22 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 	// The Miner Actor -- needs loading the market state
 
-	// load market proposals
-	marketActorV8, ok, err := actorsIn.GetActorV4(builtin.StorageMarketActorAddr)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to get market actor: %w", err)
-	}
-
-	if !ok {
-		return cid.Undef, xerrors.New("didn't find market actor")
-	}
-
-	var marketStateV8 market8.State
-	if err := store.Get(ctx, marketActorV8.Head, &marketStateV8); err != nil {
-		return cid.Undef, xerrors.Errorf("failed to get market actor state: %w", err)
-	}
-
-	// Find verified pending deals for both datacap and verifreg migrations
-	pendingVerifiedDeals, pendingVerifiedDealSize, err := getPendingVerifiedDealsAndTotalSize(ctx, adtStore, marketStateV8)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to get pending verified deals")
-	}
-
-	proposals, err := market8.AsDealProposalArray(adtStore, marketStateV8.Proposals)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to get proposals: %w", err)
-	}
-
-	miner9Cid, ok := newManifest.Get(manifest.MinerKey)
+	miner10Cid, ok := newManifest.Get(manifest.MinerKey)
 	if !ok {
 		return cid.Undef, xerrors.Errorf("code cid for miner actor not found in new manifest")
 	}
 
-	mm, err := newMinerMigrator(ctx, store, proposals, miner9Cid)
+	mm, err := newMinerMigrator(ctx, store, miner10Cid)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to create miner migrator: %w", err)
 	}
 
-	migrations[miner8Cid] = cachedMigration(cache, *mm)
+	migrations[miner9Cid] = cachedMigration(cache, *mm)
 
 	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations), len(oldManifestData.Entries))
 	}
 	startTime := time.Now()
-
-	// The DataCap actor -- needs to be created, and loading the verified registry state
-
-	verifregActorV8, ok, err := actorsIn.GetActorV4(builtin.VerifiedRegistryActorAddr)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to get verifreg actor: %w", err)
-	}
-
-	if !ok {
-		return cid.Undef, xerrors.New("didn't find verifreg actor")
-	}
-
-	var verifregStateV8 verifreg8.State
-	if err := adtStore.Get(ctx, verifregActorV8.Head, &verifregStateV8); err != nil {
-		return cid.Undef, xerrors.Errorf("failed to get verifreg actor state: %w", err)
-	}
-
-	dataCapCode, ok := newManifest.Get(manifest.DataCapKey)
-	if !ok {
-		return cid.Undef, xerrors.Errorf("failed to find datacap code ID: %w", err)
-	}
-
-	if err = actorsIn.SetActorV4(builtin.DatacapActorAddr, &builtin.ActorV4{
-		Code: dataCapCode,
-		// we just need to put _something_ defined, this never gets read
-		Head:       emptyMapCid,
-		CallSeqNum: 0,
-		Balance:    big.Zero(),
-	}); err != nil {
-		return cid.Undef, xerrors.Errorf("failed to set datacap actor: %w", err)
-	}
-
-	migrations[dataCapCode] = &datacapMigrator{
-		emptyMapCid:             emptyMapCid,
-		verifregStateV8:         verifregStateV8,
-		OutCodeCID:              dataCapCode,
-		pendingVerifiedDealSize: pendingVerifiedDealSize,
-	}
-
-	// The Verifreg & Market Actor need special handling,
-	// - they need to load the init actor state
-	// - they need to be done in order -- the output of the verifreg migration is input to the market migration
-
-	initActorV8, ok, err := actorsIn.GetActorV4(builtin.InitActorAddr)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to load init actor: %w", err)
-	}
-
-	if !ok {
-		return cid.Undef, xerrors.New("failed to find init actor")
-	}
-
-	var initStateV8 init8.State
-	if err = adtStore.Get(ctx, initActorV8.Head, &initStateV8); err != nil {
-		return cid.Undef, xerrors.Errorf("failed to load init state: %w", err)
-	}
-
-	type verifregMarketResult struct {
-		verifregHead cid.Cid
-		marketHead   cid.Cid
-		err          error
-	}
-
-	verifregMarketResultCh := make(chan verifregMarketResult)
-	go func() {
-		ret := verifregMarketResult{
-			verifregHead: cid.Undef,
-			marketHead:   cid.Undef,
-			err:          nil,
-		}
-		verifregHead, dealAllocationTuples, err := migrateVerifreg(ctx, adtStore, priorEpoch, initStateV8, marketStateV8, pendingVerifiedDeals, verifregStateV8, emptyMapCid)
-		if err != nil {
-			ret.err = xerrors.Errorf("failed to migrate verifreg actor: %w", err)
-			verifregMarketResultCh <- ret
-		}
-
-		ret.verifregHead = verifregHead
-
-		marketHead, err := migrateMarket(ctx, adtStore, dealAllocationTuples, marketStateV8, emptyMapCid)
-		if err != nil {
-			ret.err = xerrors.Errorf("failed to migrate market state: %w", err)
-			verifregMarketResultCh <- ret
-		}
-
-		ret.marketHead = marketHead
-		verifregMarketResultCh <- ret
-	}()
 
 	// Setup synchronization
 	grp, ctx := errgroup.WithContext(ctx)
@@ -436,39 +305,6 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 	if err := grp.Wait(); err != nil {
 		return cid.Undef, err
-	}
-
-	verifregCode, ok := newManifest.Get(manifest.VerifregKey)
-	if !ok {
-		return cid.Undef, xerrors.Errorf("failed to find verifreg code ID: %w", err)
-	}
-
-	marketCode, ok := newManifest.Get(manifest.MarketKey)
-	if !ok {
-		return cid.Undef, xerrors.Errorf("failed to find market code ID: %w", err)
-	}
-
-	verifregMarketHeads := <-verifregMarketResultCh
-	if verifregMarketHeads.err != nil {
-		return cid.Undef, xerrors.Errorf("failed to migrate verifreg and market: %w", err)
-	}
-
-	if err = actorsOut.SetActorV4(builtin.VerifiedRegistryActorAddr, &builtin.ActorV4{
-		Code:       verifregCode,
-		Head:       verifregMarketHeads.verifregHead,
-		CallSeqNum: verifregActorV8.CallSeqNum,
-		Balance:    verifregActorV8.Balance,
-	}); err != nil {
-		return cid.Undef, xerrors.Errorf("failed to set verifreg actor: %w", err)
-	}
-
-	if err = actorsOut.SetActorV4(builtin.StorageMarketActorAddr, &builtin.ActorV4{
-		Code:       marketCode,
-		Head:       verifregMarketHeads.marketHead,
-		CallSeqNum: marketActorV8.CallSeqNum,
-		Balance:    marketActorV8.Balance,
-	}); err != nil {
-		return cid.Undef, xerrors.Errorf("failed to set market actor: %w", err)
 	}
 
 	elapsed := time.Since(startTime)

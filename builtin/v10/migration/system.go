@@ -3,7 +3,7 @@ package migration
 import (
 	"context"
 
-	"github.com/filecoin-project/go-state-types/builtin/v8/system"
+	"github.com/filecoin-project/go-state-types/builtin/v9/system"
 
 	"github.com/ipfs/go-cid"
 	cbor "github.com/ipfs/go-ipld-cbor"
