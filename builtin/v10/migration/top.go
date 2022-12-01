@@ -12,7 +12,7 @@ import (
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
-	system8 "github.com/filecoin-project/go-state-types/builtin/v8/system"
+	system9 "github.com/filecoin-project/go-state-types/builtin/v9/system"
 	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/go-state-types/rt"
@@ -69,6 +69,24 @@ func SectorsAmtKey(sectorsAmt cid.Cid) string {
 	return "sectorsAmt-" + sectorsAmtKey
 }
 
+func PartitionsAmtKey(partitionsAmt cid.Cid) string {
+	partitionsAmtKey, err := partitionsAmt.StringOfBase(multibase.Base32)
+	if err != nil {
+		panic(err)
+	}
+
+	return "partitionsAmt-" + partitionsAmtKey
+}
+
+func ExpirationsAmtKey(expirationsAmt cid.Cid) string {
+	expirationsAmtKey, err := expirationsAmt.StringOfBase(multibase.Base32)
+	if err != nil {
+		panic(err)
+	}
+
+	return "partitionsAmt-" + expirationsAmtKey
+}
+
 func MinerPrevSectorsInKey(m address.Address) string {
 	return "prevSectorsIn-" + m.String()
 }
@@ -89,11 +107,11 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	// Load input and output state trees
 	actorsIn, err := builtin.LoadTree(adtStore, actorsRootIn)
 	if err != nil {
-		return cid.Undef, err
+		return cid.Undef, xerrors.Errorf("loading state tree: %w", err)
 	}
 	actorsOut, err := builtin.NewTree(adtStore)
 	if err != nil {
-		return cid.Undef, err
+		return cid.Undef, xerrors.Errorf("creating new state tree: %w", err)
 	}
 
 	// load old manifest data
@@ -106,7 +124,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.New("didn't find system actor")
 	}
 
-	var systemState system8.State
+	var systemState system9.State
 	if err := store.Get(ctx, systemActor.Head, &systemState); err != nil {
 		return cid.Undef, xerrors.Errorf("failed to get system actor state: %w", err)
 	}
@@ -239,7 +257,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 			for job := range jobCh {
 				result, err := job.run(ctx, store, priorEpoch)
 				if err != nil {
-					return err
+					return xerrors.Errorf("running job: %w", err)
 				}
 				select {
 				case jobResultCh <- result:
@@ -395,12 +413,12 @@ func (c cachedMigrator) migrateState(ctx context.Context, store cbor.IpldStore, 
 	newHead, err := c.cache.Load(ActorHeadKey(in.address, in.head), func() (cid.Cid, error) {
 		result, err := c.actorMigration.migrateState(ctx, store, in)
 		if err != nil {
-			return cid.Undef, err
+			return cid.Undef, xerrors.Errorf("migrating state: %w", err)
 		}
 		return result.newHead, nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("using cache: %w", err)
 	}
 	return &actorMigrationResult{
 		newCodeCID: c.migratedCodeCID(),

@@ -240,16 +240,24 @@ type GetBeneficiaryReturn struct {
 
 // ExpirationSet is a collection of sector numbers that are expiring, either due to
 // expected "on-time" expiration at the end of their life, or unexpected "early" termination
-// due to being faulty for too long consecutively.
+// due to expiring proofs or being faulty for too long consecutively.
 // Note that there is not a direct correspondence between on-time sectors and active power;
 // a sector may be faulty but expiring on-time if it faults just prior to expected termination.
 // Early sectors are always faulty, and active power always represents on-time sectors.
 type ExpirationSet struct {
-	OnTimeSectors bitfield.BitField // Sectors expiring "on time" at the end of their committed life
-	EarlySectors  bitfield.BitField // Sectors expiring "early" due to being faulty for too long
-	OnTimePledge  abi.TokenAmount   // Pledge total for the on-time sectors
-	ActivePower   PowerPair         // Power that is currently active (not faulty)
-	FaultyPower   PowerPair         // Power that is currently faulty
+	// Sectors expiring "on time" at the end of their committed life
+	OnTimeSectors bitfield.BitField
+	// Sectors expiring "early", due to proof expiration, difference from on_time_sectors is that
+	// the pledge for them is not counted in the ExpirationSet as it is manually assessed during expiration.
+	EarlySectors bitfield.BitField
+	// Sectors expiring "early" due to being faulty for too long
+	FaultySectors bitfield.BitField
+	// Pledge total for the on-time sectors
+	OnTimePledge abi.TokenAmount
+	// Power that is currently active (not faulty)
+	ActivePower PowerPair
+	// Power that is currently faulty
+	FaultyPower PowerPair
 }
 
 // A queue of expiration sets by epoch, representing the on-time or early termination epoch for a collection of sectors.

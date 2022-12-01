@@ -119,12 +119,25 @@ var FaultMaxAge = WPoStProvingPeriod * 42 // PARAM_SPEC
 const WorkerKeyChangeDelay = ChainFinality // PARAM_SPEC
 
 // Minimum number of epochs past the current epoch a sector may be set to expire.
-const MinSectorExpiration = 180 * builtin.EpochsInDay // PARAM_SPEC
+const MinSectorCommitment = 180 * builtin.EpochsInDay // PARAM_SPEC
 
 // The maximum number of epochs past the current epoch that sector lifetime may be extended.
 // A sector may be extended multiple times, however, the total maximum lifetime is also bounded by
 // the associated seal proof's maximum lifetime.
-const MaxSectorExpirationExtension = 540 * builtin.EpochsInDay // PARAM_SPEC
+const MaxSectorCommitmentExtension = 540 * builtin.EpochsInDay // PARAM_SPEC
+
+/// Maximum number of epochs the proof can be valid since activation or latest refresh
+/// Slightly larger than existing (v16) MAX_SECTOR_COMMITMENT_EXTENSION.
+const MaxProofValidity = 545 * builtin.EpochsInDay
+
+/// A number of epochs before proof expiration during which the proof can be extended
+/// Derived as:
+///     MAX_PROOF_VALIDITY - (MAX_SECTOR_LIFE - MAX_PROOF_VALIDITY) / 3
+/// for 3 refreshes during max life of a sector
+const ProofRefreshWindow = 117 * builtin.EpochsInDay // ~ 4mo
+
+// The number of epochs to extend ProofExpiration on extension
+const ProofRefreshIncrease = MaxProofValidity - ProofRefreshWindow // ~ 14 mo
 
 // DealWeight and VerifiedDealWeight are spacetime occupied by regular deals and verified deals in a sector.
 // Sum of DealWeight and VerifiedDealWeight should be less than or equal to total SpaceTime of a sector.
@@ -165,7 +178,7 @@ func QAPowerForWeight(size abi.SectorSize, duration abi.ChainEpoch, dealWeight, 
 
 // The quality-adjusted power for a sector.
 func QAPowerForSector(size abi.SectorSize, sector *SectorOnChainInfo) abi.StoragePower {
-	duration := sector.Expiration - sector.Activation
+	duration := sector.CommitmentExpiration - sector.Activation
 	return QAPowerForWeight(size, duration, sector.DealWeight, sector.VerifiedDealWeight)
 }
 

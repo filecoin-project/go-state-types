@@ -164,7 +164,8 @@ type SectorOnChainInfo struct {
 	SealedCID             cid.Cid                 // CommR
 	DealIDs               []abi.DealID
 	Activation            abi.ChainEpoch  // Epoch during which the sector proof was accepted
-	Expiration            abi.ChainEpoch  // Epoch during which the sector expires
+	CommitmentExpiration  abi.ChainEpoch  // Epoch during which the sector expires
+	ProofExpiration       abi.ChainEpoch  // Epoch during which the sector proof validity expires
 	DealWeight            abi.DealWeight  // Integral of active deals over sector lifetime
 	VerifiedDealWeight    abi.DealWeight  // Integral of active verified deals over sector lifetime
 	InitialPledge         abi.TokenAmount // Pledge collected to commit this sector
@@ -174,6 +175,18 @@ type SectorOnChainInfo struct {
 	ReplacedDayReward     abi.TokenAmount // Day reward of sector this sector replace or zero
 	SectorKeyCID          *cid.Cid        // The original SealedSectorCID, only gets set on the first ReplicaUpdate
 	SimpleQAPower         bool            // Flag for QA power mechanism introduced in FIP-0045
+}
+
+func (si *SectorOnChainInfo) ExpiresEarly() bool {
+	return si.ProofExpiration < si.CommitmentExpiration
+}
+
+func (si *SectorOnChainInfo) ExpiresAt() abi.ChainEpoch {
+	if si.ProofExpiration < si.CommitmentExpiration {
+		return si.ProofExpiration
+	} else {
+		return si.CommitmentExpiration
+	}
 }
 
 func (st *State) GetInfo(store adt.Store) (*MinerInfo, error) {

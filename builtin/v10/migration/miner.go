@@ -3,44 +3,36 @@ package migration
 import (
 	"context"
 
-	"github.com/filecoin-project/go-state-types/exitcode"
+	"github.com/ipfs/go-cid"
+	cbor "github.com/ipfs/go-ipld-cbor"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-amt-ipld/v4"
+	"github.com/filecoin-project/go-bitfield"
+	"github.com/filecoin-project/go-state-types/builtin"
 	"golang.org/x/xerrors"
 
-	commp "github.com/filecoin-project/go-commp-utils/nonffi"
-	"github.com/filecoin-project/go-state-types/builtin"
+	"github.com/filecoin-project/go-state-types/abi"
 	miner10 "github.com/filecoin-project/go-state-types/builtin/v10/miner"
 	adt10 "github.com/filecoin-project/go-state-types/builtin/v10/util/adt"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
 	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
-
-	"github.com/ipfs/go-cid"
-	cbor "github.com/ipfs/go-ipld-cbor"
-
-	"github.com/filecoin-project/go-state-types/abi"
 )
 
 // The minerMigrator performs the following migrations:
-// TODO
+// FIP-0047 Adds ProofExpiration to SectorOnChainInfo, and FaultySectors to the ExpirationSet of each parition
 
 type minerMigrator struct {
-	emptyPrecommitOnChainInfosV10 cid.Cid
-	emptyDeadlineV9               cid.Cid
-	emptyDeadlinesV9              cid.Cid
-	emptyDeadlineV10              cid.Cid
-	emptyDeadlinesV10             cid.Cid
-	OutCodeCID                    cid.Cid
+	emptyDeadlineV9   cid.Cid
+	emptyDeadlinesV9  cid.Cid
+	emptyDeadlineV10  cid.Cid
+	emptyDeadlinesV10 cid.Cid
+	emptyPartitions   cid.Cid
+	OutCodeCID        cid.Cid
 }
 
 func newMinerMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid) (*minerMigrator, error) {
 	ctxStore := adt9.WrapStore(ctx, store)
-
-	emptyPrecommitMapCidV10, err := adt10.StoreEmptyMap(ctxStore, builtin.DefaultHamtBitwidth)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to construct empty precommit map v9: %w", err)
-	}
 
 	edv9, err := miner9.ConstructDeadline(ctxStore)
 	if err != nil {
@@ -75,13 +67,18 @@ func newMinerMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid
 
 	}
 
+	emptyPartitionsArrayCid, err := adt10.StoreEmptyArray(ctxStore, miner10.DeadlinePartitionsAmtBitwidth)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to construct empty partitions array: %w", err)
+	}
+
 	return &minerMigrator{
-		emptyPrecommitOnChainInfosV10: emptyPrecommitMapCidV10,
-		emptyDeadlineV9:               edv9cid,
-		emptyDeadlinesV9:              edsv9cid,
-		emptyDeadlineV10:              edv10cid,
-		emptyDeadlinesV10:             edsv10cid,
-		OutCodeCID:                    outCode,
+		emptyDeadlineV9:   edv9cid,
+		emptyDeadlinesV9:  edsv9cid,
+		emptyDeadlineV10:  edv10cid,
+		emptyDeadlinesV10: edsv10cid,
+		emptyPartitions:   emptyPartitionsArrayCid,
+		OutCodeCID:        outCode,
 	}, nil
 }
 
@@ -92,18 +89,13 @@ func (m minerMigrator) migratedCodeCID() cid.Cid {
 func (m minerMigrator) migrateState(ctx context.Context, store cbor.IpldStore, in actorMigrationInput) (*actorMigrationResult, error) {
 	var inState miner9.State
 	if err := store.Get(ctx, in.head, &inState); err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("getting miner state: %w", err)
 	}
 	var inInfo miner9.MinerInfo
 	if err := store.Get(ctx, inState.Info, &inInfo); err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("getting miner info: %w", err)
 	}
 	wrappedStore := adt9.WrapStore(ctx, store)
-
-	newPrecommits, err := m.migratePrecommits(ctx, wrappedStore, inState.PreCommittedSectors)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to migrate precommits for miner: %s: %w", in.address, err)
-	}
 
 	newSectors, err := migrateSectorsWithCache(ctx, wrappedStore, in.cache, in.address, inState.Sectors)
 	if err != nil {
@@ -123,16 +115,23 @@ func (m minerMigrator) migrateState(ctx context.Context, store cbor.IpldStore, i
 		}
 	}
 
+	var newPendingBeneficiaryTerm *miner10.PendingBeneficiaryChange
+	if inInfo.PendingBeneficiaryTerm != nil {
+		newPendingBeneficiaryTerm = &miner10.PendingBeneficiaryChange{
+			NewBeneficiary:        inInfo.PendingBeneficiaryTerm.NewBeneficiary,
+			NewQuota:              inInfo.PendingBeneficiaryTerm.NewQuota,
+			NewExpiration:         inInfo.PendingBeneficiaryTerm.NewExpiration,
+			ApprovedByBeneficiary: inInfo.PendingBeneficiaryTerm.ApprovedByBeneficiary,
+			ApprovedByNominee:     inInfo.PendingBeneficiaryTerm.ApprovedByNominee,
+		}
+	}
+
 	outInfo := miner10.MinerInfo{
-		Owner:       inInfo.Owner,
-		Worker:      inInfo.Worker,
-		Beneficiary: inInfo.Owner,
-		BeneficiaryTerm: miner10.BeneficiaryTerm{
-			Quota:      abi.NewTokenAmount(0),
-			UsedQuota:  abi.NewTokenAmount(0),
-			Expiration: 0,
-		},
-		PendingBeneficiaryTerm:     nil,
+		Owner:                      inInfo.Owner,
+		Worker:                     inInfo.Worker,
+		Beneficiary:                inInfo.Owner,
+		BeneficiaryTerm:            miner10.BeneficiaryTerm(inInfo.BeneficiaryTerm),
+		PendingBeneficiaryTerm:     newPendingBeneficiaryTerm,
 		ControlAddresses:           inInfo.ControlAddresses,
 		PendingWorkerKey:           newPendingWorkerKey,
 		PeerId:                     inInfo.PeerId,
@@ -155,7 +154,7 @@ func (m minerMigrator) migrateState(ctx context.Context, store cbor.IpldStore, i
 		VestingFunds:               inState.VestingFunds,
 		FeeDebt:                    inState.FeeDebt,
 		InitialPledge:              inState.InitialPledge,
-		PreCommittedSectors:        newPrecommits,
+		PreCommittedSectors:        inState.PreCommittedSectors,
 		PreCommittedSectorsCleanUp: inState.PreCommittedSectorsCleanUp,
 		AllocatedSectors:           inState.AllocatedSectors,
 		Sectors:                    newSectors,
@@ -171,81 +170,6 @@ func (m minerMigrator) migrateState(ctx context.Context, store cbor.IpldStore, i
 		newCodeCID: m.migratedCodeCID(),
 		newHead:    newHead,
 	}, err
-}
-
-func (m minerMigrator) migratePrecommits(ctx context.Context, wrappedStore adt9.Store, inRoot cid.Cid) (cid.Cid, error) {
-	oldPrecommitOnChainInfos, err := adt9.AsMap(wrappedStore, inRoot, builtin.DefaultHamtBitwidth)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to load old precommit onchain infos: %w", err)
-	}
-
-	newPrecommitOnChainInfos, err := adt10.AsMap(wrappedStore, m.emptyPrecommitOnChainInfosV10, builtin.DefaultHamtBitwidth)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to load empty map: %w", err)
-	}
-
-	var info miner9.SectorPreCommitOnChainInfo
-	err = oldPrecommitOnChainInfos.ForEach(&info, func(key string) error {
-		var unsealedCid *cid.Cid
-		var pieces []abi.PieceInfo
-		for _, dealID := range info.Info.DealIDs {
-			deal, err := m.proposals.GetDealProposal(dealID)
-			if err != nil {
-				// Possible for the proposal to be missing if it's expired (but the deal is still in a precommit that's yet to be cleaned up)
-				// Just continue in this case, the sector is unProveCommitable anyway, will just fail later
-				if exitcode.Unwrap(err, exitcode.ErrIllegalState) != exitcode.ErrNotFound {
-					return xerrors.Errorf("error getting deal proposal for sector: %d: %w", info.Info.SectorNumber, err)
-				}
-
-				continue
-			}
-
-			pieces = append(pieces, abi.PieceInfo{
-				PieceCID: deal.PieceCID,
-				Size:     deal.PieceSize,
-			})
-		}
-
-		if len(pieces) != 0 {
-			commd, err := commp.GenerateUnsealedCID(info.Info.SealProof, pieces)
-			if err != nil {
-				return xerrors.Errorf("failed to generate unsealed CID: %w", err)
-			}
-
-			unsealedCid = &commd
-		}
-
-		err = newPrecommitOnChainInfos.Put(miner10.SectorKey(info.Info.SectorNumber), &miner10.SectorPreCommitOnChainInfo{
-			Info: miner10.SectorPreCommitInfo{
-				SealProof:     info.Info.SealProof,
-				SectorNumber:  info.Info.SectorNumber,
-				SealedCID:     info.Info.SealedCID,
-				SealRandEpoch: info.Info.SealRandEpoch,
-				DealIDs:       info.Info.DealIDs,
-				Expiration:    info.Info.Expiration,
-				UnsealedCid:   unsealedCid,
-			},
-			PreCommitDeposit: info.PreCommitDeposit,
-			PreCommitEpoch:   info.PreCommitEpoch,
-		})
-
-		if err != nil {
-			return xerrors.Errorf("failed to write new precommitinfo: %w", err)
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to iterate over precommitinfos: %w", err)
-	}
-
-	newPrecommits, err := newPrecommitOnChainInfos.Root()
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to flush new precommits: %w", err)
-	}
-
-	return newPrecommits, nil
 }
 
 func migrateSectorsWithCache(ctx context.Context, store adt9.Store, cache MigrationCache, minerAddr address.Address, inRoot cid.Cid) (cid.Cid, error) {
@@ -303,7 +227,7 @@ func migrateSectorsWithCache(ctx context.Context, store adt9.Store, cache Migrat
 					}
 
 					if err := prevOutSectors.Set(change.Key, migrateSectorInfo(*info)); err != nil {
-						return cid.Undef, xerrors.Errorf("failed to set migrated sector %d in prevOutSectors", sectorNo)
+						return cid.Undef, xerrors.Errorf("failed to set migrated sector %d in prevOutSectors: %w", sectorNo, err)
 					}
 				}
 			}
@@ -344,10 +268,36 @@ func migrateSectorsFromScratch(ctx context.Context, store adt9.Store, inArray *a
 	if err = inArray.ForEach(&sectorInfo, func(k int64) error {
 		return outArray.Set(uint64(k), migrateSectorInfo(sectorInfo))
 	}); err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("migrating sectors: %w", err)
 	}
 
-	return outArray, err
+	return outArray, nil
+}
+
+func migrateSectorInfo(sectorInfo miner9.SectorOnChainInfo) *miner10.SectorOnChainInfo {
+	proofExpiration := sectorInfo.Activation + miner10.MaxProofValidity
+	for proofExpiration < sectorInfo.Expiration {
+		proofExpiration += miner10.ProofRefreshIncrease
+	}
+
+	return &miner10.SectorOnChainInfo{
+		SectorNumber:          sectorInfo.SectorNumber,
+		SealProof:             sectorInfo.SealProof,
+		SealedCID:             sectorInfo.SealedCID,
+		DealIDs:               sectorInfo.DealIDs,
+		Activation:            sectorInfo.Activation,
+		CommitmentExpiration:  sectorInfo.Expiration,
+		ProofExpiration:       proofExpiration,
+		DealWeight:            sectorInfo.DealWeight,
+		VerifiedDealWeight:    sectorInfo.VerifiedDealWeight,
+		InitialPledge:         sectorInfo.InitialPledge,
+		ExpectedDayReward:     sectorInfo.ExpectedDayReward,
+		ExpectedStoragePledge: sectorInfo.ExpectedStoragePledge,
+		ReplacedSectorAge:     sectorInfo.ReplacedSectorAge,
+		ReplacedDayReward:     sectorInfo.ReplacedDayReward,
+		SectorKeyCID:          sectorInfo.SectorKeyCID,
+		SimpleQAPower:         sectorInfo.SimpleQAPower,
+	}
 }
 
 func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt9.Store, cache MigrationCache, deadlines cid.Cid) (cid.Cid, error) {
@@ -358,7 +308,7 @@ func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt9.Store, c
 	var inDeadlines miner9.Deadlines
 	err := store.Get(store.Context(), deadlines, &inDeadlines)
 	if err != nil {
-		return cid.Undef, err
+		return cid.Undef, xerrors.Errorf("getting deadlines: %w", err)
 	}
 
 	var outDeadlines miner10.Deadlines
@@ -374,7 +324,7 @@ func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt9.Store, c
 			outSectorsSnapshotCid, err := cache.Load(SectorsAmtKey(inDeadline.SectorsSnapshot), func() (cid.Cid, error) {
 				inSectorsSnapshot, err := adt9.AsArray(store, inDeadline.SectorsSnapshot, miner9.SectorsAmtBitwidth)
 				if err != nil {
-					return cid.Undef, err
+					return cid.Undef, xerrors.Errorf("getting sector snapshot: %w", err)
 				}
 
 				outSectorsSnapshot, err := migrateSectorsFromScratch(ctx, store, inSectorsSnapshot)
@@ -384,13 +334,17 @@ func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt9.Store, c
 
 				return outSectorsSnapshot.Root()
 			})
-
 			if err != nil {
 				return cid.Undef, xerrors.Errorf("failed to migrate sectors snapshot: %w", err)
 			}
 
+			outPartsCid, err := m.migrateParitions(ctx, store, cache, inDeadline.Partitions)
+			if err != nil {
+				return cid.Undef, xerrors.Errorf("failed to migrate partitions: %w", err)
+			}
+
 			outDeadline := miner10.Deadline{
-				Partitions:                        inDeadline.Partitions,
+				Partitions:                        outPartsCid,
 				ExpirationsEpochs:                 inDeadline.ExpirationsEpochs,
 				PartitionsPoSted:                  inDeadline.PartitionsPoSted,
 				EarlyTerminations:                 inDeadline.EarlyTerminations,
@@ -405,7 +359,7 @@ func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt9.Store, c
 
 			outDlCid, err := store.Put(ctx, &outDeadline)
 			if err != nil {
-				return cid.Undef, err
+				return cid.Undef, xerrors.Errorf("saving deadline to store: %w", err)
 			}
 
 			outDeadlines.Due[i] = outDlCid
@@ -415,22 +369,86 @@ func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt9.Store, c
 	return store.Put(ctx, &outDeadlines)
 }
 
-func migrateSectorInfo(sectorInfo miner9.SectorOnChainInfo) *miner10.SectorOnChainInfo {
-	return &miner10.SectorOnChainInfo{
-		SectorNumber:          sectorInfo.SectorNumber,
-		SealProof:             sectorInfo.SealProof,
-		SealedCID:             sectorInfo.SealedCID,
-		DealIDs:               sectorInfo.DealIDs,
-		Activation:            sectorInfo.Activation,
-		Expiration:            sectorInfo.Expiration,
-		DealWeight:            sectorInfo.DealWeight,
-		VerifiedDealWeight:    sectorInfo.VerifiedDealWeight,
-		InitialPledge:         sectorInfo.InitialPledge,
-		ExpectedDayReward:     sectorInfo.ExpectedDayReward,
-		ExpectedStoragePledge: sectorInfo.ExpectedStoragePledge,
-		ReplacedSectorAge:     sectorInfo.ReplacedSectorAge,
-		ReplacedDayReward:     sectorInfo.ReplacedDayReward,
-		SectorKeyCID:          sectorInfo.SectorKeyCID,
-		SimpleQAPower:         sectorInfo.DealWeight.IsZero() && sectorInfo.VerifiedDealWeight.IsZero(),
-	}
+func (m minerMigrator) migrateParitions(ctx context.Context, store adt9.Store, cache MigrationCache, partitions cid.Cid) (cid.Cid, error) {
+	return cache.Load(PartitionsAmtKey(partitions), func() (cid.Cid, error) {
+		inPartitionsArr, err := adt9.AsArray(store, partitions, miner9.DeadlinePartitionsAmtBitwidth)
+		if err != nil {
+			return cid.Undef, xerrors.Errorf("failed to load partitions: %w", err)
+		}
+
+		outPartitions, err := adt10.MakeEmptyArray(store, miner10.DeadlinePartitionsAmtBitwidth)
+		if err != nil {
+			return cid.Undef, xerrors.Errorf("failed to create new partitions: %w", err)
+		}
+
+		var inPartition miner9.Partition
+		err = inPartitionsArr.ForEach(&inPartition, func(i int64) error {
+			outEsCid, err := m.migrateExpirations(ctx, store, cache, inPartition)
+			if err != nil {
+				return xerrors.Errorf("failed to migrate expirations: %w", err)
+			}
+
+			outPartition := miner10.Partition{
+				Sectors:           inPartition.Sectors,
+				Unproven:          inPartition.Unproven,
+				Faults:            inPartition.Faults,
+				Recoveries:        inPartition.Recoveries,
+				Terminated:        inPartition.Terminated,
+				ExpirationsEpochs: outEsCid,
+				EarlyTerminated:   inPartition.EarlyTerminated,
+				LivePower:         miner10.PowerPair(inPartition.LivePower),
+				UnprovenPower:     miner10.PowerPair(inPartition.UnprovenPower),
+				FaultyPower:       miner10.PowerPair(inPartition.FaultyPower),
+				RecoveringPower:   miner10.PowerPair(inPartition.RecoveringPower),
+			}
+
+			err = outPartitions.Set(uint64(i), &outPartition)
+			if err != nil {
+				return xerrors.Errorf("failed to set partition: %w", err)
+			}
+
+			return nil
+		})
+		if err != nil {
+			return cid.Undef, xerrors.Errorf("failed to iterate over partitions: %w", err)
+		}
+
+		return outPartitions.Root()
+	})
+}
+
+func (m minerMigrator) migrateExpirations(ctx context.Context, store adt9.Store, cache MigrationCache, inPartition miner9.Partition) (cid.Cid, error) {
+	return cache.Load(ExpirationsAmtKey(inPartition.ExpirationsEpochs), func() (cid.Cid, error) {
+		// We aren't going to use the quant spec
+		expirationQueue, err := miner9.LoadExpirationQueue(store, inPartition.ExpirationsEpochs, builtin.QuantSpec{}, miner9.PartitionExpirationAmtBitwidth)
+		if err != nil {
+			return cid.Undef, xerrors.Errorf("loading expiration queue: %w", err)
+		}
+
+		outExpirations, err := adt10.MakeEmptyArray(store, miner10.DeadlineExpirationAmtBitwidth)
+		if err != nil {
+			return cid.Undef, xerrors.Errorf("failed to create new expiration queue: %w", err)
+		}
+
+		var inExpirationSet miner9.ExpirationSet
+		err = expirationQueue.ForEach(&inExpirationSet, func(i int64) error {
+			newExpirationSet := miner10.ExpirationSet{
+				OnTimeSectors: inExpirationSet.OnTimeSectors,
+				EarlySectors:  bitfield.New(),
+				FaultySectors: inExpirationSet.EarlySectors, // What we used to call "EarlySectors" are now "FaultySectors"
+				OnTimePledge:  inExpirationSet.OnTimePledge,
+				ActivePower:   miner10.PowerPair(inExpirationSet.ActivePower),
+				FaultyPower:   miner10.PowerPair(inExpirationSet.FaultyPower),
+			}
+
+			err = outExpirations.Set(uint64(i), &newExpirationSet)
+			if err != nil {
+				return xerrors.Errorf("failed to set expiration queue: %w", err)
+			}
+
+			return nil
+		})
+
+		return outExpirations.Root()
+	})
 }

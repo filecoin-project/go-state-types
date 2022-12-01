@@ -96,7 +96,7 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount) (
 			for _, dealID := range sector.DealIDs {
 				minerSummary.Deals[dealID] = DealSummary{
 					SectorStart:      sector.Activation,
-					SectorExpiration: sector.Expiration,
+					SectorExpiration: sector.CommitmentExpiration,
 				}
 			}
 
@@ -553,6 +553,7 @@ func CheckExpirationQueue(expQ ExpirationQueue, liveSectors map[abi.SectorNumber
 	allFaultyPower := NewPowerPairZero()
 	allOnTimePledge := big.Zero()
 	firstQueueEpoch := abi.ChainEpoch(-1)
+	// TODO Update for new Expiration set fields
 	var exp ExpirationSet
 	err = expQ.ForEach(&exp, func(e int64) error {
 		epoch := abi.ChainEpoch(e)
@@ -575,7 +576,7 @@ func CheckExpirationQueue(expQ ExpirationQueue, liveSectors map[abi.SectorNumber
 			if sector, ok := liveSectors[sno]; ok {
 				// The sector can be "on time" either at its target expiration epoch, or in the first queue entry
 				// (a CC-replaced sector moved forward).
-				target := quant.QuantizeUp(sector.Expiration)
+				target := quant.QuantizeUp(sector.CommitmentExpiration)
 				acc.Require(epoch == target || epoch == firstQueueEpoch, "invalid expiration %d for sector %d, expected %d or %d",
 					epoch, sector.SectorNumber, firstQueueEpoch, target)
 
@@ -598,7 +599,7 @@ func CheckExpirationQueue(expQ ExpirationQueue, liveSectors map[abi.SectorNumber
 
 			// Check expiring sectors are still alive.
 			if sector, ok := liveSectors[sno]; ok {
-				target := quant.QuantizeUp(sector.Expiration)
+				target := quant.QuantizeUp(sector.CommitmentExpiration)
 				acc.Require(epoch < target, "invalid early expiration %d for sector %d, expected < %d",
 					epoch, sector.SectorNumber, target)
 			} else {
