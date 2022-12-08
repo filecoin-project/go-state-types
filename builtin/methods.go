@@ -187,7 +187,7 @@ func GenerateMethodNum(name string) (abi.MethodNum, error) {
 		}
 	}
 
-	return abi.MethodNum(0), xerrors.Errorf("Could not generate method num from method name :", name)
+	return abi.MethodNum(0), xerrors.Errorf("Could not generate method num from method name %s:", name)
 }
 
 func validateMethodName(name string) error {
@@ -196,12 +196,12 @@ func validateMethodName(name string) error {
 	}
 
 	if !unicode.IsUpper(rune(name[0])) {
-		return xerrors.Errorf("Method name first letter must be uppercase, method name: ", name)
+		return xerrors.Errorf("Method name first letter must be uppercase, method name: %s", name)
 	}
 
 	for _, c := range name {
 		if !(unicode.IsLetter(c) || unicode.IsDigit(c) || c == '_') {
-			return xerrors.Errorf("method name has illegal characters, method name: ", name)
+			return xerrors.Errorf("method name has illegal characters, method name: %s", name)
 		}
 	}
 
