@@ -6,10 +6,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/filecoin-project/go-state-types/builtin"
-
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/builtin"
 	system9 "github.com/filecoin-project/go-state-types/builtin/v9/system"
 	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 	"github.com/filecoin-project/go-state-types/manifest"
@@ -86,18 +85,17 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 			miner9Cid = entry.Code
 		}
 	}
-
 	if miner9Cid == cid.Undef {
 		return cid.Undef, xerrors.Errorf("didn't find miner in old manifest entries")
 	}
 
-	for name, oldCodeCID := range oldCodeIDMap { //nolint:nomaprange
+	for name, oldCodeCID := range oldCodeIDMap {
 		newCodeCID, ok := newManifest.Get(name)
 		if !ok {
 			return cid.Undef, xerrors.Errorf("code cid for %s actor not found in new manifest", name)
 		}
 
-		migrations[oldCodeCID] = migration.CodeMigrator{newCodeCID}
+		migrations[oldCodeCID] = migration.CodeMigrator{OutCodeCID: newCodeCID}
 	}
 
 	// migrations that migrate both code and state, override entries in `migrations`
@@ -109,10 +107,9 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("code cid for system actor not found in manifest")
 	}
 
-	migrations[systemActor.Code] = systemActorMigrator{newSystemCodeCID, newManifest.Data}
+	migrations[systemActor.Code] = systemActorMigrator{OutCodeCID: newSystemCodeCID, ManifestData: newManifest.Data}
 
-	// The Miner Actor -- needs loading the market state
-
+	// Miner Actor
 	miner10Cid, ok := newManifest.Get(manifest.MinerKey)
 	if !ok {
 		return cid.Undef, xerrors.Errorf("code cid for miner actor not found in new manifest")
@@ -239,7 +236,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		log.Log(rt.INFO, "Result writer started")
 		resultCount := 0
 		for result := range jobResultCh {
-			if err := actorsOut.SetActorV4(result.Address, &result.ActorV4); err != nil {
+			if err := actorsOut.SetActorV5(result.Address, &result.ActorV5); err != nil {
 				return err
 			}
 			resultCount++
@@ -268,7 +265,7 @@ type migrationJob struct {
 
 type migrationJobResult struct {
 	address.Address
-	builtin.ActorV4
+	builtin.ActorV5
 }
 
 func (job *migrationJob) run(ctx context.Context, store cbor.IpldStore, priorEpoch abi.ChainEpoch) (*migrationJobResult, error) {
@@ -286,11 +283,12 @@ func (job *migrationJob) run(ctx context.Context, store cbor.IpldStore, priorEpo
 	// Set up new actor record with the migrated state.
 	return &migrationJobResult{
 		job.Address, // Unchanged
-		builtin.ActorV4{
+		builtin.ActorV5{
 			Code:       result.NewCodeCID,
 			Head:       result.NewHead,
 			CallSeqNum: job.ActorV4.CallSeqNum, // Unchanged
 			Balance:    job.ActorV4.Balance,    // Unchanged
+			Address:    nil,                    // TODO input predictable address for accounts
 		},
 	}, nil
 }
