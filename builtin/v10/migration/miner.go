@@ -20,7 +20,7 @@ import (
 )
 
 // The minerMigrator performs the following migrations:
-// FIP-0047 Adds ProofExpiration to SectorOnChainInfo, and FaultySectors to the ExpirationSet of each parition
+// FIP-0047 Adds ProofExpiration to SectorOnChainInfo, and FaultySectors to the ExpirationSet of each partition
 
 type minerMigrator struct {
 	emptyDeadlineV9   cid.Cid
@@ -107,33 +107,14 @@ func (m minerMigrator) migrateState(ctx context.Context, store cbor.IpldStore, i
 		return nil, xerrors.Errorf("failed to migrate deadlines: %w", err)
 	}
 
-	var newPendingWorkerKey *miner10.WorkerKeyChange
-	if inInfo.PendingWorkerKey != nil {
-		newPendingWorkerKey = &miner10.WorkerKeyChange{
-			NewWorker:   inInfo.PendingWorkerKey.NewWorker,
-			EffectiveAt: inInfo.PendingWorkerKey.EffectiveAt,
-		}
-	}
-
-	var newPendingBeneficiaryTerm *miner10.PendingBeneficiaryChange
-	if inInfo.PendingBeneficiaryTerm != nil {
-		newPendingBeneficiaryTerm = &miner10.PendingBeneficiaryChange{
-			NewBeneficiary:        inInfo.PendingBeneficiaryTerm.NewBeneficiary,
-			NewQuota:              inInfo.PendingBeneficiaryTerm.NewQuota,
-			NewExpiration:         inInfo.PendingBeneficiaryTerm.NewExpiration,
-			ApprovedByBeneficiary: inInfo.PendingBeneficiaryTerm.ApprovedByBeneficiary,
-			ApprovedByNominee:     inInfo.PendingBeneficiaryTerm.ApprovedByNominee,
-		}
-	}
-
 	outInfo := miner10.MinerInfo{
 		Owner:                      inInfo.Owner,
 		Worker:                     inInfo.Worker,
 		Beneficiary:                inInfo.Owner,
 		BeneficiaryTerm:            miner10.BeneficiaryTerm(inInfo.BeneficiaryTerm),
-		PendingBeneficiaryTerm:     newPendingBeneficiaryTerm,
+		PendingBeneficiaryTerm:     (*miner10.PendingBeneficiaryChange)(inInfo.PendingBeneficiaryTerm),
 		ControlAddresses:           inInfo.ControlAddresses,
-		PendingWorkerKey:           newPendingWorkerKey,
+		PendingWorkerKey:           (*miner10.WorkerKeyChange)(inInfo.PendingWorkerKey),
 		PeerId:                     inInfo.PeerId,
 		Multiaddrs:                 inInfo.Multiaddrs,
 		WindowPoStProofType:        inInfo.WindowPoStProofType,
@@ -338,7 +319,7 @@ func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt9.Store, c
 				return cid.Undef, xerrors.Errorf("failed to migrate sectors snapshot: %w", err)
 			}
 
-			outPartsCid, err := m.migrateParitions(ctx, store, cache, inDeadline.Partitions)
+			outPartsCid, err := m.migratePartitions(ctx, store, cache, inDeadline.Partitions)
 			if err != nil {
 				return cid.Undef, xerrors.Errorf("failed to migrate partitions: %w", err)
 			}
@@ -369,7 +350,7 @@ func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt9.Store, c
 	return store.Put(ctx, &outDeadlines)
 }
 
-func (m minerMigrator) migrateParitions(ctx context.Context, store adt9.Store, cache MigrationCache, partitions cid.Cid) (cid.Cid, error) {
+func (m minerMigrator) migratePartitions(ctx context.Context, store adt9.Store, cache MigrationCache, partitions cid.Cid) (cid.Cid, error) {
 	return cache.Load(PartitionsAmtKey(partitions), func() (cid.Cid, error) {
 		inPartitionsArr, err := adt9.AsArray(store, partitions, miner9.DeadlinePartitionsAmtBitwidth)
 		if err != nil {
