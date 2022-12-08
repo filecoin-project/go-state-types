@@ -3,6 +3,8 @@ package migration
 import (
 	"context"
 
+	"github.com/filecoin-project/go-state-types/migration"
+
 	"github.com/ipfs/go-cid"
 	cbor "github.com/ipfs/go-ipld-cbor"
 
@@ -82,13 +84,13 @@ func newMinerMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid
 	}, nil
 }
 
-func (m minerMigrator) migratedCodeCID() cid.Cid {
+func (m minerMigrator) MigratedCodeCID() cid.Cid {
 	return m.OutCodeCID
 }
 
-func (m minerMigrator) migrateState(ctx context.Context, store cbor.IpldStore, in actorMigrationInput) (*actorMigrationResult, error) {
+func (m minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, in migration.ActorMigrationInput) (*migration.ActorMigrationResult, error) {
 	var inState miner9.State
-	if err := store.Get(ctx, in.head, &inState); err != nil {
+	if err := store.Get(ctx, in.Head, &inState); err != nil {
 		return nil, xerrors.Errorf("getting miner state: %w", err)
 	}
 	var inInfo miner9.MinerInfo
@@ -97,12 +99,12 @@ func (m minerMigrator) migrateState(ctx context.Context, store cbor.IpldStore, i
 	}
 	wrappedStore := adt9.WrapStore(ctx, store)
 
-	newSectors, err := migrateSectorsWithCache(ctx, wrappedStore, in.cache, in.address, inState.Sectors)
+	newSectors, err := migrateSectorsWithCache(ctx, wrappedStore, in.Cache, in.Address, inState.Sectors)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to migrate sectors for miner: %s: %w", in.address, err)
+		return nil, xerrors.Errorf("failed to migrate sectors for miner: %s: %w", in.Address, err)
 	}
 
-	newDeadlines, err := m.migrateDeadlines(ctx, wrappedStore, in.cache, inState.Deadlines)
+	newDeadlines, err := m.migrateDeadlines(ctx, wrappedStore, in.Cache, inState.Deadlines)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to migrate deadlines: %w", err)
 	}
@@ -147,25 +149,25 @@ func (m minerMigrator) migrateState(ctx context.Context, store cbor.IpldStore, i
 	}
 
 	newHead, err := store.Put(ctx, &outState)
-	return &actorMigrationResult{
-		newCodeCID: m.migratedCodeCID(),
-		newHead:    newHead,
+	return &migration.ActorMigrationResult{
+		NewCodeCID: m.MigratedCodeCID(),
+		NewHead:    newHead,
 	}, err
 }
 
-func migrateSectorsWithCache(ctx context.Context, store adt9.Store, cache MigrationCache, minerAddr address.Address, inRoot cid.Cid) (cid.Cid, error) {
-	return cache.Load(SectorsAmtKey(inRoot), func() (cid.Cid, error) {
+func migrateSectorsWithCache(ctx context.Context, store adt9.Store, cache migration.MigrationCache, minerAddr address.Address, inRoot cid.Cid) (cid.Cid, error) {
+	return cache.Load(migration.SectorsAmtKey(inRoot), func() (cid.Cid, error) {
 		inArray, err := adt9.AsArray(store, inRoot, miner9.SectorsAmtBitwidth)
 		if err != nil {
 			return cid.Undef, xerrors.Errorf("failed to read sectors array: %w", err)
 		}
 
-		okIn, prevInRoot, err := cache.Read(MinerPrevSectorsInKey(minerAddr))
+		okIn, prevInRoot, err := cache.Read(migration.MinerPrevSectorsInKey(minerAddr))
 		if err != nil {
 			return cid.Undef, xerrors.Errorf("failed to get previous inRoot from cache: %w", err)
 		}
 
-		okOut, prevOutRoot, err := cache.Read(MinerPrevSectorsOutKey(minerAddr))
+		okOut, prevOutRoot, err := cache.Read(migration.MinerPrevSectorsOutKey(minerAddr))
 		if err != nil {
 			return cid.Undef, xerrors.Errorf("failed to get previous outRoot from cache: %w", err)
 		}
@@ -227,11 +229,11 @@ func migrateSectorsWithCache(ctx context.Context, store adt9.Store, cache Migrat
 			return cid.Undef, xerrors.Errorf("error writing new sectors AMT: %w", err)
 		}
 
-		if err = cache.Write(MinerPrevSectorsInKey(minerAddr), inRoot); err != nil {
+		if err = cache.Write(migration.MinerPrevSectorsInKey(minerAddr), inRoot); err != nil {
 			return cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
 		}
 
-		if err = cache.Write(MinerPrevSectorsOutKey(minerAddr), outRoot); err != nil {
+		if err = cache.Write(migration.MinerPrevSectorsOutKey(minerAddr), outRoot); err != nil {
 			return cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
 		}
 
@@ -281,7 +283,7 @@ func migrateSectorInfo(sectorInfo miner9.SectorOnChainInfo) *miner10.SectorOnCha
 	}
 }
 
-func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt9.Store, cache MigrationCache, deadlines cid.Cid) (cid.Cid, error) {
+func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt9.Store, cache migration.MigrationCache, deadlines cid.Cid) (cid.Cid, error) {
 	if deadlines == m.emptyDeadlinesV9 {
 		return m.emptyDeadlinesV10, nil
 	}
@@ -302,7 +304,7 @@ func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt9.Store, c
 				return cid.Undef, err
 			}
 
-			outSectorsSnapshotCid, err := cache.Load(SectorsAmtKey(inDeadline.SectorsSnapshot), func() (cid.Cid, error) {
+			outSectorsSnapshotCid, err := cache.Load(migration.SectorsAmtKey(inDeadline.SectorsSnapshot), func() (cid.Cid, error) {
 				inSectorsSnapshot, err := adt9.AsArray(store, inDeadline.SectorsSnapshot, miner9.SectorsAmtBitwidth)
 				if err != nil {
 					return cid.Undef, xerrors.Errorf("getting sector snapshot: %w", err)
@@ -350,8 +352,8 @@ func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt9.Store, c
 	return store.Put(ctx, &outDeadlines)
 }
 
-func (m minerMigrator) migratePartitions(ctx context.Context, store adt9.Store, cache MigrationCache, partitions cid.Cid) (cid.Cid, error) {
-	return cache.Load(PartitionsAmtKey(partitions), func() (cid.Cid, error) {
+func (m minerMigrator) migratePartitions(ctx context.Context, store adt9.Store, cache migration.MigrationCache, partitions cid.Cid) (cid.Cid, error) {
+	return cache.Load(migration.PartitionsAmtKey(partitions), func() (cid.Cid, error) {
 		inPartitionsArr, err := adt9.AsArray(store, partitions, miner9.DeadlinePartitionsAmtBitwidth)
 		if err != nil {
 			return cid.Undef, xerrors.Errorf("failed to load partitions: %w", err)
@@ -398,8 +400,8 @@ func (m minerMigrator) migratePartitions(ctx context.Context, store adt9.Store, 
 	})
 }
 
-func (m minerMigrator) migrateExpirations(ctx context.Context, store adt9.Store, cache MigrationCache, inPartition miner9.Partition) (cid.Cid, error) {
-	return cache.Load(ExpirationsAmtKey(inPartition.ExpirationsEpochs), func() (cid.Cid, error) {
+func (m minerMigrator) migrateExpirations(ctx context.Context, store adt9.Store, cache migration.MigrationCache, inPartition miner9.Partition) (cid.Cid, error) {
+	return cache.Load(migration.ExpirationsAmtKey(inPartition.ExpirationsEpochs), func() (cid.Cid, error) {
 		// We aren't going to use the quant spec
 		expirationQueue, err := miner9.LoadExpirationQueue(store, inPartition.ExpirationsEpochs, builtin.QuantSpec{}, miner9.PartitionExpirationAmtBitwidth)
 		if err != nil {
