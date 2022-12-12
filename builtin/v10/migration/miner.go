@@ -109,29 +109,8 @@ func (m minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, i
 		return nil, xerrors.Errorf("failed to migrate deadlines: %w", err)
 	}
 
-	outInfo := miner10.MinerInfo{
-		Owner:                      inInfo.Owner,
-		Worker:                     inInfo.Worker,
-		Beneficiary:                inInfo.Owner,
-		BeneficiaryTerm:            miner10.BeneficiaryTerm(inInfo.BeneficiaryTerm),
-		PendingBeneficiaryTerm:     (*miner10.PendingBeneficiaryChange)(inInfo.PendingBeneficiaryTerm),
-		ControlAddresses:           inInfo.ControlAddresses,
-		PendingWorkerKey:           (*miner10.WorkerKeyChange)(inInfo.PendingWorkerKey),
-		PeerId:                     inInfo.PeerId,
-		Multiaddrs:                 inInfo.Multiaddrs,
-		WindowPoStProofType:        inInfo.WindowPoStProofType,
-		SectorSize:                 inInfo.SectorSize,
-		WindowPoStPartitionSectors: inInfo.WindowPoStPartitionSectors,
-		ConsensusFaultElapsed:      inInfo.ConsensusFaultElapsed,
-		PendingOwnerAddress:        inInfo.PendingOwnerAddress,
-	}
-	newInfoCid, err := store.Put(ctx, &outInfo)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to flush new miner info: %w", err)
-	}
-
 	outState := miner10.State{
-		Info:                       newInfoCid,
+		Info:                       inState.Info,
 		PreCommitDeposits:          inState.PreCommitDeposits,
 		LockedFunds:                inState.LockedFunds,
 		VestingFunds:               inState.VestingFunds,
