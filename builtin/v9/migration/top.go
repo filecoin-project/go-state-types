@@ -204,7 +204,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	// Find verified pending deals for both datacap and verifreg migrations
 	pendingVerifiedDeals, pendingVerifiedDealSize, err := getPendingVerifiedDealsAndTotalSize(ctx, adtStore, marketStateV8)
 	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to get pending verified deals")
+		return cid.Undef, xerrors.Errorf("failed to get pending verified deals: %w", err)
 	}
 
 	proposals, err := market8.AsDealProposalArray(adtStore, marketStateV8.Proposals)
