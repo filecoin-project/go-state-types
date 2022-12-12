@@ -1273,8 +1273,8 @@ func (t *ExpirationSet) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.EarlySectors (bitfield.BitField) (struct)
-	if err := t.EarlySectors.MarshalCBOR(w); err != nil {
+	// t.ProofExpiringSectors (bitfield.BitField) (struct)
+	if err := t.ProofExpiringSectors.MarshalCBOR(w); err != nil {
 		return err
 	}
 
@@ -1327,12 +1327,12 @@ func (t *ExpirationSet) UnmarshalCBOR(r io.Reader) error {
 		}
 
 	}
-	// t.EarlySectors (bitfield.BitField) (struct)
+	// t.ProofExpiringSectors (bitfield.BitField) (struct)
 
 	{
 
-		if err := t.EarlySectors.UnmarshalCBOR(br); err != nil {
-			return xerrors.Errorf("unmarshaling t.EarlySectors: %w", err)
+		if err := t.ProofExpiringSectors.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.ProofExpiringSectors: %w", err)
 		}
 
 	}

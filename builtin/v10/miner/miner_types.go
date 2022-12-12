@@ -245,12 +245,13 @@ type GetBeneficiaryReturn struct {
 // a sector may be faulty but expiring on-time if it faults just prior to expected termination.
 // Early sectors are always faulty, and active power always represents on-time sectors.
 type ExpirationSet struct {
-	// Sectors expiring "on time" at the end of their committed life
+	// Sectors expiring "on time" at the end of their committed life. These sectors can also be "faulty" in a sense
+	// that they don't give power, but will expire on time in this queue if it faults just prior to expected termination.
 	OnTimeSectors bitfield.BitField
-	// Sectors expiring "early", due to proof expiration, difference from on_time_sectors is that
+	// Sectors expiring early due to proof expiration, difference from on_time_sectors is that
 	// the pledge for them is not counted in the ExpirationSet as it is manually assessed during expiration.
-	EarlySectors bitfield.BitField
-	// Sectors expiring "early" due to being faulty for too long
+	ProofExpiringSectors bitfield.BitField
+	// Sectors expiring early due to being faulty for too long
 	FaultySectors bitfield.BitField
 	// Pledge total for the on-time sectors
 	OnTimePledge abi.TokenAmount

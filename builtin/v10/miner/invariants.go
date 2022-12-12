@@ -537,6 +537,7 @@ type ExpirationQueueStateSummary struct {
 }
 
 // Checks the expiration queue for consistency.
+// TODO update for FIP-0047
 func CheckExpirationQueue(expQ ExpirationQueue, liveSectors map[abi.SectorNumber]*SectorOnChainInfo,
 	partitionFaults bitfield.BitField, quant builtin.QuantSpec, sectorSize abi.SectorSize, acc *builtin.MessageAccumulator) *ExpirationQueueStateSummary {
 	partitionFaultsMap, err := partitionFaults.AllMap(1 << 30)
@@ -588,7 +589,7 @@ func CheckExpirationQueue(expQ ExpirationQueue, liveSectors map[abi.SectorNumber
 		})
 		acc.RequireNoError(err, "error iterating on-time sectors")
 
-		err = exp.EarlySectors.ForEach(func(n uint64) error {
+		err = exp.FaultySectors.ForEach(func(n uint64) error {
 			sno := abi.SectorNumber(n)
 			// Check sectors are present only once.
 			acc.Require(!seenSectors[sno], "sector %d in expiration queue twice", sno)
@@ -613,7 +614,7 @@ func CheckExpirationQueue(expQ ExpirationQueue, liveSectors map[abi.SectorNumber
 		var activeSectors, faultySectors map[abi.SectorNumber]*SectorOnChainInfo
 		var missing []abi.SectorNumber
 
-		all, err := bitfield.MergeBitFields(exp.OnTimeSectors, exp.EarlySectors)
+		all, err := bitfield.MergeBitFields(exp.OnTimeSectors, exp.FaultySectors)
 		if err != nil {
 			acc.Addf("error merging all on-time and early bitfields: %v", err)
 		} else {
@@ -653,7 +654,7 @@ func CheckExpirationQueue(expQ ExpirationQueue, liveSectors map[abi.SectorNumber
 		acc.Require(exp.OnTimePledge.Equals(onTimeSectorsPledge), "on time pledge recorded %v doesn't match computed %v", exp.OnTimePledge, onTimeSectorsPledge)
 
 		allOnTime = append(allOnTime, exp.OnTimeSectors)
-		allEarly = append(allEarly, exp.EarlySectors)
+		allEarly = append(allEarly, exp.FaultySectors)
 		allActivePower = allActivePower.Add(exp.ActivePower)
 		allFaultyPower = allFaultyPower.Add(exp.FaultyPower)
 		allOnTimePledge = big.Add(allOnTimePledge, exp.OnTimePledge)

@@ -345,7 +345,7 @@ func (m minerMigrator) migratePartitions(ctx context.Context, store adt9.Store, 
 
 		var inPartition miner9.Partition
 		err = inPartitionsArr.ForEach(&inPartition, func(i int64) error {
-			outEsCid, err := m.migrateExpirations(ctx, store, cache, inPartition)
+			outEsCid, err := m.migrateExpirations(ctx, store, inPartition)
 			if err != nil {
 				return xerrors.Errorf("failed to migrate expirations: %w", err)
 			}
@@ -379,38 +379,37 @@ func (m minerMigrator) migratePartitions(ctx context.Context, store adt9.Store, 
 	})
 }
 
-func (m minerMigrator) migrateExpirations(ctx context.Context, store adt9.Store, cache migration.MigrationCache, inPartition miner9.Partition) (cid.Cid, error) {
-	return cache.Load(migration.ExpirationsAmtKey(inPartition.ExpirationsEpochs), func() (cid.Cid, error) {
-		// We aren't going to use the quant spec
-		expirationQueue, err := miner9.LoadExpirationQueue(store, inPartition.ExpirationsEpochs, builtin.QuantSpec{}, miner9.PartitionExpirationAmtBitwidth)
-		if err != nil {
-			return cid.Undef, xerrors.Errorf("loading expiration queue: %w", err)
+func (m minerMigrator) migrateExpirations(ctx context.Context, store adt9.Store, inPartition miner9.Partition) (cid.Cid, error) {
+	// We aren't going to use the quant spec
+	expirationQueue, err := miner9.LoadExpirationQueue(store, inPartition.ExpirationsEpochs, builtin.QuantSpec{}, miner9.PartitionExpirationAmtBitwidth)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("loading expiration queue: %w", err)
+	}
+
+	outExpirations, err := adt10.MakeEmptyArray(store, miner10.DeadlineExpirationAmtBitwidth)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to create new expiration queue: %w", err)
+	}
+
+	var inExpirationSet miner9.ExpirationSet
+	err = expirationQueue.ForEach(&inExpirationSet, func(i int64) error {
+		newExpirationSet := miner10.ExpirationSet{
+			OnTimeSectors:        inExpirationSet.OnTimeSectors,
+			ProofExpiringSectors: bitfield.New(),
+			// What we used to call "EarlySectors" are now "FaultySectors"
+			FaultySectors: inExpirationSet.EarlySectors,
+			OnTimePledge:  inExpirationSet.OnTimePledge,
+			ActivePower:   miner10.PowerPair(inExpirationSet.ActivePower),
+			FaultyPower:   miner10.PowerPair(inExpirationSet.FaultyPower),
 		}
 
-		outExpirations, err := adt10.MakeEmptyArray(store, miner10.DeadlineExpirationAmtBitwidth)
+		err = outExpirations.Set(uint64(i), &newExpirationSet)
 		if err != nil {
-			return cid.Undef, xerrors.Errorf("failed to create new expiration queue: %w", err)
+			return xerrors.Errorf("failed to set expiration queue: %w", err)
 		}
 
-		var inExpirationSet miner9.ExpirationSet
-		err = expirationQueue.ForEach(&inExpirationSet, func(i int64) error {
-			newExpirationSet := miner10.ExpirationSet{
-				OnTimeSectors: inExpirationSet.OnTimeSectors,
-				EarlySectors:  bitfield.New(),
-				FaultySectors: inExpirationSet.EarlySectors, // What we used to call "EarlySectors" are now "FaultySectors"
-				OnTimePledge:  inExpirationSet.OnTimePledge,
-				ActivePower:   miner10.PowerPair(inExpirationSet.ActivePower),
-				FaultyPower:   miner10.PowerPair(inExpirationSet.FaultyPower),
-			}
-
-			err = outExpirations.Set(uint64(i), &newExpirationSet)
-			if err != nil {
-				return xerrors.Errorf("failed to set expiration queue: %w", err)
-			}
-
-			return nil
-		})
-
-		return outExpirations.Root()
+		return nil
 	})
+
+	return outExpirations.Root()
 }
