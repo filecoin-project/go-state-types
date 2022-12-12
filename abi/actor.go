@@ -1,6 +1,8 @@
 package abi
 
-import "strconv"
+import (
+	"strconv"
+)
 
 // A sequential number assigned to an actor when created by the InitActor.
 // This ID is embedded in ID-type addresses.
@@ -35,4 +37,3 @@ type Multiaddrs = []byte
 
 // PeerID is a byte array representing a Libp2p PeerID
 type PeerID = []byte
-
