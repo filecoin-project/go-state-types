@@ -135,7 +135,7 @@ func CheckStateInvariants(tree *builtin.ActorTree, priorEpoch abi.ChainEpoch, ac
 			summary, msgs := verifreg.CheckStateInvariants(&st, tree.Store, priorEpoch)
 			acc.WithPrefix("verifreg: ").AddAll(msgs)
 			verifregSummary = summary
-		case actorCodes[manifest.DataCapKey]:
+		case actorCodes[manifest.DatacapKey]:
 			var st datacap.State
 			if err := tree.Store.Get(tree.Store.Context(), actor.Head, &st); err != nil {
 				return err
