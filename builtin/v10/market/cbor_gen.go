@@ -1052,85 +1052,6 @@ func (t *VerifyDealsForActivationReturn) UnmarshalCBOR(r io.Reader) error {
 	return nil
 }
 
-var lengthBufComputeDataCommitmentParams = []byte{129}
-
-func (t *ComputeDataCommitmentParams) MarshalCBOR(w io.Writer) error {
-	if t == nil {
-		_, err := w.Write(cbg.CborNull)
-		return err
-	}
-	if _, err := w.Write(lengthBufComputeDataCommitmentParams); err != nil {
-		return err
-	}
-
-	scratch := make([]byte, 9)
-
-	// t.Inputs ([]*market.SectorDataSpec) (slice)
-	if len(t.Inputs) > cbg.MaxLength {
-		return xerrors.Errorf("Slice value in field t.Inputs was too long")
-	}
-
-	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajArray, uint64(len(t.Inputs))); err != nil {
-		return err
-	}
-	for _, v := range t.Inputs {
-		if err := v.MarshalCBOR(w); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (t *ComputeDataCommitmentParams) UnmarshalCBOR(r io.Reader) error {
-	*t = ComputeDataCommitmentParams{}
-
-	br := cbg.GetPeeker(r)
-	scratch := make([]byte, 8)
-
-	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
-	if err != nil {
-		return err
-	}
-	if maj != cbg.MajArray {
-		return fmt.Errorf("cbor input should be of type array")
-	}
-
-	if extra != 1 {
-		return fmt.Errorf("cbor input had wrong number of fields")
-	}
-
-	// t.Inputs ([]*market.SectorDataSpec) (slice)
-
-	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
-	if err != nil {
-		return err
-	}
-
-	if extra > cbg.MaxLength {
-		return fmt.Errorf("t.Inputs: array too large (%d)", extra)
-	}
-
-	if maj != cbg.MajArray {
-		return fmt.Errorf("expected cbor array")
-	}
-
-	if extra > 0 {
-		t.Inputs = make([]*SectorDataSpec, extra)
-	}
-
-	for i := 0; i < int(extra); i++ {
-
-		var v SectorDataSpec
-		if err := v.UnmarshalCBOR(br); err != nil {
-			return err
-		}
-
-		t.Inputs[i] = &v
-	}
-
-	return nil
-}
-
 var lengthBufComputeDataCommitmentReturn = []byte{129}
 
 func (t *ComputeDataCommitmentReturn) MarshalCBOR(w io.Writer) error {
@@ -1210,48 +1131,31 @@ func (t *ComputeDataCommitmentReturn) UnmarshalCBOR(r io.Reader) error {
 	return nil
 }
 
-var lengthBufOnMinerSectorsTerminateParams = []byte{130}
+var lengthBufGetBalanceReturn = []byte{130}
 
-func (t *OnMinerSectorsTerminateParams) MarshalCBOR(w io.Writer) error {
+func (t *GetBalanceReturn) MarshalCBOR(w io.Writer) error {
 	if t == nil {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-	if _, err := w.Write(lengthBufOnMinerSectorsTerminateParams); err != nil {
+	if _, err := w.Write(lengthBufGetBalanceReturn); err != nil {
 		return err
 	}
 
-	scratch := make([]byte, 9)
-
-	// t.Epoch (abi.ChainEpoch) (int64)
-	if t.Epoch >= 0 {
-		if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.Epoch)); err != nil {
-			return err
-		}
-	} else {
-		if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajNegativeInt, uint64(-t.Epoch-1)); err != nil {
-			return err
-		}
-	}
-
-	// t.DealIDs ([]abi.DealID) (slice)
-	if len(t.DealIDs) > cbg.MaxLength {
-		return xerrors.Errorf("Slice value in field t.DealIDs was too long")
-	}
-
-	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajArray, uint64(len(t.DealIDs))); err != nil {
+	// t.Balance (big.Int) (struct)
+	if err := t.Balance.MarshalCBOR(w); err != nil {
 		return err
 	}
-	for _, v := range t.DealIDs {
-		if err := cbg.CborWriteHeader(w, cbg.MajUnsignedInt, uint64(v)); err != nil {
-			return err
-		}
+
+	// t.Locked (big.Int) (struct)
+	if err := t.Locked.MarshalCBOR(w); err != nil {
+		return err
 	}
 	return nil
 }
 
-func (t *OnMinerSectorsTerminateParams) UnmarshalCBOR(r io.Reader) error {
-	*t = OnMinerSectorsTerminateParams{}
+func (t *GetBalanceReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = GetBalanceReturn{}
 
 	br := cbg.GetPeeker(r)
 	scratch := make([]byte, 8)
@@ -1268,7 +1172,377 @@ func (t *OnMinerSectorsTerminateParams) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	// t.Epoch (abi.ChainEpoch) (int64)
+	// t.Balance (big.Int) (struct)
+
+	{
+
+		if err := t.Balance.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.Balance: %w", err)
+		}
+
+	}
+	// t.Locked (big.Int) (struct)
+
+	{
+
+		if err := t.Locked.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.Locked: %w", err)
+		}
+
+	}
+	return nil
+}
+
+var lengthBufDealQueryParams = []byte{129}
+
+func (t *DealQueryParams) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufDealQueryParams); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.Id (abi.DealID) (uint64)
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.Id)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *DealQueryParams) UnmarshalCBOR(r io.Reader) error {
+	*t = DealQueryParams{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Id (abi.DealID) (uint64)
+
+	{
+
+		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.Id = abi.DealID(extra)
+
+	}
+	return nil
+}
+
+var lengthBufGetDealDataCommitmentReturn = []byte{130}
+
+func (t *GetDealDataCommitmentReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufGetDealDataCommitmentReturn); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.Data (cid.Cid) (struct)
+
+	if err := cbg.WriteCidBuf(scratch, w, t.Data); err != nil {
+		return xerrors.Errorf("failed to write cid field t.Data: %w", err)
+	}
+
+	// t.Size (abi.PaddedPieceSize) (uint64)
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.Size)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *GetDealDataCommitmentReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = GetDealDataCommitmentReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Data (cid.Cid) (struct)
+
+	{
+
+		c, err := cbg.ReadCid(br)
+		if err != nil {
+			return xerrors.Errorf("failed to read cid field t.Data: %w", err)
+		}
+
+		t.Data = c
+
+	}
+	// t.Size (abi.PaddedPieceSize) (uint64)
+
+	{
+
+		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.Size = abi.PaddedPieceSize(extra)
+
+	}
+	return nil
+}
+
+var lengthBufGetDealClientReturn = []byte{129}
+
+func (t *GetDealClientReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufGetDealClientReturn); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.Client (abi.ActorID) (uint64)
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.Client)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *GetDealClientReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = GetDealClientReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Client (abi.ActorID) (uint64)
+
+	{
+
+		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.Client = abi.ActorID(extra)
+
+	}
+	return nil
+}
+
+var lengthBufGetDealProviderReturn = []byte{129}
+
+func (t *GetDealProviderReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufGetDealProviderReturn); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.Provider (abi.ActorID) (uint64)
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.Provider)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *GetDealProviderReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = GetDealProviderReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Provider (abi.ActorID) (uint64)
+
+	{
+
+		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.Provider = abi.ActorID(extra)
+
+	}
+	return nil
+}
+
+var lengthBufGetDealLabelReturn = []byte{129}
+
+func (t *GetDealLabelReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufGetDealLabelReturn); err != nil {
+		return err
+	}
+
+	// t.Label (market.DealLabel) (struct)
+	if err := t.Label.MarshalCBOR(w); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *GetDealLabelReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = GetDealLabelReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Label (market.DealLabel) (struct)
+
+	{
+
+		if err := t.Label.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.Label: %w", err)
+		}
+
+	}
+	return nil
+}
+
+var lengthBufGetDealTermReturn = []byte{130}
+
+func (t *GetDealTermReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufGetDealTermReturn); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.Start (abi.ChainEpoch) (int64)
+	if t.Start >= 0 {
+		if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.Start)); err != nil {
+			return err
+		}
+	} else {
+		if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajNegativeInt, uint64(-t.Start-1)); err != nil {
+			return err
+		}
+	}
+
+	// t.Duration (abi.ChainEpoch) (int64)
+	if t.Duration >= 0 {
+		if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.Duration)); err != nil {
+			return err
+		}
+	} else {
+		if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajNegativeInt, uint64(-t.Duration-1)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (t *GetDealTermReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = GetDealTermReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Start (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
 		var extraI int64
@@ -1291,41 +1565,341 @@ func (t *OnMinerSectorsTerminateParams) UnmarshalCBOR(r io.Reader) error {
 			return fmt.Errorf("wrong type for int64 field: %d", maj)
 		}
 
-		t.Epoch = abi.ChainEpoch(extraI)
+		t.Start = abi.ChainEpoch(extraI)
 	}
-	// t.DealIDs ([]abi.DealID) (slice)
+	// t.Duration (abi.ChainEpoch) (int64)
+	{
+		maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+		var extraI int64
+		if err != nil {
+			return err
+		}
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
+			}
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative oveflow")
+			}
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
+		}
+
+		t.Duration = abi.ChainEpoch(extraI)
+	}
+	return nil
+}
+
+var lengthBufGetDealTotalPriceReturn = []byte{129}
+
+func (t *GetDealTotalPriceReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufGetDealTotalPriceReturn); err != nil {
+		return err
+	}
+
+	// t.TotalPrice (big.Int) (struct)
+	if err := t.TotalPrice.MarshalCBOR(w); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *GetDealTotalPriceReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = GetDealTotalPriceReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.TotalPrice (big.Int) (struct)
+
+	{
+
+		if err := t.TotalPrice.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.TotalPrice: %w", err)
+		}
+
+	}
+	return nil
+}
+
+var lengthBufGetDealClientCollateralReturn = []byte{129}
+
+func (t *GetDealClientCollateralReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufGetDealClientCollateralReturn); err != nil {
+		return err
+	}
+
+	// t.Collateral (big.Int) (struct)
+	if err := t.Collateral.MarshalCBOR(w); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *GetDealClientCollateralReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = GetDealClientCollateralReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Collateral (big.Int) (struct)
+
+	{
+
+		if err := t.Collateral.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.Collateral: %w", err)
+		}
+
+	}
+	return nil
+}
+
+var lengthBufGetDealProviderCollateralReturn = []byte{129}
+
+func (t *GetDealProviderCollateralReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufGetDealProviderCollateralReturn); err != nil {
+		return err
+	}
+
+	// t.Collateral (big.Int) (struct)
+	if err := t.Collateral.MarshalCBOR(w); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *GetDealProviderCollateralReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = GetDealProviderCollateralReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Collateral (big.Int) (struct)
+
+	{
+
+		if err := t.Collateral.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.Collateral: %w", err)
+		}
+
+	}
+	return nil
+}
+
+var lengthBufGetDealVerifiedReturn = []byte{129}
+
+func (t *GetDealVerifiedReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufGetDealVerifiedReturn); err != nil {
+		return err
+	}
+
+	// t.Verified (bool) (bool)
+	if err := cbg.WriteBool(w, t.Verified); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *GetDealVerifiedReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = GetDealVerifiedReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Verified (bool) (bool)
 
 	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
 		return err
 	}
+	if maj != cbg.MajOther {
+		return fmt.Errorf("booleans must be major type 7")
+	}
+	switch extra {
+	case 20:
+		t.Verified = false
+	case 21:
+		t.Verified = true
+	default:
+		return fmt.Errorf("booleans are either major type 7, value 20 or 21 (got %d)", extra)
+	}
+	return nil
+}
 
-	if extra > cbg.MaxLength {
-		return fmt.Errorf("t.DealIDs: array too large (%d)", extra)
+var lengthBufGetDealActivationReturn = []byte{130}
+
+func (t *GetDealActivationReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufGetDealActivationReturn); err != nil {
+		return err
 	}
 
+	scratch := make([]byte, 9)
+
+	// t.Activated (abi.ChainEpoch) (int64)
+	if t.Activated >= 0 {
+		if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.Activated)); err != nil {
+			return err
+		}
+	} else {
+		if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajNegativeInt, uint64(-t.Activated-1)); err != nil {
+			return err
+		}
+	}
+
+	// t.Terminated (abi.ChainEpoch) (int64)
+	if t.Terminated >= 0 {
+		if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.Terminated)); err != nil {
+			return err
+		}
+	} else {
+		if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajNegativeInt, uint64(-t.Terminated-1)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (t *GetDealActivationReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = GetDealActivationReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
 	if maj != cbg.MajArray {
-		return fmt.Errorf("expected cbor array")
+		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra > 0 {
-		t.DealIDs = make([]abi.DealID, extra)
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	for i := 0; i < int(extra); i++ {
-
-		maj, val, err := cbg.CborReadHeaderBuf(br, scratch)
+	// t.Activated (abi.ChainEpoch) (int64)
+	{
+		maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+		var extraI int64
 		if err != nil {
-			return xerrors.Errorf("failed to read uint64 for t.DealIDs slice: %w", err)
+			return err
+		}
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
+			}
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative oveflow")
+			}
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
 		}
 
-		if maj != cbg.MajUnsignedInt {
-			return xerrors.Errorf("value read for array t.DealIDs was not a uint, instead got %d", maj)
-		}
-
-		t.DealIDs[i] = abi.DealID(val)
+		t.Activated = abi.ChainEpoch(extraI)
 	}
+	// t.Terminated (abi.ChainEpoch) (int64)
+	{
+		maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+		var extraI int64
+		if err != nil {
+			return err
+		}
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
+			}
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative oveflow")
+			}
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
+		}
 
+		t.Terminated = abi.ChainEpoch(extraI)
+	}
 	return nil
 }
 

@@ -5649,6 +5649,427 @@ func (t *GetBeneficiaryReturn) UnmarshalCBOR(r io.Reader) error {
 	return nil
 }
 
+var lengthBufGetOwnerReturn = []byte{130}
+
+func (t *GetOwnerReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufGetOwnerReturn); err != nil {
+		return err
+	}
+
+	// t.Owner (address.Address) (struct)
+	if err := t.Owner.MarshalCBOR(w); err != nil {
+		return err
+	}
+
+	// t.Proposed (address.Address) (struct)
+	if err := t.Proposed.MarshalCBOR(w); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *GetOwnerReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = GetOwnerReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Owner (address.Address) (struct)
+
+	{
+
+		if err := t.Owner.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.Owner: %w", err)
+		}
+
+	}
+	// t.Proposed (address.Address) (struct)
+
+	{
+
+		b, err := br.ReadByte()
+		if err != nil {
+			return err
+		}
+		if b != cbg.CborNull[0] {
+			if err := br.UnreadByte(); err != nil {
+				return err
+			}
+			t.Proposed = new(address.Address)
+			if err := t.Proposed.UnmarshalCBOR(br); err != nil {
+				return xerrors.Errorf("unmarshaling t.Proposed pointer: %w", err)
+			}
+		}
+
+	}
+	return nil
+}
+
+var lengthBufIsControllingAddressParams = []byte{129}
+
+func (t *IsControllingAddressParams) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufIsControllingAddressParams); err != nil {
+		return err
+	}
+
+	// t.Address (address.Address) (struct)
+	if err := t.Address.MarshalCBOR(w); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *IsControllingAddressParams) UnmarshalCBOR(r io.Reader) error {
+	*t = IsControllingAddressParams{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Address (address.Address) (struct)
+
+	{
+
+		if err := t.Address.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.Address: %w", err)
+		}
+
+	}
+	return nil
+}
+
+var lengthBufIsControllingAddressReturn = []byte{129}
+
+func (t *IsControllingAddressReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufIsControllingAddressReturn); err != nil {
+		return err
+	}
+
+	// t.IsControlling (bool) (bool)
+	if err := cbg.WriteBool(w, t.IsControlling); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *IsControllingAddressReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = IsControllingAddressReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.IsControlling (bool) (bool)
+
+	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajOther {
+		return fmt.Errorf("booleans must be major type 7")
+	}
+	switch extra {
+	case 20:
+		t.IsControlling = false
+	case 21:
+		t.IsControlling = true
+	default:
+		return fmt.Errorf("booleans are either major type 7, value 20 or 21 (got %d)", extra)
+	}
+	return nil
+}
+
+var lengthBufGetSectorSizeReturn = []byte{129}
+
+func (t *GetSectorSizeReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufGetSectorSizeReturn); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.SectorSize (abi.SectorSize) (uint64)
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.SectorSize)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *GetSectorSizeReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = GetSectorSizeReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.SectorSize (abi.SectorSize) (uint64)
+
+	{
+
+		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.SectorSize = abi.SectorSize(extra)
+
+	}
+	return nil
+}
+
+var lengthBufGetAvailableBalanceReturn = []byte{129}
+
+func (t *GetAvailableBalanceReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufGetAvailableBalanceReturn); err != nil {
+		return err
+	}
+
+	// t.AvailableBalance (big.Int) (struct)
+	if err := t.AvailableBalance.MarshalCBOR(w); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *GetAvailableBalanceReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = GetAvailableBalanceReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.AvailableBalance (big.Int) (struct)
+
+	{
+
+		if err := t.AvailableBalance.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.AvailableBalance: %w", err)
+		}
+
+	}
+	return nil
+}
+
+var lengthBufGetPeerIDReturn = []byte{129}
+
+func (t *GetPeerIDReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufGetPeerIDReturn); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.PeerId ([]uint8) (slice)
+	if len(t.PeerId) > cbg.ByteArrayMaxLen {
+		return xerrors.Errorf("Byte array in field t.PeerId was too long")
+	}
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajByteString, uint64(len(t.PeerId))); err != nil {
+		return err
+	}
+
+	if _, err := w.Write(t.PeerId[:]); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *GetPeerIDReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = GetPeerIDReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.PeerId ([]uint8) (slice)
+
+	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+
+	if extra > cbg.ByteArrayMaxLen {
+		return fmt.Errorf("t.PeerId: byte array too large (%d)", extra)
+	}
+	if maj != cbg.MajByteString {
+		return fmt.Errorf("expected byte array")
+	}
+
+	if extra > 0 {
+		t.PeerId = make([]uint8, extra)
+	}
+
+	if _, err := io.ReadFull(br, t.PeerId[:]); err != nil {
+		return err
+	}
+	return nil
+}
+
+var lengthBufGetMultiAddrsReturn = []byte{129}
+
+func (t *GetMultiAddrsReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufGetMultiAddrsReturn); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.MultiAddrs ([]uint8) (slice)
+	if len(t.MultiAddrs) > cbg.ByteArrayMaxLen {
+		return xerrors.Errorf("Byte array in field t.MultiAddrs was too long")
+	}
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajByteString, uint64(len(t.MultiAddrs))); err != nil {
+		return err
+	}
+
+	if _, err := w.Write(t.MultiAddrs[:]); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *GetMultiAddrsReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = GetMultiAddrsReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.MultiAddrs ([]uint8) (slice)
+
+	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+
+	if extra > cbg.ByteArrayMaxLen {
+		return fmt.Errorf("t.MultiAddrs: byte array too large (%d)", extra)
+	}
+	if maj != cbg.MajByteString {
+		return fmt.Errorf("expected byte array")
+	}
+
+	if extra > 0 {
+		t.MultiAddrs = make([]uint8, extra)
+	}
+
+	if _, err := io.ReadFull(br, t.MultiAddrs[:]); err != nil {
+		return err
+	}
+	return nil
+}
+
 var lengthBufFaultDeclaration = []byte{131}
 
 func (t *FaultDeclaration) MarshalCBOR(w io.Writer) error {

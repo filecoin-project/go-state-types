@@ -369,3 +369,35 @@ type SectorClaim struct {
 	MaintainClaims []verifreg.ClaimId
 	DropClaims     []verifreg.ClaimId
 }
+
+type GetOwnerReturn struct {
+	Owner    addr.Address
+	Proposed *addr.Address
+}
+
+type IsControllingAddressParams struct {
+	Address addr.Address
+}
+
+type IsControllingAddressReturn struct {
+	IsControlling bool
+}
+
+type GetSectorSizeReturn struct {
+	SectorSize abi.SectorSize
+}
+
+type GetAvailableBalanceReturn struct {
+	AvailableBalance abi.TokenAmount
+}
+
+// TODO check this works
+type GetVestingFundsReturn = VestingFunds
+
+type GetPeerIDReturn struct {
+	PeerId []byte
+}
+
+type GetMultiAddrsReturn struct {
+	MultiAddrs []byte
+}

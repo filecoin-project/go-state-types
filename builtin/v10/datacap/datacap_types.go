@@ -88,3 +88,7 @@ type BurnFromReturn struct {
 	Balance   abi.TokenAmount
 	Allowance abi.TokenAmount
 }
+
+type GranularityReturn struct {
+	Granularity uint64
+}

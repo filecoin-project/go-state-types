@@ -46,3 +46,24 @@ type CurrentTotalPowerReturn struct {
 	PledgeCollateral        abi.TokenAmount
 	QualityAdjPowerSmoothed smoothing.FilterEstimate
 }
+
+type NetworkRawPowerReturn struct {
+	RawBytePower abi.StoragePower
+}
+
+type MinerRawPowerParams struct {
+	Miner abi.ActorID
+}
+
+type MinerRawPowerReturn struct {
+	RawBytePower          abi.StoragePower
+	MeetsConsensusMinimum bool
+}
+
+type MinerCountReturn struct {
+	MinerCount int64
+}
+
+type MinerConsensusCountReturn struct {
+	MinerConsensusCount int64
+}

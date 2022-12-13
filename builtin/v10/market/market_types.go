@@ -84,3 +84,79 @@ type OnMinerSectorsTerminateParams struct {
 	Epoch   abi.ChainEpoch
 	DealIDs []abi.DealID
 }
+
+type GetBalanceReturn struct {
+	Balance abi.TokenAmount
+	Locked  abi.TokenAmount
+}
+
+type DealQueryParams struct {
+	Id abi.DealID
+}
+
+type GetDealDataCommitmentParams = DealQueryParams
+
+type GetDealDataCommitmentReturn struct {
+	Data cid.Cid
+	Size abi.PaddedPieceSize
+}
+
+type GetDealClientParams = DealQueryParams
+
+type GetDealClientReturn struct {
+	Client abi.ActorID
+}
+
+type GetDealProviderParams = DealQueryParams
+
+type GetDealProviderReturn struct {
+	Provider abi.ActorID
+}
+
+type GetDealLabelParams = DealQueryParams
+
+type GetDealLabelReturn struct {
+	// TODO This is an enem of either string/bytes in actors
+	Label DealLabel
+}
+
+type GetDealTermParams = DealQueryParams
+
+type GetDealTermReturn struct {
+	Start    abi.ChainEpoch
+	Duration abi.ChainEpoch
+}
+
+type GetDealTotalPriceParams = DealQueryParams
+
+type GetDealTotalPriceReturn struct {
+	TotalPrice abi.TokenAmount
+}
+
+type GetDealClientCollateralParams = DealQueryParams
+
+type GetDealClientCollateralReturn struct {
+	Collateral abi.TokenAmount
+}
+
+type GetDealProviderCollateralParams = DealQueryParams
+
+type GetDealProviderCollateralReturn struct {
+	Collateral abi.TokenAmount
+}
+
+type GetDealVerifiedParams = DealQueryParams
+
+type GetDealVerifiedReturn struct {
+	Verified bool
+}
+
+type GetDealActivationParams = DealQueryParams
+
+type GetDealActivationReturn struct {
+	// Epoch at which the deal was activated, or -1.
+	// This may be before the proposed start epoch.
+	Activated abi.ChainEpoch
+	// Epoch at which the deal was terminated abnormally, or -1.
+	Terminated abi.ChainEpoch
+}

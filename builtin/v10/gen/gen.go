@@ -101,6 +101,11 @@ func main() {
 		power.CreateMinerReturn{},
 		power.CurrentTotalPowerReturn{},
 		power.EnrollCronEventParams{},
+		power.NetworkRawPowerReturn{},
+		power.MinerRawPowerParams{},
+		power.MinerRawPowerReturn{},
+		power.MinerCountReturn{},
+		power.MinerConsensusCountReturn{},
 		// other types
 		power.CronEvent{},
 	); err != nil {
@@ -119,9 +124,19 @@ func main() {
 		market.ActivateDealsResult{},
 		market.VerifyDealsForActivationParams{},
 		market.VerifyDealsForActivationReturn{},
-		market.ComputeDataCommitmentParams{},
 		market.ComputeDataCommitmentReturn{},
-		market.OnMinerSectorsTerminateParams{},
+		market.GetBalanceReturn{},
+		market.DealQueryParams{},
+		market.GetDealDataCommitmentReturn{},
+		market.GetDealClientReturn{},
+		market.GetDealProviderReturn{},
+		market.GetDealLabelReturn{},
+		market.GetDealTermReturn{},
+		market.GetDealTotalPriceReturn{},
+		market.GetDealClientCollateralReturn{},
+		market.GetDealProviderCollateralReturn{},
+		market.GetDealVerifiedReturn{},
+		market.GetDealActivationReturn{},
 		// other types
 		market.DealProposal{},
 		market.ClientDealProposal{},
@@ -185,6 +200,13 @@ func main() {
 		miner.ProveReplicaUpdatesParams2{},
 		miner.ChangeBeneficiaryParams{},
 		miner.GetBeneficiaryReturn{},
+		miner.GetOwnerReturn{},
+		miner.IsControllingAddressParams{},
+		miner.IsControllingAddressReturn{},
+		miner.GetSectorSizeReturn{},
+		miner.GetAvailableBalanceReturn{},
+		miner.GetPeerIDReturn{},
+		miner.GetMultiAddrsReturn{},
 		// other types
 		miner.FaultDeclaration{},
 		miner.RecoveryDeclaration{},
@@ -257,6 +279,7 @@ func main() {
 		datacap.BurnReturn{},
 		datacap.BurnFromParams{},
 		datacap.BurnFromReturn{},
+		datacap.GranularityReturn{},
 	); err != nil {
 		panic(err)
 	}

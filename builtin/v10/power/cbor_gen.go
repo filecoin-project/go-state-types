@@ -1228,6 +1228,325 @@ func (t *EnrollCronEventParams) UnmarshalCBOR(r io.Reader) error {
 	return nil
 }
 
+var lengthBufNetworkRawPowerReturn = []byte{129}
+
+func (t *NetworkRawPowerReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufNetworkRawPowerReturn); err != nil {
+		return err
+	}
+
+	// t.RawBytePower (big.Int) (struct)
+	if err := t.RawBytePower.MarshalCBOR(w); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *NetworkRawPowerReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = NetworkRawPowerReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.RawBytePower (big.Int) (struct)
+
+	{
+
+		if err := t.RawBytePower.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.RawBytePower: %w", err)
+		}
+
+	}
+	return nil
+}
+
+var lengthBufMinerRawPowerParams = []byte{129}
+
+func (t *MinerRawPowerParams) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufMinerRawPowerParams); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.Miner (abi.ActorID) (uint64)
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.Miner)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *MinerRawPowerParams) UnmarshalCBOR(r io.Reader) error {
+	*t = MinerRawPowerParams{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Miner (abi.ActorID) (uint64)
+
+	{
+
+		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.Miner = abi.ActorID(extra)
+
+	}
+	return nil
+}
+
+var lengthBufMinerRawPowerReturn = []byte{130}
+
+func (t *MinerRawPowerReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufMinerRawPowerReturn); err != nil {
+		return err
+	}
+
+	// t.RawBytePower (big.Int) (struct)
+	if err := t.RawBytePower.MarshalCBOR(w); err != nil {
+		return err
+	}
+
+	// t.MeetsConsensusMinimum (bool) (bool)
+	if err := cbg.WriteBool(w, t.MeetsConsensusMinimum); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *MinerRawPowerReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = MinerRawPowerReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.RawBytePower (big.Int) (struct)
+
+	{
+
+		if err := t.RawBytePower.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.RawBytePower: %w", err)
+		}
+
+	}
+	// t.MeetsConsensusMinimum (bool) (bool)
+
+	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajOther {
+		return fmt.Errorf("booleans must be major type 7")
+	}
+	switch extra {
+	case 20:
+		t.MeetsConsensusMinimum = false
+	case 21:
+		t.MeetsConsensusMinimum = true
+	default:
+		return fmt.Errorf("booleans are either major type 7, value 20 or 21 (got %d)", extra)
+	}
+	return nil
+}
+
+var lengthBufMinerCountReturn = []byte{129}
+
+func (t *MinerCountReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufMinerCountReturn); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.MinerCount (int64) (int64)
+	if t.MinerCount >= 0 {
+		if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.MinerCount)); err != nil {
+			return err
+		}
+	} else {
+		if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajNegativeInt, uint64(-t.MinerCount-1)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (t *MinerCountReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = MinerCountReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.MinerCount (int64) (int64)
+	{
+		maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+		var extraI int64
+		if err != nil {
+			return err
+		}
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
+			}
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative oveflow")
+			}
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
+		}
+
+		t.MinerCount = int64(extraI)
+	}
+	return nil
+}
+
+var lengthBufMinerConsensusCountReturn = []byte{129}
+
+func (t *MinerConsensusCountReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufMinerConsensusCountReturn); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.MinerConsensusCount (int64) (int64)
+	if t.MinerConsensusCount >= 0 {
+		if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.MinerConsensusCount)); err != nil {
+			return err
+		}
+	} else {
+		if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajNegativeInt, uint64(-t.MinerConsensusCount-1)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (t *MinerConsensusCountReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = MinerConsensusCountReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.MinerConsensusCount (int64) (int64)
+	{
+		maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+		var extraI int64
+		if err != nil {
+			return err
+		}
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
+			}
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative oveflow")
+			}
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
+		}
+
+		t.MinerConsensusCount = int64(extraI)
+	}
+	return nil
+}
+
 var lengthBufCronEvent = []byte{130}
 
 func (t *CronEvent) MarshalCBOR(w io.Writer) error {
