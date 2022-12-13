@@ -9,7 +9,7 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v9/power"
 )
 
-var Methods = map[uint64]builtin.MethodMeta{
+var Methods = map[abi.MethodNum]builtin.MethodMeta{
 	1:  {"Constructor", *new(func(*power.MinerConstructorParams) *abi.EmptyValue)},            // Constructor
 	2:  {"ControlAddresses", *new(func(*abi.EmptyValue) *GetControlAddressesReturn)},          // ControlAddresses
 	3:  {"ChangeWorkerAddress", *new(func(*ChangeWorkerAddressParams) *abi.EmptyValue)},       // ChangeWorkerAddress

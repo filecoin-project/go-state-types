@@ -7,7 +7,7 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin"
 )
 
-var Methods = map[uint64]builtin.MethodMeta{
+var Methods = map[abi.MethodNum]builtin.MethodMeta{
 	1: {"Constructor", *new(func(*abi.EmptyValue) *abi.EmptyValue)},                                              // Constructor
 	2: {"AddBalance", *new(func(*address.Address) *abi.EmptyValue)},                                              // AddBalance
 	3: {"WithdrawBalance", *new(func(*WithdrawBalanceParams) *abi.TokenAmount)},                                  // WithdrawBalance
