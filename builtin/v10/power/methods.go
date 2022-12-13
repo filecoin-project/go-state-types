@@ -6,7 +6,7 @@ import (
 	"github.com/filecoin-project/go-state-types/proof"
 )
 
-var Methods = map[uint64]builtin.MethodMeta{
+var Methods = map[abi.MethodNum]builtin.MethodMeta{
 	1: {"Constructor", *new(func(*abi.EmptyValue) *abi.EmptyValue)},                    // Constructor
 	2: {"CreateMiner", *new(func(*CreateMinerParams) *CreateMinerReturn)},              // CreateMiner
 	3: {"UpdateClaimedPower", *new(func(*UpdateClaimedPowerParams) *abi.EmptyValue)},   // UpdateClaimedPower
