@@ -5,6 +5,7 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin"
+	cbg "github.com/whyrusleeping/cbor-gen"
 )
 
 var InfiniteAllowance = big.Mul(big.MustFromString("1000000000000000000000"), builtin.TokenPrecision)
@@ -89,6 +90,4 @@ type BurnFromReturn struct {
 	Allowance abi.TokenAmount
 }
 
-type GranularityReturn struct {
-	Granularity uint64
-}
+type GranularityReturn = cbg.CborInt

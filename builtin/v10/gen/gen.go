@@ -4,8 +4,8 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v10/account"
 	"github.com/filecoin-project/go-state-types/builtin/v10/cron"
 	"github.com/filecoin-project/go-state-types/builtin/v10/datacap"
-	eam "github.com/filecoin-project/go-state-types/builtin/v10/eam"
-	evm "github.com/filecoin-project/go-state-types/builtin/v10/evm"
+	"github.com/filecoin-project/go-state-types/builtin/v10/eam"
+	"github.com/filecoin-project/go-state-types/builtin/v10/evm"
 	init_ "github.com/filecoin-project/go-state-types/builtin/v10/init"
 	"github.com/filecoin-project/go-state-types/builtin/v10/market"
 	"github.com/filecoin-project/go-state-types/builtin/v10/miner"
@@ -101,11 +101,7 @@ func main() {
 		power.CreateMinerReturn{},
 		power.CurrentTotalPowerReturn{},
 		power.EnrollCronEventParams{},
-		power.NetworkRawPowerReturn{},
-		power.MinerRawPowerParams{},
 		power.MinerRawPowerReturn{},
-		power.MinerCountReturn{},
-		power.MinerConsensusCountReturn{},
 		// other types
 		power.CronEvent{},
 	); err != nil {
@@ -126,16 +122,8 @@ func main() {
 		market.VerifyDealsForActivationReturn{},
 		market.ComputeDataCommitmentReturn{},
 		market.GetBalanceReturn{},
-		market.DealQueryParams{},
 		market.GetDealDataCommitmentReturn{},
-		market.GetDealClientReturn{},
-		market.GetDealProviderReturn{},
-		market.GetDealLabelReturn{},
 		market.GetDealTermReturn{},
-		market.GetDealTotalPriceReturn{},
-		market.GetDealClientCollateralReturn{},
-		market.GetDealProviderCollateralReturn{},
-		market.GetDealVerifiedReturn{},
 		market.GetDealActivationReturn{},
 		// other types
 		market.DealProposal{},
@@ -201,10 +189,6 @@ func main() {
 		miner.ChangeBeneficiaryParams{},
 		miner.GetBeneficiaryReturn{},
 		miner.GetOwnerReturn{},
-		miner.IsControllingAddressParams{},
-		miner.IsControllingAddressReturn{},
-		miner.GetSectorSizeReturn{},
-		miner.GetAvailableBalanceReturn{},
 		miner.GetPeerIDReturn{},
 		miner.GetMultiAddrsReturn{},
 		// other types
@@ -279,7 +263,6 @@ func main() {
 		datacap.BurnReturn{},
 		datacap.BurnFromParams{},
 		datacap.BurnFromReturn{},
-		datacap.GranularityReturn{},
 	); err != nil {
 		panic(err)
 	}

@@ -12,6 +12,7 @@ import (
 	xc "github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/proof"
 	cid "github.com/ipfs/go-cid"
+	cbg "github.com/whyrusleeping/cbor-gen"
 	"golang.org/x/xerrors"
 )
 
@@ -375,23 +376,14 @@ type GetOwnerReturn struct {
 	Proposed *addr.Address
 }
 
-type IsControllingAddressParams struct {
-	Address addr.Address
-}
+type IsControllingAddressParams = addr.Address
 
-type IsControllingAddressReturn struct {
-	IsControlling bool
-}
+type IsControllingAddressReturn = cbg.CborBool
 
-type GetSectorSizeReturn struct {
-	SectorSize abi.SectorSize
-}
+type GetSectorSizeReturn = abi.SectorSize
 
-type GetAvailableBalanceReturn struct {
-	AvailableBalance abi.TokenAmount
-}
+type GetAvailableBalanceReturn = abi.TokenAmount
 
-// TODO check this works
 type GetVestingFundsReturn = VestingFunds
 
 type GetPeerIDReturn struct {

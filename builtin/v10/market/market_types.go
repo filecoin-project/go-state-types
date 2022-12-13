@@ -90,9 +90,7 @@ type GetBalanceReturn struct {
 	Locked  abi.TokenAmount
 }
 
-type DealQueryParams struct {
-	Id abi.DealID
-}
+type DealQueryParams = cbg.CborInt // abi.DealID
 
 type GetDealDataCommitmentParams = DealQueryParams
 
@@ -103,22 +101,15 @@ type GetDealDataCommitmentReturn struct {
 
 type GetDealClientParams = DealQueryParams
 
-type GetDealClientReturn struct {
-	Client abi.ActorID
-}
+type GetDealClientReturn = cbg.CborInt // abi.ActorID
 
 type GetDealProviderParams = DealQueryParams
 
-type GetDealProviderReturn struct {
-	Provider abi.ActorID
-}
+type GetDealProviderReturn = cbg.CborInt // abi.ActorID
 
 type GetDealLabelParams = DealQueryParams
 
-type GetDealLabelReturn struct {
-	// TODO This is an enem of either string/bytes in actors
-	Label DealLabel
-}
+type GetDealLabelReturn = DealLabel
 
 type GetDealTermParams = DealQueryParams
 
@@ -129,27 +120,19 @@ type GetDealTermReturn struct {
 
 type GetDealTotalPriceParams = DealQueryParams
 
-type GetDealTotalPriceReturn struct {
-	TotalPrice abi.TokenAmount
-}
+type GetDealTotalPriceReturn = abi.TokenAmount
 
 type GetDealClientCollateralParams = DealQueryParams
 
-type GetDealClientCollateralReturn struct {
-	Collateral abi.TokenAmount
-}
+type GetDealClientCollateralReturn = abi.TokenAmount
 
 type GetDealProviderCollateralParams = DealQueryParams
 
-type GetDealProviderCollateralReturn struct {
-	Collateral abi.TokenAmount
-}
+type GetDealProviderCollateralReturn = abi.TokenAmount
 
 type GetDealVerifiedParams = DealQueryParams
 
-type GetDealVerifiedReturn struct {
-	Verified bool
-}
+type GetDealVerifiedReturn = cbg.CborBool
 
 type GetDealActivationParams = DealQueryParams
 
