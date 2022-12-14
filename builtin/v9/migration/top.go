@@ -245,7 +245,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("failed to get verifreg actor state: %w", err)
 	}
 
-	dataCapCode, ok := newManifest.Get(manifest.DataCapKey)
+	dataCapCode, ok := newManifest.Get(manifest.DatacapKey)
 	if !ok {
 		return cid.Undef, xerrors.Errorf("failed to find datacap code ID: %w", err)
 	}
