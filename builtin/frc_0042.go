@@ -38,8 +38,8 @@ func validateMethodName(name string) error {
 		return xerrors.Errorf("empty name string")
 	}
 
-	if !unicode.IsUpper(rune(name[0])) {
-		return xerrors.Errorf("Method name first letter must be uppercase, method name: %s", name)
+	if !(unicode.IsUpper(rune(name[0])) || name[0] == "_"[0]) {
+		return xerrors.Errorf("Method name first letter must be uppercase or underscore, method name: %s", name)
 	}
 
 	for _, c := range name {
