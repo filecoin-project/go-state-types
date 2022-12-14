@@ -4,6 +4,7 @@ import (
 	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin/v10/util/smoothing"
+	cbg "github.com/whyrusleeping/cbor-gen"
 )
 
 // Storage miner actor constructor params are defined here so the power actor can send them to the init actor
@@ -46,3 +47,16 @@ type CurrentTotalPowerReturn struct {
 	PledgeCollateral        abi.TokenAmount
 	QualityAdjPowerSmoothed smoothing.FilterEstimate
 }
+
+type NetworkRawPowerReturn = abi.StoragePower
+
+type MinerRawPowerParams = cbg.CborInt // abi.ActorID
+
+type MinerRawPowerReturn struct {
+	RawBytePower          abi.StoragePower
+	MeetsConsensusMinimum bool
+}
+
+type MinerCountReturn = cbg.CborInt
+
+type MinerConsensusCountReturn = cbg.CborInt

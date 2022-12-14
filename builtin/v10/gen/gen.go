@@ -4,8 +4,8 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v10/account"
 	"github.com/filecoin-project/go-state-types/builtin/v10/cron"
 	"github.com/filecoin-project/go-state-types/builtin/v10/datacap"
-	eam "github.com/filecoin-project/go-state-types/builtin/v10/eam"
-	evm "github.com/filecoin-project/go-state-types/builtin/v10/evm"
+	"github.com/filecoin-project/go-state-types/builtin/v10/eam"
+	"github.com/filecoin-project/go-state-types/builtin/v10/evm"
 	init_ "github.com/filecoin-project/go-state-types/builtin/v10/init"
 	"github.com/filecoin-project/go-state-types/builtin/v10/market"
 	"github.com/filecoin-project/go-state-types/builtin/v10/miner"
@@ -101,6 +101,7 @@ func main() {
 		power.CreateMinerReturn{},
 		power.CurrentTotalPowerReturn{},
 		power.EnrollCronEventParams{},
+		power.MinerRawPowerReturn{},
 		// other types
 		power.CronEvent{},
 	); err != nil {
@@ -119,9 +120,11 @@ func main() {
 		market.ActivateDealsResult{},
 		market.VerifyDealsForActivationParams{},
 		market.VerifyDealsForActivationReturn{},
-		market.ComputeDataCommitmentParams{},
 		market.ComputeDataCommitmentReturn{},
-		market.OnMinerSectorsTerminateParams{},
+		market.GetBalanceReturn{},
+		market.GetDealDataCommitmentReturn{},
+		market.GetDealTermReturn{},
+		market.GetDealActivationReturn{},
 		// other types
 		market.DealProposal{},
 		market.ClientDealProposal{},
@@ -185,6 +188,9 @@ func main() {
 		miner.ProveReplicaUpdatesParams2{},
 		miner.ChangeBeneficiaryParams{},
 		miner.GetBeneficiaryReturn{},
+		miner.GetOwnerReturn{},
+		miner.GetPeerIDReturn{},
+		miner.GetMultiAddrsReturn{},
 		// other types
 		miner.FaultDeclaration{},
 		miner.RecoveryDeclaration{},

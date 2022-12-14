@@ -1228,6 +1228,76 @@ func (t *EnrollCronEventParams) UnmarshalCBOR(r io.Reader) error {
 	return nil
 }
 
+var lengthBufMinerRawPowerReturn = []byte{130}
+
+func (t *MinerRawPowerReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufMinerRawPowerReturn); err != nil {
+		return err
+	}
+
+	// t.RawBytePower (big.Int) (struct)
+	if err := t.RawBytePower.MarshalCBOR(w); err != nil {
+		return err
+	}
+
+	// t.MeetsConsensusMinimum (bool) (bool)
+	if err := cbg.WriteBool(w, t.MeetsConsensusMinimum); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *MinerRawPowerReturn) UnmarshalCBOR(r io.Reader) error {
+	*t = MinerRawPowerReturn{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.RawBytePower (big.Int) (struct)
+
+	{
+
+		if err := t.RawBytePower.UnmarshalCBOR(br); err != nil {
+			return xerrors.Errorf("unmarshaling t.RawBytePower: %w", err)
+		}
+
+	}
+	// t.MeetsConsensusMinimum (bool) (bool)
+
+	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajOther {
+		return fmt.Errorf("booleans must be major type 7")
+	}
+	switch extra {
+	case 20:
+		t.MeetsConsensusMinimum = false
+	case 21:
+		t.MeetsConsensusMinimum = true
+	default:
+		return fmt.Errorf("booleans are either major type 7, value 20 or 21 (got %d)", extra)
+	}
+	return nil
+}
+
 var lengthBufCronEvent = []byte{130}
 
 func (t *CronEvent) MarshalCBOR(w io.Writer) error {
