@@ -3,6 +3,7 @@ package multisig
 import (
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
+	"github.com/filecoin-project/go-state-types/builtin/frc0042"
 )
 
 var Methods = map[abi.MethodNum]builtin.MethodMeta{
@@ -15,5 +16,5 @@ var Methods = map[abi.MethodNum]builtin.MethodMeta{
 	7: {"SwapSigner", *new(func(*SwapSignerParams) *abi.EmptyValue)},                                   // SwapSigner
 	8: {"ChangeNumApprovalsThreshold", *new(func(*ChangeNumApprovalsThresholdParams) *abi.EmptyValue)}, // ChangeNumApprovalsThreshold
 	9: {"LockBalance", *new(func(*LockBalanceParams) *abi.EmptyValue)},                                 // LockBalance
-	builtin.MustGenerateExportedMethodNum("Receive"): {"UniversalReceiverHook", *new(func(*abi.CborBytesTransparent) *abi.EmptyValue)}, // UniversalReceiverHook
+	frc0042.GenerateExportedMethodNum("Receive"): {"UniversalReceiverHook", *new(func(*abi.CborBytesTransparent) *abi.EmptyValue)}, // UniversalReceiverHook
 }

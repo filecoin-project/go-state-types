@@ -1,6 +1,7 @@
 package builtin
 
 import (
+	"github.com/filecoin-project/go-state-types/builtin/frc0042"
 	"testing"
 
 	"github.com/filecoin-project/go-state-types/abi"
@@ -9,7 +10,7 @@ import (
 
 func TestGenerateMethodNum(t *testing.T) {
 
-	methodNum, err := GenerateMethodNum("Receive")
+	methodNum, err := frc0042.GenerateMethodNum("Receive")
 	require.NoError(t, err)
 	require.Equal(t, methodNum, abi.MethodNum(3726118371))
 }

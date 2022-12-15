@@ -1,9 +1,8 @@
-package builtin
+package frc0042
 
 import (
 	"encoding/binary"
 	"unicode"
-
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/minio/blake2b-simd"
 	"golang.org/x/xerrors"
@@ -15,10 +14,6 @@ func GenerateMethodNum(name string) (abi.MethodNum, error) {
 	err := validateMethodName(name)
 	if err != nil {
 		return 0, err
-	}
-
-	if name == "Constructor" {
-		return MethodConstructor, nil
 	}
 
 	digest := blake2b.Sum512([]byte("1|" + name))
@@ -51,7 +46,7 @@ func validateMethodName(name string) error {
 	return nil
 }
 
-func MustGenerateExportedMethodNum(name string) abi.MethodNum {
+func GenerateExportedMethodNum(name string) abi.MethodNum {
 	methodNum, err := GenerateMethodNum(name)
 	if err != nil {
 		panic(err)

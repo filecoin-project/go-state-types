@@ -4,6 +4,7 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
+	"github.com/filecoin-project/go-state-types/builtin/frc0042"
 )
 
 var Methods = map[abi.MethodNum]builtin.MethodMeta{
@@ -19,5 +20,5 @@ var Methods = map[abi.MethodNum]builtin.MethodMeta{
 	10: {"GetClaims", *new(func(*GetClaimsParams) *GetClaimsReturn)},                                              // GetClaims
 	11: {"ExtendClaimTerms", *new(func(*ExtendClaimTermsParams) *ExtendClaimTermsReturn)},                         // ExtendClaimTerms
 	12: {"RemoveExpiredClaims", *new(func(*RemoveExpiredClaimsParams) *RemoveExpiredClaimsReturn)},                // RemoveExpiredClaims
-	builtin.MustGenerateExportedMethodNum("Receive"): {"UniversalReceiverHook", *new(func(*UniversalReceiverParams) *AllocationsResponse)}, // UniversalReceiverHook
+	frc0042.GenerateExportedMethodNum("Receive"): {"UniversalReceiverHook", *new(func(*UniversalReceiverParams) *AllocationsResponse)}, // UniversalReceiverHook
 }

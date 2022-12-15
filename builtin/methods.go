@@ -2,6 +2,7 @@ package builtin
 
 import (
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/builtin/frc0042"
 )
 
 const (
@@ -17,8 +18,8 @@ var MethodsAccount = struct {
 }{
 	MethodConstructor,
 	2,
-	MustGenerateExportedMethodNum("AuthenticateMessage"),
-	MustGenerateExportedMethodNum("Receive"),
+	frc0042.GenerateExportedMethodNum("AuthenticateMessage"),
+	frc0042.GenerateExportedMethodNum("Receive"),
 }
 
 var MethodsInit = struct {
@@ -29,7 +30,7 @@ var MethodsInit = struct {
 }{
 	MethodConstructor,
 	2,
-	MustGenerateExportedMethodNum("Exec"),
+	frc0042.GenerateExportedMethodNum("Exec"),
 }
 
 var MethodsCron = struct {
@@ -74,22 +75,22 @@ var MethodsMultisig = struct {
 }{
 	MethodConstructor,
 	2,
-	MustGenerateExportedMethodNum("Propose"),
+	frc0042.GenerateExportedMethodNum("Propose"),
 	3,
-	MustGenerateExportedMethodNum("Approve"),
+	frc0042.GenerateExportedMethodNum("Approve"),
 	4,
-	MustGenerateExportedMethodNum("Cancel"),
+	frc0042.GenerateExportedMethodNum("Cancel"),
 	5,
-	MustGenerateExportedMethodNum("AddSigner"),
+	frc0042.GenerateExportedMethodNum("AddSigner"),
 	6,
-	MustGenerateExportedMethodNum("RemoveSigner"),
+	frc0042.GenerateExportedMethodNum("RemoveSigner"),
 	7,
-	MustGenerateExportedMethodNum("SwapSigner"),
+	frc0042.GenerateExportedMethodNum("SwapSigner"),
 	8,
-	MustGenerateExportedMethodNum("ChangeNumApprovalsThreshold"),
+	frc0042.GenerateExportedMethodNum("ChangeNumApprovalsThreshold"),
 	9,
-	MustGenerateExportedMethodNum("LockBalance"),
-	MustGenerateExportedMethodNum("Receive"),
+	frc0042.GenerateExportedMethodNum("LockBalance"),
+	frc0042.GenerateExportedMethodNum("Receive"),
 }
 
 var MethodsPaych = struct {
@@ -131,27 +132,27 @@ var MethodsMarket = struct {
 }{
 	MethodConstructor,
 	2,
-	MustGenerateExportedMethodNum("AddBalance"),
+	frc0042.GenerateExportedMethodNum("AddBalance"),
 	3,
-	MustGenerateExportedMethodNum("WithdrawBalance"),
+	frc0042.GenerateExportedMethodNum("WithdrawBalance"),
 	4,
-	MustGenerateExportedMethodNum("PublishStorageDeals"),
+	frc0042.GenerateExportedMethodNum("PublishStorageDeals"),
 	5,
 	6,
 	7,
 	8,
 	9,
-	MustGenerateExportedMethodNum("GetBalance"),
-	MustGenerateExportedMethodNum("GetDealDataCommitment"),
-	MustGenerateExportedMethodNum("GetDealClient"),
-	MustGenerateExportedMethodNum("GetDealProvider"),
-	MustGenerateExportedMethodNum("GetDealLabel"),
-	MustGenerateExportedMethodNum("GetDealTerm"),
-	MustGenerateExportedMethodNum("GetDealTotalPrice"),
-	MustGenerateExportedMethodNum("GetDealClientCollateral"),
-	MustGenerateExportedMethodNum("GetDealProviderCollateral"),
-	MustGenerateExportedMethodNum("GetDealVerified"),
-	MustGenerateExportedMethodNum("GetDealActivation"),
+	frc0042.GenerateExportedMethodNum("GetBalance"),
+	frc0042.GenerateExportedMethodNum("GetDealDataCommitment"),
+	frc0042.GenerateExportedMethodNum("GetDealClient"),
+	frc0042.GenerateExportedMethodNum("GetDealProvider"),
+	frc0042.GenerateExportedMethodNum("GetDealLabel"),
+	frc0042.GenerateExportedMethodNum("GetDealTerm"),
+	frc0042.GenerateExportedMethodNum("GetDealTotalPrice"),
+	frc0042.GenerateExportedMethodNum("GetDealClientCollateral"),
+	frc0042.GenerateExportedMethodNum("GetDealProviderCollateral"),
+	frc0042.GenerateExportedMethodNum("GetDealVerified"),
+	frc0042.GenerateExportedMethodNum("GetDealActivation"),
 }
 
 var MethodsPower = struct {
@@ -172,7 +173,7 @@ var MethodsPower = struct {
 }{
 	MethodConstructor,
 	2,
-	MustGenerateExportedMethodNum("CreateMiner"),
+	frc0042.GenerateExportedMethodNum("CreateMiner"),
 	3,
 	4,
 	5,
@@ -180,10 +181,10 @@ var MethodsPower = struct {
 	7,
 	8,
 	9,
-	MustGenerateExportedMethodNum("NetworkRawPower"),
-	MustGenerateExportedMethodNum("MinerRawPower"),
-	MustGenerateExportedMethodNum("MinerCount"),
-	MustGenerateExportedMethodNum("MinerConsensusCount"),
+	frc0042.GenerateExportedMethodNum("NetworkRawPower"),
+	frc0042.GenerateExportedMethodNum("MinerRawPower"),
+	frc0042.GenerateExportedMethodNum("MinerCount"),
+	frc0042.GenerateExportedMethodNum("MinerConsensusCount"),
 }
 
 var MethodsMiner = struct {
@@ -238,9 +239,9 @@ var MethodsMiner = struct {
 	MethodConstructor,
 	2,
 	3,
-	MustGenerateExportedMethodNum("ChangeWorkerAddress"),
+	frc0042.GenerateExportedMethodNum("ChangeWorkerAddress"),
 	4,
-	MustGenerateExportedMethodNum("ChangePeerID"),
+	frc0042.GenerateExportedMethodNum("ChangePeerID"),
 	5,
 	6,
 	7,
@@ -253,18 +254,18 @@ var MethodsMiner = struct {
 	14,
 	15,
 	16,
-	MustGenerateExportedMethodNum("WithdrawBalance"),
+	frc0042.GenerateExportedMethodNum("WithdrawBalance"),
 	17,
 	18,
-	MustGenerateExportedMethodNum("ChangeMultiaddrs"),
+	frc0042.GenerateExportedMethodNum("ChangeMultiaddrs"),
 	19,
 	20,
 	21,
-	MustGenerateExportedMethodNum("ConfirmChangeWorkerAddress"),
+	frc0042.GenerateExportedMethodNum("ConfirmChangeWorkerAddress"),
 	22,
-	MustGenerateExportedMethodNum("RepayDebt"),
+	frc0042.GenerateExportedMethodNum("RepayDebt"),
 	23,
-	MustGenerateExportedMethodNum("ChangeOwnerAddress"),
+	frc0042.GenerateExportedMethodNum("ChangeOwnerAddress"),
 	24,
 	25,
 	26,
@@ -272,16 +273,16 @@ var MethodsMiner = struct {
 	28,
 	29,
 	30,
-	MustGenerateExportedMethodNum("ChangeBeneficiary"),
+	frc0042.GenerateExportedMethodNum("ChangeBeneficiary"),
 	31,
 	32,
-	MustGenerateExportedMethodNum("GetOwner"),
-	MustGenerateExportedMethodNum("IsControllingAddress"),
-	MustGenerateExportedMethodNum("GetSectorSize"),
-	MustGenerateExportedMethodNum("GetAvailableBalance"),
-	MustGenerateExportedMethodNum("GetVestingFunds"),
-	MustGenerateExportedMethodNum("GetPeerID"),
-	MustGenerateExportedMethodNum("GetMultiaddrs"),
+	frc0042.GenerateExportedMethodNum("GetOwner"),
+	frc0042.GenerateExportedMethodNum("IsControllingAddress"),
+	frc0042.GenerateExportedMethodNum("GetSectorSize"),
+	frc0042.GenerateExportedMethodNum("GetAvailableBalance"),
+	frc0042.GenerateExportedMethodNum("GetVestingFunds"),
+	frc0042.GenerateExportedMethodNum("GetPeerID"),
+	frc0042.GenerateExportedMethodNum("GetMultiaddrs"),
 }
 
 var MethodsVerifiedRegistry = struct {
@@ -308,20 +309,20 @@ var MethodsVerifiedRegistry = struct {
 	2,
 	3,
 	4,
-	MustGenerateExportedMethodNum("AddVerifiedClient"),
+	frc0042.GenerateExportedMethodNum("AddVerifiedClient"),
 	5,
 	6,
 	7,
 	8,
-	MustGenerateExportedMethodNum("RemoveExpiredAllocations"),
+	frc0042.GenerateExportedMethodNum("RemoveExpiredAllocations"),
 	9,
 	10,
-	MustGenerateExportedMethodNum("GetClaims"),
+	frc0042.GenerateExportedMethodNum("GetClaims"),
 	11,
-	MustGenerateExportedMethodNum("ExtendClaimTerms"),
+	frc0042.GenerateExportedMethodNum("ExtendClaimTerms"),
 	12,
-	MustGenerateExportedMethodNum("RemoveExpiredClaims"),
-	MustGenerateExportedMethodNum("Receive"),
+	frc0042.GenerateExportedMethodNum("RemoveExpiredClaims"),
+	frc0042.GenerateExportedMethodNum("Receive"),
 }
 
 var MethodsDatacap = struct {
@@ -343,21 +344,21 @@ var MethodsDatacap = struct {
 	GranularityExported       abi.MethodNum
 }{
 	MethodConstructor,
-	MustGenerateExportedMethodNum("Mint"),
-	MustGenerateExportedMethodNum("Destroy"),
-	MustGenerateExportedMethodNum("Name"),
-	MustGenerateExportedMethodNum("Symbol"),
-	MustGenerateExportedMethodNum("TotalSupply"),
-	MustGenerateExportedMethodNum("Balance"),
-	MustGenerateExportedMethodNum("Transfer"),
-	MustGenerateExportedMethodNum("TransferFrom"),
-	MustGenerateExportedMethodNum("IncreaseAllowance"),
-	MustGenerateExportedMethodNum("DecreaseAllowance"),
-	MustGenerateExportedMethodNum("RevokeAllowance"),
-	MustGenerateExportedMethodNum("Burn"),
-	MustGenerateExportedMethodNum("BurnFrom"),
-	MustGenerateExportedMethodNum("Allowance"),
-	MustGenerateExportedMethodNum("Granularity"),
+	frc0042.GenerateExportedMethodNum("Mint"),
+	frc0042.GenerateExportedMethodNum("Destroy"),
+	frc0042.GenerateExportedMethodNum("Name"),
+	frc0042.GenerateExportedMethodNum("Symbol"),
+	frc0042.GenerateExportedMethodNum("TotalSupply"),
+	frc0042.GenerateExportedMethodNum("Balance"),
+	frc0042.GenerateExportedMethodNum("Transfer"),
+	frc0042.GenerateExportedMethodNum("TransferFrom"),
+	frc0042.GenerateExportedMethodNum("IncreaseAllowance"),
+	frc0042.GenerateExportedMethodNum("DecreaseAllowance"),
+	frc0042.GenerateExportedMethodNum("RevokeAllowance"),
+	frc0042.GenerateExportedMethodNum("Burn"),
+	frc0042.GenerateExportedMethodNum("BurnFrom"),
+	frc0042.GenerateExportedMethodNum("Allowance"),
+	frc0042.GenerateExportedMethodNum("Granularity"),
 }
 
 var MethodsEVM = struct {
