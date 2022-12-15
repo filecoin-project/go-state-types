@@ -10,6 +10,6 @@ import (
 var Methods = map[abi.MethodNum]builtin.MethodMeta{
 	1: {"Constructor", *new(func(*address.Address) *abi.EmptyValue)},   // Constructor
 	2: {"PubkeyAddress", *new(func(*abi.EmptyValue) *address.Address)}, // PubkeyAddress
-	builtin.MustGenerateFRCMethodNum("AuthenticateMessage"): {"AuthenticateMessage", *new(func(*AuthenticateMessageParams) *abi.EmptyValue)},  // AuthenticateMessage
-	builtin.MustGenerateFRCMethodNum("Receive"):             {"UniversalReceiverHook", *new(func(*abi.CborBytesTransparent) *abi.EmptyValue)}, // UniversalReceiverHook
+	builtin.MustGenerateExportedMethodNum("AuthenticateMessage"): {"AuthenticateMessage", *new(func(*AuthenticateMessageParams) *abi.EmptyValue)},  // AuthenticateMessage
+	builtin.MustGenerateExportedMethodNum("Receive"):             {"UniversalReceiverHook", *new(func(*abi.CborBytesTransparent) *abi.EmptyValue)}, // UniversalReceiverHook
 }

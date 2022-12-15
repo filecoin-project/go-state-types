@@ -19,5 +19,5 @@ var Methods = map[abi.MethodNum]builtin.MethodMeta{
 	10: {"GetClaims", *new(func(*GetClaimsParams) *GetClaimsReturn)},                                              // GetClaims
 	11: {"ExtendClaimTerms", *new(func(*ExtendClaimTermsParams) *ExtendClaimTermsReturn)},                         // ExtendClaimTerms
 	12: {"RemoveExpiredClaims", *new(func(*RemoveExpiredClaimsParams) *RemoveExpiredClaimsReturn)},                // RemoveExpiredClaims
-	builtin.MustGenerateFRCMethodNum("Receive"): {"UniversalReceiverHook", *new(func(*UniversalReceiverParams) *AllocationsResponse)}, // UniversalReceiverHook
+	builtin.MustGenerateExportedMethodNum("Receive"): {"UniversalReceiverHook", *new(func(*UniversalReceiverParams) *AllocationsResponse)}, // UniversalReceiverHook
 }

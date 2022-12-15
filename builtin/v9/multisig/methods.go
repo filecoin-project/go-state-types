@@ -15,5 +15,5 @@ var Methods = map[abi.MethodNum]builtin.MethodMeta{
 	7: {"SwapSigner", *new(func(*SwapSignerParams) *abi.EmptyValue)},                                   // SwapSigner
 	8: {"ChangeNumApprovalsThreshold", *new(func(*ChangeNumApprovalsThresholdParams) *abi.EmptyValue)}, // ChangeNumApprovalsThreshold
 	9: {"LockBalance", *new(func(*LockBalanceParams) *abi.EmptyValue)},                                 // LockBalance
-	builtin.MustGenerateFRCMethodNum("Receive"): {"UniversalReceiverHook", *new(func(*abi.CborBytesTransparent) *abi.EmptyValue)}, // UniversalReceiverHook
+	builtin.MustGenerateExportedMethodNum("Receive"): {"UniversalReceiverHook", *new(func(*abi.CborBytesTransparent) *abi.EmptyValue)}, // UniversalReceiverHook
 }

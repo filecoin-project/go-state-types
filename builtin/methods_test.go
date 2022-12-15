@@ -9,7 +9,7 @@ import (
 
 func TestGenerateMethodNum(t *testing.T) {
 
-	methodNum, err := GenerateFRCMethodNum("Receive")
+	methodNum, err := GenerateMethodNum("Receive")
 	require.NoError(t, err)
 	require.Equal(t, methodNum, abi.MethodNum(3726118371))
 }

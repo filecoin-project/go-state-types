@@ -11,7 +11,7 @@ import (
 
 // Generates a standard FRC-42 compliant method number
 // Reference: https://github.com/filecoin-project/FIPs/blob/master/FRCs/frc-0042.md
-func GenerateFRCMethodNum(name string) (abi.MethodNum, error) {
+func GenerateMethodNum(name string) (abi.MethodNum, error) {
 	err := validateMethodName(name)
 	if err != nil {
 		return 0, err
@@ -51,8 +51,8 @@ func validateMethodName(name string) error {
 	return nil
 }
 
-func MustGenerateFRCMethodNum(name string) abi.MethodNum {
-	methodNum, err := GenerateFRCMethodNum(name)
+func MustGenerateExportedMethodNum(name string) abi.MethodNum {
+	methodNum, err := GenerateMethodNum(name)
 	if err != nil {
 		panic(err)
 	}
