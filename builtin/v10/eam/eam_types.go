@@ -12,11 +12,6 @@ type Create2Params struct {
 	Salt     [32]byte
 }
 
-type CreateAccount struct {
-	// Pubkey is the secp256k1 public key
-	Pubkey [65]byte
-}
-
 type Return struct {
 	ActorID       uint64
 	RobustAddress address.Address

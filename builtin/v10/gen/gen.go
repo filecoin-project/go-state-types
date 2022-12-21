@@ -301,8 +301,6 @@ func main() {
 		eam.CreateReturn{},
 		eam.Create2Params{},
 		eam.Create2Return{},
-		eam.CreateAccount{},
-		// TODO eam.CreateAccountReturn{},
 	); err != nil {
 		panic(err)
 	}
