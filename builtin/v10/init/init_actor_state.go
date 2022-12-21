@@ -61,26 +61,59 @@ func (s *State) ResolveAddress(store adt.Store, address addr.Address) (addr.Addr
 	}
 }
 
-// Allocates a new ID address and stores a mapping of the argument address to it.
-// Returns the newly-allocated address.
-func (s *State) MapAddressToNewID(store adt.Store, address addr.Address) (addr.Address, error) {
-	actorID := cbg.CborInt(s.NextID)
-	s.NextID++
-
+// Maps argument addresses to to a new or existing actor ID.
+// With no delegated address, or if the delegated address is not already mapped,
+// allocates a new ID address and maps both to it.
+// If the delegated address is already present, maps the robust address to that actor ID.
+// Fails if the robust address is already mapped, providing tombstone.
+//
+//0 Returns the actor ID and a boolean indicating whether or not the actor already exists.
+func (s *State) MapAddressToNewID(store adt.Store, robustAddress addr.Address, delegatedAddress *addr.Address) (addr.Address, bool, error) {
 	m, err := adt.AsMap(store, s.AddressMap, builtin.DefaultHamtBitwidth)
 	if err != nil {
-		return addr.Undef, xerrors.Errorf("failed to load address map: %w", err)
+		return addr.Undef, false, xerrors.Errorf("failed to load address map: %w", err)
 	}
-	err = m.Put(abi.AddrKey(address), &actorID)
+
+	var actorID cbg.CborInt
+	existing := false
+	if delegatedAddress != nil {
+		// If there's a delegated address, either recall the already-mapped actor ID or
+		// create and map a new one.
+		existing, err = m.Get(abi.AddrKey(*delegatedAddress), &actorID)
+		if err != nil {
+			return addr.Undef, false, xerrors.Errorf("failed to check existing delegated addr: %w", err)
+		}
+		if !existing {
+			actorID = cbg.CborInt(s.NextID)
+			s.NextID++
+			if err := m.Put(abi.AddrKey(*delegatedAddress), &actorID); err != nil {
+				return addr.Undef, false, xerrors.Errorf("failed to put new delegated addr: %w", err)
+			}
+		}
+	} else {
+		// With no delegated address, always create a new actor ID.
+		actorID = cbg.CborInt(s.NextID)
+		s.NextID++
+	}
+
+	isNew, err := m.PutIfAbsent(abi.AddrKey(robustAddress), &actorID)
 	if err != nil {
-		return addr.Undef, xerrors.Errorf("map address failed to store entry: %w", err)
+		return addr.Undef, false, xerrors.Errorf("map address failed to store entry: %w", err)
 	}
+	if !isNew {
+		return addr.Undef, false, xerrors.Errorf("robust address %s is already allocated in the address map", robustAddress)
+	}
+
 	amr, err := m.Root()
 	if err != nil {
-		return addr.Undef, xerrors.Errorf("failed to get address map root: %w", err)
+		return addr.Undef, false, xerrors.Errorf("failed to get address map root: %w", err)
 	}
 	s.AddressMap = amr
 
 	idAddr, err := addr.NewIDAddress(uint64(actorID))
-	return idAddr, err
+	if err != nil {
+		return addr.Undef, false, xerrors.Errorf("failed to convert actorID to address: %w", err)
+	}
+
+	return idAddr, existing, nil
 }
