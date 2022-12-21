@@ -24,11 +24,12 @@ var MethodsAccount = struct {
 var MethodsInit = struct {
 	Constructor  abi.MethodNum
 	Exec         abi.MethodNum
+	Exec4        abi.MethodNum
 	ExecExported abi.MethodNum
-	// TODO Exec4?
 }{
 	MethodConstructor,
 	2,
+	3,
 	MustGenerateFRCMethodNum("Exec"),
 }
 
