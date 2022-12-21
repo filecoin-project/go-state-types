@@ -6,6 +6,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	init10 "github.com/filecoin-project/go-state-types/builtin/v10/init"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
@@ -75,6 +77,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	// Set of prior version code CIDs for actors to defer during iteration, for explicit migration afterwards.
 	deferredCodeIDs := make(map[cid.Cid]struct{})
 
+	oldInitCodeCID := cid.Undef
 	for _, oldEntry := range oldManifestData.Entries {
 		newCodeCID, ok := newManifest.Get(oldEntry.Name)
 		if !ok {
@@ -82,18 +85,37 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		}
 
 		migrations[oldEntry.Code] = migration.CodeMigrator{OutCodeCID: newCodeCID}
+
+		if oldEntry.Name == manifest.InitKey {
+			oldInitCodeCID = oldEntry.Code
+		}
 	}
 
+	if !oldInitCodeCID.Defined() {
+		return cid.Undef, xerrors.New("didn't find init actor in old manifest")
+	}
 	// migrations that migrate both code and state, override entries in `migrations`
 
 	// The System Actor
-	newSystemCodeCID, ok := newManifest.Get("system")
+	newSystemCodeCID, ok := newManifest.Get(manifest.SystemKey)
 	if !ok {
-		return cid.Undef, xerrors.Errorf("code cid for system actor not found in manifest")
+		return cid.Undef, xerrors.Errorf("code cid for system actor not found in new manifest")
 	}
 
 	migrations[systemActor.Code] = systemActorMigrator{OutCodeCID: newSystemCodeCID, ManifestData: newManifest.Data}
 
+	// The Init Actor
+	newInitCodeCID, ok := newManifest.Get(manifest.InitKey)
+	if !ok {
+		return cid.Undef, xerrors.Errorf("code cid for init actor not found in new manifest")
+	}
+
+	ethZeroAddr, err := makeEthZeroAddress()
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to make eth zero address: %w", err)
+	}
+
+	migrations[oldInitCodeCID] = initActorMigrator{OutCodeCID: newInitCodeCID, EthZeroAddress: ethZeroAddr}
 	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations), len(oldManifestData.Entries))
 	}
@@ -221,6 +243,61 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("migration group error: %w", err)
 	}
 
+	// Make the empty state
+
+	emptyObj, err := makeEmptyState(store)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to make empty obj: %w", err)
+	}
+
+	// Create the EAM Actor
+
+	eamAct, err := CreateEAMActor(&newManifest, emptyObj)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to create the EAM Actor: %w", err)
+	}
+
+	if err := actorsOut.SetActorV5(builtin.EthereumAddressManagerActorAddr, eamAct); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to set EAM Actor: %w", err)
+	}
+
+	// Create the EthZeroAddress as an EthAccount
+	initAct, ok, err := actorsOut.GetActorV5(builtin.InitActorAddr)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to get init actor: %w", err)
+	}
+	if !ok {
+		return cid.Undef, xerrors.New("didn't find init actor")
+	}
+
+	var initSt init10.State
+	if err := store.Get(ctx, initAct.Head, &initSt); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to get init state: %w", err)
+	}
+
+	ethZeroAddrId, ok, err := initSt.ResolveAddress(adt9.WrapStore(ctx, store), ethZeroAddr)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to get ethZero actor: %w", err)
+	}
+	if !ok {
+		return cid.Undef, xerrors.New("didn't find ethZero actor")
+	}
+
+	ethAccountCID, ok := newManifest.Get(manifest.EthAccountKey)
+	if !ok {
+		return cid.Undef, xerrors.New("didn't find ethAccount code CID")
+	}
+
+	if err := actorsOut.SetActorV5(ethZeroAddrId, &builtin.ActorV5{
+		Code:       ethAccountCID,
+		Head:       emptyObj,
+		CallSeqNum: 0,
+		Balance:    abi.NewTokenAmount(0),
+		Address:    &ethZeroAddr,
+	}); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to set ethZeroActor: %w", err)
+	}
+
 	elapsed := time.Since(startTime)
 	rate := float64(doneCount) / elapsed.Seconds()
 	log.Log(rt.INFO, "All %d done after %v (%.0f/s), flushing state root.", doneCount, elapsed, rate)
@@ -268,4 +345,17 @@ func (job *migrationJob) run(ctx context.Context, store cbor.IpldStore, priorEpo
 			Address:    nil,                    // TODO check that this does not need to be populated
 		},
 	}, nil
+}
+
+func makeEthZeroAddress() (address.Address, error) {
+	return address.NewDelegatedAddress(builtin.EthereumAddressManagerActorID, make([]byte, 20))
+}
+
+func makeEmptyState(store cbor.IpldStore) (cid.Cid, error) {
+	emptyObject, err := store.Put(context.TODO(), []struct{}{})
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to make empty object: %w", err)
+	}
+
+	return emptyObject, nil
 }
