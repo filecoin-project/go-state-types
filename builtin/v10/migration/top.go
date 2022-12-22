@@ -75,16 +75,13 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	// Set of prior version code CIDs for actors to defer during iteration, for explicit migration afterwards.
 	deferredCodeIDs := make(map[cid.Cid]struct{})
 
-	// Populated from oldManifestData
-	oldCodeIDMap := make(map[string]cid.Cid, len(oldManifestData.Entries))
-
-	for name, oldCodeCID := range oldCodeIDMap {
-		newCodeCID, ok := newManifest.Get(name)
+	for _, oldEntry := range oldManifestData.Entries {
+		newCodeCID, ok := newManifest.Get(oldEntry.Name)
 		if !ok {
-			return cid.Undef, xerrors.Errorf("code cid for %s actor not found in new manifest", name)
+			return cid.Undef, xerrors.Errorf("code cid for %s actor not found in new manifest", oldEntry.Name)
 		}
 
-		migrations[oldCodeCID] = migration.CodeMigrator{OutCodeCID: newCodeCID}
+		migrations[oldEntry.Code] = migration.CodeMigrator{OutCodeCID: newCodeCID}
 	}
 
 	// migrations that migrate both code and state, override entries in `migrations`
@@ -140,7 +137,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 			atomic.AddUint32(&jobCount, 1)
 			return nil
 		}); err != nil {
-			return err
+			return xerrors.Errorf("error iterating v4 actors: %w", err)
 		}
 		log.Log(rt.INFO, "Done creating %d migration jobs for tree %s after %v", jobCount, actorsRootIn, time.Since(startTime))
 		return nil
@@ -212,7 +209,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		resultCount := 0
 		for result := range jobResultCh {
 			if err := actorsOut.SetActorV5(result.Address, &result.ActorV5); err != nil {
-				return err
+				return xerrors.Errorf("error setting actor %s: %w", result.Address, err)
 			}
 			resultCount++
 		}
@@ -221,14 +218,19 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	})
 
 	if err := grp.Wait(); err != nil {
-		return cid.Undef, err
+		return cid.Undef, xerrors.Errorf("migration group error: %w", err)
 	}
 
 	elapsed := time.Since(startTime)
 	rate := float64(doneCount) / elapsed.Seconds()
 	log.Log(rt.INFO, "All %d done after %v (%.0f/s), flushing state root.", doneCount, elapsed, rate)
 
-	return actorsOut.Flush()
+	outCid, err := actorsOut.Flush()
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to flush actorsOut: %w", err)
+	}
+
+	return outCid, nil
 }
 
 type migrationJob struct {
