@@ -386,3 +386,9 @@ var MethodsEAM = struct {
 	2,
 	3,
 }
+
+var MethodsEthAccount = struct {
+	Constructor abi.MethodNum
+}{
+	MethodConstructor,
+}

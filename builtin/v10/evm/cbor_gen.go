@@ -282,3 +282,91 @@ func (t *GetStorageAtParams) UnmarshalCBOR(r io.Reader) error {
 	}
 	return nil
 }
+
+var lengthBufDelegateCallParams = []byte{130}
+
+func (t *DelegateCallParams) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufDelegateCallParams); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.Code (cid.Cid) (struct)
+
+	if err := cbg.WriteCidBuf(scratch, w, t.Code); err != nil {
+		return xerrors.Errorf("failed to write cid field t.Code: %w", err)
+	}
+
+	// t.Input ([]uint8) (slice)
+	if len(t.Input) > cbg.ByteArrayMaxLen {
+		return xerrors.Errorf("Byte array in field t.Input was too long")
+	}
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajByteString, uint64(len(t.Input))); err != nil {
+		return err
+	}
+
+	if _, err := w.Write(t.Input[:]); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *DelegateCallParams) UnmarshalCBOR(r io.Reader) error {
+	*t = DelegateCallParams{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Code (cid.Cid) (struct)
+
+	{
+
+		c, err := cbg.ReadCid(br)
+		if err != nil {
+			return xerrors.Errorf("failed to read cid field t.Code: %w", err)
+		}
+
+		t.Code = c
+
+	}
+	// t.Input ([]uint8) (slice)
+
+	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+
+	if extra > cbg.ByteArrayMaxLen {
+		return fmt.Errorf("t.Input: byte array too large (%d)", extra)
+	}
+	if maj != cbg.MajByteString {
+		return fmt.Errorf("expected byte array")
+	}
+
+	if extra > 0 {
+		t.Input = make([]uint8, extra)
+	}
+
+	if _, err := io.ReadFull(br, t.Input[:]); err != nil {
+		return err
+	}
+	return nil
+}

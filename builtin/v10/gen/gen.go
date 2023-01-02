@@ -291,6 +291,7 @@ func main() {
 		// method params and returns
 		evm.ConstructorParams{},
 		evm.GetStorageAtParams{},
+		evm.DelegateCallParams{},
 	); err != nil {
 		panic(err)
 	}
