@@ -387,6 +387,10 @@ var MethodsEAM = struct {
 	3,
 }
 
+var MethodsEmbryo = struct {
+	Constructor abi.MethodNum
+}{}
+
 var MethodsEthAccount = struct {
 	Constructor abi.MethodNum
 }{
