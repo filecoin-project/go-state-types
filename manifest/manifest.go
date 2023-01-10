@@ -19,18 +19,18 @@ const (
 	CronKey       = "cron"
 	InitKey       = "init"
 	MarketKey     = "storagemarket"
-	MinerKey      = "storageminer"
-	MultisigKey   = "multisig"
-	PaychKey      = "paymentchannel"
-	PowerKey      = "storagepower"
-	RewardKey     = "reward"
-	SystemKey     = "system"
-	VerifregKey   = "verifiedregistry"
-	DatacapKey    = "datacap"
-	EvmKey        = "evm"
-	EamKey        = "eam"
-	EmbryoKey     = "embryo"
-	EthAccountKey = "ethaccount"
+	MinerKey       = "storageminer"
+	MultisigKey    = "multisig"
+	PaychKey       = "paymentchannel"
+	PowerKey       = "storagepower"
+	RewardKey      = "reward"
+	SystemKey      = "system"
+	VerifregKey    = "verifiedregistry"
+	DatacapKey     = "datacap"
+	EvmKey         = "evm"
+	EamKey         = "eam"
+	PlaceholderKey = "placeholder"
+	EthAccountKey  = "ethaccount"
 )
 
 func GetBuiltinActorsKeys(av actorstypes.Version) []string {
@@ -51,7 +51,7 @@ func GetBuiltinActorsKeys(av actorstypes.Version) []string {
 		keys = append(keys, DatacapKey)
 	}
 	if av >= 10 {
-		keys = append(keys, EvmKey, EamKey, EmbryoKey, EthAccountKey)
+		keys = append(keys, EvmKey, EamKey, PlaceholderKey, EthAccountKey)
 	}
 	return keys
 }
