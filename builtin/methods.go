@@ -387,7 +387,7 @@ var MethodsEAM = struct {
 	3,
 }
 
-var MethodsEmbryo = struct {
+var MethodsPlaceholder = struct {
 	Constructor abi.MethodNum
 }{}
 
