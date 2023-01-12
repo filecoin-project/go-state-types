@@ -7,6 +7,7 @@ import (
 	"io"
 	"sort"
 
+	address "github.com/filecoin-project/go-address"
 	cid "github.com/ipfs/go-cid"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	xerrors "golang.org/x/xerrors"
@@ -182,8 +183,18 @@ func (t *CreateReturn) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		if err := t.RobustAddress.UnmarshalCBOR(br); err != nil {
-			return xerrors.Errorf("unmarshaling t.RobustAddress: %w", err)
+		b, err := br.ReadByte()
+		if err != nil {
+			return err
+		}
+		if b != cbg.CborNull[0] {
+			if err := br.UnreadByte(); err != nil {
+				return err
+			}
+			t.RobustAddress = new(address.Address)
+			if err := t.RobustAddress.UnmarshalCBOR(br); err != nil {
+				return xerrors.Errorf("unmarshaling t.RobustAddress pointer: %w", err)
+			}
 		}
 
 	}
@@ -394,8 +405,18 @@ func (t *Create2Return) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		if err := t.RobustAddress.UnmarshalCBOR(br); err != nil {
-			return xerrors.Errorf("unmarshaling t.RobustAddress: %w", err)
+		b, err := br.ReadByte()
+		if err != nil {
+			return err
+		}
+		if b != cbg.CborNull[0] {
+			if err := br.UnreadByte(); err != nil {
+				return err
+			}
+			t.RobustAddress = new(address.Address)
+			if err := t.RobustAddress.UnmarshalCBOR(br); err != nil {
+				return xerrors.Errorf("unmarshaling t.RobustAddress pointer: %w", err)
+			}
 		}
 
 	}

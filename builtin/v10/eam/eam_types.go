@@ -14,7 +14,7 @@ type Create2Params struct {
 
 type Return struct {
 	ActorID       uint64
-	RobustAddress address.Address
+	RobustAddress *address.Address
 	EthAddress    [20]byte
 }
 
