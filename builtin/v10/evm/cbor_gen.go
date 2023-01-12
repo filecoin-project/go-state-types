@@ -7,6 +7,7 @@ import (
 	"io"
 	"sort"
 
+	abi "github.com/filecoin-project/go-state-types/abi"
 	cid "github.com/ipfs/go-cid"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	xerrors "golang.org/x/xerrors"
@@ -16,7 +17,84 @@ var _ = xerrors.Errorf
 var _ = cid.Undef
 var _ = sort.Sort
 
-var lengthBufState = []byte{131}
+var lengthBufTombstone = []byte{130}
+
+func (t *Tombstone) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if _, err := w.Write(lengthBufTombstone); err != nil {
+		return err
+	}
+
+	scratch := make([]byte, 9)
+
+	// t.Origin (abi.ActorID) (uint64)
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.Origin)); err != nil {
+		return err
+	}
+
+	// t.Nonce (uint64) (uint64)
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.Nonce)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *Tombstone) UnmarshalCBOR(r io.Reader) error {
+	*t = Tombstone{}
+
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
+
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Origin (abi.ActorID) (uint64)
+
+	{
+
+		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.Origin = abi.ActorID(extra)
+
+	}
+	// t.Nonce (uint64) (uint64)
+
+	{
+
+		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.Nonce = uint64(extra)
+
+	}
+	return nil
+}
+
+var lengthBufState = []byte{133}
 
 func (t *State) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -35,6 +113,19 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 		return xerrors.Errorf("failed to write cid field t.Bytecode: %w", err)
 	}
 
+	// t.BytecodeHash ([32]uint8) (array)
+	if len(t.BytecodeHash) > cbg.ByteArrayMaxLen {
+		return xerrors.Errorf("Byte array in field t.BytecodeHash was too long")
+	}
+
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajByteString, uint64(len(t.BytecodeHash))); err != nil {
+		return err
+	}
+
+	if _, err := w.Write(t.BytecodeHash[:]); err != nil {
+		return err
+	}
+
 	// t.ContractState (cid.Cid) (struct)
 
 	if err := cbg.WriteCidBuf(scratch, w, t.ContractState); err != nil {
@@ -47,6 +138,10 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
+	// t.Tombstone (evm.Tombstone) (struct)
+	if err := t.Tombstone.MarshalCBOR(w); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -64,7 +159,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 3 {
+	if extra != 5 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
@@ -79,6 +174,29 @@ func (t *State) UnmarshalCBOR(r io.Reader) error {
 
 		t.Bytecode = c
 
+	}
+	// t.BytecodeHash ([32]uint8) (array)
+
+	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+	if err != nil {
+		return err
+	}
+
+	if extra > cbg.ByteArrayMaxLen {
+		return fmt.Errorf("t.BytecodeHash: byte array too large (%d)", extra)
+	}
+	if maj != cbg.MajByteString {
+		return fmt.Errorf("expected byte array")
+	}
+
+	if extra != 32 {
+		return fmt.Errorf("expected array to have 32 elements")
+	}
+
+	t.BytecodeHash = [32]uint8{}
+
+	if _, err := io.ReadFull(br, t.BytecodeHash[:]); err != nil {
+		return err
 	}
 	// t.ContractState (cid.Cid) (struct)
 
@@ -104,6 +222,25 @@ func (t *State) UnmarshalCBOR(r io.Reader) error {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Nonce = uint64(extra)
+
+	}
+	// t.Tombstone (evm.Tombstone) (struct)
+
+	{
+
+		b, err := br.ReadByte()
+		if err != nil {
+			return err
+		}
+		if b != cbg.CborNull[0] {
+			if err := br.UnreadByte(); err != nil {
+				return err
+			}
+			t.Tombstone = new(Tombstone)
+			if err := t.Tombstone.UnmarshalCBOR(br); err != nil {
+				return xerrors.Errorf("unmarshaling t.Tombstone pointer: %w", err)
+			}
+		}
 
 	}
 	return nil

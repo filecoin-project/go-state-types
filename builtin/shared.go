@@ -16,3 +16,5 @@ type BigFrac struct {
 	Numerator   big.Int
 	Denominator big.Int
 }
+
+type EmptyState struct{}
