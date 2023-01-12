@@ -22,7 +22,7 @@ func CheckStateInvariants(st *State, store adt.Store) *builtin.MessageAccumulato
 	hasher.Write(byteCode)
 	byteCodeHash := hasher.Sum(nil)
 
-	acc.Require(bytes.Compare(byteCodeHash, st.BytecodeHash[:]) == 0, "Bytecode hash doesn't match bytecode cid")
+	acc.Require(bytes.Equal(byteCodeHash, st.BytecodeHash[:]), "Bytecode hash doesn't match bytecode cid")
 
 	return acc
 }

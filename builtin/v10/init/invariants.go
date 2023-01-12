@@ -60,6 +60,7 @@ func CheckStateInvariants(st *State, tree *builtin.ActorTree, actorCodes map[str
 		initSummary.AddrIDs[keyAddr] = actorId
 
 		idaddr, err := addr.NewIDAddress(uint64(actorId))
+		acc.RequireNoError(err, "unable to convert actorId %v to id address", actorId)
 		actor, found, err := tree.GetActorV5(idaddr)
 		acc.RequireNoError(err, "unable to retrieve actor with idaddr %v", idaddr)
 		acc.Require(found, "actor not found idaddr %v", idaddr)
