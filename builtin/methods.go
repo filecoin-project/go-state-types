@@ -363,11 +363,12 @@ var MethodsDatacap = struct {
 
 var MethodsEVM = struct {
 	Constructor            abi.MethodNum
-	InvokeContract         abi.MethodNum
+	Resurrect              abi.MethodNum
 	GetBytecode            abi.MethodNum
+	GetBytecodeHash        abi.MethodNum
 	GetStorageAt           abi.MethodNum
-	InvokeContractReadOnly abi.MethodNum
 	InvokeContractDelegate abi.MethodNum
+	InvokeContract         abi.MethodNum
 }{
 	MethodConstructor,
 	2,
@@ -375,6 +376,7 @@ var MethodsEVM = struct {
 	4,
 	5,
 	6,
+	MustGenerateFRCMethodNum("InvokeEVM"),
 }
 
 var MethodsEAM = struct {
