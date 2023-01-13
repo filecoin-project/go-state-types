@@ -303,6 +303,7 @@ func main() {
 		eam.CreateReturn{},
 		eam.Create2Params{},
 		eam.Create2Return{},
+		eam.CreateExternalReturn{},
 	); err != nil {
 		panic(err)
 	}
