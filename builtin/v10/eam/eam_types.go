@@ -22,4 +22,4 @@ type Return struct {
 
 type CreateReturn Return
 type Create2Return Return
-type Create3Return Return
+type CreateExternalReturn Return
