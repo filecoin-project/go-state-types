@@ -113,7 +113,7 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 		return xerrors.Errorf("failed to write cid field t.Bytecode: %w", err)
 	}
 
-	// t.BytecodeHash ([32]uint8) (array)
+	// t.BytecodeHash (evm.CodeHash) (array)
 	if len(t.BytecodeHash) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.BytecodeHash was too long")
 	}
@@ -175,7 +175,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) error {
 		t.Bytecode = c
 
 	}
-	// t.BytecodeHash ([32]uint8) (array)
+	// t.BytecodeHash (evm.CodeHash) (array)
 
 	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
