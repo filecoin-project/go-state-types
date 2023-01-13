@@ -380,13 +380,15 @@ var MethodsEVM = struct {
 }
 
 var MethodsEAM = struct {
-	Constructor abi.MethodNum
-	Create      abi.MethodNum
-	Create2     abi.MethodNum
+	Constructor    abi.MethodNum
+	Create         abi.MethodNum
+	Create2        abi.MethodNum
+	CreateExternal abi.MethodNum
 }{
 	MethodConstructor,
 	2,
 	3,
+	4,
 }
 
 var MethodsPlaceholder = struct {

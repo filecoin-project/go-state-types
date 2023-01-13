@@ -1,6 +1,8 @@
 package eam
 
-import "github.com/filecoin-project/go-address"
+import (
+	"github.com/filecoin-project/go-address"
+)
 
 type CreateParams struct {
 	Initcode []byte
@@ -20,3 +22,4 @@ type Return struct {
 
 type CreateReturn Return
 type Create2Return Return
+type CreateExternalReturn Return
