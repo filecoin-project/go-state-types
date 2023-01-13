@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/filecoin-project/go-state-types/builtin/v10/datacap"
 	"github.com/filecoin-project/go-state-types/builtin/v10/evm"
-
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/ipfs/go-cid"
 
@@ -44,7 +43,13 @@ func CheckStateInvariants(tree *builtin.ActorTree, priorEpoch abi.ChainEpoch, ac
 	var powerSummary *power.StateSummary
 	var paychSummaries []*paych.StateSummary
 	var multisigSummaries []*multisig.StateSummary
+	var delegatedAddrs []address.Address
 	minerSummaries := make(map[address.Address]*miner.StateSummary)
+
+	emptyObjectCid, err := builtin.MakeEmptyState(tree.Store)
+	if err != nil {
+		return nil, err
+	}
 
 	if err := tree.ForEachV5(func(key address.Address, actor *builtin.ActorV5) error {
 		acc := acc.WithPrefix("%v ", key) // Intentional shadow
@@ -52,6 +57,10 @@ func CheckStateInvariants(tree *builtin.ActorTree, priorEpoch abi.ChainEpoch, ac
 			acc.Addf("unexpected address protocol in state tree root: %v", key)
 		}
 		totalFIl = big.Add(totalFIl, actor.Balance)
+
+		if key.Protocol() == address.Delegated {
+			delegatedAddrs = append(delegatedAddrs, key)
+		}
 
 		switch actor.Code {
 		case actorCodes[manifest.SystemKey]:
@@ -148,29 +157,28 @@ func CheckStateInvariants(tree *builtin.ActorTree, priorEpoch abi.ChainEpoch, ac
 		case actorCodes[manifest.EvmKey]:
 			var st evm.State
 			if err := tree.Store.Get(tree.Store.Context(), actor.Head, &st); err != nil {
-				fmt.Println("evm invariant error = ", err)
 				return err
 			}
 			msgs := evm.CheckStateInvariants(&st, tree.Store)
 			acc.WithPrefix("evm: ").AddAll(msgs)
 		case actorCodes[manifest.PlaceholderKey]:
-			if err := tree.Store.Get(tree.Store.Context(), actor.Head, &builtin.EmptyState{}); err != nil {
-				return err
-			}
+			acc.Require(actor.Head == emptyObjectCid, "Placeholder actor head %v unequal to emptyObjectCid %v", actor.Head, emptyObjectCid)
 		case actorCodes[manifest.EthAccountKey]:
-			if err := tree.Store.Get(tree.Store.Context(), actor.Head, &builtin.EmptyState{}); err != nil {
-				return err
-			}
+			acc.Require(actor.Head == emptyObjectCid, "EthAccount actor head %v unequal to emptyObjectCid %v", actor.Head, emptyObjectCid)
 		case actorCodes[manifest.EamKey]:
-			if err := tree.Store.Get(tree.Store.Context(), actor.Head, &builtin.EmptyState{}); err != nil {
-				return err
-			}
+			acc.Require(actor.Head == emptyObjectCid, "Eam actor head %v unequal to emptyObjectCid %v", actor.Head, emptyObjectCid)
 		default:
 			return xerrors.Errorf("unexpected actor code CID %v for address %v", actor.Code, key)
 		}
 		return nil
 	}); err != nil {
 		return nil, err
+	}
+
+	// Check if all delegated addresses are part of init actor
+	for _, addr := range delegatedAddrs {
+		_, found := initSummary.AddrIDs[addr]
+		acc.Require(!found, "delegated address %v not found in init actor map", addr)
 	}
 
 	//

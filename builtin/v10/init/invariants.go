@@ -65,6 +65,10 @@ func CheckStateInvariants(st *State, tree *builtin.ActorTree, actorCodes map[str
 		acc.RequireNoError(err, "unable to retrieve actor with idaddr %v", idaddr)
 		acc.Require(found, "actor not found idaddr %v", idaddr)
 
+		if keyAddr.Protocol() == addr.Delegated {
+			acc.Require(canHaveDelegatedAddress(actor, actorCodes), "actor %v not supposed to have a delegated address", idaddr)
+		}
+
 		// we expect the address field to be populated for the below actors
 		if (actor.Code == actorCodes[manifest.EthAccountKey] ||
 			actor.Code == actorCodes[manifest.EvmKey] ||
@@ -77,4 +81,10 @@ func CheckStateInvariants(st *State, tree *builtin.ActorTree, actorCodes map[str
 	})
 	acc.RequireNoError(err, "error iterating address map")
 	return initSummary, acc
+}
+
+func canHaveDelegatedAddress(actor *builtin.ActorV5, actorCodes map[string]cid.Cid) bool {
+	return actor.Code == actorCodes[manifest.EthAccountKey] ||
+		actor.Code == actorCodes[manifest.EvmKey] ||
+		actor.Code == actorCodes[manifest.PlaceholderKey]
 }

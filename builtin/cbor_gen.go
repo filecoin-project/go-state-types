@@ -252,38 +252,3 @@ func (t *ActorV5) UnmarshalCBOR(r io.Reader) error {
 	}
 	return nil
 }
-
-var lengthBufEmptyState = []byte{128}
-
-func (t *EmptyState) MarshalCBOR(w io.Writer) error {
-	if t == nil {
-		_, err := w.Write(cbg.CborNull)
-		return err
-	}
-	if _, err := w.Write(lengthBufEmptyState); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (t *EmptyState) UnmarshalCBOR(r io.Reader) error {
-	*t = EmptyState{}
-
-	br := cbg.GetPeeker(r)
-	scratch := make([]byte, 8)
-
-	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
-	if err != nil {
-		return err
-	}
-	if maj != cbg.MajArray {
-		return fmt.Errorf("cbor input should be of type array")
-	}
-
-	if extra != 0 {
-		return fmt.Errorf("cbor input had wrong number of fields")
-	}
-
-	return nil
-}
