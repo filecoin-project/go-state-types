@@ -8,7 +8,7 @@ import (
 
 var Methods = map[abi.MethodNum]builtin.MethodMeta{
 	1: {"Constructor", *new(func(*ConstructorParams) *abi.EmptyValue)},
-	2: {"Constructor", *new(func(*ResurrectParams) *abi.EmptyValue)},
+	2: {"Resurrect", *new(func(*ResurrectParams) *abi.EmptyValue)},
 	3: {"GetBytecode", *new(func(*abi.EmptyValue) *typegen.CborCid)},
 	4: {"GetBytecodeHash", *new(func(*abi.EmptyValue) *abi.CborBytes)},
 	5: {"GetStorageAt", *new(func(*GetStorageAtParams) *abi.CborBytes)},
