@@ -7,6 +7,8 @@ type ConstructorParams struct {
 	Initcode []byte
 }
 
+type ResurrectParams = ConstructorParams
+
 type GetStorageAtParams struct {
 	StorageKey []byte
 }
