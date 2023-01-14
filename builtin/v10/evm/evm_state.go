@@ -4,14 +4,22 @@ import (
 	"github.com/ipfs/go-cid"
 	xerrors "golang.org/x/xerrors"
 
+	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v10/util/adt"
 )
 
+type Tombstone struct {
+	Origin abi.ActorID
+	Nonce  uint64
+}
+
 type State struct {
 	Bytecode      cid.Cid
+	BytecodeHash  [32]byte
 	ContractState cid.Cid
 	Nonce         uint64
+	Tombstone     *Tombstone
 }
 
 func ConstructState(store adt.Store, bytecode cid.Cid) (*State, error) {
