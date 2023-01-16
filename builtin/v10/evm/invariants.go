@@ -10,7 +10,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
-// Checks internal invariants of account state.
+// Checks internal invariants of evm state.
 func CheckStateInvariants(st *State, store adt.Store) *builtin.MessageAccumulator {
 	acc := &builtin.MessageAccumulator{}
 
