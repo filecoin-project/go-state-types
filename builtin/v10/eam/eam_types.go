@@ -1,6 +1,8 @@
 package eam
 
-import "github.com/filecoin-project/go-address"
+import (
+	"github.com/filecoin-project/go-address"
+)
 
 type CreateParams struct {
 	Initcode []byte
@@ -14,9 +16,10 @@ type Create2Params struct {
 
 type Return struct {
 	ActorID       uint64
-	RobustAddress address.Address
+	RobustAddress *address.Address
 	EthAddress    [20]byte
 }
 
 type CreateReturn Return
 type Create2Return Return
+type CreateExternalReturn Return
