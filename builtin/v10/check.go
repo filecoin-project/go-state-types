@@ -46,7 +46,7 @@ func CheckStateInvariants(tree *builtin.ActorTree, priorEpoch abi.ChainEpoch, ac
 	var delegatedAddrs []address.Address
 	minerSummaries := make(map[address.Address]*miner.StateSummary)
 
-	emptyObjectCid, err := builtin.MakeEmptyState(tree.Store)
+	emptyObjectCid, err := builtin.MakeEmptyState()
 	if err != nil {
 		return nil, err
 	}
@@ -58,8 +58,8 @@ func CheckStateInvariants(tree *builtin.ActorTree, priorEpoch abi.ChainEpoch, ac
 		}
 		totalFIl = big.Add(totalFIl, actor.Balance)
 
-		if key.Protocol() == address.Delegated {
-			delegatedAddrs = append(delegatedAddrs, key)
+		if actor.Address != nil && actor.Address.Protocol() == address.Delegated {
+			delegatedAddrs = append(delegatedAddrs, *actor.Address)
 		}
 
 		switch actor.Code {
@@ -166,7 +166,7 @@ func CheckStateInvariants(tree *builtin.ActorTree, priorEpoch abi.ChainEpoch, ac
 		case actorCodes[manifest.EthAccountKey]:
 			acc.Require(actor.Head == emptyObjectCid, "EthAccount actor head %v unequal to emptyObjectCid %v", actor.Head, emptyObjectCid)
 		case actorCodes[manifest.EamKey]:
-			acc.Require(actor.Head == emptyObjectCid, "Eam actor head %v unequal to emptyObjectCid %v", actor.Head, emptyObjectCid)
+			acc.Require(actor.Head == emptyObjectCid, "Eam actor head %s unequal to emptyObjectCid %s", actor.Head, emptyObjectCid)
 		default:
 			return xerrors.Errorf("unexpected actor code CID %v for address %v", actor.Code, key)
 		}
@@ -178,7 +178,7 @@ func CheckStateInvariants(tree *builtin.ActorTree, priorEpoch abi.ChainEpoch, ac
 	// Check if all delegated addresses are part of init actor
 	for _, addr := range delegatedAddrs {
 		_, found := initSummary.AddrIDs[addr]
-		acc.Require(!found, "delegated address %v not found in init actor map", addr)
+		acc.Require(found, "delegated address %v not found in init actor map", addr)
 	}
 
 	//

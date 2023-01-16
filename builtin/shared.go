@@ -21,7 +21,8 @@ type BigFrac struct {
 	Denominator big.Int
 }
 
-func MakeEmptyState(store cbor.IpldStore) (cid.Cid, error) {
+func MakeEmptyState() (cid.Cid, error) {
+	store := cbor.NewMemCborStore()
 	emptyObject, err := store.Put(context.TODO(), []struct{}{})
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to make empty object: %w", err)

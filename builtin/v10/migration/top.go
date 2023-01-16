@@ -245,7 +245,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 	// Make the empty state
 
-	emptyObj, err := builtin.MakeEmptyState(store)
+	emptyObj, err := builtin.MakeEmptyState()
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to make empty obj: %w", err)
 	}
