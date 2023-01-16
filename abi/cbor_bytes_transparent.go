@@ -14,7 +14,9 @@ func (t *CborBytesTransparent) MarshalCBOR(w io.Writer) error {
 }
 
 // UnmarshalCBOR CANNOT read a cbor-encoded byte slice. This will just transparently pass the underlying bytes.
+// This method is also risky, as it reads unboundedly. Do NOT use it for anything vulnerable.
 func (t *CborBytesTransparent) UnmarshalCBOR(r io.Reader) error {
-	_, err := r.Read(*t)
+	var err error
+	*t, err = io.ReadAll(r)
 	return err
 }
