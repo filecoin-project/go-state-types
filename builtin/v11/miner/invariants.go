@@ -5,11 +5,11 @@ import (
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
-	"github.com/filecoin-project/go-state-types/builtin/v10/util"
+	"github.com/filecoin-project/go-state-types/builtin/v11/util"
 	"golang.org/x/xerrors"
 
 	"github.com/filecoin-project/go-state-types/builtin"
-	"github.com/filecoin-project/go-state-types/builtin/v10/util/adt"
+	"github.com/filecoin-project/go-state-types/builtin/v11/util/adt"
 )
 
 type DealSummary struct {

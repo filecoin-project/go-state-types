@@ -4,7 +4,7 @@ import (
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
-	"github.com/filecoin-project/go-state-types/builtin/v10/util/adt"
+	"github.com/filecoin-project/go-state-types/builtin/v11/util/adt"
 	"github.com/ipfs/go-cid"
 	"golang.org/x/xerrors"
 )
