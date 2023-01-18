@@ -245,7 +245,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 	// Make the empty state
 
-	emptyObj, err := makeEmptyState(store)
+	emptyObj, err := builtin.MakeEmptyState()
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to make empty obj: %w", err)
 	}
@@ -349,13 +349,4 @@ func (job *migrationJob) run(ctx context.Context, store cbor.IpldStore, priorEpo
 
 func makeEthZeroAddress() (address.Address, error) {
 	return address.NewDelegatedAddress(builtin.EthereumAddressManagerActorID, make([]byte, 20))
-}
-
-func makeEmptyState(store cbor.IpldStore) (cid.Cid, error) {
-	emptyObject, err := store.Put(context.TODO(), []struct{}{})
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to make empty object: %w", err)
-	}
-
-	return emptyObject, nil
 }
