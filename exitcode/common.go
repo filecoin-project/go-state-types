@@ -4,24 +4,27 @@ package exitcode
 // Actors may also define their own codes, including redefining these values.
 
 const (
-	// ErrIllegalArgument Indicates a method parameter is invalid.
+	// ErrIllegalArgument indicates that a method parameter is invalid.
 	ErrIllegalArgument = FirstActorErrorCode + iota
-	// ErrNotFound Indicates a requested resource does not exist.
+	// ErrNotFound indicates that a requested resource does not exist.
 	ErrNotFound
-	// ErrForbidden Indicates an action is disallowed.
+	// ErrForbidden indicates that an action is disallowed.
 	ErrForbidden
-	// ErrInsufficientFunds Indicates a balance of funds is insufficient.
+	// ErrInsufficientFunds indicates that a balance of funds is insufficient.
 	ErrInsufficientFunds
-	// ErrIllegalState Indicates an actor's internal state is invalid.
+	// ErrIllegalState indicates that an actor's internal state is invalid.
 	ErrIllegalState
-	// ErrSerialization Indicates de/serialization failure within actor code.
+	// ErrSerialization indicates a de/serialization failure within actor code.
 	ErrSerialization
-	// ErrUnhandledMessage Indicates the actor cannot handle this message.
+	// ErrUnhandledMessage indicates that the actor cannot handle this message.
 	ErrUnhandledMessage
-	// ErrUnspecified Indicates the actor failed with an unspecified error.
+	// ErrUnspecified indicates that the actor failed with an unspecified error.
 	ErrUnspecified
-	// ErrAssertionFailed Indicates the actor failed a user-level assertion
+	// ErrAssertionFailed indicates that the actor failed a user-level assertion
 	ErrAssertionFailed
+	// ErrReadOnly indicates that the actor cannot perform the requested operation
+	// in read-only mode.
+	ErrReadOnly
 
 	// Common error codes stop here.  If you define a common error code above
 	// this value it will have conflicting interpretations
