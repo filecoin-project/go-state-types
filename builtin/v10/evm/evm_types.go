@@ -1,6 +1,10 @@
 package evm
 
-import "github.com/ipfs/go-cid"
+import (
+	"github.com/ipfs/go-cid"
+
+	"github.com/filecoin-project/go-state-types/abi"
+)
 
 type ConstructorParams struct {
 	Creator  []byte
@@ -14,6 +18,8 @@ type GetStorageAtParams struct {
 }
 
 type DelegateCallParams struct {
-	Code  cid.Cid
-	Input []byte
+	Code   cid.Cid
+	Input  []byte
+	Caller [20]byte
+	Value  abi.TokenAmount
 }
