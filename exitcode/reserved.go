@@ -50,6 +50,17 @@ const (
 	SysErrReserved4 = ExitCode(13)
 	SysErrReserved5 = ExitCode(14)
 	SysErrReserved6 = ExitCode(15)
+
+	// Used by the builtin actors, so we keep these around for historical reasons.
+
+	// DEPRECATED
+	SysErrInvalidMethod = ExitCode(3)
+	// DEPRECATED
+	SysErrForbidden = ExitCode(8)
+	// DEPRECATED
+	SysErrorIllegalActor = ExitCode(9)
+	// DEPRECATED
+	SysErrorIllegalArgument = ExitCode(10)
 )
 
 // The initial range of exit codes is reserved for system errors.
