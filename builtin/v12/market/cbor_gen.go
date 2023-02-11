@@ -8,7 +8,7 @@ import (
 	"sort"
 
 	abi "github.com/filecoin-project/go-state-types/abi"
-	verifreg "github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
+	verifreg "github.com/filecoin-project/go-state-types/builtin/v12/verifreg"
 	cid "github.com/ipfs/go-cid"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	xerrors "golang.org/x/xerrors"

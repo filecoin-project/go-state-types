@@ -3,7 +3,7 @@ package smoothing
 import (
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
-	"github.com/filecoin-project/go-state-types/builtin/v11/util/math"
+	"github.com/filecoin-project/go-state-types/builtin/v12/util/math"
 )
 
 var (
@@ -28,8 +28,8 @@ func init() {
 
 }
 
-//Alpha Beta Filter "position" (value) and "velocity" (rate of change of value) estimates
-//Estimates are in Q.128 format
+// Alpha Beta Filter "position" (value) and "velocity" (rate of change of value) estimates
+// Estimates are in Q.128 format
 type FilterEstimate struct {
 	PositionEstimate big.Int // Q.128
 	VelocityEstimate big.Int // Q.128

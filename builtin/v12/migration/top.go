@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	init10 "github.com/filecoin-project/go-state-types/builtin/v11/init"
+	init10 "github.com/filecoin-project/go-state-types/builtin/v12/init"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"

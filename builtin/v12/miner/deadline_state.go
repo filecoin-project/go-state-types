@@ -3,7 +3,7 @@ package miner
 import (
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/big"
-	"github.com/filecoin-project/go-state-types/builtin/v11/util/adt"
+	"github.com/filecoin-project/go-state-types/builtin/v12/util/adt"
 	xc "github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/proof"
 	"github.com/ipfs/go-cid"

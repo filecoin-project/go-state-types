@@ -3,7 +3,7 @@ package migration
 import (
 	"context"
 
-	init10 "github.com/filecoin-project/go-state-types/builtin/v11/init"
+	init10 "github.com/filecoin-project/go-state-types/builtin/v12/init"
 
 	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"

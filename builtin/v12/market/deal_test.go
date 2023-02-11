@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/filecoin-project/go-state-types/builtin/v11/market"
+	"github.com/filecoin-project/go-state-types/builtin/v12/market"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/big"

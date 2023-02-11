@@ -4,14 +4,14 @@ import (
 	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin"
-	"github.com/filecoin-project/go-state-types/builtin/v11/util/adt"
-	"github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
+	"github.com/filecoin-project/go-state-types/builtin/v12/util/adt"
+	"github.com/filecoin-project/go-state-types/builtin/v12/verifreg"
 	"github.com/filecoin-project/go-state-types/exitcode"
 	cbg "github.com/whyrusleeping/cbor-gen"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/ipfs/go-cid"
-	xerrors "golang.org/x/xerrors"
+	"golang.org/x/xerrors"
 )
 
 const EpochUndefined = abi.ChainEpoch(-1)

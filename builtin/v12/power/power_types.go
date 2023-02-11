@@ -3,7 +3,7 @@ package power
 import (
 	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/go-state-types/builtin/v11/util/smoothing"
+	"github.com/filecoin-project/go-state-types/builtin/v12/util/smoothing"
 	cbg "github.com/whyrusleeping/cbor-gen"
 )
 
