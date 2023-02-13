@@ -11,7 +11,7 @@ import (
 )
 
 type ConstructorParams struct {
-	Creator  []byte
+	Creator  [20]byte
 	Initcode []byte
 }
 
