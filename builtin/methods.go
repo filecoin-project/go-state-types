@@ -401,5 +401,4 @@ var MethodsEthAccount = struct {
 }{
 	MethodConstructor,
 	MustGenerateFRCMethodNum("AuthenticateMessage"),
-	MustGenerateFRCMethodNum("Receive"),
 }
