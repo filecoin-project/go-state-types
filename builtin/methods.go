@@ -398,7 +398,6 @@ var MethodsPlaceholder = struct {
 var MethodsEthAccount = struct {
 	Constructor           abi.MethodNum
 	AuthenticateMessage   abi.MethodNum
-	UniversalReceiverHook abi.MethodNum
 }{
 	MethodConstructor,
 	MustGenerateFRCMethodNum("AuthenticateMessage"),
