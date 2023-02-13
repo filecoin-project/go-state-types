@@ -19,43 +19,48 @@ const (
 	// - insufficient funds to cover execution
 	SysErrSenderStateInvalid = ExitCode(2)
 
-	// Indicates failure to find a method in an actor.
-	SysErrInvalidMethod = ExitCode(3)
-
-	// Indicates the message receiver trapped (panicked
+	// Indicates the message receiver trapped (panicked).
 	SysErrIllegalInstruction = ExitCode(4)
 
 	// Indicates that the receiver of a message is not valid (and cannot be implicitly created).
 	SysErrInvalidReceiver = ExitCode(5)
 
 	// Indicates that a message sender has insufficient balance for the value being sent.
-	// Note that this is distinct from SysErrSenderStateInvalid when a top-level sender can't cover
-	// value transfer + gas. This code is only expected to come from inter-actor sends.
+	// Note that this is distinct from SysErrSenderStateInvalid when a top-level sender can't
+	// cover value transfer + gas. This code is only expected to come from inter-actor sends.
 	SysErrInsufficientFunds = ExitCode(6)
 
-	// Indicates message execution (including subcalls) used more gas than the specified limit.
+	// Indicates that message execution (including subcalls) used more gas than the specified
+	// limit.
 	SysErrOutOfGas = ExitCode(7)
 
-	// Indicates message execution is forbidden for the caller by runtime caller validation.
-	SysErrForbidden = ExitCode(8)
+	// Indicates that the actor attempted to exit with a reserved exit code.
+	SysErrIllegalExitCode = ExitCode(9)
 
-	// Indicates actor code performed a disallowed operation. Disallowed operations include:
-	// - mutating state outside of a state acquisition block
-	// - failing to invoke caller validation
-	// - aborting with a reserved exit code (including success or a system error).
-	SysErrorIllegalActor = ExitCode(9)
+	// Indicates that something unexpected happened in the system. This always indicates a bug.
+	SysErrFatal = ExitCode(10)
 
-	// Indicates an invalid argument passed to a runtime method.
-	SysErrorIllegalArgument = ExitCode(10)
-
-	// Indicates the actor returned a block handle that doesn't exist
+	// Indicates the actor returned a block handle that doesn't exist.
 	SysErrMissingReturn = ExitCode(11)
 
 	// Unused
+	SysErrReserved1 = ExitCode(3)
+	SysErrReserved2 = ExitCode(8)
 	SysErrReserved3 = ExitCode(12)
 	SysErrReserved4 = ExitCode(13)
 	SysErrReserved5 = ExitCode(14)
 	SysErrReserved6 = ExitCode(15)
+
+	// Used by the builtin actors, so we keep these around for historical reasons.
+
+	// DEPRECATED
+	SysErrInvalidMethod = ExitCode(3)
+	// DEPRECATED
+	SysErrForbidden = ExitCode(8)
+	// DEPRECATED
+	SysErrorIllegalActor = ExitCode(9)
+	// DEPRECATED
+	SysErrorIllegalArgument = ExitCode(10)
 )
 
 // The initial range of exit codes is reserved for system errors.
@@ -66,15 +71,15 @@ var names = map[ExitCode]string{
 	Ok:                       "Ok",
 	SysErrSenderInvalid:      "SysErrSenderInvalid",
 	SysErrSenderStateInvalid: "SysErrSenderStateInvalid",
-	SysErrInvalidMethod:      "SysErrInvalidMethod",
 	SysErrIllegalInstruction: "SysErrIllegalInstruction",
 	SysErrInvalidReceiver:    "SysErrInvalidReceiver",
 	SysErrInsufficientFunds:  "SysErrInsufficientFunds",
 	SysErrOutOfGas:           "SysErrOutOfGas",
-	SysErrForbidden:          "SysErrForbidden",
-	SysErrorIllegalActor:     "SysErrorIllegalActor",
-	SysErrorIllegalArgument:  "SysErrorIllegalArgument",
+	SysErrIllegalExitCode:    "SysErrIllegalExitCode",
+	SysErrFatal:              "SysFatal",
 	SysErrMissingReturn:      "SysErrMissingReturn",
+	SysErrReserved1:          "SysErrReserved1",
+	SysErrReserved2:          "SysErrReserved2",
 	SysErrReserved3:          "SysErrReserved3",
 	SysErrReserved4:          "SysErrReserved4",
 	SysErrReserved5:          "SysErrReserved5",

@@ -22,15 +22,13 @@ var MethodsAccount = struct {
 }
 
 var MethodsInit = struct {
-	Constructor  abi.MethodNum
-	Exec         abi.MethodNum
-	Exec4        abi.MethodNum
-	ExecExported abi.MethodNum
+	Constructor abi.MethodNum
+	Exec        abi.MethodNum
+	Exec4       abi.MethodNum
 }{
 	MethodConstructor,
 	2,
 	3,
-	MustGenerateFRCMethodNum("Exec"),
 }
 
 var MethodsCron = struct {
