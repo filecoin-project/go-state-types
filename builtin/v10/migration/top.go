@@ -342,7 +342,7 @@ func (job *migrationJob) run(ctx context.Context, store cbor.IpldStore, priorEpo
 			Head:       result.NewHead,
 			CallSeqNum: job.ActorV4.CallSeqNum, // Unchanged
 			Balance:    job.ActorV4.Balance,    // Unchanged
-			Address:    nil,                    // TODO check that this does not need to be populated
+			Address:    nil,                    // Not assigned to existing actors.
 		},
 	}, nil
 }
