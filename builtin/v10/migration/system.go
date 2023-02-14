@@ -5,7 +5,7 @@ import (
 
 	"github.com/filecoin-project/go-state-types/migration"
 
-	"github.com/filecoin-project/go-state-types/builtin/v9/system"
+	system10 "github.com/filecoin-project/go-state-types/builtin/v10/system"
 
 	"github.com/ipfs/go-cid"
 	cbor "github.com/ipfs/go-ipld-cbor"
@@ -23,7 +23,7 @@ func (m systemActorMigrator) MigratedCodeCID() cid.Cid {
 
 func (m systemActorMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, in migration.ActorMigrationInput) (*migration.ActorMigrationResult, error) {
 	// The ManifestData itself is already in the blockstore
-	state := system.State{BuiltinActors: m.ManifestData}
+	state := system10.State{BuiltinActors: m.ManifestData}
 	stateHead, err := store.Put(ctx, &state)
 	if err != nil {
 		return nil, err

@@ -25,7 +25,7 @@ type ActorV5 struct {
 	Head       cid.Cid          // CID of the head state object for the actor
 	CallSeqNum uint64           // CallSeqNum for the next message to be received by the actor (non-zero for accounts only)
 	Balance    big.Int          // Token balance of the actor
-	Address    *address.Address // Predictable actor address
+	Address    *address.Address // Delegated (f4) actor address
 }
 
 // A specialization of a map of ID-addresses to actor heads.
