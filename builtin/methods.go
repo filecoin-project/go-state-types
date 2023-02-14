@@ -13,7 +13,6 @@ var MethodsAccount = struct {
 	Constructor           abi.MethodNum
 	PubkeyAddress         abi.MethodNum
 	AuthenticateMessage   abi.MethodNum
-	UniversalReceiverHook abi.MethodNum
 }{
 	MethodConstructor,
 	2,
