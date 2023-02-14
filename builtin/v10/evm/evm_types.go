@@ -18,7 +18,7 @@ type ConstructorParams struct {
 type ResurrectParams = ConstructorParams
 
 type GetStorageAtParams struct {
-	StorageKey []byte
+	StorageKey [32]byte
 }
 
 type DelegateCallParams struct {
