@@ -18,7 +18,6 @@ var MethodsAccount = struct {
 	MethodConstructor,
 	2,
 	MustGenerateFRCMethodNum("AuthenticateMessage"),
-	MustGenerateFRCMethodNum("Receive"),
 }
 
 var MethodsInit = struct {
