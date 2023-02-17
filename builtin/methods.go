@@ -13,12 +13,10 @@ var MethodsAccount = struct {
 	Constructor           abi.MethodNum
 	PubkeyAddress         abi.MethodNum
 	AuthenticateMessage   abi.MethodNum
-	UniversalReceiverHook abi.MethodNum
 }{
 	MethodConstructor,
 	2,
 	MustGenerateFRCMethodNum("AuthenticateMessage"),
-	MustGenerateFRCMethodNum("Receive"),
 }
 
 var MethodsInit = struct {
@@ -391,14 +389,14 @@ var MethodsEAM = struct {
 
 var MethodsPlaceholder = struct {
 	Constructor abi.MethodNum
-}{}
+}{
+	MethodConstructor,
+}
 
 var MethodsEthAccount = struct {
 	Constructor           abi.MethodNum
 	AuthenticateMessage   abi.MethodNum
-	UniversalReceiverHook abi.MethodNum
 }{
 	MethodConstructor,
 	MustGenerateFRCMethodNum("AuthenticateMessage"),
-	MustGenerateFRCMethodNum("Receive"),
 }

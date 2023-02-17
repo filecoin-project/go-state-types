@@ -259,7 +259,7 @@ func (t *ConstructorParams) MarshalCBOR(w io.Writer) error {
 
 	scratch := make([]byte, 9)
 
-	// t.Creator ([]uint8) (slice)
+	// t.Creator ([20]uint8) (array)
 	if len(t.Creator) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.Creator was too long")
 	}
@@ -305,7 +305,7 @@ func (t *ConstructorParams) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	// t.Creator ([]uint8) (slice)
+	// t.Creator ([20]uint8) (array)
 
 	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
@@ -319,9 +319,11 @@ func (t *ConstructorParams) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("expected byte array")
 	}
 
-	if extra > 0 {
-		t.Creator = make([]uint8, extra)
+	if extra != 20 {
+		return fmt.Errorf("expected array to have 20 elements")
 	}
+
+	t.Creator = [20]uint8{}
 
 	if _, err := io.ReadFull(br, t.Creator[:]); err != nil {
 		return err
@@ -363,7 +365,7 @@ func (t *GetStorageAtParams) MarshalCBOR(w io.Writer) error {
 
 	scratch := make([]byte, 9)
 
-	// t.StorageKey ([]uint8) (slice)
+	// t.StorageKey ([32]uint8) (array)
 	if len(t.StorageKey) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.StorageKey was too long")
 	}
@@ -396,7 +398,7 @@ func (t *GetStorageAtParams) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	// t.StorageKey ([]uint8) (slice)
+	// t.StorageKey ([32]uint8) (array)
 
 	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
@@ -410,9 +412,11 @@ func (t *GetStorageAtParams) UnmarshalCBOR(r io.Reader) error {
 		return fmt.Errorf("expected byte array")
 	}
 
-	if extra > 0 {
-		t.StorageKey = make([]uint8, extra)
+	if extra != 32 {
+		return fmt.Errorf("expected array to have 32 elements")
 	}
+
+	t.StorageKey = [32]uint8{}
 
 	if _, err := io.ReadFull(br, t.StorageKey[:]); err != nil {
 		return err
