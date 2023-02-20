@@ -4,21 +4,21 @@ import (
 	"io"
 
 	"github.com/ipfs/go-cid"
-	xerrors "golang.org/x/xerrors"
+	"golang.org/x/xerrors"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	cbg "github.com/whyrusleeping/cbor-gen"
 )
 
 type ConstructorParams struct {
-	Creator  []byte
+	Creator  [20]byte
 	Initcode []byte
 }
 
 type ResurrectParams = ConstructorParams
 
 type GetStorageAtParams struct {
-	StorageKey []byte
+	StorageKey [32]byte
 }
 
 type DelegateCallParams struct {
