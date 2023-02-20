@@ -6,14 +6,14 @@ import (
 )
 
 type ConstructorParams struct {
-	Creator  []byte
+	Creator  [20]byte
 	Initcode []byte
 }
 
 type ResurrectParams = ConstructorParams
 
 type GetStorageAtParams struct {
-	StorageKey []byte
+	StorageKey [32]byte
 }
 
 type DelegateCallParams struct {
