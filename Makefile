@@ -25,6 +25,7 @@ gen:
 	$(GO_BIN) run ./builtin/v8/gen/gen.go
 	$(GO_BIN) run ./builtin/v9/gen/gen.go
 	$(GO_BIN) run ./builtin/v10/gen/gen.go
+	$(GO_BIN) run ./builtin/v11/gen/gen.go
 .PHONY: gen
 
 lint:
