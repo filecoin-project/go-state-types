@@ -63,3 +63,5 @@ const SectorQualityPrecision = 20
 var OneNanoFIL = big.NewInt(1_000_000_000)
 
 const MinVerifiedDealSize = 1 << 20
+
+const EndOfLifeClaimDropPeriod = 30 * EpochsInDay
