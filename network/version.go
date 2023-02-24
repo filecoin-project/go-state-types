@@ -28,6 +28,7 @@ const (
 	Version18                 // Hyperspace genesis
 	Version19                 // Hyperspace 230119
 	Version20                 // Hyperspace 230215
+	Version21                 // Hyperspace 230227
 
 	// VersionMax is the maximum version number
 	VersionMax = Version(math.MaxUint32)

@@ -10,9 +10,9 @@ const (
 )
 
 var MethodsAccount = struct {
-	Constructor           abi.MethodNum
-	PubkeyAddress         abi.MethodNum
-	AuthenticateMessage   abi.MethodNum
+	Constructor         abi.MethodNum
+	PubkeyAddress       abi.MethodNum
+	AuthenticateMessage abi.MethodNum
 }{
 	MethodConstructor,
 	2,
@@ -394,9 +394,7 @@ var MethodsPlaceholder = struct {
 }
 
 var MethodsEthAccount = struct {
-	Constructor           abi.MethodNum
-	AuthenticateMessage   abi.MethodNum
+	Constructor abi.MethodNum
 }{
 	MethodConstructor,
-	MustGenerateFRCMethodNum("AuthenticateMessage"),
 }
