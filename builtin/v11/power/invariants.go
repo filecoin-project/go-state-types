@@ -4,6 +4,7 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
+	"github.com/filecoin-project/go-state-types/network"
 
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v11/util/adt"
@@ -169,7 +170,7 @@ func CheckProofValidationInvariants(st *State, store adt.Store, claims ClaimsByA
 
 			var info proof.SealVerifyInfo
 			err = arr.ForEach(&info, func(i int64) error {
-				sectorWindowPoStProofType, err := info.SealProof.RegisteredWindowPoStProof()
+				sectorWindowPoStProofType, err := info.SealProof.RegisteredWindowPoStProofByNetworkVersion(network.Version19)
 				acc.RequireNoError(err, "failed to get PoSt proof type for seal proof %d", info.SealProof)
 				acc.Require(claim.WindowPoStProofType == sectorWindowPoStProofType, "miner submitted proof with proof type %d different from claim %d",
 					sectorWindowPoStProofType, claim.WindowPoStProofType)

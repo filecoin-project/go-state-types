@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/filecoin-project/go-address"
-	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/rt"
 	cbor "github.com/ipfs/go-ipld-cbor"
 	"github.com/multiformats/go-multibase"
@@ -143,10 +142,9 @@ func MinerPrevSectorsOutKey(m address.Address) string {
 }
 
 type ActorMigrationInput struct {
-	Address    address.Address // actor's address
-	Head       cid.Cid
-	PriorEpoch abi.ChainEpoch // epoch of last state transition prior to migration
-	Cache      MigrationCache // cache of existing cid -> cid migrations for this actor
+	Address address.Address // actor's address
+	Head    cid.Cid
+	Cache   MigrationCache // cache of existing cid -> cid migrations for this actor
 }
 
 type ActorMigrationResult struct {

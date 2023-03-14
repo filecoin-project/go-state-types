@@ -5,6 +5,8 @@ import (
 	"math"
 	"strconv"
 
+	"github.com/filecoin-project/go-state-types/network"
+
 	"golang.org/x/xerrors"
 
 	"github.com/filecoin-project/go-state-types/big"
@@ -23,15 +25,16 @@ const MaxSectorNumber = math.MaxInt64
 
 // SectorSize indicates one of a set of possible sizes in the network.
 // Ideally, SectorSize would be an enum
-// type SectorSize enum {
-//   1KiB = 1024
-//   1MiB = 1048576
-//   1GiB = 1073741824
-//   1TiB = 1099511627776
-//   1PiB = 1125899906842624
-//   1EiB = 1152921504606846976
-//   max  = 18446744073709551615
-// }
+//
+//	type SectorSize enum {
+//	  1KiB = 1024
+//	  1MiB = 1048576
+//	  1GiB = 1073741824
+//	  1TiB = 1099511627776
+//	  1PiB = 1125899906842624
+//	  1EiB = 1152921504606846976
+//	  max  = 18446744073709551615
+//	}
 type SectorSize uint64
 
 // Formats the size as a decimal string.
@@ -90,12 +93,36 @@ const (
 	RegisteredPoStProof_StackedDrgWinning512MiBV1 = RegisteredPoStProof(2)
 	RegisteredPoStProof_StackedDrgWinning32GiBV1  = RegisteredPoStProof(3)
 	RegisteredPoStProof_StackedDrgWinning64GiBV1  = RegisteredPoStProof(4)
-	RegisteredPoStProof_StackedDrgWindow2KiBV1    = RegisteredPoStProof(5)
-	RegisteredPoStProof_StackedDrgWindow8MiBV1    = RegisteredPoStProof(6)
-	RegisteredPoStProof_StackedDrgWindow512MiBV1  = RegisteredPoStProof(7)
-	RegisteredPoStProof_StackedDrgWindow32GiBV1   = RegisteredPoStProof(8)
-	RegisteredPoStProof_StackedDrgWindow64GiBV1   = RegisteredPoStProof(9)
+
+	RegisteredPoStProof_StackedDrgWindow2KiBV1   = RegisteredPoStProof(5)
+	RegisteredPoStProof_StackedDrgWindow8MiBV1   = RegisteredPoStProof(6)
+	RegisteredPoStProof_StackedDrgWindow512MiBV1 = RegisteredPoStProof(7)
+	RegisteredPoStProof_StackedDrgWindow32GiBV1  = RegisteredPoStProof(8)
+	RegisteredPoStProof_StackedDrgWindow64GiBV1  = RegisteredPoStProof(9)
+
+	RegisteredPoStProof_StackedDrgWindow2KiBV1_1   = RegisteredPoStProof(10)
+	RegisteredPoStProof_StackedDrgWindow8MiBV1_1   = RegisteredPoStProof(11)
+	RegisteredPoStProof_StackedDrgWindow512MiBV1_1 = RegisteredPoStProof(12)
+	RegisteredPoStProof_StackedDrgWindow32GiBV1_1  = RegisteredPoStProof(13)
+	RegisteredPoStProof_StackedDrgWindow64GiBV1_1  = RegisteredPoStProof(14)
 )
+
+func (r RegisteredPoStProof) ToV1_1PostProof() (RegisteredPoStProof, error) {
+	switch r {
+	case RegisteredPoStProof_StackedDrgWindow2KiBV1, RegisteredPoStProof_StackedDrgWindow2KiBV1_1:
+		return RegisteredPoStProof_StackedDrgWindow2KiBV1_1, nil
+	case RegisteredPoStProof_StackedDrgWindow8MiBV1, RegisteredPoStProof_StackedDrgWindow8MiBV1_1:
+		return RegisteredPoStProof_StackedDrgWindow8MiBV1_1, nil
+	case RegisteredPoStProof_StackedDrgWindow512MiBV1, RegisteredPoStProof_StackedDrgWindow512MiBV1_1:
+		return RegisteredPoStProof_StackedDrgWindow512MiBV1_1, nil
+	case RegisteredPoStProof_StackedDrgWindow32GiBV1, RegisteredPoStProof_StackedDrgWindow32GiBV1_1:
+		return RegisteredPoStProof_StackedDrgWindow32GiBV1_1, nil
+	case RegisteredPoStProof_StackedDrgWindow64GiBV1, RegisteredPoStProof_StackedDrgWindow64GiBV1_1:
+		return RegisteredPoStProof_StackedDrgWindow64GiBV1_1, nil
+	}
+
+	return -1, xerrors.Errorf("input %d is not a V1 PostProof", r)
+}
 
 type RegisteredAggregationProof int64
 
@@ -235,14 +262,31 @@ func (p RegisteredSealProof) RegisteredWinningPoStProof() (RegisteredPoStProof, 
 	return info.WinningPoStProof, nil
 }
 
-// RegisteredWindowPoStProof produces the PoSt-specific RegisteredProof corresponding
-// to the receiving RegisteredProof.
+// RegisteredWindowPoStProof produces the V1 PoSt-specific RegisteredPoStProof corresponding
+// to the receiving RegisteredSealProof.
 func (p RegisteredSealProof) RegisteredWindowPoStProof() (RegisteredPoStProof, error) {
 	info, ok := SealProofInfos[p]
 	if !ok {
 		return 0, xerrors.Errorf("unsupported proof type: %v", p)
 	}
+
 	return info.WindowPoStProof, nil
+}
+
+// RegisteredWindowPoStProofByNetworkVersion produces the V1 PoSt-specific RegisteredPoStProof corresponding
+// to the receiving RegisteredSealProof.
+// Before nv19, the V1 Proof is returned, from nv19 onwards the v1_1 proof is returned.
+func (p RegisteredSealProof) RegisteredWindowPoStProofByNetworkVersion(nv network.Version) (RegisteredPoStProof, error) {
+	info, ok := SealProofInfos[p]
+	if !ok {
+		return 0, xerrors.Errorf("unsupported proof type: %v", p)
+	}
+
+	if nv <= network.Version18 {
+		return info.WindowPoStProof, nil
+	}
+
+	return info.WindowPoStProof.ToV1_1PostProof()
 }
 
 // RegisteredUpdateProof produces the Update-specific RegisteredProof corresponding
