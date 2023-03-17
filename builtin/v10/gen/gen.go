@@ -120,11 +120,13 @@ func main() {
 		market.ActivateDealsResult{},
 		market.VerifyDealsForActivationParams{},
 		market.VerifyDealsForActivationReturn{},
+		market.ComputeDataCommitmentParams{},
 		market.ComputeDataCommitmentReturn{},
 		market.GetBalanceReturn{},
 		market.GetDealDataCommitmentReturn{},
 		market.GetDealTermReturn{},
 		market.GetDealActivationReturn{},
+		market.OnMinerSectorsTerminateParams{},
 		// other types
 		market.DealProposal{},
 		market.ClientDealProposal{},
