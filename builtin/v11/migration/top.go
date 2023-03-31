@@ -84,7 +84,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		}
 
 		migrations[oldEntry.Code] = migration.CodeMigrator{OutCodeCID: newCodeCID}
-		if oldEntry.Name == manifest.InitKey {
+		if oldEntry.Name == manifest.MinerKey {
 			miner10Cid = oldEntry.Code
 		}
 	}
