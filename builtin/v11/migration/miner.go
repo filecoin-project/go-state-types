@@ -94,7 +94,7 @@ func (m minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, i
 		return nil, xerrors.Errorf("failed to migrate sectors for miner: %s: %w", in.Address, err)
 	}
 
-	newDeadlines, err := m.migrateDeadlines(ctx, wrappedStore, in.Cache, inState.Deadlines)
+	newDeadlines, err := m.migrateDeadlines(ctx, wrappedStore, in.Cache, in.Address, inState.Deadlines)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to migrate deadlines: %w", err)
 	}
@@ -234,7 +234,7 @@ func migrateSectorsFromScratch(ctx context.Context, store adt10.Store, inArray *
 	return outArray, err
 }
 
-func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt10.Store, cache migration.MigrationCache, deadlines cid.Cid) (cid.Cid, error) {
+func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt10.Store, cache migration.MigrationCache, minerAddr address.Address, deadlines cid.Cid) (cid.Cid, error) {
 	if deadlines == m.emptyDeadlinesV10 {
 		return m.emptyDeadlinesV11, nil
 	}
@@ -256,17 +256,39 @@ func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt10.Store, 
 			}
 
 			outSectorsSnapshotCid, err := cache.Load(migration.SectorsAmtKey(inDeadline.SectorsSnapshot), func() (cid.Cid, error) {
-				inSectorsSnapshot, err := adt10.AsArray(store, inDeadline.SectorsSnapshot, miner10.SectorsAmtBitwidth)
+				okIn, currentInRoot, err := cache.Read(migration.MinerPrevSectorsInKey(minerAddr))
 				if err != nil {
-					return cid.Undef, err
+					return cid.Undef, xerrors.Errorf("failed to get previous inRoot from cache: %w", err)
 				}
 
-				outSectorsSnapshot, err := migrateSectorsFromScratch(ctx, store, inSectorsSnapshot)
+				okOut, currentOutRoot, err := cache.Read(migration.MinerPrevSectorsOutKey(minerAddr))
 				if err != nil {
-					return cid.Undef, xerrors.Errorf("failed to migrate sectors: %w", err)
+					return cid.Undef, xerrors.Errorf("failed to get previous outRoot from cache: %w", err)
+				}
+				var outSnapshotRoot cid.Cid
+
+				if okIn && okOut {
+					outSnapshotRoot, err = migrateSectorsWithDiff(ctx, store, inDeadline.SectorsSnapshot, currentInRoot, currentOutRoot)
+					if err != nil {
+						return cid.Undef, xerrors.Errorf("failed to migrate sectors from diff: %w", err)
+					}
+				} else {
+					inSectorsSnapshot, err := adt10.AsArray(store, inDeadline.SectorsSnapshot, miner10.SectorsAmtBitwidth)
+					if err != nil {
+						return cid.Undef, err
+					}
+					outSnapshot, err := migrateSectorsFromScratch(ctx, store, inSectorsSnapshot)
+					if err != nil {
+						return cid.Undef, xerrors.Errorf("failed to migrate sectors: %w", err)
+					}
+					outSnapshotRoot, err = outSnapshot.Root()
+					if err != nil {
+						return cid.Undef, xerrors.Errorf("failed to take root of snapshot: %w", err)
+					}
+
 				}
 
-				return outSectorsSnapshot.Root()
+				return outSnapshotRoot, nil
 			})
 
 			if err != nil {
