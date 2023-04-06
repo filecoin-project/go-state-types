@@ -25,11 +25,11 @@ func (m minerMigrator) MigratedCodeCID() cid.Cid {
 func (m minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, in migration.ActorMigrationInput) (*migration.ActorMigrationResult, error) {
 	var inState miner10.State
 	if err := store.Get(ctx, in.Head, &inState); err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to load miner state for %s: %w", in.Address, err)
 	}
 	var inInfo miner10.MinerInfo
 	if err := store.Get(ctx, inState.Info, &inInfo); err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to load miner info for %s: %w", in.Address, err)
 	}
 
 	outProof, err := inInfo.WindowPoStProofType.ToV1_1PostProof()
@@ -54,7 +54,7 @@ func (m minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, i
 		PendingBeneficiaryTerm:     (*miner11.PendingBeneficiaryChange)(inInfo.PendingBeneficiaryTerm),
 	}
 
-	outInfoCid, err := store.Put(ctx, outInfo)
+	outInfoCid, err := store.Put(ctx, &outInfo)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to write new miner info: %w", err)
 	}
