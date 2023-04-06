@@ -67,9 +67,13 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	deferredCodeIDs := make(map[cid.Cid]struct{})
 
 	miner10Cid := cid.Undef
+	power10Cid := cid.Undef
 	for _, oldEntry := range oldManifestData.Entries {
 		if oldEntry.Name == manifest.MinerKey {
 			miner10Cid = oldEntry.Code
+		}
+		if oldEntry.Name == manifest.PowerKey {
+			power10Cid = oldEntry.Code
 		}
 
 		newCodeCID, ok := newManifest.Get(oldEntry.Name)
@@ -83,9 +87,14 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.New("didn't find miner actor in old manifest")
 	}
 
+	if !power10Cid.Defined() {
+		return cid.Undef, xerrors.New("didn't find power actor in old manifest")
+	}
+
 	// migrations that migrate both code and state, override entries in `migrations`
 
 	// The System Actor
+
 	newSystemCodeCID, ok := newManifest.Get(manifest.SystemKey)
 	if !ok {
 		return cid.Undef, xerrors.Errorf("code cid for system actor not found in new manifest")
@@ -101,6 +110,15 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 
 	migrations[miner10Cid] = migration.CachedMigration(cache, minerMigrator{miner11Cid})
+
+	// The Power Actor
+
+	power11Cid, ok := newManifest.Get(manifest.PowerKey)
+	if !ok {
+		return cid.Undef, xerrors.Errorf("code cid for power actor not found in new manifest")
+	}
+
+	migrations[power11Cid] = migration.CachedMigration(cache, powerMigrator{power11Cid})
 
 	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations), len(oldManifestData.Entries))
