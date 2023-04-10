@@ -328,15 +328,19 @@ func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt10.Store, 
 
 func migrateSectorInfo(sectorInfo miner10.SectorOnChainInfo) *miner11.SectorOnChainInfo {
 	// For a sector that has not been updated: the Activation is correct and ReplacedSectorAge is zero.
-	// For a sector that has been updated: Activation is the epoch at which it was upgraded, and ReplacedSectorAge is delta since the true activation.
+	// For a sector that has been updated through SnapDeals: Activation is the epoch at which it was upgraded, and ReplacedSectorAge is delta since the true activation.
+	// For a sector that has been updated through the old CC path: Activation is correct
+	// Thus, we want to set:
 	//
-	// Thus we want to set:
-	//
-	// Activation := OldActivation - ReplacedSectorAge (a no-op for non-upgraded sectors)
-	// PowerBaseEpoch := Activation (in both upgrade and not-upgraded cases)
+	// PowerBaseEpoch := Activation (in all cases)
+	// Activation := Activation (for non-upgraded sectors and sectors upgraded through old CC path)
+	// Activation := OldActivation - ReplacedSectorAge (for sectors updated through SnapDeals)
 
 	powerBaseEpoch := sectorInfo.Activation
-	activationEpoch := sectorInfo.Activation - sectorInfo.ReplacedSectorAge
+	activationEpoch := sectorInfo.Activation
+	if sectorInfo.SectorKeyCID != nil {
+		activationEpoch = sectorInfo.Activation - sectorInfo.ReplacedSectorAge
+	}
 
 	return &miner11.SectorOnChainInfo{
 		SectorNumber:          sectorInfo.SectorNumber,
