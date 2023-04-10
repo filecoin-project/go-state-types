@@ -324,10 +324,9 @@ type migrationJobResult struct {
 
 func (job *migrationJob) run(ctx context.Context, store cbor.IpldStore, priorEpoch abi.ChainEpoch) (*migrationJobResult, error) {
 	result, err := job.MigrateState(ctx, store, migration.ActorMigrationInput{
-		Address:    job.Address,
-		Head:       job.ActorV4.Head,
-		PriorEpoch: priorEpoch,
-		Cache:      job.cache,
+		Address: job.Address,
+		Head:    job.ActorV4.Head,
+		Cache:   job.cache,
 	})
 	if err != nil {
 		return nil, xerrors.Errorf("state migration failed for actor code %s, addr %s: %w",

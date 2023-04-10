@@ -25,9 +25,9 @@ const (
 	Version15                 // OhSnap
 	Version16                 // Skyr
 	Version17                 // Shark
-	Version18                 // tentative
-	Version19                 // tentative
-	Version20                 // tentative
+	Version18                 // Hygge
+	Version19                 // Lightning
+	Version20                 // Thunder
 
 	// VersionMax is the maximum version number
 	VersionMax = Version(math.MaxUint32)

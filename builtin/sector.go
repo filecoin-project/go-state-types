@@ -11,7 +11,8 @@ type SealProofPolicy struct {
 }
 
 // For V1 Stacked DRG sectors, the max is 540 days since Network Version 11
-// 	according to https://github.com/filecoin-project/FIPs/blob/master/FIPS/fip-0014.md
+//
+//	according to https://github.com/filecoin-project/FIPs/blob/master/FIPS/fip-0014.md
 const EpochsIn540Days = stabi.ChainEpoch(540 * EpochsInDay)
 
 // For V1_1 Stacked DRG sectors, the max is 5 years
@@ -52,16 +53,6 @@ var SealProofPoliciesV11 = map[stabi.RegisteredSealProof]*SealProofPolicy{
 	},
 }
 
-// Returns the partition size, in sectors, associated with a seal proof type.
-// The partition size is the number of sectors proved in a single PoSt proof.
-func SealProofWindowPoStPartitionSectors(p stabi.RegisteredSealProof) (uint64, error) {
-	wPoStProofType, err := p.RegisteredWindowPoStProof()
-	if err != nil {
-		return 0, err
-	}
-	return PoStProofWindowPoStPartitionSectors(wPoStProofType)
-}
-
 // SectorMaximumLifetime is the maximum duration a sector sealed with this proof may exist between activation and expiration
 func SealProofSectorMaximumLifetime(p stabi.RegisteredSealProof) (stabi.ChainEpoch, error) {
 	info, ok := SealProofPoliciesV11[p]
@@ -100,7 +91,15 @@ var PoStProofPolicies = map[stabi.RegisteredPoStProof]*PoStProofPolicy{
 		WindowPoStPartitionSectors: 2,
 		ConsensusMinerMinPower:     stabi.NewStoragePower(10 << 40),
 	},
+	stabi.RegisteredPoStProof_StackedDrgWindow2KiBV1_1: {
+		WindowPoStPartitionSectors: 2,
+		ConsensusMinerMinPower:     stabi.NewStoragePower(10 << 40),
+	},
 	stabi.RegisteredPoStProof_StackedDrgWindow8MiBV1: {
+		WindowPoStPartitionSectors: 2,
+		ConsensusMinerMinPower:     stabi.NewStoragePower(10 << 40),
+	},
+	stabi.RegisteredPoStProof_StackedDrgWindow8MiBV1_1: {
 		WindowPoStPartitionSectors: 2,
 		ConsensusMinerMinPower:     stabi.NewStoragePower(10 << 40),
 	},
@@ -108,11 +107,23 @@ var PoStProofPolicies = map[stabi.RegisteredPoStProof]*PoStProofPolicy{
 		WindowPoStPartitionSectors: 2,
 		ConsensusMinerMinPower:     stabi.NewStoragePower(10 << 40),
 	},
+	stabi.RegisteredPoStProof_StackedDrgWindow512MiBV1_1: {
+		WindowPoStPartitionSectors: 2,
+		ConsensusMinerMinPower:     stabi.NewStoragePower(10 << 40),
+	},
 	stabi.RegisteredPoStProof_StackedDrgWindow32GiBV1: {
 		WindowPoStPartitionSectors: 2349,
 		ConsensusMinerMinPower:     stabi.NewStoragePower(10 << 40),
 	},
+	stabi.RegisteredPoStProof_StackedDrgWindow32GiBV1_1: {
+		WindowPoStPartitionSectors: 2349,
+		ConsensusMinerMinPower:     stabi.NewStoragePower(10 << 40),
+	},
 	stabi.RegisteredPoStProof_StackedDrgWindow64GiBV1: {
+		WindowPoStPartitionSectors: 2300,
+		ConsensusMinerMinPower:     stabi.NewStoragePower(10 << 40),
+	},
+	stabi.RegisteredPoStProof_StackedDrgWindow64GiBV1_1: {
 		WindowPoStPartitionSectors: 2300,
 		ConsensusMinerMinPower:     stabi.NewStoragePower(10 << 40),
 	},
