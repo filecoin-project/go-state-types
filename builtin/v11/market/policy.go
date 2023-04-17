@@ -17,7 +17,7 @@ var ProviderCollateralSupplyTarget = builtin.BigFrac{
 var DealMinDuration = abi.ChainEpoch(180 * builtin.EpochsInDay) // PARAM_SPEC
 
 // Maximum deal duration
-var DealMaxDuration = abi.ChainEpoch(1278 * builtin.EpochsInDay) // PARAM_SPEC
+var DealMaxDuration = abi.ChainEpoch(540 * builtin.EpochsInDay) // PARAM_SPEC
 
 var MarketDefaultAllocationTermBuffer = abi.ChainEpoch(90 * builtin.EpochsInDay)
 

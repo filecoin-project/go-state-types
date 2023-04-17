@@ -109,11 +109,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("code cid for miner actor not found in new manifest")
 	}
 
-	mm, err := newMinerMigrator(ctx, store, miner11Cid)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to create miner migrator: %w", err)
-	}
-	migrations[miner10Cid] = migration.CachedMigration(cache, *mm)
+	migrations[miner10Cid] = migration.CachedMigration(cache, minerMigrator{miner11Cid})
 
 	// The Power Actor
 

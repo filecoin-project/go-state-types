@@ -124,7 +124,7 @@ const MinSectorExpiration = 180 * builtin.EpochsInDay // PARAM_SPEC
 // The maximum number of epochs past the current epoch that sector lifetime may be extended.
 // A sector may be extended multiple times, however, the total maximum lifetime is also bounded by
 // the associated seal proof's maximum lifetime.
-const MaxSectorExpirationExtension = 1278 * builtin.EpochsInDay // PARAM_SPEC
+const MaxSectorExpirationExtension = 540 * builtin.EpochsInDay // PARAM_SPEC
 
 // DealWeight and VerifiedDealWeight are spacetime occupied by regular deals and verified deals in a sector.
 // Sum of DealWeight and VerifiedDealWeight should be less than or equal to total SpaceTime of a sector.
