@@ -348,6 +348,26 @@ var PoStProofInfos = map[RegisteredPoStProof]*PoStProofInfo{
 		SectorSize: ss64GiB,
 		ProofSize:  192,
 	},
+	RegisteredPoStProof_StackedDrgWindow2KiBV1_1: {
+		SectorSize: ss2KiB,
+		ProofSize:  192,
+	},
+	RegisteredPoStProof_StackedDrgWindow8MiBV1_1: {
+		SectorSize: ss8MiB,
+		ProofSize:  192,
+	},
+	RegisteredPoStProof_StackedDrgWindow512MiBV1_1: {
+		SectorSize: ss512MiB,
+		ProofSize:  192,
+	},
+	RegisteredPoStProof_StackedDrgWindow32GiBV1_1: {
+		SectorSize: ss32GiB,
+		ProofSize:  192,
+	},
+	RegisteredPoStProof_StackedDrgWindow64GiBV1_1: {
+		SectorSize: ss64GiB,
+		ProofSize:  192,
+	},
 }
 
 func (p RegisteredPoStProof) SectorSize() (SectorSize, error) {
