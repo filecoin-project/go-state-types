@@ -69,7 +69,7 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount) (
 
 	minerSummary.Deals = map[abi.DealID]DealSummary{}
 	var allSectors map[abi.SectorNumber]*SectorOnChainInfo
-	sectorsWithDeals := make(map[abi.SectorNumber]bool)
+	minerSummary.SectorsWithDeals = make(map[abi.SectorNumber]bool)
 	if sectorsArr, err := adt.AsArray(store, st.Sectors, SectorsAmtBitwidth); err != nil {
 		acc.Addf("error loading sectors")
 	} else {
@@ -101,7 +101,7 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount) (
 			}
 
 			if len(sector.DealIDs) > 0 {
-				sectorsWithDeals[abi.SectorNumber(sno)] = true
+				minerSummary.SectorsWithDeals[abi.SectorNumber(sno)] = true
 			}
 
 			return nil
