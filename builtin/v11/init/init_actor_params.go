@@ -26,3 +26,12 @@ type Exec4Params struct {
 }
 
 type Exec4Return = ExecReturn
+
+type InstallParams struct {
+	Code []byte
+}
+
+type InstallReturn struct {
+	CodeCid   cid.Cid
+	Installed bool
+}

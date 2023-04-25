@@ -23,10 +23,12 @@ var MethodsInit = struct {
 	Constructor abi.MethodNum
 	Exec        abi.MethodNum
 	Exec4       abi.MethodNum
+	InstallCode abi.MethodNum
 }{
 	MethodConstructor,
 	2,
 	3,
+	4,
 }
 
 var MethodsCron = struct {
