@@ -83,6 +83,12 @@ const (
 	RegisteredSealProof_StackedDrg512MiBV1_1 = RegisteredSealProof(7)
 	RegisteredSealProof_StackedDrg32GiBV1_1  = RegisteredSealProof(8)
 	RegisteredSealProof_StackedDrg64GiBV1_1  = RegisteredSealProof(9)
+
+	RegisteredSealProof_StackedDrg2KiBV1_1_Feat_SyntheticPoRep   = RegisteredSealProof(10)
+	RegisteredSealProof_StackedDrg8MiBV1_1_Feat_SyntheticPoRep   = RegisteredSealProof(11)
+	RegisteredSealProof_StackedDrg512MiBV1_1_Feat_SyntheticPoRep = RegisteredSealProof(12)
+	RegisteredSealProof_StackedDrg32GiBV1_1_Feat_SyntheticPoRep  = RegisteredSealProof(13)
+	RegisteredSealProof_StackedDrg64GiBV1_1_Feat_SyntheticPoRep  = RegisteredSealProof(14)
 )
 
 type RegisteredPoStProof int64
@@ -232,6 +238,41 @@ var SealProofInfos = map[RegisteredSealProof]*SealProofInfo{
 		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning64GiBV1,
 		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow64GiBV1,
 		UpdateProof:      RegisteredUpdateProof_StackedDrg64GiBV1,
+	},
+	RegisteredSealProof_StackedDrg2KiBV1_1_Feat_SyntheticPoRep: {
+		ProofSize:        192,
+		SectorSize:       ss2KiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning2KiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow2KiBV1,
+		UpdateProof:      RegisteredUpdateProof_StackedDrg2KiBV1,
+	},
+	RegisteredSealProof_StackedDrg8MiBV1_1_Feat_SyntheticPoRep: {
+		ProofSize:        192,
+		SectorSize:       ss2KiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning8MiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow2KiBV1,
+		UpdateProof:      RegisteredUpdateProof_StackedDrg2KiBV1,
+	},
+	RegisteredSealProof_StackedDrg512MiBV1_1_Feat_SyntheticPoRep: {
+		ProofSize:        192,
+		SectorSize:       ss2KiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning512MiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow2KiBV1,
+		UpdateProof:      RegisteredUpdateProof_StackedDrg2KiBV1,
+	},
+	RegisteredSealProof_StackedDrg32GiBV1_1_Feat_SyntheticPoRep: {
+		ProofSize:        192,
+		SectorSize:       ss2KiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning32GiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow2KiBV1,
+		UpdateProof:      RegisteredUpdateProof_StackedDrg2KiBV1,
+	},
+	RegisteredSealProof_StackedDrg64GiBV1_1_Feat_SyntheticPoRep: {
+		ProofSize:        192,
+		SectorSize:       ss2KiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning64GiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow2KiBV1,
+		UpdateProof:      RegisteredUpdateProof_StackedDrg2KiBV1,
 	},
 }
 
