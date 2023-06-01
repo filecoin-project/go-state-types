@@ -3,10 +3,11 @@ package migration
 import (
 	"context"
 
-	"github.com/filecoin-project/go-address"
-	"github.com/filecoin-project/go-state-types/builtin"
 	cbor "github.com/ipfs/go-ipld-cbor"
 	"golang.org/x/xerrors"
+
+	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/builtin"
 )
 
 type migrationJob struct {

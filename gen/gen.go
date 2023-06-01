@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/filecoin-project/go-state-types/builtin"
 	gen "github.com/whyrusleeping/cbor-gen"
 
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/builtin"
 )
 
 func main() {

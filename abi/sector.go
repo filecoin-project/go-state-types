@@ -5,11 +5,10 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/filecoin-project/go-state-types/network"
-
 	"golang.org/x/xerrors"
 
 	"github.com/filecoin-project/go-state-types/big"
+	"github.com/filecoin-project/go-state-types/network"
 )
 
 // SectorNumber is a numeric identifier for a sector. It is usually relative to a miner.
@@ -90,6 +89,14 @@ const (
 	RegisteredSealProof_StackedDrg32GiBV1_1_Feat_SyntheticPoRep  = RegisteredSealProof(13)
 	RegisteredSealProof_StackedDrg64GiBV1_1_Feat_SyntheticPoRep  = RegisteredSealProof(14)
 )
+
+var Synthetic = map[RegisteredSealProof]bool{
+	RegisteredSealProof_StackedDrg2KiBV1_1_Feat_SyntheticPoRep:   true,
+	RegisteredSealProof_StackedDrg8MiBV1_1_Feat_SyntheticPoRep:   true,
+	RegisteredSealProof_StackedDrg512MiBV1_1_Feat_SyntheticPoRep: true,
+	RegisteredSealProof_StackedDrg32GiBV1_1_Feat_SyntheticPoRep:  true,
+	RegisteredSealProof_StackedDrg64GiBV1_1_Feat_SyntheticPoRep:  true,
+}
 
 type RegisteredPoStProof int64
 

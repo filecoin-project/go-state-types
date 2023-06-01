@@ -3,20 +3,18 @@ package migration
 import (
 	"context"
 
-	init10 "github.com/filecoin-project/go-state-types/builtin/v10/init"
+	"github.com/ipfs/go-cid"
+	cbor "github.com/ipfs/go-ipld-cbor"
+	cbg "github.com/whyrusleeping/cbor-gen"
+	"golang.org/x/xerrors"
 
 	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
-	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
-	cbg "github.com/whyrusleeping/cbor-gen"
-
-	"golang.org/x/xerrors"
-
+	init10 "github.com/filecoin-project/go-state-types/builtin/v10/init"
 	init9 "github.com/filecoin-project/go-state-types/builtin/v9/init"
+	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 	"github.com/filecoin-project/go-state-types/migration"
-	"github.com/ipfs/go-cid"
-	cbor "github.com/ipfs/go-ipld-cbor"
 )
 
 // Init Actor migrator

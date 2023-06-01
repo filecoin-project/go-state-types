@@ -6,16 +6,17 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/ipld/go-ipld-prime"
+	"github.com/ipld/go-ipld-prime/codec/dagcbor"
+	"github.com/ipld/go-ipld-prime/node/bindnode"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin/v8/paych"
 	"github.com/filecoin-project/go-state-types/crypto"
 	. "github.com/filecoin-project/go-state-types/ipld"
-	"github.com/ipld/go-ipld-prime"
-	"github.com/ipld/go-ipld-prime/codec/dagcbor"
-	"github.com/ipld/go-ipld-prime/node/bindnode"
-	"github.com/stretchr/testify/assert"
 )
 
 var ipldSchema string = `

@@ -6,31 +6,24 @@ import (
 	"sync/atomic"
 	"time"
 
-	init8 "github.com/filecoin-project/go-state-types/builtin/v8/init"
-
-	verifreg8 "github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
-
-	"github.com/filecoin-project/go-state-types/big"
-	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
-
-	market8 "github.com/filecoin-project/go-state-types/builtin/v8/market"
-
-	system8 "github.com/filecoin-project/go-state-types/builtin/v8/system"
-
-	"github.com/filecoin-project/go-state-types/builtin"
-
+	"github.com/ipfs/go-cid"
+	cbor "github.com/ipfs/go-ipld-cbor"
 	"github.com/multiformats/go-multibase"
+	"golang.org/x/sync/errgroup"
+	"golang.org/x/xerrors"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/big"
+	"github.com/filecoin-project/go-state-types/builtin"
+	init8 "github.com/filecoin-project/go-state-types/builtin/v8/init"
+	market8 "github.com/filecoin-project/go-state-types/builtin/v8/market"
+	system8 "github.com/filecoin-project/go-state-types/builtin/v8/system"
 	adt8 "github.com/filecoin-project/go-state-types/builtin/v8/util/adt"
+	verifreg8 "github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
+	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/go-state-types/rt"
-
-	"github.com/ipfs/go-cid"
-	cbor "github.com/ipfs/go-ipld-cbor"
-	"golang.org/x/sync/errgroup"
-	"golang.org/x/xerrors"
 )
 
 // Config parameterizes a state tree migration

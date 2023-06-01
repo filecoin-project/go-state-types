@@ -4,9 +4,10 @@ import (
 	"encoding/binary"
 	"unicode"
 
-	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/minio/blake2b-simd"
 	"golang.org/x/xerrors"
+
+	"github.com/filecoin-project/go-state-types/abi"
 )
 
 // Generates a standard FRC-42 compliant method number

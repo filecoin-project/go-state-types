@@ -4,23 +4,23 @@ import (
 	"context"
 	"testing"
 
-	commp "github.com/filecoin-project/go-commp-utils/nonffi"
-	market8 "github.com/filecoin-project/go-state-types/builtin/v8/market"
+	"github.com/ipfs/go-cid"
+	cbor "github.com/ipfs/go-ipld-cbor"
+	"github.com/stretchr/testify/require"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-bitfield"
+	commp "github.com/filecoin-project/go-commp-utils/nonffi"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin"
+	market8 "github.com/filecoin-project/go-state-types/builtin/v8/market"
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	"github.com/filecoin-project/go-state-types/builtin/v8/util/adt"
 	"github.com/filecoin-project/go-state-types/builtin/v9/migration"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
 	system9 "github.com/filecoin-project/go-state-types/builtin/v9/system"
 	"github.com/filecoin-project/go-state-types/manifest"
-	"github.com/ipfs/go-cid"
-	cbor "github.com/ipfs/go-ipld-cbor"
-	"github.com/stretchr/testify/require"
 )
 
 func TestMinerMigration(t *testing.T) {

@@ -4,17 +4,16 @@ import (
 	"context"
 	"testing"
 
-	"github.com/filecoin-project/go-address"
-	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/ipfs/go-cid"
-
-	"github.com/filecoin-project/go-state-types/builtin/v9/migration"
-
-	"github.com/filecoin-project/go-state-types/builtin"
-	system9 "github.com/filecoin-project/go-state-types/builtin/v9/system"
-	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 	cbor "github.com/ipfs/go-ipld-cbor"
 	"github.com/stretchr/testify/require"
+
+	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/builtin"
+	"github.com/filecoin-project/go-state-types/builtin/v9/migration"
+	system9 "github.com/filecoin-project/go-state-types/builtin/v9/system"
+	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
+	"github.com/filecoin-project/go-state-types/manifest"
 )
 
 func TestMigration(t *testing.T) {

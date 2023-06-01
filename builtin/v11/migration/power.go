@@ -3,21 +3,19 @@ package migration
 import (
 	"context"
 
-	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/go-state-types/builtin/v11/util/smoothing"
-
-	"github.com/filecoin-project/go-address"
-	power11 "github.com/filecoin-project/go-state-types/builtin/v11/power"
-
-	adt10 "github.com/filecoin-project/go-state-types/builtin/v10/util/adt"
-
-	"github.com/filecoin-project/go-state-types/builtin"
-	power10 "github.com/filecoin-project/go-state-types/builtin/v10/power"
-	adt11 "github.com/filecoin-project/go-state-types/builtin/v11/util/adt"
-	"github.com/filecoin-project/go-state-types/migration"
 	"github.com/ipfs/go-cid"
 	cbor "github.com/ipfs/go-ipld-cbor"
 	"golang.org/x/xerrors"
+
+	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/builtin"
+	power10 "github.com/filecoin-project/go-state-types/builtin/v10/power"
+	adt10 "github.com/filecoin-project/go-state-types/builtin/v10/util/adt"
+	power11 "github.com/filecoin-project/go-state-types/builtin/v11/power"
+	adt11 "github.com/filecoin-project/go-state-types/builtin/v11/util/adt"
+	"github.com/filecoin-project/go-state-types/builtin/v11/util/smoothing"
+	"github.com/filecoin-project/go-state-types/migration"
 )
 
 // The powerMigrator performs the following migrations:

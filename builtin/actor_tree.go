@@ -1,12 +1,13 @@
 package builtin
 
 import (
+	"github.com/ipfs/go-cid"
+	"golang.org/x/xerrors"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin/v8/util/adt"
-	"github.com/ipfs/go-cid"
-	"golang.org/x/xerrors"
 )
 
 // Value type of the top level of the state tree.

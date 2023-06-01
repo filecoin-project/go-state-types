@@ -3,9 +3,10 @@ package abi
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/network"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAddressValidForNetworkVersion(t *testing.T) {

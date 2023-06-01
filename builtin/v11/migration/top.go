@@ -3,17 +3,16 @@ package migration
 import (
 	"context"
 
-	system10 "github.com/filecoin-project/go-state-types/builtin/v10/system"
-	adt10 "github.com/filecoin-project/go-state-types/builtin/v10/util/adt"
-
-	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/go-state-types/builtin"
-	"github.com/filecoin-project/go-state-types/manifest"
-	"github.com/filecoin-project/go-state-types/migration"
-
 	"github.com/ipfs/go-cid"
 	cbor "github.com/ipfs/go-ipld-cbor"
 	"golang.org/x/xerrors"
+
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/builtin"
+	system10 "github.com/filecoin-project/go-state-types/builtin/v10/system"
+	adt10 "github.com/filecoin-project/go-state-types/builtin/v10/util/adt"
+	"github.com/filecoin-project/go-state-types/manifest"
+	"github.com/filecoin-project/go-state-types/migration"
 )
 
 // MigrateStateTree Migrates the filecoin state tree starting from the global state tree and upgrading all actor state.

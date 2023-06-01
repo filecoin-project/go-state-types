@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/filecoin-project/go-state-types/proof"
 	gen "github.com/whyrusleeping/cbor-gen"
+
+	"github.com/filecoin-project/go-state-types/proof"
 )
 
 func main() {

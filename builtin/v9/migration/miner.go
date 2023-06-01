@@ -3,25 +3,21 @@ package migration
 import (
 	"context"
 
-	"github.com/filecoin-project/go-state-types/exitcode"
-
-	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
+	"github.com/ipfs/go-cid"
+	cbor "github.com/ipfs/go-ipld-cbor"
+	"golang.org/x/xerrors"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-amt-ipld/v4"
-	"golang.org/x/xerrors"
-
 	commp "github.com/filecoin-project/go-commp-utils/nonffi"
+	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v8/market"
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
 	adt8 "github.com/filecoin-project/go-state-types/builtin/v8/util/adt"
 	miner9 "github.com/filecoin-project/go-state-types/builtin/v9/miner"
-
-	"github.com/ipfs/go-cid"
-	cbor "github.com/ipfs/go-ipld-cbor"
-
-	"github.com/filecoin-project/go-state-types/abi"
+	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
+	"github.com/filecoin-project/go-state-types/exitcode"
 )
 
 // The minerMigrator performs the following migrations:

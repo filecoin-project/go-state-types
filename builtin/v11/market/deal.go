@@ -7,17 +7,16 @@ import (
 	"io"
 	"unicode/utf8"
 
-	"github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
-
-	addr "github.com/filecoin-project/go-address"
-	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/go-state-types/big"
-	acrypto "github.com/filecoin-project/go-state-types/crypto"
+	"github.com/ipfs/go-cid"
 	mh "github.com/multiformats/go-multihash"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	"golang.org/x/xerrors"
 
-	"github.com/ipfs/go-cid"
+	addr "github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/big"
+	"github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
+	acrypto "github.com/filecoin-project/go-state-types/crypto"
 )
 
 var PieceCIDPrefix = cid.Prefix{

@@ -8,15 +8,15 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/filecoin-project/go-state-types/actors"
-
-	"github.com/filecoin-project/go-state-types/rt"
-
 	block "github.com/ipfs/go-block-format"
+	"github.com/ipfs/go-cid"
 	ipldcbor "github.com/ipfs/go-ipld-cbor"
+	mh "github.com/multiformats/go-multihash"
+	"github.com/stretchr/testify/require"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/actors"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v8/account"
@@ -30,9 +30,7 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 	"github.com/filecoin-project/go-state-types/cbor"
 	"github.com/filecoin-project/go-state-types/manifest"
-	"github.com/ipfs/go-cid"
-	mh "github.com/multiformats/go-multihash"
-	"github.com/stretchr/testify/require"
+	"github.com/filecoin-project/go-state-types/rt"
 )
 
 func makeTestManifest(t *testing.T, store adt.Store, prefix string) (cid.Cid, cid.Cid) {

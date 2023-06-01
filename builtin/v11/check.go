@@ -4,13 +4,17 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/filecoin-project/go-state-types/builtin/v11/datacap"
-	"github.com/filecoin-project/go-state-types/builtin/v11/evm"
-	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/ipfs/go-cid"
+	"golang.org/x/xerrors"
 
+	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/big"
+	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v11/account"
 	"github.com/filecoin-project/go-state-types/builtin/v11/cron"
+	"github.com/filecoin-project/go-state-types/builtin/v11/datacap"
+	"github.com/filecoin-project/go-state-types/builtin/v11/evm"
 	init_ "github.com/filecoin-project/go-state-types/builtin/v11/init"
 	"github.com/filecoin-project/go-state-types/builtin/v11/market"
 	"github.com/filecoin-project/go-state-types/builtin/v11/miner"
@@ -19,13 +23,7 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v11/power"
 	"github.com/filecoin-project/go-state-types/builtin/v11/reward"
 	"github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
-
-	"github.com/filecoin-project/go-state-types/builtin"
-
-	"github.com/filecoin-project/go-address"
-	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/go-state-types/big"
-	"golang.org/x/xerrors"
+	"github.com/filecoin-project/go-state-types/manifest"
 )
 
 // Within this code, Go errors are not expected, but are often converted to messages so that execution

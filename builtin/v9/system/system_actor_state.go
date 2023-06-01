@@ -3,12 +3,11 @@ package system
 import (
 	"context"
 
-	"github.com/filecoin-project/go-state-types/manifest"
-
-	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
-
 	"github.com/ipfs/go-cid"
 	"golang.org/x/xerrors"
+
+	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
+	"github.com/filecoin-project/go-state-types/manifest"
 )
 
 type State struct {

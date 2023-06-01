@@ -1,6 +1,9 @@
 package miner
 
 import (
+	cid "github.com/ipfs/go-cid"
+	"golang.org/x/xerrors"
+
 	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/abi"
@@ -9,8 +12,6 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v8/util/adt"
 	"github.com/filecoin-project/go-state-types/dline"
 	xc "github.com/filecoin-project/go-state-types/exitcode"
-	cid "github.com/ipfs/go-cid"
-	"golang.org/x/xerrors"
 )
 
 // Balance of Miner Actor should be greater than or equal to

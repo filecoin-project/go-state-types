@@ -1,13 +1,14 @@
 package miner
 
 import (
+	"github.com/ipfs/go-cid"
+	"golang.org/x/xerrors"
+
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin/v8/util/adt"
 	xc "github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/proof"
-	"github.com/ipfs/go-cid"
-	"golang.org/x/xerrors"
 )
 
 // Deadlines contains Deadline objects, describing the sectors due at the given

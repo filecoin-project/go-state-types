@@ -1,10 +1,11 @@
 package paych
 
 import (
+	"github.com/ipfs/go-cid"
+
 	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
-	"github.com/ipfs/go-cid"
 )
 
 // A given payment channel actor is established by From
