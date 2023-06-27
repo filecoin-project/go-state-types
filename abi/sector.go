@@ -1,6 +1,7 @@
 package abi
 
 import (
+	"encoding/binary"
 	"fmt"
 	"math"
 	"strconv"
@@ -346,6 +347,53 @@ func (p RegisteredSealProof) RegisteredUpdateProof() (RegisteredUpdateProof, err
 		return 0, xerrors.Errorf("unsupported proof type: %v", p)
 	}
 	return info.UpdateProof, nil
+}
+
+// mapping to porep_id values
+// https://github.com/filecoin-project/rust-filecoin-proofs-api/blob/9b580c2791f028b7ce3aaef0cf9d68956c50170d/src/registry.rs#L32
+var registeredProofIds = map[RegisteredSealProof]uint64{
+	RegisteredSealProof_StackedDrg2KiBV1:   0,
+	RegisteredSealProof_StackedDrg8MiBV1:   1,
+	RegisteredSealProof_StackedDrg512MiBV1: 2,
+	RegisteredSealProof_StackedDrg32GiBV1:  3,
+	RegisteredSealProof_StackedDrg64GiBV1:  4,
+
+	RegisteredSealProof_StackedDrg2KiBV1_1:   5,
+	RegisteredSealProof_StackedDrg8MiBV1_1:   6,
+	RegisteredSealProof_StackedDrg512MiBV1_1: 7,
+	RegisteredSealProof_StackedDrg32GiBV1_1:  8,
+	RegisteredSealProof_StackedDrg64GiBV1_1:  9,
+}
+
+func (p RegisteredSealProof) porepNonce() uint64 {
+	// https://github.com/filecoin-project/rust-filecoin-proofs-api/blob/9b580c2791f028b7ce3aaef0cf9d68956c50170d/src/registry.rs#L166
+	return 0
+}
+
+// PoRepID produces the porep_id for this RegisteredSealProof. Mainly used for
+// computing replica_id.
+func (p RegisteredSealProof) PoRepID() ([32]byte, error) {
+	// https://github.com/filecoin-project/rust-filecoin-proofs-api/blob/9b580c2791f028b7ce3aaef0cf9d68956c50170d/src/registry.rs#L174
+
+	var id [32]byte
+
+	proofId, ok := registeredProofIds[p]
+	if !ok {
+		return id, xerrors.Errorf("unsupported proof type: %v", p)
+	}
+
+	// Convert the proofId and nonce to little endian byte slices
+	proofIdBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(proofIdBytes, proofId)
+
+	nonceBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(nonceBytes, p.porepNonce())
+
+	// Copy these byte slices into the PoRep ID
+	copy(id[0:8], proofIdBytes)
+	copy(id[8:16], nonceBytes)
+
+	return id, nil
 }
 
 // Metadata about a PoSt proof type.
