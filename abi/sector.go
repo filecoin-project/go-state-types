@@ -6,11 +6,11 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/filecoin-project/go-state-types/network"
-
+	"github.com/minio/sha256-simd"
 	"golang.org/x/xerrors"
 
 	"github.com/filecoin-project/go-state-types/big"
+	"github.com/filecoin-project/go-state-types/network"
 )
 
 // SectorNumber is a numeric identifier for a sector. It is usually relative to a miner.
@@ -394,6 +394,45 @@ func (p RegisteredSealProof) PoRepID() ([32]byte, error) {
 	copy(id[8:16], nonceBytes)
 
 	return id, nil
+}
+
+// ReplicaId produces the replica_id for this RegisteredSealProof. This is used
+// as the main input for computing SDR
+func (p RegisteredSealProof) ReplicaId(prover ActorID, sector SectorNumber, ticket []byte, commd []byte) ([32]byte, error) {
+	// https://github.com/filecoin-project/rust-fil-proofs/blob/5b46d4ac88e19003416bb110e2b2871523cc2892/storage-proofs-porep/src/stacked/vanilla/params.rs#L758-L775
+
+	pi, err := prover.ProverID()
+	if err != nil {
+		return [32]byte{}, err
+	}
+	porepID, err := p.PoRepID()
+	if err != nil {
+		return [32]byte{}, err
+	}
+
+	if len(ticket) != 32 {
+		return [32]byte{}, xerrors.Errorf("invalid ticket length %d", len(ticket))
+	}
+	if len(commd) != 32 {
+		return [32]byte{}, xerrors.Errorf("invalid commd length %d", len(commd))
+	}
+
+	var sectorID [8]byte
+	binary.BigEndian.PutUint64(sectorID[:], uint64(sector))
+
+	s := sha256.New()
+
+	// sha256 writes never error
+	_, _ = s.Write(pi[:])
+	_, _ = s.Write(sectorID[:])
+	_, _ = s.Write(ticket)
+	_, _ = s.Write(commd)
+	_, _ = s.Write(porepID[:])
+
+	var replicaID [32]byte
+	copy(replicaID[:], s.Sum(nil))
+
+	return replicaID, nil
 }
 
 // Metadata about a PoSt proof type.

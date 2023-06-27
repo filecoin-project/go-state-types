@@ -2,6 +2,10 @@ package abi
 
 import (
 	"strconv"
+
+	"golang.org/x/xerrors"
+
+	"github.com/filecoin-project/go-address"
 )
 
 // A sequential number assigned to an actor when created by the InitActor.
@@ -10,6 +14,18 @@ type ActorID uint64
 
 func (e ActorID) String() string {
 	return strconv.FormatInt(int64(e), 10)
+}
+
+// ProverID returns a 32 byte proverID used when computing ReplicaID
+func (e ActorID) ProverID() ([32]byte, error) {
+	maddr, err := address.NewIDAddress(uint64(e))
+	if err != nil {
+		return [32]byte{}, xerrors.Errorf("failed to convert ActorID to prover id ([32]byte): %w", err)
+	}
+
+	var proverID [32]byte
+	copy(proverID[:], maddr.Payload())
+	return proverID, nil
 }
 
 // MethodNum is an integer that represents a particular method
