@@ -429,10 +429,16 @@ func (p RegisteredSealProof) ReplicaId(prover ActorID, sector SectorNumber, tick
 	_, _ = s.Write(commd)
 	_, _ = s.Write(porepID[:])
 
-	var replicaID [32]byte
-	copy(replicaID[:], s.Sum(nil))
+	return bytesIntoFr32Safe(s.Sum(nil)), nil
+}
 
-	return replicaID, nil
+func bytesIntoFr32Safe(in []byte) [32]byte {
+	var out [32]byte
+	copy(out[:], in)
+
+	out[31] &= 0b0011_1111
+
+	return out
 }
 
 // Metadata about a PoSt proof type.
