@@ -355,7 +355,9 @@ func CheckMarketAgainstVerifreg(acc *builtin.MessageAccumulator, verifregSummary
 	for allocationId, dealId := range marketSummary.AllocIdToDealId {
 		alloc, found := verifregSummary.Allocations[allocationId]
 		acc.Require(found, "allocation %d not found for pending deal %d", allocationId, dealId)
-
+		if !found {
+			continue
+		}
 		info, found := marketSummary.Deals[dealId]
 		acc.Require(found, "internal invariant error invalid market state references missing deal %d", dealId)
 
