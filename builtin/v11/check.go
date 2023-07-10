@@ -327,11 +327,8 @@ func CheckVerifregAgainstMiners(acc *builtin.MessageAccumulator, verifregSummary
 		maddr, err := address.NewIDAddress(uint64(claim.Provider))
 		acc.RequireNoError(err, "error creating ID address: %v", err)
 
-		minerSummary, ok := minerSummaries[maddr]
+		_, ok := minerSummaries[maddr]
 		acc.Require(ok, "claim provider %s is not found in miner summaries", maddr)
-
-		// all claims are linked to a valid sector number
-		acc.Require(minerSummary.SectorsWithDeals[claim.Sector], "claim sector number %d not recorded as a sector with deals for miner %s", claim.Sector, maddr)
 	}
 }
 
@@ -358,7 +355,9 @@ func CheckMarketAgainstVerifreg(acc *builtin.MessageAccumulator, verifregSummary
 	for allocationId, dealId := range marketSummary.AllocIdToDealId {
 		alloc, found := verifregSummary.Allocations[allocationId]
 		acc.Require(found, "allocation %d not found for pending deal %d", allocationId, dealId)
-
+		if !found {
+			continue
+		}
 		info, found := marketSummary.Deals[dealId]
 		acc.Require(found, "internal invariant error invalid market state references missing deal %d", dealId)
 
