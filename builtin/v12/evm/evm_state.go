@@ -6,7 +6,7 @@ import (
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
-	"github.com/filecoin-project/go-state-types/builtin/v11/util/adt"
+	"github.com/filecoin-project/go-state-types/builtin/v12/util/adt"
 )
 
 type Tombstone struct {

@@ -10,11 +10,11 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
-	power10 "github.com/filecoin-project/go-state-types/builtin/v10/power"
-	adt10 "github.com/filecoin-project/go-state-types/builtin/v10/util/adt"
-	power11 "github.com/filecoin-project/go-state-types/builtin/v11/power"
-	adt11 "github.com/filecoin-project/go-state-types/builtin/v11/util/adt"
-	"github.com/filecoin-project/go-state-types/builtin/v11/util/smoothing"
+	power10 "github.com/filecoin-project/go-state-types/builtin/v11/power"
+	adt10 "github.com/filecoin-project/go-state-types/builtin/v11/util/adt"
+	power11 "github.com/filecoin-project/go-state-types/builtin/v12/power"
+	adt11 "github.com/filecoin-project/go-state-types/builtin/v12/util/adt"
+	"github.com/filecoin-project/go-state-types/builtin/v12/util/smoothing"
 	"github.com/filecoin-project/go-state-types/migration"
 )
 

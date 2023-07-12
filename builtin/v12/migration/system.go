@@ -6,7 +6,7 @@ import (
 	"github.com/ipfs/go-cid"
 	cbor "github.com/ipfs/go-ipld-cbor"
 
-	system10 "github.com/filecoin-project/go-state-types/builtin/v10/system"
+	system10 "github.com/filecoin-project/go-state-types/builtin/v11/system"
 	"github.com/filecoin-project/go-state-types/migration"
 )
 

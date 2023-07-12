@@ -15,7 +15,7 @@ import (
 	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
-	"github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
+	"github.com/filecoin-project/go-state-types/builtin/v12/verifreg"
 	acrypto "github.com/filecoin-project/go-state-types/crypto"
 )
 

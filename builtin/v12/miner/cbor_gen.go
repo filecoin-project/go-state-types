@@ -9,7 +9,7 @@ import (
 
 	address "github.com/filecoin-project/go-address"
 	abi "github.com/filecoin-project/go-state-types/abi"
-	verifreg "github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
+	verifreg "github.com/filecoin-project/go-state-types/builtin/v12/verifreg"
 	proof "github.com/filecoin-project/go-state-types/proof"
 	cid "github.com/ipfs/go-cid"
 	cbg "github.com/whyrusleeping/cbor-gen"

@@ -7,8 +7,8 @@ import (
 	cbor "github.com/ipfs/go-ipld-cbor"
 	"golang.org/x/xerrors"
 
-	miner10 "github.com/filecoin-project/go-state-types/builtin/v10/miner"
-	miner11 "github.com/filecoin-project/go-state-types/builtin/v11/miner"
+	miner10 "github.com/filecoin-project/go-state-types/builtin/v11/miner"
+	miner11 "github.com/filecoin-project/go-state-types/builtin/v12/miner"
 	"github.com/filecoin-project/go-state-types/migration"
 )
 
