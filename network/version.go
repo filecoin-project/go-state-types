@@ -28,6 +28,7 @@ const (
 	Version18                 // Hygge
 	Version19                 // Lightning
 	Version20                 // Thunder
+	Version21                 // Watermelon
 
 	// VersionMax is the maximum version number
 	VersionMax = Version(math.MaxUint32)
