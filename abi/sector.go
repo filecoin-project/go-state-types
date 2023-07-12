@@ -91,6 +91,14 @@ const (
 	RegisteredSealProof_StackedDrg64GiBV1_1_Feat_SyntheticPoRep  = RegisteredSealProof(14)
 )
 
+var Synthetic = map[RegisteredSealProof]bool{
+	RegisteredSealProof_StackedDrg2KiBV1_1_Feat_SyntheticPoRep:   true,
+	RegisteredSealProof_StackedDrg8MiBV1_1_Feat_SyntheticPoRep:   true,
+	RegisteredSealProof_StackedDrg512MiBV1_1_Feat_SyntheticPoRep: true,
+	RegisteredSealProof_StackedDrg32GiBV1_1_Feat_SyntheticPoRep:  true,
+	RegisteredSealProof_StackedDrg64GiBV1_1_Feat_SyntheticPoRep:  true,
+}
+
 type RegisteredPoStProof int64
 
 const (
