@@ -5,9 +5,8 @@ import (
 	"encoding/binary"
 	"errors"
 
-	"github.com/ipfs/go-cid"
-
 	"github.com/filecoin-project/go-address"
+	"github.com/ipfs/go-cid"
 )
 
 // Keyer defines an interface required to put values in mapping.
@@ -58,7 +57,7 @@ type intKey struct {
 	int64
 }
 
-// noinspection GoExportedFuncWithUnexportedType
+//noinspection GoExportedFuncWithUnexportedType
 func IntKey(k int64) intKey {
 	return intKey{k}
 }
@@ -69,7 +68,7 @@ func (k intKey) Key() string {
 	return string(buf[:n])
 }
 
-// noinspection GoUnusedExportedFunction
+//noinspection GoUnusedExportedFunction
 func ParseIntKey(k string) (int64, error) {
 	i, n := binary.Varint([]byte(k))
 	if n != len(k) {
@@ -83,7 +82,7 @@ type uintKey struct {
 	uint64
 }
 
-// noinspection GoExportedFuncWithUnexportedType
+//noinspection GoExportedFuncWithUnexportedType
 func UIntKey(k uint64) uintKey {
 	return uintKey{k}
 }

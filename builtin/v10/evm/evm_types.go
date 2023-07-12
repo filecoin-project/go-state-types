@@ -4,10 +4,10 @@ import (
 	"io"
 
 	"github.com/ipfs/go-cid"
-	cbg "github.com/whyrusleeping/cbor-gen"
 	xerrors "golang.org/x/xerrors"
 
 	"github.com/filecoin-project/go-state-types/abi"
+	cbg "github.com/whyrusleeping/cbor-gen"
 )
 
 type ConstructorParams struct {

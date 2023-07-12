@@ -1,12 +1,14 @@
 package migration
 
 import (
-	"github.com/ipfs/go-cid"
-	"golang.org/x/xerrors"
+	"github.com/filecoin-project/go-state-types/manifest"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
-	"github.com/filecoin-project/go-state-types/manifest"
+
+	"golang.org/x/xerrors"
+
+	"github.com/ipfs/go-cid"
 )
 
 func CreateEAMActor(m *manifest.Manifest, head cid.Cid) (*builtin.ActorV5, error) {

@@ -30,3 +30,4 @@ type Randomness []byte
 
 // RandomnessLength is the length of the randomness slice.
 const RandomnessLength = 32
+

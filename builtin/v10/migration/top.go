@@ -6,20 +6,21 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ipfs/go-cid"
-	cbor "github.com/ipfs/go-ipld-cbor"
-	"golang.org/x/sync/errgroup"
-	"golang.org/x/xerrors"
+	init10 "github.com/filecoin-project/go-state-types/builtin/v10/init"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
-	init10 "github.com/filecoin-project/go-state-types/builtin/v10/init"
 	system9 "github.com/filecoin-project/go-state-types/builtin/v9/system"
 	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/go-state-types/migration"
 	"github.com/filecoin-project/go-state-types/rt"
+
+	"github.com/ipfs/go-cid"
+	cbor "github.com/ipfs/go-ipld-cbor"
+	"golang.org/x/sync/errgroup"
+	"golang.org/x/xerrors"
 )
 
 // MigrateStateTree Migrates the filecoin state tree starting from the global state tree and upgrading all actor state.

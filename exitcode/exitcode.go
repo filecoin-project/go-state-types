@@ -44,8 +44,8 @@ func (x ExitCode) Error() string {
 // Wrapf attaches an error message, and possibly an error, to the exit
 // code.
 //
-//	err := ErrIllegalArgument.Wrapf("my description: %w", err)
-//	exitcode.Unwrap(exitcode.ErrIllegalState, err) == exitcode.ErrIllegalArgument
+//    err := ErrIllegalArgument.Wrapf("my description: %w", err)
+//    exitcode.Unwrap(exitcode.ErrIllegalState, err) == exitcode.ErrIllegalArgument
 func (x ExitCode) Wrapf(msg string, args ...interface{}) error {
 	return &wrapped{
 		exitCode: x,
@@ -86,8 +86,8 @@ func (w *wrapped) Is(target error) bool {
 // Unwrap extracts an exit code from an error, defaulting to the passed default
 // exit code.
 //
-//	err := ErrIllegalState.WithContext("my description: %w", err)
-//	exitcode.Unwrap(exitcode.ErrIllegalState, err) == exitcode.ErrIllegalArgument
+//    err := ErrIllegalState.WithContext("my description: %w", err)
+//    exitcode.Unwrap(exitcode.ErrIllegalState, err) == exitcode.ErrIllegalArgument
 func Unwrap(err error, defaultExitCode ExitCode) (code ExitCode) {
 	if errors.As(err, &code) {
 		return code

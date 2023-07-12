@@ -6,15 +6,14 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ipfs/go-cid"
-	cbor "github.com/ipfs/go-ipld-cbor"
-	"golang.org/x/sync/errgroup"
-	"golang.org/x/xerrors"
-
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/builtin"
 	adt10 "github.com/filecoin-project/go-state-types/builtin/v10/util/adt"
 	"github.com/filecoin-project/go-state-types/rt"
+	"github.com/ipfs/go-cid"
+	cbor "github.com/ipfs/go-ipld-cbor"
+	"golang.org/x/sync/errgroup"
+	"golang.org/x/xerrors"
 )
 
 func RunMigration(ctx context.Context, cfg Config, cache MigrationCache, store cbor.IpldStore, log Logger, actorsIn *builtin.ActorTree, migrations map[cid.Cid]ActorMigration) (*builtin.ActorTree, error) {

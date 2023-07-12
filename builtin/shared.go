@@ -2,12 +2,10 @@ package builtin
 
 import (
 	"context"
-
+	"github.com/filecoin-project/go-state-types/big"
 	"github.com/ipfs/go-cid"
 	cbor "github.com/ipfs/go-ipld-cbor"
 	"golang.org/x/xerrors"
-
-	"github.com/filecoin-project/go-state-types/big"
 )
 
 ///// Code shared by multiple built-in actors. /////

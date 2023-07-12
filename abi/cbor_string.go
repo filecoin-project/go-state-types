@@ -3,8 +3,9 @@ package abi
 import (
 	"io"
 
-	cbg "github.com/whyrusleeping/cbor-gen"
 	"golang.org/x/xerrors"
+
+	cbg "github.com/whyrusleeping/cbor-gen"
 )
 
 type CborString string

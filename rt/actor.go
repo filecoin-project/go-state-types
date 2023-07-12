@@ -1,9 +1,8 @@
 package rt
 
 import (
-	"github.com/ipfs/go-cid"
-
 	"github.com/filecoin-project/go-state-types/cbor"
+	"github.com/ipfs/go-cid"
 )
 
 // VMActor is a concrete implementation of an actor, to be used by a Filecoin

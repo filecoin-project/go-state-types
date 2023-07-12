@@ -1,9 +1,6 @@
 package miner
 
 import (
-	cid "github.com/ipfs/go-cid"
-	"golang.org/x/xerrors"
-
 	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/abi"
@@ -14,6 +11,8 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
 	xc "github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/proof"
+	cid "github.com/ipfs/go-cid"
+	"golang.org/x/xerrors"
 )
 
 type DeclareFaultsRecoveredParams struct {

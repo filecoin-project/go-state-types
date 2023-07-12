@@ -3,13 +3,9 @@ package v8
 import (
 	"bytes"
 
+	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/ipfs/go-cid"
-	"golang.org/x/xerrors"
 
-	"github.com/filecoin-project/go-address"
-	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/go-state-types/big"
-	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v8/account"
 	"github.com/filecoin-project/go-state-types/builtin/v8/cron"
 	init_ "github.com/filecoin-project/go-state-types/builtin/v8/init"
@@ -20,7 +16,13 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v8/power"
 	"github.com/filecoin-project/go-state-types/builtin/v8/reward"
 	"github.com/filecoin-project/go-state-types/builtin/v8/verifreg"
-	"github.com/filecoin-project/go-state-types/manifest"
+
+	"github.com/filecoin-project/go-state-types/builtin"
+
+	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/big"
+	"golang.org/x/xerrors"
 )
 
 // Within this code, Go errors are not expected, but are often converted to messages so that execution

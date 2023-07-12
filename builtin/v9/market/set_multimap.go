@@ -1,12 +1,12 @@
 package market
 
 import (
-	cid "github.com/ipfs/go-cid"
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	"golang.org/x/xerrors"
 
-	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
+	cid "github.com/ipfs/go-cid"
 )
 
 type SetMultimap struct {

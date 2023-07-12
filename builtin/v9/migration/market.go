@@ -3,10 +3,6 @@ package migration
 import (
 	"context"
 
-	"github.com/ipfs/go-cid"
-	typegen "github.com/whyrusleeping/cbor-gen"
-	"golang.org/x/xerrors"
-
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
 	market8 "github.com/filecoin-project/go-state-types/builtin/v8/market"
@@ -14,6 +10,9 @@ import (
 	market9 "github.com/filecoin-project/go-state-types/builtin/v9/market"
 	adt9 "github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 	"github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
+	"github.com/ipfs/go-cid"
+	typegen "github.com/whyrusleeping/cbor-gen"
+	"golang.org/x/xerrors"
 )
 
 func migrateMarket(ctx context.Context, adtStore adt8.Store, dealAllocationTuples []DealAllocationTuple, marketStateV8 market8.State, emptyMapCid cid.Cid) (cid.Cid, error) {

@@ -1,9 +1,8 @@
 package main
 
 import (
-	gen "github.com/whyrusleeping/cbor-gen"
-
 	"github.com/filecoin-project/go-state-types/manifest"
+	gen "github.com/whyrusleeping/cbor-gen"
 )
 
 func main() {

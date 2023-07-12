@@ -1,15 +1,15 @@
 package market
 
 import (
-	"github.com/ipfs/go-cid"
-	xerrors "golang.org/x/xerrors"
-
 	addr "github.com/filecoin-project/go-address"
-	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v8/util/adt"
 	"github.com/filecoin-project/go-state-types/exitcode"
+
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/ipfs/go-cid"
+	xerrors "golang.org/x/xerrors"
 )
 
 const EpochUndefined = abi.ChainEpoch(-1)

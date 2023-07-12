@@ -3,9 +3,8 @@
 package adt
 
 import (
-	"github.com/ipfs/go-cid"
-
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/ipfs/go-cid"
 )
 
 // Set interprets a Map as a set, storing keys (with empty values) in a HAMT.

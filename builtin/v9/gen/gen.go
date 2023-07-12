@@ -1,8 +1,6 @@
 package main
 
 import (
-	gen "github.com/whyrusleeping/cbor-gen"
-
 	"github.com/filecoin-project/go-state-types/builtin/v9/account"
 	"github.com/filecoin-project/go-state-types/builtin/v9/cron"
 	"github.com/filecoin-project/go-state-types/builtin/v9/datacap"
@@ -16,6 +14,7 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v9/system"
 	"github.com/filecoin-project/go-state-types/builtin/v9/util/smoothing"
 	"github.com/filecoin-project/go-state-types/builtin/v9/verifreg"
+	gen "github.com/whyrusleeping/cbor-gen"
 )
 
 func main() {

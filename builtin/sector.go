@@ -1,9 +1,8 @@
 package builtin
 
 import (
-	"golang.org/x/xerrors"
-
 	stabi "github.com/filecoin-project/go-state-types/abi"
+	"golang.org/x/xerrors"
 )
 
 // Policy values associated with a seal proof type.

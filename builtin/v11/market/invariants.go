@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"encoding/binary"
 
-	"github.com/ipfs/go-cid"
-	cbg "github.com/whyrusleeping/cbor-gen"
+	"github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
+	"github.com/ipfs/go-cid"
+	cbg "github.com/whyrusleeping/cbor-gen"
+
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v11/util/adt"
-	"github.com/filecoin-project/go-state-types/builtin/v11/verifreg"
 )
 
 type DealSummary struct {

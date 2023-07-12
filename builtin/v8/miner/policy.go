@@ -1,12 +1,12 @@
 package miner
 
 import (
-	"github.com/ipfs/go-cid"
-	mh "github.com/multiformats/go-multihash"
+	"github.com/filecoin-project/go-state-types/builtin"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
-	"github.com/filecoin-project/go-state-types/builtin"
+	"github.com/ipfs/go-cid"
+	mh "github.com/multiformats/go-multihash"
 )
 
 // The period over which a miner's active sectors are expected to be proven via WindowPoSt.

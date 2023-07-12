@@ -3,13 +3,12 @@ package evm
 import (
 	"bytes"
 
-	"github.com/ipfs/go-cid"
-	"golang.org/x/crypto/sha3"
-	"golang.org/x/xerrors"
-
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v11/util/adt"
+	"github.com/ipfs/go-cid"
+	"golang.org/x/crypto/sha3"
+	"golang.org/x/xerrors"
 )
 
 // Checks internal invariants of evm state.

@@ -1,10 +1,10 @@
 package init
 
 import (
-	cbg "github.com/whyrusleeping/cbor-gen"
-
 	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
+	cbg "github.com/whyrusleeping/cbor-gen"
+
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 )

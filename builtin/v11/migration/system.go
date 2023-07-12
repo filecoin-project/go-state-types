@@ -3,11 +3,12 @@ package migration
 import (
 	"context"
 
-	"github.com/ipfs/go-cid"
-	cbor "github.com/ipfs/go-ipld-cbor"
+	"github.com/filecoin-project/go-state-types/migration"
 
 	system10 "github.com/filecoin-project/go-state-types/builtin/v10/system"
-	"github.com/filecoin-project/go-state-types/migration"
+
+	"github.com/ipfs/go-cid"
+	cbor "github.com/ipfs/go-ipld-cbor"
 )
 
 // System Actor migrator
