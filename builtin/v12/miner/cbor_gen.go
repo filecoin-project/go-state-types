@@ -1884,13 +1884,13 @@ func (t *SectorOnChainInfo) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.ReplacedSectorAge (abi.ChainEpoch) (int64)
-	if t.ReplacedSectorAge >= 0 {
-		if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.ReplacedSectorAge)); err != nil {
+	// t.PowerBaseEpoch (abi.ChainEpoch) (int64)
+	if t.PowerBaseEpoch >= 0 {
+		if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.PowerBaseEpoch)); err != nil {
 			return err
 		}
 	} else {
-		if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajNegativeInt, uint64(-t.ReplacedSectorAge-1)); err != nil {
+		if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajNegativeInt, uint64(-t.PowerBaseEpoch-1)); err != nil {
 			return err
 		}
 	}
@@ -2116,7 +2116,7 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) error {
 		}
 
 	}
-	// t.ReplacedSectorAge (abi.ChainEpoch) (int64)
+	// t.PowerBaseEpoch (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
 		var extraI int64
@@ -2139,7 +2139,7 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) error {
 			return fmt.Errorf("wrong type for int64 field: %d", maj)
 		}
 
-		t.ReplacedSectorAge = abi.ChainEpoch(extraI)
+		t.PowerBaseEpoch = abi.ChainEpoch(extraI)
 	}
 	// t.ReplacedDayReward (big.Int) (struct)
 
