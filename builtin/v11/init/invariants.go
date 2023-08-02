@@ -63,8 +63,9 @@ func CheckStateInvariants(st *State, tree *builtin.ActorTree, actorCodes map[str
 		acc.RequireNoError(err, "unable to convert actorId %v to id address", actorId)
 		actor, found, err := tree.GetActorV5(idaddr)
 		acc.RequireNoError(err, "unable to retrieve actor with idaddr %v", idaddr)
-		acc.Require(found, "actor not found idaddr %v", idaddr)
-
+		if !found {
+			return nil // this can happen if actor self destructs as init is not informed
+		}
 		if keyAddr.Protocol() == addr.Delegated {
 			acc.Require(canHaveDelegatedAddress(actor, actorCodes), "actor %v not supposed to have a delegated address", idaddr)
 		}
