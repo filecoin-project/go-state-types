@@ -65,7 +65,12 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	// Set of prior version code CIDs for actors to defer during iteration, for explicit migration afterwards.
 	deferredCodeIDs := make(map[cid.Cid]struct{})
 
+	miner11Cid := cid.Undef
+
 	for _, oldEntry := range oldManifestData.Entries {
+		if oldEntry.Name == manifest.MinerKey {
+			miner11Cid = oldEntry.Code
+		}
 		newCodeCID, ok := newManifest.Get(oldEntry.Name)
 		if !ok {
 			return cid.Undef, xerrors.Errorf("code cid for %s actor not found in new manifest", oldEntry.Name)
@@ -83,6 +88,18 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 
 	migrations[systemActor.Code] = systemActorMigrator{OutCodeCID: newSystemCodeCID, ManifestData: newManifest.Data}
+
+	// The Miner Actor
+	miner12Cid, ok := newManifest.Get(manifest.MinerKey)
+	if !ok {
+		return cid.Undef, xerrors.Errorf("code cid for miner actor not found in new manifest")
+	}
+
+	mm, err := newMinerMigrator(ctx, store, miner12Cid)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to create miner migrator: %w", err)
+	}
+	migrations[miner11Cid] = migration.CachedMigration(cache, *mm)
 
 	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations), len(oldManifestData.Entries))
