@@ -9,6 +9,7 @@ import (
 	"github.com/minio/sha256-simd"
 	"golang.org/x/xerrors"
 
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/network"
 )
@@ -401,7 +402,7 @@ func (p RegisteredSealProof) PoRepID() ([32]byte, error) {
 func (p RegisteredSealProof) ReplicaId(prover ActorID, sector SectorNumber, ticket []byte, commd []byte) ([32]byte, error) {
 	// https://github.com/filecoin-project/rust-fil-proofs/blob/5b46d4ac88e19003416bb110e2b2871523cc2892/storage-proofs-porep/src/stacked/vanilla/params.rs#L758-L775
 
-	pi, err := prover.ProverID()
+	pi, err := MakeProverID(prover)
 	if err != nil {
 		return [32]byte{}, err
 	}
@@ -430,6 +431,20 @@ func (p RegisteredSealProof) ReplicaId(prover ActorID, sector SectorNumber, tick
 	_, _ = s.Write(porepID[:])
 
 	return bytesIntoFr32Safe(s.Sum(nil)), nil
+}
+
+type ProverID [32]byte
+
+// ProverID returns a 32 byte proverID used when computing ReplicaID
+func MakeProverID(e ActorID) (ProverID, error) {
+	maddr, err := address.NewIDAddress(uint64(e))
+	if err != nil {
+		return ProverID{}, xerrors.Errorf("failed to convert ActorID to prover id ([32]byte): %w", err)
+	}
+
+	var proverID ProverID
+	copy(proverID[:], maddr.Payload())
+	return proverID, nil
 }
 
 func bytesIntoFr32Safe(in []byte) [32]byte {
