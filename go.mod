@@ -13,6 +13,7 @@ require (
 	github.com/ipfs/go-ipld-cbor v0.0.6
 	github.com/ipld/go-ipld-prime v0.19.0
 	github.com/minio/blake2b-simd v0.0.0-20160723061019-3f5f724cb5b1
+	github.com/minio/sha256-simd v1.0.1
 	github.com/multiformats/go-multibase v0.0.3
 	github.com/multiformats/go-multihash v0.2.1
 	github.com/multiformats/go-varint v0.0.6

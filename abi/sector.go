@@ -1,15 +1,17 @@
 package abi
 
 import (
+	"encoding/binary"
 	"fmt"
 	"math"
 	"strconv"
 
-	"github.com/filecoin-project/go-state-types/network"
-
+	"github.com/minio/sha256-simd"
 	"golang.org/x/xerrors"
 
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/big"
+	"github.com/filecoin-project/go-state-types/network"
 )
 
 // SectorNumber is a numeric identifier for a sector. It is usually relative to a miner.
@@ -346,6 +348,112 @@ func (p RegisteredSealProof) RegisteredUpdateProof() (RegisteredUpdateProof, err
 		return 0, xerrors.Errorf("unsupported proof type: %v", p)
 	}
 	return info.UpdateProof, nil
+}
+
+// mapping to porep_id values
+// https://github.com/filecoin-project/rust-filecoin-proofs-api/blob/9b580c2791f028b7ce3aaef0cf9d68956c50170d/src/registry.rs#L32
+var registeredProofIds = map[RegisteredSealProof]uint64{
+	RegisteredSealProof_StackedDrg2KiBV1:   0,
+	RegisteredSealProof_StackedDrg8MiBV1:   1,
+	RegisteredSealProof_StackedDrg512MiBV1: 2,
+	RegisteredSealProof_StackedDrg32GiBV1:  3,
+	RegisteredSealProof_StackedDrg64GiBV1:  4,
+
+	RegisteredSealProof_StackedDrg2KiBV1_1:   5,
+	RegisteredSealProof_StackedDrg8MiBV1_1:   6,
+	RegisteredSealProof_StackedDrg512MiBV1_1: 7,
+	RegisteredSealProof_StackedDrg32GiBV1_1:  8,
+	RegisteredSealProof_StackedDrg64GiBV1_1:  9,
+}
+
+func (p RegisteredSealProof) porepNonce() uint64 {
+	// https://github.com/filecoin-project/rust-filecoin-proofs-api/blob/9b580c2791f028b7ce3aaef0cf9d68956c50170d/src/registry.rs#L166
+	return 0
+}
+
+// PoRepID produces the porep_id for this RegisteredSealProof. Mainly used for
+// computing replica_id.
+func (p RegisteredSealProof) PoRepID() ([32]byte, error) {
+	// https://github.com/filecoin-project/rust-filecoin-proofs-api/blob/9b580c2791f028b7ce3aaef0cf9d68956c50170d/src/registry.rs#L174
+
+	var id [32]byte
+
+	proofId, ok := registeredProofIds[p]
+	if !ok {
+		return id, xerrors.Errorf("unsupported proof type: %v", p)
+	}
+
+	// Convert the proofId and nonce to little endian byte slices
+	proofIdBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(proofIdBytes, proofId)
+
+	nonceBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(nonceBytes, p.porepNonce())
+
+	// Copy these byte slices into the PoRep ID
+	copy(id[0:8], proofIdBytes)
+	copy(id[8:16], nonceBytes)
+
+	return id, nil
+}
+
+// ReplicaId produces the replica_id for this RegisteredSealProof. This is used
+// as the main input for computing SDR
+func (p RegisteredSealProof) ReplicaId(prover ActorID, sector SectorNumber, ticket []byte, commd []byte) ([32]byte, error) {
+	// https://github.com/filecoin-project/rust-fil-proofs/blob/5b46d4ac88e19003416bb110e2b2871523cc2892/storage-proofs-porep/src/stacked/vanilla/params.rs#L758-L775
+
+	pi, err := MakeProverID(prover)
+	if err != nil {
+		return [32]byte{}, err
+	}
+	porepID, err := p.PoRepID()
+	if err != nil {
+		return [32]byte{}, err
+	}
+
+	if len(ticket) != 32 {
+		return [32]byte{}, xerrors.Errorf("invalid ticket length %d", len(ticket))
+	}
+	if len(commd) != 32 {
+		return [32]byte{}, xerrors.Errorf("invalid commd length %d", len(commd))
+	}
+
+	var sectorID [8]byte
+	binary.BigEndian.PutUint64(sectorID[:], uint64(sector))
+
+	s := sha256.New()
+
+	// sha256 writes never error
+	_, _ = s.Write(pi[:])
+	_, _ = s.Write(sectorID[:])
+	_, _ = s.Write(ticket)
+	_, _ = s.Write(commd)
+	_, _ = s.Write(porepID[:])
+
+	return bytesIntoFr32Safe(s.Sum(nil)), nil
+}
+
+type ProverID [32]byte
+
+// ProverID returns a 32 byte proverID used when computing ReplicaID
+func MakeProverID(e ActorID) (ProverID, error) {
+	maddr, err := address.NewIDAddress(uint64(e))
+	if err != nil {
+		return ProverID{}, xerrors.Errorf("failed to convert ActorID to prover id ([32]byte): %w", err)
+	}
+
+	var proverID ProverID
+	copy(proverID[:], maddr.Payload())
+	return proverID, nil
+}
+
+func bytesIntoFr32Safe(in []byte) [32]byte {
+	var out [32]byte
+	copy(out[:], in)
+
+	out[31] &= 0b0011_1111
+
+	return out
 }
 
 // Metadata about a PoSt proof type.
