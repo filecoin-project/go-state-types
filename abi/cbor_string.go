@@ -29,12 +29,8 @@ func (t *CborString) MarshalCBOR(w io.Writer) error {
 
 func (t *CborString) UnmarshalCBOR(r io.Reader) error {
 	*t = ""
-
-	br := cbg.GetPeeker(r)
-	scratch := make([]byte, 8)
-
 	{
-		sval, err := cbg.ReadStringBuf(br, scratch)
+		sval, err := cbg.ReadString(r)
 		if err != nil {
 			return err
 		}

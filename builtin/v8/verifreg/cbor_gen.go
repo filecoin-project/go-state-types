@@ -5,6 +5,7 @@ package verifreg
 import (
 	"fmt"
 	"io"
+	"math"
 	"sort"
 
 	cid "github.com/ipfs/go-cid"
@@ -14,6 +15,7 @@ import (
 
 var _ = xerrors.Errorf
 var _ = cid.Undef
+var _ = math.E
 var _ = sort.Sort
 
 var lengthBufState = []byte{132}
@@ -23,48 +25,54 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-	if _, err := w.Write(lengthBufState); err != nil {
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufState); err != nil {
 		return err
 	}
 
-	scratch := make([]byte, 9)
-
 	// t.RootKey (address.Address) (struct)
-	if err := t.RootKey.MarshalCBOR(w); err != nil {
+	if err := t.RootKey.MarshalCBOR(cw); err != nil {
 		return err
 	}
 
 	// t.Verifiers (cid.Cid) (struct)
 
-	if err := cbg.WriteCidBuf(scratch, w, t.Verifiers); err != nil {
+	if err := cbg.WriteCid(cw, t.Verifiers); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Verifiers: %w", err)
 	}
 
 	// t.VerifiedClients (cid.Cid) (struct)
 
-	if err := cbg.WriteCidBuf(scratch, w, t.VerifiedClients); err != nil {
+	if err := cbg.WriteCid(cw, t.VerifiedClients); err != nil {
 		return xerrors.Errorf("failed to write cid field t.VerifiedClients: %w", err)
 	}
 
 	// t.RemoveDataCapProposalIDs (cid.Cid) (struct)
 
-	if err := cbg.WriteCidBuf(scratch, w, t.RemoveDataCapProposalIDs); err != nil {
+	if err := cbg.WriteCid(cw, t.RemoveDataCapProposalIDs); err != nil {
 		return xerrors.Errorf("failed to write cid field t.RemoveDataCapProposalIDs: %w", err)
 	}
 
 	return nil
 }
 
-func (t *State) UnmarshalCBOR(r io.Reader) error {
+func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	*t = State{}
 
-	br := cbg.GetPeeker(r)
-	scratch := make([]byte, 8)
+	cr := cbg.NewCborReader(r)
 
-	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	maj, extra, err := cr.ReadHeader()
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
 	if maj != cbg.MajArray {
 		return fmt.Errorf("cbor input should be of type array")
 	}
@@ -77,7 +85,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		if err := t.RootKey.UnmarshalCBOR(br); err != nil {
+		if err := t.RootKey.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.RootKey: %w", err)
 		}
 
@@ -86,7 +94,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		c, err := cbg.ReadCid(br)
+		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Verifiers: %w", err)
 		}
@@ -98,7 +106,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		c, err := cbg.ReadCid(br)
+		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.VerifiedClients: %w", err)
 		}
@@ -110,7 +118,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		c, err := cbg.ReadCid(br)
+		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.RemoveDataCapProposalIDs: %w", err)
 		}
@@ -128,32 +136,40 @@ func (t *AddVerifierParams) MarshalCBOR(w io.Writer) error {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-	if _, err := w.Write(lengthBufAddVerifierParams); err != nil {
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufAddVerifierParams); err != nil {
 		return err
 	}
 
 	// t.Address (address.Address) (struct)
-	if err := t.Address.MarshalCBOR(w); err != nil {
+	if err := t.Address.MarshalCBOR(cw); err != nil {
 		return err
 	}
 
 	// t.Allowance (big.Int) (struct)
-	if err := t.Allowance.MarshalCBOR(w); err != nil {
+	if err := t.Allowance.MarshalCBOR(cw); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (t *AddVerifierParams) UnmarshalCBOR(r io.Reader) error {
+func (t *AddVerifierParams) UnmarshalCBOR(r io.Reader) (err error) {
 	*t = AddVerifierParams{}
 
-	br := cbg.GetPeeker(r)
-	scratch := make([]byte, 8)
+	cr := cbg.NewCborReader(r)
 
-	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	maj, extra, err := cr.ReadHeader()
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
 	if maj != cbg.MajArray {
 		return fmt.Errorf("cbor input should be of type array")
 	}
@@ -166,7 +182,7 @@ func (t *AddVerifierParams) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		if err := t.Address.UnmarshalCBOR(br); err != nil {
+		if err := t.Address.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Address: %w", err)
 		}
 
@@ -175,7 +191,7 @@ func (t *AddVerifierParams) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		if err := t.Allowance.UnmarshalCBOR(br); err != nil {
+		if err := t.Allowance.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Allowance: %w", err)
 		}
 
@@ -190,32 +206,40 @@ func (t *AddVerifiedClientParams) MarshalCBOR(w io.Writer) error {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-	if _, err := w.Write(lengthBufAddVerifiedClientParams); err != nil {
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufAddVerifiedClientParams); err != nil {
 		return err
 	}
 
 	// t.Address (address.Address) (struct)
-	if err := t.Address.MarshalCBOR(w); err != nil {
+	if err := t.Address.MarshalCBOR(cw); err != nil {
 		return err
 	}
 
 	// t.Allowance (big.Int) (struct)
-	if err := t.Allowance.MarshalCBOR(w); err != nil {
+	if err := t.Allowance.MarshalCBOR(cw); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (t *AddVerifiedClientParams) UnmarshalCBOR(r io.Reader) error {
+func (t *AddVerifiedClientParams) UnmarshalCBOR(r io.Reader) (err error) {
 	*t = AddVerifiedClientParams{}
 
-	br := cbg.GetPeeker(r)
-	scratch := make([]byte, 8)
+	cr := cbg.NewCborReader(r)
 
-	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	maj, extra, err := cr.ReadHeader()
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
 	if maj != cbg.MajArray {
 		return fmt.Errorf("cbor input should be of type array")
 	}
@@ -228,7 +252,7 @@ func (t *AddVerifiedClientParams) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		if err := t.Address.UnmarshalCBOR(br); err != nil {
+		if err := t.Address.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Address: %w", err)
 		}
 
@@ -237,7 +261,7 @@ func (t *AddVerifiedClientParams) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		if err := t.Allowance.UnmarshalCBOR(br); err != nil {
+		if err := t.Allowance.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Allowance: %w", err)
 		}
 
@@ -252,32 +276,40 @@ func (t *UseBytesParams) MarshalCBOR(w io.Writer) error {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-	if _, err := w.Write(lengthBufUseBytesParams); err != nil {
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufUseBytesParams); err != nil {
 		return err
 	}
 
 	// t.Address (address.Address) (struct)
-	if err := t.Address.MarshalCBOR(w); err != nil {
+	if err := t.Address.MarshalCBOR(cw); err != nil {
 		return err
 	}
 
 	// t.DealSize (big.Int) (struct)
-	if err := t.DealSize.MarshalCBOR(w); err != nil {
+	if err := t.DealSize.MarshalCBOR(cw); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (t *UseBytesParams) UnmarshalCBOR(r io.Reader) error {
+func (t *UseBytesParams) UnmarshalCBOR(r io.Reader) (err error) {
 	*t = UseBytesParams{}
 
-	br := cbg.GetPeeker(r)
-	scratch := make([]byte, 8)
+	cr := cbg.NewCborReader(r)
 
-	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	maj, extra, err := cr.ReadHeader()
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
 	if maj != cbg.MajArray {
 		return fmt.Errorf("cbor input should be of type array")
 	}
@@ -290,7 +322,7 @@ func (t *UseBytesParams) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		if err := t.Address.UnmarshalCBOR(br); err != nil {
+		if err := t.Address.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Address: %w", err)
 		}
 
@@ -299,7 +331,7 @@ func (t *UseBytesParams) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		if err := t.DealSize.UnmarshalCBOR(br); err != nil {
+		if err := t.DealSize.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.DealSize: %w", err)
 		}
 
@@ -314,32 +346,40 @@ func (t *RestoreBytesParams) MarshalCBOR(w io.Writer) error {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-	if _, err := w.Write(lengthBufRestoreBytesParams); err != nil {
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufRestoreBytesParams); err != nil {
 		return err
 	}
 
 	// t.Address (address.Address) (struct)
-	if err := t.Address.MarshalCBOR(w); err != nil {
+	if err := t.Address.MarshalCBOR(cw); err != nil {
 		return err
 	}
 
 	// t.DealSize (big.Int) (struct)
-	if err := t.DealSize.MarshalCBOR(w); err != nil {
+	if err := t.DealSize.MarshalCBOR(cw); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (t *RestoreBytesParams) UnmarshalCBOR(r io.Reader) error {
+func (t *RestoreBytesParams) UnmarshalCBOR(r io.Reader) (err error) {
 	*t = RestoreBytesParams{}
 
-	br := cbg.GetPeeker(r)
-	scratch := make([]byte, 8)
+	cr := cbg.NewCborReader(r)
 
-	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	maj, extra, err := cr.ReadHeader()
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
 	if maj != cbg.MajArray {
 		return fmt.Errorf("cbor input should be of type array")
 	}
@@ -352,7 +392,7 @@ func (t *RestoreBytesParams) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		if err := t.Address.UnmarshalCBOR(br); err != nil {
+		if err := t.Address.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Address: %w", err)
 		}
 
@@ -361,7 +401,7 @@ func (t *RestoreBytesParams) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		if err := t.DealSize.UnmarshalCBOR(br); err != nil {
+		if err := t.DealSize.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.DealSize: %w", err)
 		}
 
@@ -376,42 +416,50 @@ func (t *RemoveDataCapParams) MarshalCBOR(w io.Writer) error {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-	if _, err := w.Write(lengthBufRemoveDataCapParams); err != nil {
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufRemoveDataCapParams); err != nil {
 		return err
 	}
 
 	// t.VerifiedClientToRemove (address.Address) (struct)
-	if err := t.VerifiedClientToRemove.MarshalCBOR(w); err != nil {
+	if err := t.VerifiedClientToRemove.MarshalCBOR(cw); err != nil {
 		return err
 	}
 
 	// t.DataCapAmountToRemove (big.Int) (struct)
-	if err := t.DataCapAmountToRemove.MarshalCBOR(w); err != nil {
+	if err := t.DataCapAmountToRemove.MarshalCBOR(cw); err != nil {
 		return err
 	}
 
 	// t.VerifierRequest1 (verifreg.RemoveDataCapRequest) (struct)
-	if err := t.VerifierRequest1.MarshalCBOR(w); err != nil {
+	if err := t.VerifierRequest1.MarshalCBOR(cw); err != nil {
 		return err
 	}
 
 	// t.VerifierRequest2 (verifreg.RemoveDataCapRequest) (struct)
-	if err := t.VerifierRequest2.MarshalCBOR(w); err != nil {
+	if err := t.VerifierRequest2.MarshalCBOR(cw); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (t *RemoveDataCapParams) UnmarshalCBOR(r io.Reader) error {
+func (t *RemoveDataCapParams) UnmarshalCBOR(r io.Reader) (err error) {
 	*t = RemoveDataCapParams{}
 
-	br := cbg.GetPeeker(r)
-	scratch := make([]byte, 8)
+	cr := cbg.NewCborReader(r)
 
-	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	maj, extra, err := cr.ReadHeader()
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
 	if maj != cbg.MajArray {
 		return fmt.Errorf("cbor input should be of type array")
 	}
@@ -424,7 +472,7 @@ func (t *RemoveDataCapParams) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		if err := t.VerifiedClientToRemove.UnmarshalCBOR(br); err != nil {
+		if err := t.VerifiedClientToRemove.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.VerifiedClientToRemove: %w", err)
 		}
 
@@ -433,7 +481,7 @@ func (t *RemoveDataCapParams) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		if err := t.DataCapAmountToRemove.UnmarshalCBOR(br); err != nil {
+		if err := t.DataCapAmountToRemove.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.DataCapAmountToRemove: %w", err)
 		}
 
@@ -442,7 +490,7 @@ func (t *RemoveDataCapParams) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		if err := t.VerifierRequest1.UnmarshalCBOR(br); err != nil {
+		if err := t.VerifierRequest1.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.VerifierRequest1: %w", err)
 		}
 
@@ -451,7 +499,7 @@ func (t *RemoveDataCapParams) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		if err := t.VerifierRequest2.UnmarshalCBOR(br); err != nil {
+		if err := t.VerifierRequest2.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.VerifierRequest2: %w", err)
 		}
 
@@ -466,32 +514,40 @@ func (t *RemoveDataCapReturn) MarshalCBOR(w io.Writer) error {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-	if _, err := w.Write(lengthBufRemoveDataCapReturn); err != nil {
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufRemoveDataCapReturn); err != nil {
 		return err
 	}
 
 	// t.VerifiedClient (address.Address) (struct)
-	if err := t.VerifiedClient.MarshalCBOR(w); err != nil {
+	if err := t.VerifiedClient.MarshalCBOR(cw); err != nil {
 		return err
 	}
 
 	// t.DataCapRemoved (big.Int) (struct)
-	if err := t.DataCapRemoved.MarshalCBOR(w); err != nil {
+	if err := t.DataCapRemoved.MarshalCBOR(cw); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (t *RemoveDataCapReturn) UnmarshalCBOR(r io.Reader) error {
+func (t *RemoveDataCapReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	*t = RemoveDataCapReturn{}
 
-	br := cbg.GetPeeker(r)
-	scratch := make([]byte, 8)
+	cr := cbg.NewCborReader(r)
 
-	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	maj, extra, err := cr.ReadHeader()
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
 	if maj != cbg.MajArray {
 		return fmt.Errorf("cbor input should be of type array")
 	}
@@ -504,7 +560,7 @@ func (t *RemoveDataCapReturn) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		if err := t.VerifiedClient.UnmarshalCBOR(br); err != nil {
+		if err := t.VerifiedClient.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.VerifiedClient: %w", err)
 		}
 
@@ -513,7 +569,7 @@ func (t *RemoveDataCapReturn) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		if err := t.DataCapRemoved.UnmarshalCBOR(br); err != nil {
+		if err := t.DataCapRemoved.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.DataCapRemoved: %w", err)
 		}
 
@@ -528,32 +584,40 @@ func (t *RemoveDataCapRequest) MarshalCBOR(w io.Writer) error {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-	if _, err := w.Write(lengthBufRemoveDataCapRequest); err != nil {
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufRemoveDataCapRequest); err != nil {
 		return err
 	}
 
 	// t.Verifier (address.Address) (struct)
-	if err := t.Verifier.MarshalCBOR(w); err != nil {
+	if err := t.Verifier.MarshalCBOR(cw); err != nil {
 		return err
 	}
 
 	// t.VerifierSignature (crypto.Signature) (struct)
-	if err := t.VerifierSignature.MarshalCBOR(w); err != nil {
+	if err := t.VerifierSignature.MarshalCBOR(cw); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (t *RemoveDataCapRequest) UnmarshalCBOR(r io.Reader) error {
+func (t *RemoveDataCapRequest) UnmarshalCBOR(r io.Reader) (err error) {
 	*t = RemoveDataCapRequest{}
 
-	br := cbg.GetPeeker(r)
-	scratch := make([]byte, 8)
+	cr := cbg.NewCborReader(r)
 
-	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	maj, extra, err := cr.ReadHeader()
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
 	if maj != cbg.MajArray {
 		return fmt.Errorf("cbor input should be of type array")
 	}
@@ -566,7 +630,7 @@ func (t *RemoveDataCapRequest) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		if err := t.Verifier.UnmarshalCBOR(br); err != nil {
+		if err := t.Verifier.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Verifier: %w", err)
 		}
 
@@ -575,7 +639,7 @@ func (t *RemoveDataCapRequest) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		if err := t.VerifierSignature.UnmarshalCBOR(br); err != nil {
+		if err := t.VerifierSignature.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.VerifierSignature: %w", err)
 		}
 
@@ -590,41 +654,47 @@ func (t *RemoveDataCapProposal) MarshalCBOR(w io.Writer) error {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-	if _, err := w.Write(lengthBufRemoveDataCapProposal); err != nil {
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufRemoveDataCapProposal); err != nil {
 		return err
 	}
 
-	scratch := make([]byte, 9)
-
 	// t.VerifiedClient (address.Address) (struct)
-	if err := t.VerifiedClient.MarshalCBOR(w); err != nil {
+	if err := t.VerifiedClient.MarshalCBOR(cw); err != nil {
 		return err
 	}
 
 	// t.DataCapAmount (big.Int) (struct)
-	if err := t.DataCapAmount.MarshalCBOR(w); err != nil {
+	if err := t.DataCapAmount.MarshalCBOR(cw); err != nil {
 		return err
 	}
 
 	// t.RemovalProposalID (uint64) (uint64)
 
-	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.RemovalProposalID)); err != nil {
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.RemovalProposalID)); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (t *RemoveDataCapProposal) UnmarshalCBOR(r io.Reader) error {
+func (t *RemoveDataCapProposal) UnmarshalCBOR(r io.Reader) (err error) {
 	*t = RemoveDataCapProposal{}
 
-	br := cbg.GetPeeker(r)
-	scratch := make([]byte, 8)
+	cr := cbg.NewCborReader(r)
 
-	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
+	maj, extra, err := cr.ReadHeader()
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
 	if maj != cbg.MajArray {
 		return fmt.Errorf("cbor input should be of type array")
 	}
@@ -637,7 +707,7 @@ func (t *RemoveDataCapProposal) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		if err := t.VerifiedClient.UnmarshalCBOR(br); err != nil {
+		if err := t.VerifiedClient.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.VerifiedClient: %w", err)
 		}
 
@@ -646,7 +716,7 @@ func (t *RemoveDataCapProposal) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		if err := t.DataCapAmount.UnmarshalCBOR(br); err != nil {
+		if err := t.DataCapAmount.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.DataCapAmount: %w", err)
 		}
 
@@ -655,7 +725,7 @@ func (t *RemoveDataCapProposal) UnmarshalCBOR(r io.Reader) error {
 
 	{
 
-		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
+		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
 		}
