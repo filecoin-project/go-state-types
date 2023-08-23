@@ -5,7 +5,6 @@ package account
 import (
 	"fmt"
 	"io"
-	"math"
 	"sort"
 
 	cid "github.com/ipfs/go-cid"
@@ -15,7 +14,6 @@ import (
 
 var _ = xerrors.Errorf
 var _ = cid.Undef
-var _ = math.E
 var _ = sort.Sort
 
 var lengthBufState = []byte{129}
@@ -25,35 +23,27 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-
-	cw := cbg.NewCborWriter(w)
-
-	if _, err := cw.Write(lengthBufState); err != nil {
+	if _, err := w.Write(lengthBufState); err != nil {
 		return err
 	}
 
 	// t.Address (address.Address) (struct)
-	if err := t.Address.MarshalCBOR(cw); err != nil {
+	if err := t.Address.MarshalCBOR(w); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
+func (t *State) UnmarshalCBOR(r io.Reader) error {
 	*t = State{}
 
-	cr := cbg.NewCborReader(r)
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
 
-	maj, extra, err := cr.ReadHeader()
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-	}()
-
 	if maj != cbg.MajArray {
 		return fmt.Errorf("cbor input should be of type array")
 	}
@@ -66,7 +56,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 
 	{
 
-		if err := t.Address.UnmarshalCBOR(cr); err != nil {
+		if err := t.Address.UnmarshalCBOR(br); err != nil {
 			return xerrors.Errorf("unmarshaling t.Address: %w", err)
 		}
 
@@ -81,23 +71,22 @@ func (t *AuthenticateMessageParams) MarshalCBOR(w io.Writer) error {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-
-	cw := cbg.NewCborWriter(w)
-
-	if _, err := cw.Write(lengthBufAuthenticateMessageParams); err != nil {
+	if _, err := w.Write(lengthBufAuthenticateMessageParams); err != nil {
 		return err
 	}
+
+	scratch := make([]byte, 9)
 
 	// t.Signature ([]uint8) (slice)
 	if len(t.Signature) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.Signature was too long")
 	}
 
-	if err := cw.WriteMajorTypeHeader(cbg.MajByteString, uint64(len(t.Signature))); err != nil {
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajByteString, uint64(len(t.Signature))); err != nil {
 		return err
 	}
 
-	if _, err := cw.Write(t.Signature[:]); err != nil {
+	if _, err := w.Write(t.Signature[:]); err != nil {
 		return err
 	}
 
@@ -106,31 +95,26 @@ func (t *AuthenticateMessageParams) MarshalCBOR(w io.Writer) error {
 		return xerrors.Errorf("Byte array in field t.Message was too long")
 	}
 
-	if err := cw.WriteMajorTypeHeader(cbg.MajByteString, uint64(len(t.Message))); err != nil {
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajByteString, uint64(len(t.Message))); err != nil {
 		return err
 	}
 
-	if _, err := cw.Write(t.Message[:]); err != nil {
+	if _, err := w.Write(t.Message[:]); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (t *AuthenticateMessageParams) UnmarshalCBOR(r io.Reader) (err error) {
+func (t *AuthenticateMessageParams) UnmarshalCBOR(r io.Reader) error {
 	*t = AuthenticateMessageParams{}
 
-	cr := cbg.NewCborReader(r)
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
 
-	maj, extra, err := cr.ReadHeader()
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-	}()
-
 	if maj != cbg.MajArray {
 		return fmt.Errorf("cbor input should be of type array")
 	}
@@ -141,7 +125,7 @@ func (t *AuthenticateMessageParams) UnmarshalCBOR(r io.Reader) (err error) {
 
 	// t.Signature ([]uint8) (slice)
 
-	maj, extra, err = cr.ReadHeader()
+	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
 		return err
 	}
@@ -157,12 +141,12 @@ func (t *AuthenticateMessageParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Signature = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Signature[:]); err != nil {
+	if _, err := io.ReadFull(br, t.Signature[:]); err != nil {
 		return err
 	}
 	// t.Message ([]uint8) (slice)
 
-	maj, extra, err = cr.ReadHeader()
+	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
 		return err
 	}
@@ -178,7 +162,7 @@ func (t *AuthenticateMessageParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Message = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Message[:]); err != nil {
+	if _, err := io.ReadFull(br, t.Message[:]); err != nil {
 		return err
 	}
 	return nil
