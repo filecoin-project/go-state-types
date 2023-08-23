@@ -101,6 +101,10 @@ func ConstructState(store adt.Store) (*State, error) {
 	}, nil
 }
 
+type SectorDealIDs struct {
+	DealIDs []abi.DealID
+}
+
 // A specialization of a array to deals.
 // It is an error to query for a key that doesn't exist.
 type DealArray struct {
