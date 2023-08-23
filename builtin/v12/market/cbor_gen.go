@@ -20,7 +20,7 @@ var _ = cid.Undef
 var _ = math.E
 var _ = sort.Sort
 
-var lengthBufState = []byte{140}
+var lengthBufState = []byte{141}
 
 func (t *State) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -108,6 +108,12 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 		return xerrors.Errorf("failed to write cid field t.PendingDealAllocationIds: %w", err)
 	}
 
+	// t.SectorDeals (cid.Cid) (struct)
+
+	if err := cbg.WriteCid(cw, t.SectorDeals); err != nil {
+		return xerrors.Errorf("failed to write cid field t.SectorDeals: %w", err)
+	}
+
 	return nil
 }
 
@@ -130,7 +136,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 12 {
+	if extra != 13 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
@@ -282,6 +288,18 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 
 		t.PendingDealAllocationIds = c
+
+	}
+	// t.SectorDeals (cid.Cid) (struct)
+
+	{
+
+		c, err := cbg.ReadCid(cr)
+		if err != nil {
+			return xerrors.Errorf("failed to read cid field t.SectorDeals: %w", err)
+		}
+
+		t.SectorDeals = c
 
 	}
 	return nil

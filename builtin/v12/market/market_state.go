@@ -55,6 +55,10 @@ type State struct {
 
 	// Verified registry allocation IDs for deals that are not yet activated.
 	PendingDealAllocationIds cid.Cid // HAMT[DealID]AllocationID
+
+	// New mapping of sector IDs to deal IDS, grouped by storage provider.
+	SectorDeals cid.Cid // HAMT[Address]HAMT[SectorNumber]SectorDeals
+
 }
 
 func ConstructState(store adt.Store) (*State, error) {
