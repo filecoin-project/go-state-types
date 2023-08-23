@@ -2,9 +2,12 @@ package migration
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/filecoin-project/go-state-types/builtin"
 	miner11 "github.com/filecoin-project/go-state-types/builtin/v11/miner"
 	adt11 "github.com/filecoin-project/go-state-types/builtin/v11/util/adt"
+	"github.com/filecoin-project/go-state-types/builtin/v12/market"
 	miner12 "github.com/filecoin-project/go-state-types/builtin/v12/miner"
 	adt12 "github.com/filecoin-project/go-state-types/builtin/v12/util/adt"
 	"github.com/filecoin-project/go-state-types/migration"
@@ -175,7 +178,7 @@ func migrateSectorsWithCache(ctx context.Context, store adt11.Store, cache migra
 
 		if okIn && okOut {
 			// we have previous work, but the AMT has changed -- diff them
-			outRoot, err = migrateSectorsWithDiff(ctx, store, inRoot, prevInRoot, prevOutRoot)
+			outRoot, err = migrateSectorsWithDiff(ctx, store, minerAddr, inRoot, prevInRoot, prevOutRoot)
 			if err != nil {
 				return cid.Undef, xerrors.Errorf("failed to migrate sectors from diff: %w", err)
 			}
@@ -185,7 +188,7 @@ func migrateSectorsWithCache(ctx context.Context, store adt11.Store, cache migra
 			if err != nil {
 				return cid.Undef, xerrors.Errorf("failed to read sectors array: %w", err)
 			}
-			outArray, err := migrateSectorsFromScratch(ctx, store, inArray)
+			outArray, err := migrateSectorsFromScratch(ctx, store, minerAddr, inArray)
 			if err != nil {
 				return cid.Undef, xerrors.Errorf("failed to migrate sectors from scratch: %w", err)
 			}
@@ -224,7 +227,7 @@ delta = prevInRoot - inRoot
 
 merge( prevOutRoot, Migrated(delta) )
 */
-func migrateSectorsWithDiff(ctx context.Context, store adt11.Store, inRoot cid.Cid, prevInRoot cid.Cid, prevOutRoot cid.Cid) (cid.Cid, error) {
+func migrateSectorsWithDiff(ctx context.Context, store adt11.Store, minerAddr address.Address, inRoot cid.Cid, prevInRoot cid.Cid, prevOutRoot cid.Cid) (cid.Cid, error) {
 	// we have previous work, but the AMT has changed -- diff them
 	diffs, err := amt.Diff(ctx, store, store, prevInRoot, inRoot, amt.UseTreeBitWidth(miner11.SectorsAmtBitwidth))
 	if err != nil {
@@ -260,7 +263,7 @@ func migrateSectorsWithDiff(ctx context.Context, store adt11.Store, inRoot cid.C
 				return cid.Undef, xerrors.Errorf("didn't find sector %d in inSectors", sectorNo)
 			}
 
-			if err := prevOutSectors.Set(change.Key, migrateSectorInfo(*info)); err != nil {
+			if err := prevOutSectors.Set(change.Key, migrateSectorInfo(*info, store)); err != nil {
 				return cid.Undef, xerrors.Errorf("failed to set migrated sector %d in prevOutSectors", sectorNo)
 			}
 		}
@@ -269,18 +272,32 @@ func migrateSectorsWithDiff(ctx context.Context, store adt11.Store, inRoot cid.C
 	return prevOutSectors.Root()
 }
 
-func migrateSectorsFromScratch(ctx context.Context, store adt11.Store, inArray *adt11.Array) (*adt12.Array, error) {
+func migrateSectorsFromScratch(ctx context.Context, store adt11.Store, minerAddr address.Address, inArray *adt11.Array) (*adt12.Array, error) {
 	outArray, err := adt12.MakeEmptyArray(store, miner12.SectorsAmtBitwidth)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to construct new sectors array: %w", err)
 	}
 
+	sectorToDealIdHamt, err := builtin.NewTree(store)
+	if err != nil {
+		return nil, xerrors.Errorf("creating new state tree: %w", err)
+	}
+
 	var sectorInfo miner11.SectorOnChainInfo
 	if err = inArray.ForEach(&sectorInfo, func(k int64) error {
-		return outArray.Set(uint64(k), migrateSectorInfo(sectorInfo))
+
+		err = addSectorNumberToDealIdHAMT(sectorToDealIdHamt, sectorInfo, store)
+
+		return outArray.Set(uint64(k), migrateSectorInfo(sectorInfo, store))
 	}); err != nil {
 		return nil, err
 	}
+
+	sectorToDealIdHamtCid, err := sectorToDealIdHamt.Map.Root()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(sectorToDealIdHamtCid.String(), minerAddr.String())
 
 	return outArray, err
 }
@@ -319,7 +336,7 @@ func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt11.Store, 
 				var outSnapshotRoot cid.Cid
 
 				if okIn && okOut {
-					outSnapshotRoot, err = migrateSectorsWithDiff(ctx, store, inDeadline.SectorsSnapshot, currentInRoot, currentOutRoot)
+					outSnapshotRoot, err = migrateSectorsWithDiff(ctx, store, minerAddr, inDeadline.SectorsSnapshot, currentInRoot, currentOutRoot)
 					if err != nil {
 						return cid.Undef, xerrors.Errorf("failed to migrate sectors from diff: %w", err)
 					}
@@ -328,7 +345,7 @@ func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt11.Store, 
 					if err != nil {
 						return cid.Undef, err
 					}
-					outSnapshot, err := migrateSectorsFromScratch(ctx, store, inSectorsSnapshot)
+					outSnapshot, err := migrateSectorsFromScratch(ctx, store, minerAddr, inSectorsSnapshot)
 					if err != nil {
 						return cid.Undef, xerrors.Errorf("failed to migrate sectors: %w", err)
 					}
@@ -371,7 +388,7 @@ func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt11.Store, 
 	return store.Put(ctx, &outDeadlines)
 }
 
-func migrateSectorInfo(sectorInfo miner11.SectorOnChainInfo) *miner12.SectorOnChainInfo {
+func migrateSectorInfo(sectorInfo miner11.SectorOnChainInfo, store adt11.Store) *miner12.SectorOnChainInfo {
 	// For a sector that has not been updated: the Activation is correct and ReplacedSectorAge is zero.
 	// For a sector that has been updated through SnapDeals: Activation is the epoch at which it was upgraded, and ReplacedSectorAge is delta since the true activation.
 	// For a sector that has been updated through the old CC path: Activation is correct
@@ -404,4 +421,18 @@ func migrateSectorInfo(sectorInfo miner11.SectorOnChainInfo) *miner12.SectorOnCh
 		SectorKeyCID:          sectorInfo.SectorKeyCID,
 		SimpleQAPower:         sectorInfo.SimpleQAPower,
 	}
+}
+
+func addSectorNumberToDealIdHAMT(xap *builtin.ActorTree, sectorInfo miner11.SectorOnChainInfo, store adt11.Store) error {
+	//sectorInfo.DealIDs,sectorInfo.SectorNumber
+	// - todo make SectorNumber and explicit type, not just cast to int64
+	//
+	// - todo for sector use array not CborInt
+
+	cborDealIDs := market.SectorDealIDs{DealIDs: sectorInfo.DealIDs}
+	err := xap.Map.Put(abi.IntKey(int64(sectorInfo.SectorNumber)), &cborDealIDs)
+	if err != nil {
+		return xerrors.Errorf("adding sector number and deal ids to state tree: %w", err)
+	}
+	return nil
 }
