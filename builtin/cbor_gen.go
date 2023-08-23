@@ -5,7 +5,6 @@ package builtin
 import (
 	"fmt"
 	"io"
-	"math"
 	"sort"
 
 	address "github.com/filecoin-project/go-address"
@@ -16,7 +15,6 @@ import (
 
 var _ = xerrors.Errorf
 var _ = cid.Undef
-var _ = math.E
 var _ = sort.Sort
 
 var lengthBufActorV4 = []byte{132}
@@ -26,53 +24,47 @@ func (t *ActorV4) MarshalCBOR(w io.Writer) error {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-
-	cw := cbg.NewCborWriter(w)
-
-	if _, err := cw.Write(lengthBufActorV4); err != nil {
+	if _, err := w.Write(lengthBufActorV4); err != nil {
 		return err
 	}
 
+	scratch := make([]byte, 9)
+
 	// t.Code (cid.Cid) (struct)
 
-	if err := cbg.WriteCid(cw, t.Code); err != nil {
+	if err := cbg.WriteCidBuf(scratch, w, t.Code); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Code: %w", err)
 	}
 
 	// t.Head (cid.Cid) (struct)
 
-	if err := cbg.WriteCid(cw, t.Head); err != nil {
+	if err := cbg.WriteCidBuf(scratch, w, t.Head); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Head: %w", err)
 	}
 
 	// t.CallSeqNum (uint64) (uint64)
 
-	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.CallSeqNum)); err != nil {
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.CallSeqNum)); err != nil {
 		return err
 	}
 
 	// t.Balance (big.Int) (struct)
-	if err := t.Balance.MarshalCBOR(cw); err != nil {
+	if err := t.Balance.MarshalCBOR(w); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (t *ActorV4) UnmarshalCBOR(r io.Reader) (err error) {
+func (t *ActorV4) UnmarshalCBOR(r io.Reader) error {
 	*t = ActorV4{}
 
-	cr := cbg.NewCborReader(r)
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
 
-	maj, extra, err := cr.ReadHeader()
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-	}()
-
 	if maj != cbg.MajArray {
 		return fmt.Errorf("cbor input should be of type array")
 	}
@@ -85,7 +77,7 @@ func (t *ActorV4) UnmarshalCBOR(r io.Reader) (err error) {
 
 	{
 
-		c, err := cbg.ReadCid(cr)
+		c, err := cbg.ReadCid(br)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Code: %w", err)
 		}
@@ -97,7 +89,7 @@ func (t *ActorV4) UnmarshalCBOR(r io.Reader) (err error) {
 
 	{
 
-		c, err := cbg.ReadCid(cr)
+		c, err := cbg.ReadCid(br)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Head: %w", err)
 		}
@@ -109,7 +101,7 @@ func (t *ActorV4) UnmarshalCBOR(r io.Reader) (err error) {
 
 	{
 
-		maj, extra, err = cr.ReadHeader()
+		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
 		if err != nil {
 			return err
 		}
@@ -123,7 +115,7 @@ func (t *ActorV4) UnmarshalCBOR(r io.Reader) (err error) {
 
 	{
 
-		if err := t.Balance.UnmarshalCBOR(cr); err != nil {
+		if err := t.Balance.UnmarshalCBOR(br); err != nil {
 			return xerrors.Errorf("unmarshaling t.Balance: %w", err)
 		}
 
@@ -138,58 +130,52 @@ func (t *ActorV5) MarshalCBOR(w io.Writer) error {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-
-	cw := cbg.NewCborWriter(w)
-
-	if _, err := cw.Write(lengthBufActorV5); err != nil {
+	if _, err := w.Write(lengthBufActorV5); err != nil {
 		return err
 	}
 
+	scratch := make([]byte, 9)
+
 	// t.Code (cid.Cid) (struct)
 
-	if err := cbg.WriteCid(cw, t.Code); err != nil {
+	if err := cbg.WriteCidBuf(scratch, w, t.Code); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Code: %w", err)
 	}
 
 	// t.Head (cid.Cid) (struct)
 
-	if err := cbg.WriteCid(cw, t.Head); err != nil {
+	if err := cbg.WriteCidBuf(scratch, w, t.Head); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Head: %w", err)
 	}
 
 	// t.CallSeqNum (uint64) (uint64)
 
-	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.CallSeqNum)); err != nil {
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.CallSeqNum)); err != nil {
 		return err
 	}
 
 	// t.Balance (big.Int) (struct)
-	if err := t.Balance.MarshalCBOR(cw); err != nil {
+	if err := t.Balance.MarshalCBOR(w); err != nil {
 		return err
 	}
 
 	// t.Address (address.Address) (struct)
-	if err := t.Address.MarshalCBOR(cw); err != nil {
+	if err := t.Address.MarshalCBOR(w); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (t *ActorV5) UnmarshalCBOR(r io.Reader) (err error) {
+func (t *ActorV5) UnmarshalCBOR(r io.Reader) error {
 	*t = ActorV5{}
 
-	cr := cbg.NewCborReader(r)
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
 
-	maj, extra, err := cr.ReadHeader()
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-	}()
-
 	if maj != cbg.MajArray {
 		return fmt.Errorf("cbor input should be of type array")
 	}
@@ -202,7 +188,7 @@ func (t *ActorV5) UnmarshalCBOR(r io.Reader) (err error) {
 
 	{
 
-		c, err := cbg.ReadCid(cr)
+		c, err := cbg.ReadCid(br)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Code: %w", err)
 		}
@@ -214,7 +200,7 @@ func (t *ActorV5) UnmarshalCBOR(r io.Reader) (err error) {
 
 	{
 
-		c, err := cbg.ReadCid(cr)
+		c, err := cbg.ReadCid(br)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Head: %w", err)
 		}
@@ -226,7 +212,7 @@ func (t *ActorV5) UnmarshalCBOR(r io.Reader) (err error) {
 
 	{
 
-		maj, extra, err = cr.ReadHeader()
+		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
 		if err != nil {
 			return err
 		}
@@ -240,7 +226,7 @@ func (t *ActorV5) UnmarshalCBOR(r io.Reader) (err error) {
 
 	{
 
-		if err := t.Balance.UnmarshalCBOR(cr); err != nil {
+		if err := t.Balance.UnmarshalCBOR(br); err != nil {
 			return xerrors.Errorf("unmarshaling t.Balance: %w", err)
 		}
 
@@ -249,16 +235,16 @@ func (t *ActorV5) UnmarshalCBOR(r io.Reader) (err error) {
 
 	{
 
-		b, err := cr.ReadByte()
+		b, err := br.ReadByte()
 		if err != nil {
 			return err
 		}
 		if b != cbg.CborNull[0] {
-			if err := cr.UnreadByte(); err != nil {
+			if err := br.UnreadByte(); err != nil {
 				return err
 			}
 			t.Address = new(address.Address)
-			if err := t.Address.UnmarshalCBOR(cr); err != nil {
+			if err := t.Address.UnmarshalCBOR(br); err != nil {
 				return xerrors.Errorf("unmarshaling t.Address pointer: %w", err)
 			}
 		}

@@ -5,7 +5,6 @@ package cron
 import (
 	"fmt"
 	"io"
-	"math"
 	"sort"
 
 	abi "github.com/filecoin-project/go-state-types/abi"
@@ -16,7 +15,6 @@ import (
 
 var _ = xerrors.Errorf
 var _ = cid.Undef
-var _ = math.E
 var _ = sort.Sort
 
 var lengthBufState = []byte{129}
@@ -26,44 +24,38 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-
-	cw := cbg.NewCborWriter(w)
-
-	if _, err := cw.Write(lengthBufState); err != nil {
+	if _, err := w.Write(lengthBufState); err != nil {
 		return err
 	}
+
+	scratch := make([]byte, 9)
 
 	// t.Entries ([]cron.Entry) (slice)
 	if len(t.Entries) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Entries was too long")
 	}
 
-	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Entries))); err != nil {
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajArray, uint64(len(t.Entries))); err != nil {
 		return err
 	}
 	for _, v := range t.Entries {
-		if err := v.MarshalCBOR(cw); err != nil {
+		if err := v.MarshalCBOR(w); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
+func (t *State) UnmarshalCBOR(r io.Reader) error {
 	*t = State{}
 
-	cr := cbg.NewCborReader(r)
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
 
-	maj, extra, err := cr.ReadHeader()
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-	}()
-
 	if maj != cbg.MajArray {
 		return fmt.Errorf("cbor input should be of type array")
 	}
@@ -74,7 +66,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 
 	// t.Entries ([]cron.Entry) (slice)
 
-	maj, extra, err = cr.ReadHeader()
+	maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
 		return err
 	}
@@ -94,7 +86,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	for i := 0; i < int(extra); i++ {
 
 		var v Entry
-		if err := v.UnmarshalCBOR(cr); err != nil {
+		if err := v.UnmarshalCBOR(br); err != nil {
 			return err
 		}
 
@@ -111,42 +103,36 @@ func (t *Entry) MarshalCBOR(w io.Writer) error {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-
-	cw := cbg.NewCborWriter(w)
-
-	if _, err := cw.Write(lengthBufEntry); err != nil {
+	if _, err := w.Write(lengthBufEntry); err != nil {
 		return err
 	}
 
+	scratch := make([]byte, 9)
+
 	// t.Receiver (address.Address) (struct)
-	if err := t.Receiver.MarshalCBOR(cw); err != nil {
+	if err := t.Receiver.MarshalCBOR(w); err != nil {
 		return err
 	}
 
 	// t.MethodNum (abi.MethodNum) (uint64)
 
-	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.MethodNum)); err != nil {
+	if err := cbg.WriteMajorTypeHeaderBuf(scratch, w, cbg.MajUnsignedInt, uint64(t.MethodNum)); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (t *Entry) UnmarshalCBOR(r io.Reader) (err error) {
+func (t *Entry) UnmarshalCBOR(r io.Reader) error {
 	*t = Entry{}
 
-	cr := cbg.NewCborReader(r)
+	br := cbg.GetPeeker(r)
+	scratch := make([]byte, 8)
 
-	maj, extra, err := cr.ReadHeader()
+	maj, extra, err := cbg.CborReadHeaderBuf(br, scratch)
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-	}()
-
 	if maj != cbg.MajArray {
 		return fmt.Errorf("cbor input should be of type array")
 	}
@@ -159,7 +145,7 @@ func (t *Entry) UnmarshalCBOR(r io.Reader) (err error) {
 
 	{
 
-		if err := t.Receiver.UnmarshalCBOR(cr); err != nil {
+		if err := t.Receiver.UnmarshalCBOR(br); err != nil {
 			return xerrors.Errorf("unmarshaling t.Receiver: %w", err)
 		}
 
@@ -168,7 +154,7 @@ func (t *Entry) UnmarshalCBOR(r io.Reader) (err error) {
 
 	{
 
-		maj, extra, err = cr.ReadHeader()
+		maj, extra, err = cbg.CborReadHeaderBuf(br, scratch)
 		if err != nil {
 			return err
 		}
