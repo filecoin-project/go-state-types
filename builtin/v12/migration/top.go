@@ -9,6 +9,7 @@ import (
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
+	market11 "github.com/filecoin-project/go-state-types/builtin/v11/market"
 	system11 "github.com/filecoin-project/go-state-types/builtin/v11/system"
 	adt11 "github.com/filecoin-project/go-state-types/builtin/v11/util/adt"
 	"github.com/filecoin-project/go-state-types/manifest"
@@ -122,30 +123,42 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("failed to run migration: %w", err)
 	}
 
-	//todo run second migration here for market
-	migrations2 := make(map[cid.Cid]migration.ActorMigration)
+	// Load the state of the market actor from v11 for migration purposes.
+	marketActorV11, ok, err := actorsIn.GetActorV4(builtin.StorageMarketActorAddr)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to get market actor: %w", err)
+	}
 
-	// The Market Actor
-	market12Cid, ok := newManifest.Get(manifest.MarketKey)
 	if !ok {
-		return cid.Undef, xerrors.Errorf("code cid for market actor not found in new manifest")
+		return cid.Undef, xerrors.New("didn't find market actor")
 	}
 
-	marketMigrator, err := newMarketMigrator(ctx, store, market12Cid, minerMigrator)
+	var marketStateV11 market11.State
+	if err := store.Get(ctx, marketActorV11.Head, &marketStateV11); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to get market actor state: %w", err)
+	}
+
+	// Retrieve the sector deal IDs from the minerMigrator. These IDs are crucial for the migration of market actor state.
+	sectorDealIDs, err := minerMigrator.sectorDeals.Map.Root()
 	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to create market migrator: %w", err)
-	}
-	migrations2[market11Cid] = migration.CachedMigration(cache, *marketMigrator)
-
-	actorsOut2, err := migration.RunMigration(ctx, cfg, cache, store, log, actorsOut, migrations2)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to run migration: %w", err)
+		return cid.Undef, err
 	}
 
-	outCid, err := actorsOut2.Flush()
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to flush actorsOut: %w", err)
+	// Check if sectorDealIDs is not a zero value before proceeding.
+	if sectorDealIDs == cid.Undef {
+		return cid.Undef, xerrors.New("sectorDealIDs is a zero value, cannot proceed with migration")
 	}
 
-	return outCid, nil
+	// Update the market actor in the state tree with the newly fetched sector deal IDs.
+	// This ensures the market actor's state reflects the most recent sector deals.
+	if err = actorsOut.SetActorV4(builtin.StorageMarketActorAddr, &builtin.ActorV4{
+		Code:       marketActorV11.Code,
+		Head:       sectorDealIDs, // Updated value
+		CallSeqNum: marketActorV11.CallSeqNum,
+		Balance:    marketActorV11.Balance,
+	}); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to set market actor: %w", err)
+	}
+
+	return actorsOut.Flush()
 }
