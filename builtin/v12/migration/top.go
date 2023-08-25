@@ -9,6 +9,7 @@ import (
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
+	market11 "github.com/filecoin-project/go-state-types/builtin/v11/market"
 	system11 "github.com/filecoin-project/go-state-types/builtin/v11/system"
 	adt11 "github.com/filecoin-project/go-state-types/builtin/v11/util/adt"
 	market12 "github.com/filecoin-project/go-state-types/builtin/v12/market"
@@ -118,13 +119,8 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations), len(oldManifestData.Entries))
 	}
 
-	actorsOut, err := migration.RunMigration(ctx, cfg, cache, store, log, actorsIn, migrations)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to run migration: %w", err)
-	}
-
 	// Load the state of the market actor from v11 for migration purposes.
-	oldMarketActor, ok, err := actorsOut.GetActorV5(builtin.StorageMarketActorAddr)
+	oldMarketActor, ok, err := actorsIn.GetActorV5(builtin.StorageMarketActorAddr)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to get market actor: %w", err)
 	}
@@ -133,9 +129,14 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.New("didn't find market actor")
 	}
 
-	var oldMarketState market12.State
+	var oldMarketState market11.State
 	if err := store.Get(ctx, oldMarketActor.Head, &oldMarketState); err != nil {
 		return cid.Undef, xerrors.Errorf("failed to get market actor state: %w", err)
+	}
+
+	actorsOut, err := migration.RunMigration(ctx, cfg, cache, store, log, actorsIn, migrations)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to run migration: %w", err)
 	}
 
 	// Retrieve the sector deal IDs from the minerMigrator. These IDs are crucial for the migration of market actor state.
