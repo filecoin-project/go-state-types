@@ -12,6 +12,7 @@ import (
 	market11 "github.com/filecoin-project/go-state-types/builtin/v11/market"
 	system11 "github.com/filecoin-project/go-state-types/builtin/v11/system"
 	adt11 "github.com/filecoin-project/go-state-types/builtin/v11/util/adt"
+	market12 "github.com/filecoin-project/go-state-types/builtin/v12/market"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/go-state-types/migration"
 )
@@ -149,11 +150,33 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.New("sectorDealIDs is a zero value, cannot proceed with migration")
 	}
 
+	// Create the new state
+	newMarketState := market12.State{
+		Proposals:                     oldMarketState.Proposals,
+		States:                        oldMarketState.States,
+		PendingProposals:              oldMarketState.PendingProposals,
+		EscrowTable:                   oldMarketState.EscrowTable,
+		LockedTable:                   oldMarketState.LockedTable,
+		NextID:                        oldMarketState.NextID,
+		DealOpsByEpoch:                oldMarketState.DealOpsByEpoch,
+		LastCron:                      oldMarketState.LastCron,
+		TotalClientLockedCollateral:   oldMarketState.TotalClientLockedCollateral,
+		TotalProviderLockedCollateral: oldMarketState.TotalProviderLockedCollateral,
+		TotalClientStorageFee:         oldMarketState.TotalClientStorageFee,
+		PendingDealAllocationIds:      oldMarketState.PendingDealAllocationIds,
+		SectorDeals:                   sectorDealIDs, // Updated value
+	}
+
+	newMarketStateCid, err := store.Put(ctx, &newMarketState)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to put new state: %w", err)
+	}
+
 	// Update the market actor in the state tree with the newly fetched sector deal IDs.
 	// This ensures the market actor's state reflects the most recent sector deals.
 	if err = actorsOut.SetActorV4(builtin.StorageMarketActorAddr, &builtin.ActorV4{
 		Code:       oldMarketActor.Code,
-		Head:       sectorDealIDs, // Updated value
+		Head:       newMarketStateCid, // Updated value
 		CallSeqNum: oldMarketActor.CallSeqNum,
 		Balance:    oldMarketActor.Balance,
 	}); err != nil {
