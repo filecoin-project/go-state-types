@@ -124,7 +124,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 
 	// Load the state of the market actor from v11 for migration purposes.
-	marketActorV11, ok, err := actorsIn.GetActorV4(builtin.StorageMarketActorAddr)
+	oldMarketActor, ok, err := actorsOut.GetActorV4(builtin.StorageMarketActorAddr)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to get market actor: %w", err)
 	}
@@ -133,8 +133,8 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.New("didn't find market actor")
 	}
 
-	var marketStateV11 market11.State
-	if err := store.Get(ctx, marketActorV11.Head, &marketStateV11); err != nil {
+	var oldMarketState market11.State
+	if err := store.Get(ctx, oldMarketActor.Head, &oldMarketState); err != nil {
 		return cid.Undef, xerrors.Errorf("failed to get market actor state: %w", err)
 	}
 
@@ -152,10 +152,10 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	// Update the market actor in the state tree with the newly fetched sector deal IDs.
 	// This ensures the market actor's state reflects the most recent sector deals.
 	if err = actorsOut.SetActorV4(builtin.StorageMarketActorAddr, &builtin.ActorV4{
-		Code:       marketActorV11.Code,
+		Code:       oldMarketActor.Code,
 		Head:       sectorDealIDs, // Updated value
-		CallSeqNum: marketActorV11.CallSeqNum,
-		Balance:    marketActorV11.Balance,
+		CallSeqNum: oldMarketActor.CallSeqNum,
+		Balance:    oldMarketActor.Balance,
 	}); err != nil {
 		return cid.Undef, xerrors.Errorf("failed to set market actor: %w", err)
 	}
