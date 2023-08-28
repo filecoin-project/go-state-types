@@ -394,3 +394,62 @@ type GetPeerIDReturn struct {
 type GetMultiAddrsReturn struct {
 	MultiAddrs []byte
 }
+
+// ProveCommitSectors2Params represents the parameters for proving committed sectors.
+type ProveCommitSectors2Params struct {
+	SectorActivations          []SectorActivationManifest
+	SectorProofs               [][]byte
+	AggregateProof             []byte
+	RequireActivationSuccess   bool
+	RequireNotificationSuccess bool
+}
+
+// SectorActivationManifest represents the manifest for activating a sector.
+type SectorActivationManifest struct {
+	SectorNumber abi.SectorNumber
+	Pieces       []PieceActivationManifest
+}
+
+// PieceActivationManifest represents the manifest for activating a piece.
+type PieceActivationManifest struct {
+	CID                   cid.Cid
+	Size                  abi.PaddedPieceSize
+	VerifiedAllocationKey *VerifiedAllocationKey
+	Notify                []DataActivationNotification
+}
+
+// VerifiedAllocationKey represents the key for a verified allocation.
+type VerifiedAllocationKey struct {
+	Client abi.ActorID
+	ID     verifreg.AllocationId
+}
+
+// DataActivationNotification represents a notification for data activation.
+type DataActivationNotification struct {
+	Address addr.Address
+	Payload []byte
+}
+
+// ProveCommit2Return represents the return value for the ProveCommit2 function.
+type ProveCommit2Return struct {
+	Sectors []SectorActivationReturn
+}
+
+// SectorActivationReturn represents the return value for sector activation.
+type SectorActivationReturn struct {
+	Activated bool
+	Power     abi.StoragePower
+	Pieces    []PieceActivationReturn
+}
+
+// PieceActivationReturn represents the return value for piece activation.
+type PieceActivationReturn struct {
+	Claimed       bool
+	Notifications []DataActivationNotificationReturn
+}
+
+// DataActivationNotificationReturn represents the return value for a data activation notification.
+type DataActivationNotificationReturn struct {
+	Code xc.ExitCode // todo correct??
+	Data []byte
+}
