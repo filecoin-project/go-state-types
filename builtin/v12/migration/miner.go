@@ -34,7 +34,7 @@ type minerMigrator struct {
 	OutCodeCID        cid.Cid
 }
 
-func newMinerMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid) (*minerMigrator, error) {
+func newMinerMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid, cache migration.MigrationCache) (*minerMigrator, error) {
 	ctxStore := adt11.WrapStore(ctx, store)
 
 	edv11, err := miner11.ConstructDeadline(ctxStore)
@@ -70,10 +70,23 @@ func newMinerMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid
 
 	}
 
-	// New mapping of sector IDs to deal IDS, grouped by storage provider.
-	sectorDeals, err := builtin.NewTree(ctxStore)
+	//load sector index from datastore, or create a new one if not found
+	okSectorIndex, prevSectorIndexRoot, err := cache.Read(migration.SectorIndexHamtKey())
 	if err != nil {
-		return nil, xerrors.Errorf("creating new state tree: %w", err)
+		return nil, xerrors.Errorf("failed to get previous sector index from cache: %w", err)
+	}
+	var sectorDeals *builtin.ActorTree
+	if okSectorIndex {
+		sectorDeals, err = builtin.LoadTree(ctxStore, prevSectorIndexRoot)
+		if err != nil {
+			return nil, xerrors.Errorf("reading cached sectorDeals tree: %w", err)
+		}
+	} else {
+		// New mapping of sector IDs to deal IDS, grouped by storage provider.
+		sectorDeals, err = builtin.NewTree(ctxStore)
+		if err != nil {
+			return nil, xerrors.Errorf("creating new state tree: %w", err)
+		}
 	}
 
 	return &minerMigrator{
@@ -181,11 +194,18 @@ func (m minerMigrator) migrateSectorsWithCache(ctx context.Context, store adt11.
 		if err != nil {
 			return cid.Undef, xerrors.Errorf("failed to get previous outRoot from cache: %w", err)
 		}
-		var outRoot cid.Cid
 
-		if okIn && okOut {
-			// we have previous work, but the AMT has changed -- diff them
-			outRoot, err = migrateSectorsWithDiff(ctx, store, minerAddr, inRoot, prevInRoot, prevOutRoot)
+		okSectorIndexOut, prevSectorIndexRoot, err := cache.Read(migration.SectorIndexPrevSectorsOutKey(minerAddr))
+		if err != nil {
+			return cid.Undef, xerrors.Errorf("failed to get previous outRoot from cache: %w", err)
+		}
+
+		var outRoot cid.Cid
+		var sectorToDealIdHamtCid cid.Cid
+
+		if okIn && okOut && okSectorIndexOut {
+			// we have previous work -- diff them to identify if there's new work and do the new work
+			outRoot, sectorToDealIdHamtCid, err = m.migrateSectorsWithDiff(ctx, store, minerAddr, inRoot, prevInRoot, prevOutRoot, prevSectorIndexRoot)
 			if err != nil {
 				return cid.Undef, xerrors.Errorf("failed to migrate sectors from diff: %w", err)
 			}
@@ -195,7 +215,8 @@ func (m minerMigrator) migrateSectorsWithCache(ctx context.Context, store adt11.
 			if err != nil {
 				return cid.Undef, xerrors.Errorf("failed to read sectors array: %w", err)
 			}
-			outArray, err := m.migrateSectorsFromScratch(ctx, store, minerAddr, inArray)
+
+			outArray, outDealHamt, err := m.migrateSectorsFromScratch(ctx, store, minerAddr, inArray)
 			if err != nil {
 				return cid.Undef, xerrors.Errorf("failed to migrate sectors from scratch: %w", err)
 			}
@@ -203,6 +224,12 @@ func (m minerMigrator) migrateSectorsWithCache(ctx context.Context, store adt11.
 			if err != nil {
 				return cid.Undef, xerrors.Errorf("error writing new sectors AMT: %w", err)
 			}
+
+			sectorToDealIdHamtCid = outDealHamt
+		}
+
+		if err = cache.Write(migration.SectorIndexPrevSectorsOutKey(minerAddr), sectorToDealIdHamtCid); err != nil {
+			return cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
 		}
 
 		if err = cache.Write(migration.MinerPrevSectorsInKey(minerAddr), inRoot); err != nil {
@@ -213,6 +240,9 @@ func (m minerMigrator) migrateSectorsWithCache(ctx context.Context, store adt11.
 			return cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
 		}
 
+		if err = cache.Write(migration.SectorIndexPrevSectorsOutKey(minerAddr), sectorToDealIdHamtCid); err != nil {
+			return cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
+		}
 		return outRoot, nil
 	})
 }
@@ -234,60 +264,101 @@ delta = prevInRoot - inRoot
 
 merge( prevOutRoot, Migrated(delta) )
 */
-func migrateSectorsWithDiff(ctx context.Context, store adt11.Store, minerAddr address.Address, inRoot cid.Cid, prevInRoot cid.Cid, prevOutRoot cid.Cid) (cid.Cid, error) {
-	// we have previous work, but the AMT has changed -- diff them
+
+// todo modify hamt based on diff
+func (m minerMigrator) migrateSectorsWithDiff(ctx context.Context, store adt11.Store, minerAddr address.Address, inRoot cid.Cid, prevInRoot cid.Cid, prevOutRoot cid.Cid, prevSectorIndexRoot cid.Cid) (cid.Cid, cid.Cid, error) {
+	// we have previous work
+	// the AMT may or may not have changed -- diff will let us iterate over all the changes
 	diffs, err := amt.Diff(ctx, store, store, prevInRoot, inRoot, amt.UseTreeBitWidth(miner11.SectorsAmtBitwidth))
 	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to diff old and new Sector AMTs: %w", err)
+		return cid.Undef, cid.Undef, xerrors.Errorf("failed to diff old and new Sector AMTs: %w", err)
 	}
 
 	inSectors, err := miner11.LoadSectors(store, inRoot)
 	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to load inSectors: %w", err)
+		return cid.Undef, cid.Undef, xerrors.Errorf("failed to load inSectors: %w", err)
 	}
-
 	prevOutSectors, err := miner12.LoadSectors(store, prevOutRoot)
 	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to load prevOutSectors: %w", err)
+		return cid.Undef, cid.Undef, xerrors.Errorf("failed to load prevOutSectors: %w", err)
+	}
+
+	// load previous HAMT sector index for this specific minerAddr
+	sectorToDealIdHamt, err := builtin.LoadTree(store, prevSectorIndexRoot)
+	if err != nil {
+		return cid.Undef, cid.Undef, xerrors.Errorf("creating new state tree: %w", err)
 	}
 
 	for _, change := range diffs {
 		switch change.Type {
 		case amt.Remove:
 			if err := prevOutSectors.Delete(change.Key); err != nil {
-				return cid.Undef, xerrors.Errorf("failed to delete sector from prevOutSectors: %w", err)
+				return cid.Undef, cid.Undef, xerrors.Errorf("failed to delete sector from prevOutSectors: %w", err)
 			}
+
+			//remove sector from HAMT index
+			err = removeSectorNumberToDealIdFromHAMT(sectorToDealIdHamt, change.Key, store)
+			if err != nil {
+				return cid.Undef, cid.Undef, xerrors.Errorf("failed to remove sector from HAMT: %w", err)
+			}
+
 		case amt.Add:
 			fallthrough
 		case amt.Modify:
 			sectorNo := abi.SectorNumber(change.Key)
 			info, found, err := inSectors.Get(sectorNo)
 			if err != nil {
-				return cid.Undef, xerrors.Errorf("failed to get sector %d in inSectors: %w", sectorNo, err)
+				return cid.Undef, cid.Undef, xerrors.Errorf("failed to get sector %d in inSectors: %w", sectorNo, err)
 			}
 
 			if !found {
-				return cid.Undef, xerrors.Errorf("didn't find sector %d in inSectors", sectorNo)
+				return cid.Undef, cid.Undef, xerrors.Errorf("didn't find sector %d in inSectors", sectorNo)
 			}
 
 			if err := prevOutSectors.Set(change.Key, migrateSectorInfo(*info, store)); err != nil {
-				return cid.Undef, xerrors.Errorf("failed to set migrated sector %d in prevOutSectors", sectorNo)
+				return cid.Undef, cid.Undef, xerrors.Errorf("failed to set migrated sector %d in prevOutSectors", sectorNo)
+			}
+
+			// add sector to the HAMT
+			err = addSectorNumberToDealIdHAMT(sectorToDealIdHamt, *info, store)
+			if err != nil {
+				return cid.Undef, cid.Undef, xerrors.Errorf("failed to add sector %d to HAMT: %w", sectorNo, err)
 			}
 		}
 	}
 
-	return prevOutSectors.Root()
+	if len(diffs) > 0 {
+		err = m.addSectorToDealIDHamtToSectorDeals(sectorToDealIdHamt, minerAddr)
+		if err != nil {
+			return cid.Undef, cid.Undef, err
+		}
+	}
+
+	//return the hAmt
+
+	prevOutSectorsRoot, err := prevOutSectors.Root()
+	if err != nil {
+		return cid.Undef, cid.Undef, xerrors.Errorf("failed to get root of prevOutSectors: %w", err)
+	}
+
+	ret, err := sectorToDealIdHamt.Map.Root()
+	if err != nil {
+		return cid.Undef, cid.Undef, xerrors.Errorf("failed to get root of sectorToDealIdHamt: %w", err)
+	}
+	return prevOutSectorsRoot, ret, nil
+
 }
 
-func (m minerMigrator) migrateSectorsFromScratch(ctx context.Context, store adt11.Store, minerAddr address.Address, inArray *adt11.Array) (*adt12.Array, error) {
+// return cid of the HAMT for this address and add to the cache outside this fn
+func (m minerMigrator) migrateSectorsFromScratch(ctx context.Context, store adt11.Store, minerAddr address.Address, inArray *adt11.Array) (*adt12.Array, cid.Cid, error) {
 	outArray, err := adt12.MakeEmptyArray(store, miner12.SectorsAmtBitwidth)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to construct new sectors array: %w", err)
+		return nil, cid.Undef, xerrors.Errorf("failed to construct new sectors array: %w", err)
 	}
 
 	sectorToDealIdHamt, err := builtin.NewTree(store)
 	if err != nil {
-		return nil, xerrors.Errorf("creating new state tree: %w", err)
+		return nil, cid.Undef, xerrors.Errorf("creating new state tree: %w", err)
 	}
 
 	var sectorInfo miner11.SectorOnChainInfo
@@ -297,20 +368,20 @@ func (m minerMigrator) migrateSectorsFromScratch(ctx context.Context, store adt1
 
 		return outArray.Set(uint64(k), migrateSectorInfo(sectorInfo, store))
 	}); err != nil {
-		return nil, err
+		return nil, cid.Undef, err
 	}
 
 	sectorToDealIdHamtCid, err := sectorToDealIdHamt.Map.Root()
 	if err != nil {
-		return nil, err
+		return nil, cid.Undef, err
 	}
 
-	err = m.addSectorToDealIDHamtToSectorDeals(sectorToDealIdHamtCid, minerAddr)
+	err = m.addSectorToDealIDHamtToSectorDeals(sectorToDealIdHamt, minerAddr)
 	if err != nil {
-		return nil, err
+		return nil, cid.Undef, err
 	}
 
-	return outArray, err
+	return outArray, sectorToDealIdHamtCid, err
 }
 
 func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt11.Store, cache migration.MigrationCache, minerAddr address.Address, deadlines cid.Cid) (cid.Cid, error) {
@@ -347,7 +418,7 @@ func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt11.Store, 
 				var outSnapshotRoot cid.Cid
 
 				if okIn && okOut {
-					outSnapshotRoot, err = migrateSectorsWithDiff(ctx, store, minerAddr, inDeadline.SectorsSnapshot, currentInRoot, currentOutRoot)
+					outSnapshotRoot, err = migrateDeadlineSectorsWithDiff(ctx, store, inDeadline.SectorsSnapshot, currentInRoot, currentOutRoot)
 					if err != nil {
 						return cid.Undef, xerrors.Errorf("failed to migrate sectors from diff: %w", err)
 					}
@@ -356,7 +427,7 @@ func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt11.Store, 
 					if err != nil {
 						return cid.Undef, err
 					}
-					outSnapshot, err := m.migrateSectorsFromScratch(ctx, store, minerAddr, inSectorsSnapshot)
+					outSnapshot, err := migrateDeadlineSectorsFromScratch(ctx, store, inSectorsSnapshot)
 					if err != nil {
 						return cid.Undef, xerrors.Errorf("failed to migrate sectors: %w", err)
 					}
@@ -434,11 +505,70 @@ func migrateSectorInfo(sectorInfo miner11.SectorOnChainInfo, store adt11.Store) 
 	}
 }
 
+func migrateDeadlineSectorsWithDiff(ctx context.Context, store adt11.Store, inRoot cid.Cid, prevInRoot cid.Cid, prevOutRoot cid.Cid) (cid.Cid, error) {
+	// we have previous work, but the AMT has changed -- diff them
+	diffs, err := amt.Diff(ctx, store, store, prevInRoot, inRoot, amt.UseTreeBitWidth(miner11.SectorsAmtBitwidth))
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to diff old and new Sector AMTs: %w", err)
+	}
+
+	inSectors, err := miner11.LoadSectors(store, inRoot)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to load inSectors: %w", err)
+	}
+
+	prevOutSectors, err := miner12.LoadSectors(store, prevOutRoot)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to load prevOutSectors: %w", err)
+	}
+
+	for _, change := range diffs {
+		switch change.Type {
+		case amt.Remove:
+			if err := prevOutSectors.Delete(change.Key); err != nil {
+				return cid.Undef, xerrors.Errorf("failed to delete sector from prevOutSectors: %w", err)
+			}
+		case amt.Add:
+			fallthrough
+		case amt.Modify:
+			sectorNo := abi.SectorNumber(change.Key)
+			info, found, err := inSectors.Get(sectorNo)
+			if err != nil {
+				return cid.Undef, xerrors.Errorf("failed to get sector %d in inSectors: %w", sectorNo, err)
+			}
+
+			if !found {
+				return cid.Undef, xerrors.Errorf("didn't find sector %d in inSectors", sectorNo)
+			}
+
+			if err := prevOutSectors.Set(change.Key, migrateSectorInfo(*info, store)); err != nil {
+				return cid.Undef, xerrors.Errorf("failed to set migrated sector %d in prevOutSectors", sectorNo)
+			}
+		}
+	}
+
+	return prevOutSectors.Root()
+}
+
+func migrateDeadlineSectorsFromScratch(ctx context.Context, store adt11.Store, inArray *adt11.Array) (*adt12.Array, error) {
+	outArray, err := adt12.MakeEmptyArray(store, miner12.SectorsAmtBitwidth)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to construct new sectors array: %w", err)
+	}
+
+	var sectorInfo miner11.SectorOnChainInfo
+	if err = inArray.ForEach(&sectorInfo, func(k int64) error {
+		return outArray.Set(uint64(k), migrateSectorInfo(sectorInfo, store))
+	}); err != nil {
+		return nil, err
+	}
+
+	return outArray, err
+}
+
 func addSectorNumberToDealIdHAMT(xap *builtin.ActorTree, sectorInfo miner11.SectorOnChainInfo, store adt11.Store) error {
 	//sectorInfo.DealIDs,sectorInfo.SectorNumber
-	// - todo make SectorNumber and explicit type, not just cast to int64
-	//
-	// - todo for sector use array not CborInt
+	// - todo confirm types beint stored is correct
 
 	cborDealIDs := market.SectorDealIDs{DealIDs: sectorInfo.DealIDs}
 	err := xap.Map.Put(abi.IntKey(int64(sectorInfo.SectorNumber)), &cborDealIDs)
@@ -448,10 +578,23 @@ func addSectorNumberToDealIdHAMT(xap *builtin.ActorTree, sectorInfo miner11.Sect
 	return nil
 }
 
-func (m minerMigrator) addSectorToDealIDHamtToSectorDeals(hamtCid cid.Cid, minerAddr address.Address) error {
+func removeSectorNumberToDealIdFromHAMT(xap *builtin.ActorTree, SectorNumber uint64, store adt11.Store) error {
+	err := xap.Map.Delete(abi.IntKey(int64(SectorNumber)))
+	if err != nil {
+		return xerrors.Errorf("failed to delete sector from sectorToDealIdHamt index: %w", err)
+	}
+	return nil
+}
 
+func (m minerMigrator) addSectorToDealIDHamtToSectorDeals(sectorToDealIdHamt *builtin.ActorTree, minerAddr address.Address) error {
+
+	//todo we are storing the hamt cid but we MUST store the hamt type
+	hamtCid, err := sectorToDealIdHamt.Map.Root()
+	if err != nil {
+		return xerrors.Errorf("adding getting hamtCid: %w", err)
+	}
 	cborCid := market.HamtCid{Cid: hamtCid}
-	err := m.sectorDeals.Map.Put(abi.IdAddrKey(minerAddr), &cborCid)
+	err = m.sectorDeals.Map.Put(abi.IdAddrKey(minerAddr), &cborCid)
 
 	if err != nil {
 		return xerrors.Errorf("adding sector number and deal ids to state tree: %w", err)
