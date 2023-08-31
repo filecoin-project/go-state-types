@@ -1,7 +1,6 @@
 package miner
 
 import (
-	"github.com/filecoin-project/specs-actors/actors/runtime/exitcode"
 	cid "github.com/ipfs/go-cid"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	"golang.org/x/xerrors"
@@ -440,14 +439,14 @@ type ProveCommit2Return struct {
 }
 
 type BatchReturn struct {
-	SuccessCount uint32
+	SuccessCount uint64
 	FailCodes    []FailCode
 }
 
 type FailCode struct {
 	// Idx represents the index of the operation that failed within the batch.
-	Idx  uint32
-	Code exitcode.ExitCode
+	Idx  uint64
+	Code xc.ExitCode // todo correct?
 }
 
 // PieceActivationReturn represents the return value for piece activation.
