@@ -150,6 +150,11 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.New("sectorDealIDs is a zero value, cannot proceed with migration")
 	}
 
+	//save sectorDealIdIndex in Cache
+	if err = cache.Write(migration.SectorIndexHamtKey(), sectorDealIDs); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
+	}
+
 	// Create the new state
 	newMarketState := market12.State{
 		Proposals:                     oldMarketState.Proposals,

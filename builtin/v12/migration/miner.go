@@ -2,6 +2,7 @@ package migration
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/filecoin-project/go-state-types/builtin"
 	miner11 "github.com/filecoin-project/go-state-types/builtin/v11/miner"
@@ -81,6 +82,7 @@ func newMinerMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid
 		if err != nil {
 			return nil, xerrors.Errorf("reading cached sectorDeals tree: %w", err)
 		}
+		fmt.Println("Loaded HAMT from cache: ", prevSectorIndexRoot)
 	} else {
 		// New mapping of sector IDs to deal IDS, grouped by storage provider.
 		sectorDeals, err = builtin.NewTree(ctxStore)
@@ -227,7 +229,6 @@ func (m minerMigrator) migrateSectorsWithCache(ctx context.Context, store adt11.
 
 			sectorToDealIdHamtCid = outDealHamt
 		}
-
 		if err = cache.Write(migration.SectorIndexPrevSectorsOutKey(minerAddr), sectorToDealIdHamtCid); err != nil {
 			return cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
 		}
