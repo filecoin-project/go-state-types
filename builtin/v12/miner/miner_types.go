@@ -1,6 +1,7 @@
 package miner
 
 import (
+	"github.com/filecoin-project/specs-actors/actors/runtime/exitcode"
 	cid "github.com/ipfs/go-cid"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	"golang.org/x/xerrors"
@@ -404,7 +405,10 @@ type ProveCommitSectors2Params struct {
 	RequireNotificationSuccess bool
 }
 
-// SectorActivationManifest represents the manifest for activating a sector.
+// SectorActivationManifest contains data to activate a commitment to one sector and its data.
+// All pieces of data must be specified, whether or not not claiming a FIL+ activation or being
+// notified to a data consumer.
+// An implicit zero piece fills any remaining sector capacity.
 type SectorActivationManifest struct {
 	SectorNumber abi.SectorNumber
 	Pieces       []PieceActivationManifest
@@ -432,14 +436,18 @@ type DataActivationNotification struct {
 
 // ProveCommit2Return represents the return value for the ProveCommit2 function.
 type ProveCommit2Return struct {
-	Sectors []SectorActivationReturn
+	Sectors []BatchReturn
 }
 
-// SectorActivationReturn represents the return value for sector activation.
-type SectorActivationReturn struct {
-	Activated bool
-	Power     abi.StoragePower
-	Pieces    []PieceActivationReturn
+type BatchReturn struct {
+	SuccessCount uint32
+	FailCodes    []FailCode
+}
+
+type FailCode struct {
+	// Idx represents the index of the operation that failed within the batch.
+	Idx  uint32
+	Code exitcode.ExitCode
 }
 
 // PieceActivationReturn represents the return value for piece activation.
@@ -452,4 +460,63 @@ type PieceActivationReturn struct {
 type DataActivationNotificationReturn struct {
 	Code xc.ExitCode // todo correct??
 	Data []byte
+}
+
+// ProveReplicaUpdates3Params represents the parameters for proving replica updates.
+type ProveReplicaUpdates3Params struct {
+	SectorUpdates              []SectorUpdateManifest
+	SectorProofs               [][]byte
+	AggregateProof             []byte
+	UpdateProofsType           abi.RegisteredUpdateProof
+	AggregateProofType         abi.RegisteredAggregationProof
+	RequireActivationSuccess   bool
+	RequireNotificationSuccess bool
+}
+
+// SectorUpdateManifest contains data for sector update.
+type SectorUpdateManifest struct {
+	Sector       abi.SectorNumber
+	Deadline     uint64
+	Partition    uint64
+	NewSealedCID cid.Cid
+	Pieces       []PieceActivationManifest
+}
+
+// ProveReplicaUpdates3Return represents the return value for the ProveReplicaUpdates3 function.
+type ProveReplicaUpdates3Return struct {
+	ActivationResults BatchReturn
+}
+
+// SectorContentChangedParams represents a notification of change committed to sectors.
+type SectorContentChangedParams struct {
+	Sectors []SectorChanges
+}
+
+// SectorChanges describes changes to one sector's content.
+type SectorChanges struct {
+	Sector                 abi.SectorNumber
+	MinimumCommitmentEpoch abi.ChainEpoch
+	Added                  []PieceChange
+}
+
+// PieceChange describes a piece of data committed to a sector.
+type PieceChange struct {
+	Data    cid.Cid
+	Size    abi.PaddedPieceSize
+	Payload []byte
+}
+
+// SectorContentChangedReturn represents the return value for the SectorContentChanged function.
+type SectorContentChangedReturn struct {
+	Sectors []SectorReturn
+}
+
+// SectorReturn represents a result for each sector that was notified.
+type SectorReturn struct {
+	Added []PieceReturn
+}
+
+// PieceReturn represents a result for each piece for the sector that was notified.
+type PieceReturn struct {
+	Accepted bool
 }
