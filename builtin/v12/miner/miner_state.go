@@ -158,7 +158,7 @@ type SectorPreCommitOnChainInfo struct {
 	PreCommitEpoch   abi.ChainEpoch
 }
 
-type SectorOnChainInfoFlags int64
+type SectorOnChainInfoFlags uint64
 
 const (
 	SIMPLE_QA_POWER  SectorOnChainInfoFlags = 1 << iota // QA power mechanism introduced in FIP-0045
@@ -181,7 +181,7 @@ type SectorOnChainInfo struct {
 	PowerBaseEpoch        abi.ChainEpoch          // Epoch at which this sector's power was most recently updated
 	ReplacedDayReward     abi.TokenAmount         // Day reward of this sector before its power was most recently updated
 	SectorKeyCID          *cid.Cid                // The original SealedSectorCID, only gets set on the first ReplicaUpdate
-  Flags                 SectorOnChainInfoFlags  // Additional flags
+	Flags                 SectorOnChainInfoFlags  // Additional flags
 }
 
 func (st *State) GetInfo(store adt.Store) (*MinerInfo, error) {

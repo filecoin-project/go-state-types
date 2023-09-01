@@ -1973,16 +1973,12 @@ func (t *SectorOnChainInfo) MarshalCBOR(w io.Writer) error {
 		}
 	}
 
-	// t.Flags (miner.SectorOnChainInfoFlags) (int64)
-	if t.Flags >= 0 {
-		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Flags)); err != nil {
-			return err
-		}
-	} else {
-		if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-t.Flags-1)); err != nil {
-			return err
-		}
+	// t.Flags (miner.SectorOnChainInfoFlags) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Flags)); err != nil {
+		return err
 	}
+
 	return nil
 }
 
@@ -2244,30 +2240,19 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 
 	}
-	// t.Flags (miner.SectorOnChainInfoFlags) (int64)
+	// t.Flags (miner.SectorOnChainInfoFlags) (uint64)
+
 	{
-		maj, extra, err := cr.ReadHeader()
-		var extraI int64
+
+		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
 		}
-		switch maj {
-		case cbg.MajUnsignedInt:
-			extraI = int64(extra)
-			if extraI < 0 {
-				return fmt.Errorf("int64 positive overflow")
-			}
-		case cbg.MajNegativeInt:
-			extraI = int64(extra)
-			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
-			}
-			extraI = -1 - extraI
-		default:
-			return fmt.Errorf("wrong type for int64 field: %d", maj)
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
 		}
+		t.Flags = SectorOnChainInfoFlags(extra)
 
-		t.Flags = SectorOnChainInfoFlags(extraI)
 	}
 	return nil
 }
