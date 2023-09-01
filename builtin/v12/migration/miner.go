@@ -3,6 +3,7 @@ package migration
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/filecoin-project/go-state-types/builtin"
 	miner11 "github.com/filecoin-project/go-state-types/builtin/v11/miner"
@@ -33,6 +34,7 @@ type minerMigrator struct {
 	emptyDeadlinesV12 cid.Cid
 	sectorDeals       *builtin.ActorTree
 	OutCodeCID        cid.Cid
+	hamtLock          sync.Mutex
 }
 
 func newMinerMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid, cache migration.MigrationCache) (*minerMigrator, error) {
@@ -588,6 +590,9 @@ func removeSectorNumberToDealIdFromHAMT(xap *builtin.ActorTree, SectorNumber uin
 }
 
 func (m minerMigrator) addSectorToDealIDHamtToSectorDeals(sectorToDealIdHamt *builtin.ActorTree, minerAddr address.Address) error {
+	m.hamtLock.Lock()
+	// Lock so only one goroutine at a time can access the map c.v.
+	defer m.hamtLock.Unlock()
 
 	//todo we are storing the hamt cid but we MUST store the hamt type
 	hamtCid, err := sectorToDealIdHamt.Map.Root()
