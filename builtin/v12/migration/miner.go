@@ -232,10 +232,6 @@ func (m minerMigrator) migrateSectorsWithCache(ctx context.Context, store adt11.
 
 			sectorToDealIdHamtCid = outDealHamt
 		}
-		if err = cache.Write(migration.SectorIndexPrevSectorsOutKey(minerAddr), sectorToDealIdHamtCid); err != nil {
-			return cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
-		}
-
 		if err = cache.Write(migration.MinerPrevSectorsInKey(minerAddr), inRoot); err != nil {
 			return cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
 		}
