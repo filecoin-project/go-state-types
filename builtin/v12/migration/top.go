@@ -74,7 +74,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		if oldEntry.Name == manifest.MinerKey {
 			miner11Cid = oldEntry.Code
 		}
-		if oldEntry.Name == manifest.MinerKey {
+		if oldEntry.Name == manifest.MarketKey {
 			market11Cid = oldEntry.Code
 		}
 		newCodeCID, ok := newManifest.Get(oldEntry.Name)
