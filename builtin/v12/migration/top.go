@@ -180,7 +180,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	// Update the market actor in the state tree with the newly fetched sector deal IDs.
 	// This ensures the market actor's state reflects the most recent sector deals.
 	if err = actorsOut.SetActorV5(builtin.StorageMarketActorAddr, &builtin.ActorV5{
-		Code:       oldMarketActor.Code,
+		Code:       market11Cid,
 		Head:       newMarketStateCid, // Updated value
 		CallSeqNum: oldMarketActor.CallSeqNum,
 		Balance:    oldMarketActor.Balance,
