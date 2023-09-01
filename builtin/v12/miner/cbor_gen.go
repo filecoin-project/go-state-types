@@ -1973,9 +1973,15 @@ func (t *SectorOnChainInfo) MarshalCBOR(w io.Writer) error {
 		}
 	}
 
-	// t.SimpleQAPower (bool) (bool)
-	if err := cbg.WriteBool(w, t.SimpleQAPower); err != nil {
-		return err
+	// t.Flags (miner.SectorOnChainInfoFlags) (int64)
+	if t.Flags >= 0 {
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Flags)); err != nil {
+			return err
+		}
+	} else {
+		if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-t.Flags-1)); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -2238,22 +2244,30 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 
 	}
-	// t.SimpleQAPower (bool) (bool)
+	// t.Flags (miner.SectorOnChainInfoFlags) (int64)
+	{
+		maj, extra, err := cr.ReadHeader()
+		var extraI int64
+		if err != nil {
+			return err
+		}
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
+			}
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative oveflow")
+			}
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
+		}
 
-	maj, extra, err = cr.ReadHeader()
-	if err != nil {
-		return err
-	}
-	if maj != cbg.MajOther {
-		return fmt.Errorf("booleans must be major type 7")
-	}
-	switch extra {
-	case 20:
-		t.SimpleQAPower = false
-	case 21:
-		t.SimpleQAPower = true
-	default:
-		return fmt.Errorf("booleans are either major type 7, value 20 or 21 (got %d)", extra)
+		t.Flags = SectorOnChainInfoFlags(extraI)
 	}
 	return nil
 }

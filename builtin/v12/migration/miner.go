@@ -372,20 +372,27 @@ func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt11.Store, 
 }
 
 func migrateSectorInfo(sectorInfo miner11.SectorOnChainInfo) *miner12.SectorOnChainInfo {
-	// For a sector that has not been updated: the Activation is correct and ReplacedSectorAge is zero.
-	// For a sector that has been updated through SnapDeals: Activation is the epoch at which it was upgraded, and ReplacedSectorAge is delta since the true activation.
-	// For a sector that has been updated through the old CC path: Activation is correct
-	// Thus, we want to set:
-	//
-	// PowerBaseEpoch := Activation (in all cases)
-	// Activation := Activation (for non-upgraded sectors and sectors upgraded through old CC path)
-	// Activation := OldActivation - ReplacedSectorAge (for sectors updated through SnapDeals)
+  // For a sector that has not been updated: the Activation is correct and ReplacedSectorAge is zero.
+  // For a sector that has been updated through SnapDeals: Activation is the epoch at which it was upgraded, and ReplacedSectorAge is delta since the true activation.
+  // For a sector that has been updated through the old CC path: Activation is correct
+  // Thus, we want to set:
+  //
+  // PowerBaseEpoch := Activation (in all cases)
+  // Activation := Activation (for non-upgraded sectors and sectors upgraded through old CC path)
+  // Activation := OldActivation - ReplacedSectorAge (for sectors updated through SnapDeals)
+  //
+  // SimpleQAPower field got replaced by flags field. We set the flag SIMPLE_QA_POWER if the sector had the field set to true.
 
 	powerBaseEpoch := sectorInfo.Activation
 	activationEpoch := sectorInfo.Activation
 	if sectorInfo.SectorKeyCID != nil {
 		activationEpoch = sectorInfo.Activation - sectorInfo.ReplacedSectorAge
 	}
+
+  flags := miner12.SectorOnChainInfoFlags(0)
+  if sectorInfo.SimpleQAPower {
+    flags = flags | miner12.SIMPLE_QA_POWER
+  }
 
 	return &miner12.SectorOnChainInfo{
 		SectorNumber:          sectorInfo.SectorNumber,
@@ -402,6 +409,6 @@ func migrateSectorInfo(sectorInfo miner11.SectorOnChainInfo) *miner12.SectorOnCh
 		PowerBaseEpoch:        powerBaseEpoch,
 		ReplacedDayReward:     sectorInfo.ReplacedDayReward,
 		SectorKeyCID:          sectorInfo.SectorKeyCID,
-		SimpleQAPower:         sectorInfo.SimpleQAPower,
+		Flags:                 flags,
 	}
 }

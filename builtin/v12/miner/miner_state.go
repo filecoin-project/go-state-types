@@ -158,23 +158,30 @@ type SectorPreCommitOnChainInfo struct {
 	PreCommitEpoch   abi.ChainEpoch
 }
 
+type SectorOnChainInfoFlags int64
+
+const (
+	SIMPLE_QA_POWER  SectorOnChainInfoFlags = 1 << iota // QA power mechanism introduced in FIP-0045
+)
+
+
 // Information stored on-chain for a proven sector.
 type SectorOnChainInfo struct {
 	SectorNumber          abi.SectorNumber
 	SealProof             abi.RegisteredSealProof // The seal proof type implies the PoSt proof/s
 	SealedCID             cid.Cid                 // CommR
 	DealIDs               []abi.DealID
-	Activation            abi.ChainEpoch  // Epoch during which the sector proof was accepted
-	Expiration            abi.ChainEpoch  // Epoch during which the sector expires
-	DealWeight            abi.DealWeight  // Integral of active deals over sector lifetime
-	VerifiedDealWeight    abi.DealWeight  // Integral of active verified deals over sector lifetime
-	InitialPledge         abi.TokenAmount // Pledge collected to commit this sector
-	ExpectedDayReward     abi.TokenAmount // Expected one day projection of reward for sector computed at activation time
-	ExpectedStoragePledge abi.TokenAmount // Expected twenty day projection of reward for sector computed at activation time
-	PowerBaseEpoch        abi.ChainEpoch  // Epoch at which this sector's power was most recently updated
-	ReplacedDayReward     abi.TokenAmount // Day reward of this sector before its power was most recently updated
-	SectorKeyCID          *cid.Cid        // The original SealedSectorCID, only gets set on the first ReplicaUpdate
-	SimpleQAPower         bool            // Flag for QA power mechanism introduced in FIP-0045
+	Activation            abi.ChainEpoch          // Epoch during which the sector proof was accepted
+	Expiration            abi.ChainEpoch          // Epoch during which the sector expires
+	DealWeight            abi.DealWeight          // Integral of active deals over sector lifetime
+	VerifiedDealWeight    abi.DealWeight          // Integral of active verified deals over sector lifetime
+	InitialPledge         abi.TokenAmount         // Pledge collected to commit this sector
+	ExpectedDayReward     abi.TokenAmount         // Expected one day projection of reward for sector computed at activation time
+	ExpectedStoragePledge abi.TokenAmount         // Expected twenty day projection of reward for sector computed at activation time
+	PowerBaseEpoch        abi.ChainEpoch          // Epoch at which this sector's power was most recently updated
+	ReplacedDayReward     abi.TokenAmount         // Day reward of this sector before its power was most recently updated
+	SectorKeyCID          *cid.Cid                // The original SealedSectorCID, only gets set on the first ReplicaUpdate
+  Flags                 SectorOnChainInfoFlags  // Additional flags
 }
 
 func (st *State) GetInfo(store adt.Store) (*MinerInfo, error) {
