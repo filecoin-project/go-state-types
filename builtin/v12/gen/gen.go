@@ -129,7 +129,6 @@ func main() {
 		market.GetDealActivationReturn{},
 		market.OnMinerSectorsTerminateParams{},
 		market.SectorDealIDs{},
-		market.HamtCid{},
 
 		// other types
 		market.DealProposal{},

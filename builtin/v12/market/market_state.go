@@ -109,10 +109,6 @@ type SectorDealIDs struct {
 	DealIDs []abi.DealID
 }
 
-type HamtCid struct {
-	Cid cid.Cid
-}
-
 // A specialization of a array to deals.
 // It is an error to query for a key that doesn't exist.
 type DealArray struct {

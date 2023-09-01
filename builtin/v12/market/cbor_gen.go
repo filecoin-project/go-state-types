@@ -1891,67 +1891,6 @@ func (t *SectorDealIDs) UnmarshalCBOR(r io.Reader) (err error) {
 	return nil
 }
 
-var lengthBufHamtCid = []byte{129}
-
-func (t *HamtCid) MarshalCBOR(w io.Writer) error {
-	if t == nil {
-		_, err := w.Write(cbg.CborNull)
-		return err
-	}
-
-	cw := cbg.NewCborWriter(w)
-
-	if _, err := cw.Write(lengthBufHamtCid); err != nil {
-		return err
-	}
-
-	// t.Cid (cid.Cid) (struct)
-
-	if err := cbg.WriteCid(cw, t.Cid); err != nil {
-		return xerrors.Errorf("failed to write cid field t.Cid: %w", err)
-	}
-
-	return nil
-}
-
-func (t *HamtCid) UnmarshalCBOR(r io.Reader) (err error) {
-	*t = HamtCid{}
-
-	cr := cbg.NewCborReader(r)
-
-	maj, extra, err := cr.ReadHeader()
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-	}()
-
-	if maj != cbg.MajArray {
-		return fmt.Errorf("cbor input should be of type array")
-	}
-
-	if extra != 1 {
-		return fmt.Errorf("cbor input had wrong number of fields")
-	}
-
-	// t.Cid (cid.Cid) (struct)
-
-	{
-
-		c, err := cbg.ReadCid(cr)
-		if err != nil {
-			return xerrors.Errorf("failed to read cid field t.Cid: %w", err)
-		}
-
-		t.Cid = c
-
-	}
-	return nil
-}
-
 var lengthBufDealProposal = []byte{139}
 
 func (t *DealProposal) MarshalCBOR(w io.Writer) error {

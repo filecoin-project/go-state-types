@@ -19,6 +19,7 @@ import (
 
 	"github.com/ipfs/go-cid"
 	cbor "github.com/ipfs/go-ipld-cbor"
+	cbg "github.com/whyrusleeping/cbor-gen"
 
 	"github.com/filecoin-project/go-state-types/abi"
 )
@@ -599,8 +600,7 @@ func (m minerMigrator) addSectorToDealIDHamtToSectorDeals(sectorToDealIdHamt *bu
 	if err != nil {
 		return xerrors.Errorf("adding getting hamtCid: %w", err)
 	}
-	cborCid := market.HamtCid{Cid: hamtCid}
-	err = m.sectorDeals.Map.Put(abi.IdAddrKey(minerAddr), &cborCid)
+	err = m.sectorDeals.Map.Put(abi.IdAddrKey(minerAddr), cbg.CborCid(hamtCid))
 
 	if err != nil {
 		return xerrors.Errorf("adding sector number and deal ids to state tree: %w", err)
