@@ -35,7 +35,7 @@ type minerMigrator struct {
 	emptyDeadlinesV12 cid.Cid
 	sectorDeals       *builtin.ActorTree
 	OutCodeCID        cid.Cid
-	hamtLock          sync.Mutex
+	hamtLock          *sync.Mutex
 }
 
 func newMinerMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid, cache migration.MigrationCache) (*minerMigrator, error) {
