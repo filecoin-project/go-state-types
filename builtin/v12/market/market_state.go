@@ -55,6 +55,14 @@ type State struct {
 
 	// Verified registry allocation IDs for deals that are not yet activated.
 	PendingDealAllocationIds cid.Cid // HAMT[DealID]AllocationID
+
+	/// Maps providers to their sector IDs to deal IDs.
+	/// This supports finding affected deals when a sector is terminated early
+	/// or has data replaced.
+	/// Grouping by provider limits the cost of operations in the expected use case
+	/// of multiple sectors all belonging to the same provider.
+	/// HAMT[Address]HAMT[SectorNumber]SectorDealIDs
+	ProviderSectors cid.Cid
 }
 
 func ConstructState(store adt.Store) (*State, error) {
@@ -83,6 +91,10 @@ func ConstructState(store adt.Store) (*State, error) {
 	if err != nil {
 		return nil, xerrors.Errorf("failed to create empty map: %w", err)
 	}
+	emptyProviderSectorsMap, err := adt.StoreEmptyMap(store, builtin.DefaultHamtBitwidth)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to create empty map: %w", err)
+	}
 
 	return &State{
 		Proposals:                emptyProposalsArrayCid,
@@ -94,6 +106,7 @@ func ConstructState(store adt.Store) (*State, error) {
 		DealOpsByEpoch:           emptyDealOpsHamtCid,
 		LastCron:                 abi.ChainEpoch(-1),
 		PendingDealAllocationIds: emptyPendingDealAllocationMapCid,
+		ProviderSectors:          emptyProviderSectorsMap,
 
 		TotalClientLockedCollateral:   abi.NewTokenAmount(0),
 		TotalProviderLockedCollateral: abi.NewTokenAmount(0),
