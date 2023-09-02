@@ -242,7 +242,10 @@ func main() {
 		verifreg.SectorAllocationClaim{},
 		verifreg.Claim{},
 		verifreg.ClaimTerm{},
+		verifreg.ClaimExtensionRequest{},
 		verifreg.Allocation{},
+		verifreg.AllocationRequest{},
+		verifreg.AllocationRequests{},
 	); err != nil {
 		panic(err)
 	}
