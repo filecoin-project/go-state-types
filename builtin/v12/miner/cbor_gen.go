@@ -1973,10 +1973,12 @@ func (t *SectorOnChainInfo) MarshalCBOR(w io.Writer) error {
 		}
 	}
 
-	// t.SimpleQAPower (bool) (bool)
-	if err := cbg.WriteBool(w, t.SimpleQAPower); err != nil {
+	// t.Flags (miner.SectorOnChainInfoFlags) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Flags)); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -2238,22 +2240,19 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 
 	}
-	// t.SimpleQAPower (bool) (bool)
+	// t.Flags (miner.SectorOnChainInfoFlags) (uint64)
 
-	maj, extra, err = cr.ReadHeader()
-	if err != nil {
-		return err
-	}
-	if maj != cbg.MajOther {
-		return fmt.Errorf("booleans must be major type 7")
-	}
-	switch extra {
-	case 20:
-		t.SimpleQAPower = false
-	case 21:
-		t.SimpleQAPower = true
-	default:
-		return fmt.Errorf("booleans are either major type 7, value 20 or 21 (got %d)", extra)
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.Flags = SectorOnChainInfoFlags(extra)
+
 	}
 	return nil
 }

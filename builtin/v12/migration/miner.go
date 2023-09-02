@@ -380,11 +380,18 @@ func migrateSectorInfo(sectorInfo miner11.SectorOnChainInfo) *miner12.SectorOnCh
 	// PowerBaseEpoch := Activation (in all cases)
 	// Activation := Activation (for non-upgraded sectors and sectors upgraded through old CC path)
 	// Activation := OldActivation - ReplacedSectorAge (for sectors updated through SnapDeals)
+	//
+	// SimpleQAPower field got replaced by flags field. We set the flag SIMPLE_QA_POWER if the sector had the field set to true.
 
 	powerBaseEpoch := sectorInfo.Activation
 	activationEpoch := sectorInfo.Activation
 	if sectorInfo.SectorKeyCID != nil {
 		activationEpoch = sectorInfo.Activation - sectorInfo.ReplacedSectorAge
+	}
+
+	flags := miner12.SectorOnChainInfoFlags(0)
+	if sectorInfo.SimpleQAPower {
+		flags = flags | miner12.SIMPLE_QA_POWER
 	}
 
 	return &miner12.SectorOnChainInfo{
@@ -402,6 +409,6 @@ func migrateSectorInfo(sectorInfo miner11.SectorOnChainInfo) *miner12.SectorOnCh
 		PowerBaseEpoch:        powerBaseEpoch,
 		ReplacedDayReward:     sectorInfo.ReplacedDayReward,
 		SectorKeyCID:          sectorInfo.SectorKeyCID,
-		SimpleQAPower:         sectorInfo.SimpleQAPower,
+		Flags:                 flags,
 	}
 }
