@@ -221,7 +221,7 @@ func (m minerMigrator) migrateSectorsWithCache(ctx context.Context, store adt11.
 				return cid.Undef, xerrors.Errorf("failed to read sectors array: %w", err)
 			}
 
-			outArray, outDealHamt, err := m.migrateSectorsFromScratch(ctx, store, minerAddr, inArray)
+			outArray, outDealHamtCid, err := m.migrateSectorsFromScratch(ctx, store, minerAddr, inArray)
 			if err != nil {
 				return cid.Undef, xerrors.Errorf("failed to migrate sectors from scratch: %w", err)
 			}
@@ -230,8 +230,15 @@ func (m minerMigrator) migrateSectorsWithCache(ctx context.Context, store adt11.
 				return cid.Undef, xerrors.Errorf("error writing new sectors AMT: %w", err)
 			}
 
-			sectorToDealIdHamtCid = outDealHamt
+			sectorToDealIdHamtCid = outDealHamtCid
 		}
+
+		//add to new address sector deal id hamt index
+		err = m.addSectorToDealIDHamtToSectorDeals(sectorToDealIdHamtCid, minerAddr)
+		if err != nil {
+			return cid.Undef, xerrors.Errorf("failed to add sector to deal id hamt to for minerAddr to HAMT: %w", err)
+		}
+
 		if err = cache.Write(migration.MinerPrevSectorsInKey(minerAddr), inRoot); err != nil {
 			return cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
 		}
@@ -327,13 +334,6 @@ func (m minerMigrator) migrateSectorsWithDiff(ctx context.Context, store adt11.S
 		}
 	}
 
-	if len(diffs) > 0 {
-		err = m.addSectorToDealIDHamtToSectorDeals(sectorToDealIdHamt, minerAddr)
-		if err != nil {
-			return cid.Undef, cid.Undef, err
-		}
-	}
-
 	//return the hAmt
 
 	prevOutSectorsRoot, err := prevOutSectors.Root()
@@ -372,11 +372,6 @@ func (m minerMigrator) migrateSectorsFromScratch(ctx context.Context, store adt1
 	}
 
 	sectorToDealIdHamtCid, err := sectorToDealIdHamt.Map.Root()
-	if err != nil {
-		return nil, cid.Undef, err
-	}
-
-	err = m.addSectorToDealIDHamtToSectorDeals(sectorToDealIdHamt, minerAddr)
 	if err != nil {
 		return nil, cid.Undef, err
 	}
@@ -586,17 +581,12 @@ func removeSectorNumberToDealIdFromHAMT(xap *builtin.ActorTree, SectorNumber uin
 	return nil
 }
 
-func (m minerMigrator) addSectorToDealIDHamtToSectorDeals(sectorToDealIdHamt *builtin.ActorTree, minerAddr address.Address) error {
+func (m minerMigrator) addSectorToDealIDHamtToSectorDeals(hamtCid cid.Cid, minerAddr address.Address) error {
 	m.hamtLock.Lock()
 	// Lock so only one goroutine at a time can access the map c.v.
 	defer m.hamtLock.Unlock()
 
-	//todo we are storing the hamt cid but we MUST store the hamt type
-	hamtCid, err := sectorToDealIdHamt.Map.Root()
-	if err != nil {
-		return xerrors.Errorf("adding getting hamtCid: %w", err)
-	}
-	err = m.sectorDeals.Map.Put(abi.IdAddrKey(minerAddr), cbg.CborCid(hamtCid))
+	err := m.sectorDeals.Map.Put(abi.IdAddrKey(minerAddr), cbg.CborCid(hamtCid))
 
 	if err != nil {
 		return xerrors.Errorf("adding sector number and deal ids to state tree: %w", err)
