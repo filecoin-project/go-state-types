@@ -219,11 +219,13 @@ var MethodsMiner = struct {
 	ProveCommitAggregate               abi.MethodNum
 	ProveReplicaUpdates                abi.MethodNum
 	PreCommitSectorBatch2              abi.MethodNum
-	ProveReplicaUpdates2               abi.MethodNum
+	ProveReplicaUpdatesDeprecated      abi.MethodNum
 	ChangeBeneficiary                  abi.MethodNum
 	ChangeBeneficiaryExported          abi.MethodNum
 	GetBeneficiary                     abi.MethodNum
 	ExtendSectorExpiration2            abi.MethodNum
+	ProveCommitSectors2                abi.MethodNum
+	ProveReplicaUpdates2               abi.MethodNum
 	GetOwnerExported                   abi.MethodNum
 	IsControllingAddressExported       abi.MethodNum
 	GetSectorSizeExported              abi.MethodNum
@@ -272,6 +274,8 @@ var MethodsMiner = struct {
 	MustGenerateFRCMethodNum("ChangeBeneficiary"),
 	31,
 	32,
+	33,
+	34,
 	MustGenerateFRCMethodNum("GetOwner"),
 	MustGenerateFRCMethodNum("IsControllingAddress"),
 	MustGenerateFRCMethodNum("GetSectorSize"),
