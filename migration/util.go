@@ -137,7 +137,7 @@ func SectorIndexHamtKey() string {
 	return "sectorIndexHamtKey"
 }
 
-func SectorIndexPrevSectorsOutKey(m address.Address) string {
+func MinerPrevSectorDealIndexKey(m address.Address) string {
 	return "sectorIndexPrevSectorsOut-" + m.String()
 }
 
