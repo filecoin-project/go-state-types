@@ -561,11 +561,7 @@ func migrateDeadlineSectorsFromScratch(ctx context.Context, store adt11.Store, i
 }
 
 func addSectorNumberToDealIdHAMT(xap *builtin.ActorTree, sectorInfo miner11.SectorOnChainInfo, store adt11.Store) error {
-	//sectorInfo.DealIDs,sectorInfo.SectorNumber
-	// - todo confirm types beint stored is correct
-
-	cborDealIDs := market.SectorDealIDs{DealIDs: sectorInfo.DealIDs}
-	err := xap.Map.Put(abi.IntKey(int64(sectorInfo.SectorNumber)), &cborDealIDs)
+	err := xap.Map.Put(abi.IntKey(int64(sectorInfo.SectorNumber)), &market.SectorDealIDs{DealIDs: sectorInfo.DealIDs})
 	if err != nil {
 		return xerrors.Errorf("adding sector number and deal ids to state tree: %w", err)
 	}
