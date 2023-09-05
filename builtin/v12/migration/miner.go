@@ -349,7 +349,6 @@ func (m minerMigrator) migrateSectorsWithDiff(ctx context.Context, store adt11.S
 
 }
 
-// return cid of the HAMT for this address and add to the cache outside this fn
 func (m minerMigrator) migrateSectorsFromScratch(ctx context.Context, store adt11.Store, minerAddr address.Address, inArray *adt11.Array) (*adt12.Array, cid.Cid, error) {
 	outArray, err := adt12.MakeEmptyArray(store, miner12.SectorsAmtBitwidth)
 	if err != nil {
