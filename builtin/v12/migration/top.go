@@ -158,7 +158,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	// Create the new state
 	newMarketState := market12.State{
 		Proposals:                     oldMarketState.Proposals,
-		States:                        oldMarketState.States,
+		States:                        oldMarketState.States, // FIXME migrate deal states to include sector number
 		PendingProposals:              oldMarketState.PendingProposals,
 		EscrowTable:                   oldMarketState.EscrowTable,
 		LockedTable:                   oldMarketState.LockedTable,
@@ -169,7 +169,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		TotalProviderLockedCollateral: oldMarketState.TotalProviderLockedCollateral,
 		TotalClientStorageFee:         oldMarketState.TotalClientStorageFee,
 		PendingDealAllocationIds:      oldMarketState.PendingDealAllocationIds,
-		SectorDeals:                   sectorDealIDs, // Updated value
+		ProviderSectors:               sectorDealIDs, // Updated value
 	}
 
 	newMarketStateCid, err := store.Put(ctx, &newMarketState)

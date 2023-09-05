@@ -334,22 +334,6 @@ func CheckVerifregAgainstMiners(acc *builtin.MessageAccumulator, verifregSummary
 }
 
 func CheckMarketAgainstVerifreg(acc *builtin.MessageAccumulator, verifregSummary *verifreg.StateSummary, marketSummary *market.StateSummary) {
-	// all activated verified deals with claim ids reference a claim in verifreg state
-	// note that it is possible for claims to exist with no matching deal if the deal expires
-	for claimId, dealId := range marketSummary.ClaimIdToDealId {
-		claim, found := verifregSummary.Claims[claimId]
-		acc.Require(found, "claim %d not found for activated deal %d", claimId, dealId)
-
-		info, found := marketSummary.Deals[dealId]
-		acc.Require(found, "internal invariant error invalid market state references missing deal %d", dealId)
-
-		providerId, err := address.IDFromAddress(info.Provider)
-		acc.RequireNoError(err, "error getting ID from provider address")
-		acc.Require(abi.ActorID(providerId) == claim.Provider, "mismatches providers %d %d on claim %d and deal %d", providerId, claim.Provider, claimId, dealId)
-
-		acc.Require(info.PieceCid == claim.Data, "mismatches piece cid %s %s on claim %d and deal %d", info.PieceCid, claim.Data, claimId, dealId)
-	}
-
 	// all pending deal allocation ids have an associated allocation
 	// note that it is possible for allocations to exist that don't match any deal
 	// if they are created from a direct DataCap transfer
