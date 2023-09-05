@@ -28,7 +28,6 @@ type DealSummary struct {
 type StateSummary struct {
 	Deals                    map[abi.DealID]*DealSummary
 	PendingDealAllocationIds map[abi.DealID]verifreg.AllocationId
-	ClaimIdToDealId          map[verifreg.ClaimId]abi.DealID
 	AllocIdToDealId          map[verifreg.AllocationId]abi.DealID
 	PendingProposalCount     uint64
 	DealStateCount           uint64
@@ -118,7 +117,6 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 	}
 
 	dealStateCount := uint64(0)
-	claimIdToDealId := make(map[verifreg.ClaimId]abi.DealID)
 	if dealStates, err := adt.AsArray(store, st.States, StatesAmtBitwidth); err != nil {
 		acc.Addf("error loading deal states: %v", err)
 	} else {
@@ -156,11 +154,6 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 			acc.Require(!found, "deal %d has pending allocation", dealID)
 
 			dealStateCount++
-
-			if dealState.VerifiedClaim != verifreg.NoAllocationID {
-				claimIdToDealId[verifreg.ClaimId(dealState.VerifiedClaim)] = abi.DealID(dealID)
-			}
-
 			return nil
 		})
 		acc.RequireNoError(err, "error iterating deal states")
@@ -266,7 +259,6 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 		LockTableCount:           lockTableCount,
 		DealOpEpochCount:         dealOpEpochCount,
 		DealOpCount:              dealOpCount,
-		ClaimIdToDealId:          claimIdToDealId,
 		AllocIdToDealId:          allocationIdToDealId,
 	}, acc
 }

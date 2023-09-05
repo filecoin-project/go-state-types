@@ -57,7 +57,7 @@ type State struct {
 	PendingDealAllocationIds cid.Cid // HAMT[DealID]AllocationID
 
 	// New mapping of sector IDs to deal IDS, grouped by storage provider.
-	SectorDeals cid.Cid // HAMT[Address]HAMT[SectorNumber]SectorDeals
+	ProviderSectors cid.Cid // HAMT[Address]HAMT[SectorNumber]SectorDeals
 
 }
 
