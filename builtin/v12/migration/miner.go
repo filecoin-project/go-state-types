@@ -334,7 +334,7 @@ func (m minerMigrator) migrateSectorsWithDiff(ctx context.Context, store adt11.S
 		}
 	}
 
-	//return the hAmt
+	//return the sector to deal id Hamt
 
 	prevOutSectorsRoot, err := prevOutSectors.Root()
 	if err != nil {
