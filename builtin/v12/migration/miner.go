@@ -583,7 +583,6 @@ func removeSectorNumberToDealIdFromHAMT(xap *builtin.ActorTree, SectorNumber uin
 
 func (m minerMigrator) addSectorToDealIDHamtToSectorDeals(hamtCid cid.Cid, minerAddr address.Address) error {
 	m.hamtLock.Lock()
-	// Lock so only one goroutine at a time can access the map c.v.
 	defer m.hamtLock.Unlock()
 
 	err := m.sectorDeals.Map.Put(abi.IdAddrKey(minerAddr), cbg.CborCid(hamtCid))
