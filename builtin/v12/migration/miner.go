@@ -322,7 +322,7 @@ func (m minerMigrator) migrateSectorsWithDiff(ctx context.Context, store adt11.S
 				return cid.Undef, cid.Undef, xerrors.Errorf("didn't find sector %d in inSectors", sectorNo)
 			}
 
-			if err := prevOutSectors.Set(change.Key, migrateSectorInfo(*info, store)); err != nil {
+			if err := prevOutSectors.Set(change.Key, migrateSectorInfo(*info)); err != nil {
 				return cid.Undef, cid.Undef, xerrors.Errorf("failed to set migrated sector %d in prevOutSectors", sectorNo)
 			}
 
@@ -365,7 +365,7 @@ func (m minerMigrator) migrateSectorsFromScratch(ctx context.Context, store adt1
 
 		err = addSectorNumberToDealIdHAMT(sectorToDealIdHamt, sectorInfo, store)
 
-		return outArray.Set(uint64(k), migrateSectorInfo(sectorInfo, store))
+		return outArray.Set(uint64(k), migrateSectorInfo(sectorInfo))
 	}); err != nil {
 		return nil, cid.Undef, err
 	}
@@ -464,7 +464,7 @@ func (m minerMigrator) migrateDeadlines(ctx context.Context, store adt11.Store, 
 	return store.Put(ctx, &outDeadlines)
 }
 
-func migrateSectorInfo(sectorInfo miner11.SectorOnChainInfo, store adt11.Store) *miner12.SectorOnChainInfo {
+func migrateSectorInfo(sectorInfo miner11.SectorOnChainInfo) *miner12.SectorOnChainInfo {
 	// For a sector that has not been updated: the Activation is correct and ReplacedSectorAge is zero.
 	// For a sector that has been updated through SnapDeals: Activation is the epoch at which it was upgraded, and ReplacedSectorAge is delta since the true activation.
 	// For a sector that has been updated through the old CC path: Activation is correct
@@ -535,7 +535,7 @@ func migrateDeadlineSectorsWithDiff(ctx context.Context, store adt11.Store, inRo
 				return cid.Undef, xerrors.Errorf("didn't find sector %d in inSectors", sectorNo)
 			}
 
-			if err := prevOutSectors.Set(change.Key, migrateSectorInfo(*info, store)); err != nil {
+			if err := prevOutSectors.Set(change.Key, migrateSectorInfo(*info)); err != nil {
 				return cid.Undef, xerrors.Errorf("failed to set migrated sector %d in prevOutSectors", sectorNo)
 			}
 		}
@@ -552,7 +552,7 @@ func migrateDeadlineSectorsFromScratch(ctx context.Context, store adt11.Store, i
 
 	var sectorInfo miner11.SectorOnChainInfo
 	if err = inArray.ForEach(&sectorInfo, func(k int64) error {
-		return outArray.Set(uint64(k), migrateSectorInfo(sectorInfo, store))
+		return outArray.Set(uint64(k), migrateSectorInfo(sectorInfo))
 	}); err != nil {
 		return nil, err
 	}
