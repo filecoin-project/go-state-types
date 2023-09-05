@@ -2,7 +2,6 @@ package migration
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/filecoin-project/go-state-types/builtin"
@@ -74,24 +73,11 @@ func newMinerMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid
 
 	}
 
-	//load sector index from datastore, or create a new one if not found
-	okSectorIndex, prevSectorIndexRoot, err := cache.Read(migration.MarketSectorIndexKey())
-	if err != nil {
-		return nil, xerrors.Errorf("failed to get previous sector index from cache: %w", err)
-	}
+	// use a new Hamt for the parent sector IDs to deal IDS index each time to ensure old actor ids are not persisted in the cache from the premigration
 	var sectorDeals *builtin.ActorTree
-	if okSectorIndex {
-		sectorDeals, err = builtin.LoadTree(ctxStore, prevSectorIndexRoot)
-		if err != nil {
-			return nil, xerrors.Errorf("reading cached sectorDeals tree: %w", err)
-		}
-		fmt.Println("Loaded HAMT from cache: ", prevSectorIndexRoot)
-	} else {
-		// New mapping of sector IDs to deal IDS, grouped by storage provider.
-		sectorDeals, err = builtin.NewTree(ctxStore)
-		if err != nil {
-			return nil, xerrors.Errorf("creating new state tree: %w", err)
-		}
+	sectorDeals, err = builtin.NewTree(ctxStore)
+	if err != nil {
+		return nil, xerrors.Errorf("creating new state tree: %w", err)
 	}
 
 	return &minerMigrator{

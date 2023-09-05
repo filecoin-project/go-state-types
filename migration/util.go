@@ -133,10 +133,6 @@ func ExpirationsAmtKey(expirationsAmt cid.Cid) string {
 	return "partitionsAmt-" + expirationsAmtKey
 }
 
-func MarketSectorIndexKey() string {
-	return "marketSectorIndexKey"
-}
-
 func MinerPrevSectorDealIndexKey(m address.Address) string {
 	return "minerPrevSectorDealIndexKey-" + m.String()
 }
