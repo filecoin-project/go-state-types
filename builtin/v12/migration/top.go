@@ -151,7 +151,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 
 	//save sectorDealIdIndex in Cache
-	if err = cache.Write(migration.SectorIndexHamtKey(), sectorDealIDs); err != nil {
+	if err = cache.Write(migration.MarketSectorIndexKey(), sectorDealIDs); err != nil {
 		return cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
 	}
 

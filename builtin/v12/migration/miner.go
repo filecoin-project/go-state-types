@@ -75,7 +75,7 @@ func newMinerMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid
 	}
 
 	//load sector index from datastore, or create a new one if not found
-	okSectorIndex, prevSectorIndexRoot, err := cache.Read(migration.SectorIndexHamtKey())
+	okSectorIndex, prevSectorIndexRoot, err := cache.Read(migration.MarketSectorIndexKey())
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get previous sector index from cache: %w", err)
 	}
