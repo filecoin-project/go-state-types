@@ -29,13 +29,13 @@ import (
 // - #914 fix: Set ActivationEpoch to when the sector was FIRST activated, and PowerBaseEpoch to latest update epoch
 
 type minerMigrator struct {
-	emptyDeadlineV11  cid.Cid
-	emptyDeadlinesV11 cid.Cid
-	emptyDeadlineV12  cid.Cid
-	emptyDeadlinesV12 cid.Cid
-	sectorDeals       *adt12.Map
-	OutCodeCID        cid.Cid
-	hamtLock          *sync.Mutex
+	emptyDeadlineV11           cid.Cid
+	emptyDeadlinesV11          cid.Cid
+	emptyDeadlineV12           cid.Cid
+	emptyDeadlinesV12          cid.Cid
+	sectorDeals                *adt12.Map
+	OutCodeCID                 cid.Cid
+	marketSectorDealsIndexLock *sync.Mutex
 }
 
 func newMinerMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid, cache migration.MigrationCache) (*minerMigrator, error) {
@@ -95,13 +95,13 @@ func newMinerMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid
 	}
 
 	return &minerMigrator{
-		emptyDeadlineV11:  edv11cid,
-		emptyDeadlinesV11: edsv11cid,
-		emptyDeadlineV12:  edv12cid,
-		emptyDeadlinesV12: edsv12cid,
-		sectorDeals:       sectorDeals,
-		OutCodeCID:        outCode,
-		hamtLock:          &sync.Mutex{},
+		emptyDeadlineV11:           edv11cid,
+		emptyDeadlinesV11:          edsv11cid,
+		emptyDeadlineV12:           edv12cid,
+		emptyDeadlinesV12:          edsv12cid,
+		sectorDeals:                sectorDeals,
+		OutCodeCID:                 outCode,
+		marketSectorDealsIndexLock: &sync.Mutex{},
 	}, nil
 }
 
@@ -578,8 +578,8 @@ func removeSectorNumberToDealIdFromHAMT(xap *builtin.ActorTree, SectorNumber uin
 }
 
 func (m minerMigrator) addSectorToDealIDHamtToSectorDeals(hamtCid cid.Cid, minerAddr address.Address) error {
-	m.hamtLock.Lock()
-	defer m.hamtLock.Unlock()
+	m.marketSectorDealsIndexLock.Lock()
+	defer m.marketSectorDealsIndexLock.Unlock()
 
 	err := m.sectorDeals.Put(abi.IdAddrKey(minerAddr), cbg.CborCid(hamtCid))
 
