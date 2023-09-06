@@ -73,9 +73,12 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	for _, oldEntry := range oldManifestData.Entries {
 		if oldEntry.Name == manifest.MinerKey {
 			miner11Cid = oldEntry.Code
+			continue
 		}
 		if oldEntry.Name == manifest.MarketKey {
 			market11Cid = oldEntry.Code
+			deferredCodeIDs[market11Cid] = struct{}{}
+			continue
 		}
 		newCodeCID, ok := newManifest.Get(oldEntry.Name)
 		if !ok {
@@ -109,6 +112,12 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("code cid for miner actor not found in new manifest")
 	}
 
+	// The Market Actor
+	market12Cid, ok := newManifest.Get(manifest.MarketKey)
+	if !ok {
+		return cid.Undef, xerrors.Errorf("code cid for market actor not found in new manifest")
+	}
+
 	minerMigrator, err := newMinerMigrator(ctx, store, miner12Cid, cache)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to create miner migrator: %w", err)
@@ -134,7 +143,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("failed to get market actor state: %w", err)
 	}
 
-	actorsOut, err := migration.RunMigration(ctx, cfg, cache, store, log, actorsIn, migrations)
+	actorsOut, err := migration.RunMigration(ctx, cfg, cache, store, log, actorsIn, migrations, deferredCodeIDs)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to run migration: %w", err)
 	}
@@ -180,7 +189,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	// Update the market actor in the state tree with the newly fetched sector deal IDs.
 	// This ensures the market actor's state reflects the most recent sector deals.
 	if err = actorsOut.SetActorV5(builtin.StorageMarketActorAddr, &builtin.ActorV5{
-		Code:       market11Cid,
+		Code:       market12Cid,
 		Head:       newMarketStateCid, // Updated value
 		CallSeqNum: oldMarketActor.CallSeqNum,
 		Balance:    oldMarketActor.Balance,

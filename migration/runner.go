@@ -16,7 +16,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
-func RunMigration(ctx context.Context, cfg Config, cache MigrationCache, store cbor.IpldStore, log Logger, actorsIn *builtin.ActorTree, migrations map[cid.Cid]ActorMigration) (*builtin.ActorTree, error) {
+func RunMigration(ctx context.Context, cfg Config, cache MigrationCache, store cbor.IpldStore, log Logger, actorsIn *builtin.ActorTree, migrations map[cid.Cid]ActorMigration, deferredCodeIDs map[cid.Cid]struct{}) (*builtin.ActorTree, error) {
 	startTime := time.Now()
 
 	// Setup synchronization
@@ -35,6 +35,10 @@ func RunMigration(ctx context.Context, cfg Config, cache MigrationCache, store c
 		if err := actorsIn.ForEachV5(func(addr address.Address, actorIn *builtin.ActorV5) error {
 			actorMigration, ok := migrations[actorIn.Code]
 			if !ok {
+				_, isDeferred := deferredCodeIDs[actorIn.Code]
+				if isDeferred {
+					return nil
+				}
 				return xerrors.Errorf("actor with code %s has no registered migration function", actorIn.Code)
 			}
 
