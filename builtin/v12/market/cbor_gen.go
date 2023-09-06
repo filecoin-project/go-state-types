@@ -319,6 +319,12 @@ func (t *DealState) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
+	// t.SectorNumber (abi.SectorNumber) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.SectorNumber)); err != nil {
+		return err
+	}
+
 	// t.SectorStartEpoch (abi.ChainEpoch) (int64)
 	if t.SectorStartEpoch >= 0 {
 		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.SectorStartEpoch)); err != nil {
@@ -351,13 +357,6 @@ func (t *DealState) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
-
-	// t.VerifiedClaim (verifreg.AllocationId) (uint64)
-
-	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.VerifiedClaim)); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -384,6 +383,20 @@ func (t *DealState) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
+	// t.SectorNumber (abi.SectorNumber) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.SectorNumber = abi.SectorNumber(extra)
+
+	}
 	// t.SectorStartEpoch (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -458,20 +471,6 @@ func (t *DealState) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 
 		t.SlashEpoch = abi.ChainEpoch(extraI)
-	}
-	// t.VerifiedClaim (verifreg.AllocationId) (uint64)
-
-	{
-
-		maj, extra, err = cr.ReadHeader()
-		if err != nil {
-			return err
-		}
-		if maj != cbg.MajUnsignedInt {
-			return fmt.Errorf("wrong type for uint64 field")
-		}
-		t.VerifiedClaim = verifreg.AllocationId(extra)
-
 	}
 	return nil
 }

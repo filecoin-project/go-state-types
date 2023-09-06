@@ -15,7 +15,6 @@ import (
 	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
-	"github.com/filecoin-project/go-state-types/builtin/v12/verifreg"
 	acrypto "github.com/filecoin-project/go-state-types/crypto"
 )
 
@@ -27,10 +26,10 @@ var PieceCIDPrefix = cid.Prefix{
 }
 
 type DealState struct {
+	SectorNumber     abi.SectorNumber
 	SectorStartEpoch abi.ChainEpoch // -1 if not yet included in proven sector
 	LastUpdatedEpoch abi.ChainEpoch // -1 if deal state never updated
 	SlashEpoch       abi.ChainEpoch // -1 if deal never slashed
-	VerifiedClaim    verifreg.AllocationId
 }
 
 // The DealLabel is a kinded union of string or byte slice.

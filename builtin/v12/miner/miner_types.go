@@ -435,7 +435,7 @@ type DataActivationNotification struct {
 
 // ProveCommit2Return represents the return value for the ProveCommit2 function.
 type ProveCommit2Return struct {
-	Sectors []BatchReturn
+	Sectors BatchReturn
 }
 
 type BatchReturn struct {
