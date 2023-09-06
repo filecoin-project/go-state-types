@@ -101,6 +101,7 @@ func newMinerMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid
 		emptyDeadlinesV12: edsv12cid,
 		sectorDeals:       sectorDeals,
 		OutCodeCID:        outCode,
+		hamtLock:          &sync.Mutex{},
 	}, nil
 }
 
