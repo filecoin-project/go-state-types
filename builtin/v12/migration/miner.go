@@ -578,8 +578,8 @@ func removeSectorNumberToDealIdFromHAMT(xap *builtin.ActorTree, SectorNumber uin
 }
 
 func (m minerMigrator) addSectorToDealIDHamtToSectorDeals(hamtCid cid.Cid, minerAddr address.Address) error {
-	m.marketSectorDealsIndexLock.Lock()
-	defer m.marketSectorDealsIndexLock.Unlock()
+	(*m.marketSectorDealsIndexLock).Lock()
+	defer (*m.marketSectorDealsIndexLock).Unlock()
 
 	err := m.sectorDeals.Put(abi.IdAddrKey(minerAddr), cbg.CborCid(hamtCid))
 
