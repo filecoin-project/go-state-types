@@ -6853,18 +6853,9 @@ func (t *ProveCommit2Return) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.Sectors ([]miner.BatchReturn) (slice)
-	if len(t.Sectors) > cbg.MaxLength {
-		return xerrors.Errorf("Slice value in field t.Sectors was too long")
-	}
-
-	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Sectors))); err != nil {
+	// t.Sectors (miner.BatchReturn) (struct)
+	if err := t.Sectors.MarshalCBOR(cw); err != nil {
 		return err
-	}
-	for _, v := range t.Sectors {
-		if err := v.MarshalCBOR(cw); err != nil {
-			return err
-		}
 	}
 	return nil
 }
@@ -6892,35 +6883,15 @@ func (t *ProveCommit2Return) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	// t.Sectors ([]miner.BatchReturn) (slice)
+	// t.Sectors (miner.BatchReturn) (struct)
 
-	maj, extra, err = cr.ReadHeader()
-	if err != nil {
-		return err
-	}
+	{
 
-	if extra > cbg.MaxLength {
-		return fmt.Errorf("t.Sectors: array too large (%d)", extra)
-	}
-
-	if maj != cbg.MajArray {
-		return fmt.Errorf("expected cbor array")
-	}
-
-	if extra > 0 {
-		t.Sectors = make([]BatchReturn, extra)
-	}
-
-	for i := 0; i < int(extra); i++ {
-
-		var v BatchReturn
-		if err := v.UnmarshalCBOR(cr); err != nil {
-			return err
+		if err := t.Sectors.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.Sectors: %w", err)
 		}
 
-		t.Sectors[i] = v
 	}
-
 	return nil
 }
 
