@@ -33,7 +33,7 @@ type minerMigrator struct {
 	emptyDeadlinesV11 cid.Cid
 	emptyDeadlineV12  cid.Cid
 	emptyDeadlinesV12 cid.Cid
-	sectorDeals       *builtin.ActorTree
+	sectorDeals       *adt12.Map
 	OutCodeCID        cid.Cid
 	hamtLock          *sync.Mutex
 }
@@ -79,16 +79,16 @@ func newMinerMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get previous sector index from cache: %w", err)
 	}
-	var sectorDeals *builtin.ActorTree
+	var sectorDeals *adt12.Map
 	if okSectorIndex {
-		sectorDeals, err = builtin.LoadTree(ctxStore, prevSectorIndexRoot)
+		sectorDeals, err = adt12.AsMap(ctxStore, prevSectorIndexRoot, builtin.DefaultHamtBitwidth)
 		if err != nil {
 			return nil, xerrors.Errorf("reading cached sectorDeals tree: %w", err)
 		}
 		fmt.Println("Loaded HAMT from cache: ", prevSectorIndexRoot)
 	} else {
 		// New mapping of sector IDs to deal IDS, grouped by storage provider.
-		sectorDeals, err = builtin.NewTree(ctxStore)
+		sectorDeals, err = adt12.MakeEmptyMap(ctxStore, builtin.DefaultHamtBitwidth)
 		if err != nil {
 			return nil, xerrors.Errorf("creating new state tree: %w", err)
 		}
@@ -581,7 +581,7 @@ func (m minerMigrator) addSectorToDealIDHamtToSectorDeals(hamtCid cid.Cid, miner
 	m.hamtLock.Lock()
 	defer m.hamtLock.Unlock()
 
-	err := m.sectorDeals.Map.Put(abi.IdAddrKey(minerAddr), cbg.CborCid(hamtCid))
+	err := m.sectorDeals.Put(abi.IdAddrKey(minerAddr), cbg.CborCid(hamtCid))
 
 	if err != nil {
 		return xerrors.Errorf("adding sector number and deal ids to state tree: %w", err)
