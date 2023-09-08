@@ -2,6 +2,7 @@ package migration
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ipfs/go-cid"
 	cbor "github.com/ipfs/go-ipld-cbor"
@@ -180,6 +181,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		PendingDealAllocationIds:      oldMarketState.PendingDealAllocationIds,
 		ProviderSectors:               sectorDealIDs, // Updated value
 	}
+	fmt.Println("sector index: ", sectorDealIDs)
 
 	newMarketStateCid, err := store.Put(ctx, &newMarketState)
 	if err != nil {

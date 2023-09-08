@@ -342,11 +342,13 @@ func (m minerMigrator) migrateSectorsWithDiff(ctx context.Context, store adt11.S
 		return cid.Undef, cid.Undef, xerrors.Errorf("failed to get root of prevOutSectors: %w", err)
 	}
 
-	ret, err := sectorToDealIdHamt.Map.Root()
+	sectorToDealIdHamtCid, err := sectorToDealIdHamt.Map.Root()
 	if err != nil {
 		return cid.Undef, cid.Undef, xerrors.Errorf("failed to get root of sectorToDealIdHamt: %w", err)
 	}
-	return prevOutSectorsRoot, ret, nil
+
+	fmt.Println("sector to deal id hamt for address: ", minerAddr, " cid: ", sectorToDealIdHamtCid)
+	return prevOutSectorsRoot, sectorToDealIdHamtCid, nil
 
 }
 
