@@ -149,9 +149,15 @@ func (m minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, i
 
 	wrappedStore := adt11.WrapStore(ctx, store)
 
-	newSectors, err := m.migrateSectorsWithCache(ctx, wrappedStore, in.Cache, in.Address, inState.Sectors)
+	newSectors, sectorToDealIdHamtCid, err := m.migrateSectorsWithCache(ctx, wrappedStore, in.Cache, in.Address, inState.Sectors)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to migrate sectors for miner: %s: %w", in.Address, err)
+	}
+
+	// Add to new address sector deal id hamt index
+	err = m.addSectorToDealIDHamtToSectorDeals(sectorToDealIdHamtCid, in.Address)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to add sector to deal id hamt for minerAddr to HAMT: %w", err)
 	}
 
 	newDeadlines, err := m.migrateDeadlines(ctx, wrappedStore, in.Cache, in.Address, inState.Deadlines)
@@ -187,71 +193,61 @@ func (m minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, i
 		NewHead:    newHead,
 	}, nil
 }
-
-func (m minerMigrator) migrateSectorsWithCache(ctx context.Context, store adt11.Store, cache migration.MigrationCache, minerAddr address.Address, inRoot cid.Cid) (cid.Cid, error) {
-	return cache.Load(migration.SectorsAmtKey(inRoot), func() (cid.Cid, error) {
+func (m minerMigrator) migrateSectorsWithCache(ctx context.Context, store adt11.Store, cache migration.MigrationCache, minerAddr address.Address, inRoot cid.Cid) (cid.Cid, cid.Cid, error) {
+	return cache.Load2(migration.SectorsAmtKey(inRoot), func() (cid.Cid, cid.Cid, error) {
 
 		okIn, prevInRoot, err := cache.Read(migration.MinerPrevSectorsInKey(minerAddr))
 		if err != nil {
-			return cid.Undef, xerrors.Errorf("failed to get previous inRoot from cache: %w", err)
+			return cid.Undef, cid.Undef, xerrors.Errorf("failed to get previous inRoot from cache: %w", err)
 		}
 
 		okOut, prevOutRoot, err := cache.Read(migration.MinerPrevSectorsOutKey(minerAddr))
 		if err != nil {
-			return cid.Undef, xerrors.Errorf("failed to get previous outRoot from cache: %w", err)
+			return cid.Undef, cid.Undef, xerrors.Errorf("failed to get previous outRoot from cache: %w", err)
 		}
 
 		okSectorIndexOut, prevSectorIndexRoot, err := cache.Read(migration.MinerPrevSectorDealIndexKey(minerAddr))
 		if err != nil {
-			return cid.Undef, xerrors.Errorf("failed to get previous outRoot from cache: %w", err)
+			return cid.Undef, cid.Undef, xerrors.Errorf("failed to get previous outRoot from cache: %w", err)
 		}
 
 		var outRoot cid.Cid
 		var sectorToDealIdHamtCid cid.Cid
 
 		if okIn && okOut && okSectorIndexOut {
-			// we have previous work -- diff them to identify if there's new work and do the new work
 			outRoot, sectorToDealIdHamtCid, err = m.migrateSectorsWithDiff(ctx, store, minerAddr, inRoot, prevInRoot, prevOutRoot, prevSectorIndexRoot)
 			if err != nil {
-				return cid.Undef, xerrors.Errorf("failed to migrate sectors from diff: %w", err)
+				return cid.Undef, cid.Undef, xerrors.Errorf("failed to migrate sectors from diff: %w", err)
 			}
 		} else {
-			// first time we're doing this, do all the work
 			inArray, err := adt11.AsArray(store, inRoot, miner11.SectorsAmtBitwidth)
 			if err != nil {
-				return cid.Undef, xerrors.Errorf("failed to read sectors array: %w", err)
+				return cid.Undef, cid.Undef, xerrors.Errorf("failed to read sectors array: %w", err)
 			}
 
 			outArray, outDealHamtCid, err := m.migrateSectorsFromScratch(ctx, store, minerAddr, inArray)
 			if err != nil {
-				return cid.Undef, xerrors.Errorf("failed to migrate sectors from scratch: %w", err)
+				return cid.Undef, cid.Undef, xerrors.Errorf("failed to migrate sectors from scratch: %w", err)
 			}
 			outRoot, err = outArray.Root()
 			if err != nil {
-				return cid.Undef, xerrors.Errorf("error writing new sectors AMT: %w", err)
+				return cid.Undef, cid.Undef, xerrors.Errorf("error writing new sectors AMT: %w", err)
 			}
 
 			sectorToDealIdHamtCid = outDealHamtCid
 		}
-
-		//add to new address sector deal id hamt index
-		err = m.addSectorToDealIDHamtToSectorDeals(sectorToDealIdHamtCid, minerAddr)
-		if err != nil {
-			return cid.Undef, xerrors.Errorf("failed to add sector to deal id hamt to for minerAddr to HAMT: %w", err)
-		}
-
 		if err = cache.Write(migration.MinerPrevSectorsInKey(minerAddr), inRoot); err != nil {
-			return cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
+			return cid.Undef, cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
 		}
 
 		if err = cache.Write(migration.MinerPrevSectorsOutKey(minerAddr), outRoot); err != nil {
-			return cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
+			return cid.Undef, cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
 		}
 
 		if err = cache.Write(migration.MinerPrevSectorDealIndexKey(minerAddr), sectorToDealIdHamtCid); err != nil {
-			return cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
+			return cid.Undef, cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
 		}
-		return outRoot, nil
+		return outRoot, sectorToDealIdHamtCid, nil
 	})
 }
 
