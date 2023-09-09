@@ -154,6 +154,19 @@ func (m minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, i
 		return nil, xerrors.Errorf("failed to migrate sectors for miner: %s: %w", in.Address, err)
 	}
 
+	okCacheRead, sectorToDealIdHamtCid, err := in.Cache.Read(migration.MinerPrevSectorDealIndexKey(inState.Sectors))
+	if err != nil {
+		return nil, xerrors.Errorf("failed to read sector to deal id hamt from cache: %w", err)
+	}
+	if !okCacheRead {
+		return nil, xerrors.Errorf("sector to deal id hamt not found in cache for address: %s", in.Address)
+	}
+	//add to new address sector deal id hamt index
+	err = m.addSectorToDealIDHamtToSectorDeals(sectorToDealIdHamtCid, in.Address)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to add sector to deal id hamt to for minerAddr to HAMT: %w", err)
+	}
+
 	newDeadlines, err := m.migrateDeadlines(ctx, wrappedStore, in.Cache, in.Address, inState.Deadlines)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to migrate deadlines: %w", err)
@@ -201,7 +214,7 @@ func (m minerMigrator) migrateSectorsWithCache(ctx context.Context, store adt11.
 			return cid.Undef, xerrors.Errorf("failed to get previous outRoot from cache: %w", err)
 		}
 
-		okSectorIndexOut, prevSectorIndexRoot, err := cache.Read(migration.MinerPrevSectorDealIndexKey(minerAddr))
+		okSectorIndexOut, prevSectorIndexRoot, err := cache.Read(migration.MinerPrevSectorDealIndexKey(inRoot))
 		if err != nil {
 			return cid.Undef, xerrors.Errorf("failed to get previous outRoot from cache: %w", err)
 		}
@@ -234,12 +247,6 @@ func (m minerMigrator) migrateSectorsWithCache(ctx context.Context, store adt11.
 			sectorToDealIdHamtCid = outDealHamtCid
 		}
 
-		//add to new address sector deal id hamt index
-		err = m.addSectorToDealIDHamtToSectorDeals(sectorToDealIdHamtCid, minerAddr)
-		if err != nil {
-			return cid.Undef, xerrors.Errorf("failed to add sector to deal id hamt to for minerAddr to HAMT: %w", err)
-		}
-
 		if err = cache.Write(migration.MinerPrevSectorsInKey(minerAddr), inRoot); err != nil {
 			return cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
 		}
@@ -248,7 +255,8 @@ func (m minerMigrator) migrateSectorsWithCache(ctx context.Context, store adt11.
 			return cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
 		}
 
-		if err = cache.Write(migration.MinerPrevSectorDealIndexKey(minerAddr), sectorToDealIdHamtCid); err != nil {
+		//use the AMT stateroot and not the miner address because multiple miners can have empty AMTs
+		if err = cache.Write(migration.MinerPrevSectorDealIndexKey(inRoot), sectorToDealIdHamtCid); err != nil {
 			return cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
 		}
 		return outRoot, nil

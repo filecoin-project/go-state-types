@@ -137,8 +137,13 @@ func MarketSectorIndexKey() string {
 	return "marketSectorIndexKey"
 }
 
-func MinerPrevSectorDealIndexKey(m address.Address) string {
-	return "minerPrevSectorDealIndexKey-" + m.String()
+func MinerPrevSectorDealIndexKey(sectorsAmt cid.Cid) string {
+	sectorsAmtKey, err := sectorsAmt.StringOfBase(multibase.Base32)
+	if err != nil {
+		panic(err)
+	}
+
+	return "minerPrevSectorDealIndexKey-" + sectorsAmtKey
 }
 
 func MinerPrevSectorsInKey(m address.Address) string {
