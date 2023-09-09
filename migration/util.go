@@ -40,34 +40,6 @@ func (m *MemMigrationCache) Read(key string) (bool, cid.Cid, error) {
 	return true, c, nil
 }
 
-func (m *MemMigrationCache) Load2(key string, loadFunc func() (cid.Cid, cid.Cid, error)) (cid.Cid, cid.Cid, error) {
-	type cacheVal struct {
-		Cid1 cid.Cid
-		Cid2 cid.Cid
-	}
-
-	val, found := m.MigrationMap.Load(key)
-	if found {
-		cv, ok := val.(cacheVal)
-		if !ok {
-			return cid.Undef, cid.Undef, xerrors.Errorf("non expected type value in cache for Load2")
-		}
-		return cv.Cid1, cv.Cid2, nil
-	}
-
-	cid1, cid2, err := loadFunc()
-	if err != nil {
-		return cid.Undef, cid.Undef, err
-	}
-
-	m.MigrationMap.Store(key, cacheVal{
-		Cid1: cid1,
-		Cid2: cid2,
-	})
-
-	return cid1, cid2, nil
-}
-
 func (m *MemMigrationCache) Load(key string, loadFunc func() (cid.Cid, error)) (cid.Cid, error) {
 	found, c, err := m.Read(key)
 	if err != nil {
@@ -123,7 +95,6 @@ type MigrationCache interface {
 	Write(key string, newCid cid.Cid) error
 	Read(key string) (bool, cid.Cid, error)
 	Load(key string, loadFunc func() (cid.Cid, error)) (cid.Cid, error)
-	Load2(key string, loadFunc func() (cid.Cid, cid.Cid, error)) (cid.Cid, cid.Cid, error)
 }
 
 func ActorHeadKey(addr address.Address, head cid.Cid) string {
