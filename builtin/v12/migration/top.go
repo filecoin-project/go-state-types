@@ -156,7 +156,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 
 	// Check if sectorDealIDs is not a zero value before proceeding.
-	if sectorDealIDs == cid.Undef {
+	if !sectorDealIDs.Defined() {
 		return cid.Undef, xerrors.New("sectorDealIDs is a zero value, cannot proceed with migration")
 	}
 
