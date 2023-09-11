@@ -300,7 +300,7 @@ func (m minerMigrator) migrateSectorsWithDiff(ctx context.Context, store adt11.S
 	// load previous HAMT sector index for this specific minerAddr
 	sectorToDealIdHamt, err := builtin.LoadTree(store, prevSectorIndexRoot)
 	if err != nil {
-		return cid.Undef, cid.Undef, xerrors.Errorf("creating new state tree: %w", err)
+		return cid.Undef, cid.Undef, xerrors.Errorf("failed to create new state tree: %w", err)
 	}
 
 	for _, change := range diffs {
