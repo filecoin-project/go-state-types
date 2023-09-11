@@ -216,7 +216,7 @@ func (m minerMigrator) migrateSectorsWithCache(ctx context.Context, store adt11.
 
 		okSectorIndexOut, prevSectorIndexRoot, err := cache.Read(migration.MinerPrevSectorDealIndexKey(prevInRoot))
 		if err != nil {
-			return cid.Undef, xerrors.Errorf("failed to get previous outRoot from cache: %w", err)
+			return cid.Undef, xerrors.Errorf("failed to read sector to deal id hamt from cache: %w", err)
 		}
 
 		var outRoot cid.Cid
@@ -257,7 +257,7 @@ func (m minerMigrator) migrateSectorsWithCache(ctx context.Context, store adt11.
 
 		//use the AMT stateroot and not the miner address because multiple miners can have empty AMTs
 		if err = cache.Write(migration.MinerPrevSectorDealIndexKey(inRoot), sectorToDealIdHamtCid); err != nil {
-			return cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
+			return cid.Undef, xerrors.Errorf("failed to write sector to deal id hamt to cache: %w", err)
 		}
 		return outRoot, nil
 	})
