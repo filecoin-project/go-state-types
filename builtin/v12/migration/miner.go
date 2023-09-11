@@ -298,7 +298,7 @@ func (m minerMigrator) migrateSectorsWithDiff(ctx context.Context, store adt11.S
 	}
 
 	// load previous HAMT sector index for this specific minerAddr
-	sectorToDealIdHamt, err := builtin.LoadTree(store, prevSectorIndexRoot)
+	sectorToDealIdHamt, err := adt12.AsMap(store, prevSectorIndexRoot, builtin.DefaultHamtBitwidth)
 	if err != nil {
 		return cid.Undef, cid.Undef, xerrors.Errorf("failed to create new state tree: %w", err)
 	}
@@ -348,7 +348,7 @@ func (m minerMigrator) migrateSectorsWithDiff(ctx context.Context, store adt11.S
 		return cid.Undef, cid.Undef, xerrors.Errorf("failed to get root of prevOutSectors: %w", err)
 	}
 
-	sectorToDealIdHamtCid, err := sectorToDealIdHamt.Map.Root()
+	sectorToDealIdHamtCid, err := sectorToDealIdHamt.Root()
 	if err != nil {
 		return cid.Undef, cid.Undef, xerrors.Errorf("failed to get root of sectorToDealIdHamt: %w", err)
 	}
@@ -364,7 +364,7 @@ func (m minerMigrator) migrateSectorsFromScratch(ctx context.Context, store adt1
 		return nil, cid.Undef, xerrors.Errorf("failed to construct new sectors array: %w", err)
 	}
 
-	sectorToDealIdHamt, err := builtin.NewTree(store)
+	sectorToDealIdHamt, err := adt12.MakeEmptyMap(store, builtin.DefaultHamtBitwidth)
 	if err != nil {
 		return nil, cid.Undef, xerrors.Errorf("creating new state tree: %w", err)
 	}
@@ -380,7 +380,7 @@ func (m minerMigrator) migrateSectorsFromScratch(ctx context.Context, store adt1
 
 	}
 
-	sectorToDealIdHamtCid, err := sectorToDealIdHamt.Map.Root()
+	sectorToDealIdHamtCid, err := sectorToDealIdHamt.Root()
 	if err != nil {
 		return nil, cid.Undef, err
 	}
@@ -570,16 +570,16 @@ func migrateDeadlineSectorsFromScratch(ctx context.Context, store adt11.Store, i
 	return outArray, err
 }
 
-func addSectorNumberToDealIdHAMT(hamtMap *builtin.ActorTree, sectorInfo miner11.SectorOnChainInfo, store adt11.Store) error {
-	err := hamtMap.Map.Put(abi.IntKey(int64(sectorInfo.SectorNumber)), &market.SectorDealIDs{DealIDs: sectorInfo.DealIDs})
+func addSectorNumberToDealIdHAMT(hamtMap *adt12.Map, sectorInfo miner11.SectorOnChainInfo, store adt11.Store) error {
+	err := hamtMap.Put(abi.IntKey(int64(sectorInfo.SectorNumber)), &market.SectorDealIDs{DealIDs: sectorInfo.DealIDs})
 	if err != nil {
 		return xerrors.Errorf("adding sector number and deal ids to state tree: %w", err)
 	}
 	return nil
 }
 
-func removeSectorNumberToDealIdFromHAMT(hamtMap *builtin.ActorTree, SectorNumber uint64, store adt11.Store) error {
-	err := hamtMap.Map.Delete(abi.IntKey(int64(SectorNumber)))
+func removeSectorNumberToDealIdFromHAMT(hamtMap *adt12.Map, SectorNumber uint64, store adt11.Store) error {
+	err := hamtMap.Delete(abi.IntKey(int64(SectorNumber)))
 	if err != nil {
 		return xerrors.Errorf("failed to delete sector from sectorToDealIdHamt index: %w", err)
 	}
