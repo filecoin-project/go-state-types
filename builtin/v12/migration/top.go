@@ -152,7 +152,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	// Retrieve the sector deal IDs from the minerMigrator. These IDs are crucial for the migration of market actor state.
 	sectorDealIDs, err := minerMigrator.sectorDeals.Root()
 	if err != nil {
-		return cid.Undef, err
+		return cid.Undef, xerrors.Errorf("failed to flush actorsOut: %w", err)
 	}
 
 	// Check if sectorDealIDs is not a zero value before proceeding.
