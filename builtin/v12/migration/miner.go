@@ -376,7 +376,8 @@ func (m minerMigrator) migrateSectorsFromScratch(ctx context.Context, store adt1
 
 		return outArray.Set(uint64(k), migrateSectorInfo(sectorInfo))
 	}); err != nil {
-		return nil, cid.Undef, err
+		return nil, cid.Undef, xerrors.Errorf("failed to write new sector info: %w", err)
+
 	}
 
 	sectorToDealIdHamtCid, err := sectorToDealIdHamt.Map.Root()
