@@ -280,8 +280,6 @@ delta = prevInRoot - inRoot
 
 merge( prevOutRoot, Migrated(delta) )
 */
-
-// todo modify hamt based on diff
 func (m minerMigrator) migrateSectorsWithDiff(ctx context.Context, store adt11.Store, minerAddr address.Address, inRoot cid.Cid, prevInRoot cid.Cid, prevOutRoot cid.Cid, prevSectorIndexRoot cid.Cid) (cid.Cid, cid.Cid, error) {
 	// we have previous work
 	// the AMT may or may not have changed -- diff will let us iterate over all the changes
