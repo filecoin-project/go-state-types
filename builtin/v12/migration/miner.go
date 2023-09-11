@@ -214,7 +214,7 @@ func (m minerMigrator) migrateSectorsWithCache(ctx context.Context, store adt11.
 			return cid.Undef, xerrors.Errorf("failed to get previous outRoot from cache: %w", err)
 		}
 
-		okSectorIndexOut, prevSectorIndexRoot, err := cache.Read(migration.MinerPrevSectorDealIndexKey(inRoot))
+		okSectorIndexOut, prevSectorIndexRoot, err := cache.Read(migration.MinerPrevSectorDealIndexKey(prevInRoot))
 		if err != nil {
 			return cid.Undef, xerrors.Errorf("failed to get previous outRoot from cache: %w", err)
 		}
