@@ -570,16 +570,16 @@ func migrateDeadlineSectorsFromScratch(ctx context.Context, store adt11.Store, i
 	return outArray, err
 }
 
-func addSectorNumberToDealIdHAMT(xap *builtin.ActorTree, sectorInfo miner11.SectorOnChainInfo, store adt11.Store) error {
-	err := xap.Map.Put(abi.IntKey(int64(sectorInfo.SectorNumber)), &market.SectorDealIDs{DealIDs: sectorInfo.DealIDs})
+func addSectorNumberToDealIdHAMT(hamtMap *builtin.ActorTree, sectorInfo miner11.SectorOnChainInfo, store adt11.Store) error {
+	err := hamtMap.Map.Put(abi.IntKey(int64(sectorInfo.SectorNumber)), &market.SectorDealIDs{DealIDs: sectorInfo.DealIDs})
 	if err != nil {
 		return xerrors.Errorf("adding sector number and deal ids to state tree: %w", err)
 	}
 	return nil
 }
 
-func removeSectorNumberToDealIdFromHAMT(xap *builtin.ActorTree, SectorNumber uint64, store adt11.Store) error {
-	err := xap.Map.Delete(abi.IntKey(int64(SectorNumber)))
+func removeSectorNumberToDealIdFromHAMT(hamtMap *builtin.ActorTree, SectorNumber uint64, store adt11.Store) error {
+	err := hamtMap.Map.Delete(abi.IntKey(int64(SectorNumber)))
 	if err != nil {
 		return xerrors.Errorf("failed to delete sector from sectorToDealIdHamt index: %w", err)
 	}
