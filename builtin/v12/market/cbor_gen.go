@@ -305,7 +305,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	return nil
 }
 
-var lengthBufDealState = []byte{133}
+var lengthBufDealState = []byte{132}
 
 func (t *DealState) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -357,13 +357,6 @@ func (t *DealState) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
-
-	// t.VerifiedClaim (verifreg.AllocationId) (uint64)
-
-	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.VerifiedClaim)); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -386,7 +379,7 @@ func (t *DealState) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 5 {
+	if extra != 4 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
@@ -478,20 +471,6 @@ func (t *DealState) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 
 		t.SlashEpoch = abi.ChainEpoch(extraI)
-	}
-	// t.VerifiedClaim (verifreg.AllocationId) (uint64)
-
-	{
-
-		maj, extra, err = cr.ReadHeader()
-		if err != nil {
-			return err
-		}
-		if maj != cbg.MajUnsignedInt {
-			return fmt.Errorf("wrong type for uint64 field")
-		}
-		t.VerifiedClaim = verifreg.AllocationId(extra)
-
 	}
 	return nil
 }
