@@ -197,7 +197,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	// Create the new state
 	newMarketState := market12.State{
 		Proposals:                     oldMarketState.Proposals,
-		DealStates:                        newDealStatesCid,
+		States:                        newDealStatesCid,
 		PendingProposals:              oldMarketState.PendingProposals,
 		EscrowTable:                   oldMarketState.EscrowTable,
 		LockedTable:                   oldMarketState.LockedTable,

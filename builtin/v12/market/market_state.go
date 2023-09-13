@@ -26,7 +26,7 @@ type State struct {
 	// States contains state for deals that have been activated and not yet cleaned up after expiry or termination.
 	// After expiration, the state exists until the proposal is cleaned up too.
 	// Invariant: keys(States) ⊆ keys(Proposals).
-	DealStates cid.Cid // AMT[DealID]DealState
+	States cid.Cid // AMT[DealID]DealState
 
 	// PendingProposals tracks dealProposals that have not yet reached their deal start date.
 	// We track them here to ensure that miners can't publish the same deal proposal twice
@@ -90,7 +90,7 @@ func ConstructState(store adt.Store) (*State, error) {
 
 	return &State{
 		Proposals:                emptyProposalsArrayCid,
-		DealStates:                   emptyStatesArrayCid,
+		States:                   emptyStatesArrayCid,
 		PendingProposals:         emptyPendingProposalsMapCid,
 		EscrowTable:              emptyBalanceTableCid,
 		LockedTable:              emptyBalanceTableCid,
