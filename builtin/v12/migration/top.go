@@ -178,8 +178,12 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	} else {
 		var oldDealState market11.DealState
 		err = dealStates.ForEach(&oldDealState, func(dealID int64) error {
+			sectorNumber, ok := (*minerMigrator.dealToSectorIndex).Load(uint64(dealID))
+			if !ok {
+				return xerrors.Errorf("failed to load sector number for deal ID: %d", dealID)
+			}
 			newDealState := market12.DealState{
-				SectorNumber:     abi.SectorNumber((*minerMigrator.dealToSectorIndex)[uint64(dealID)]),
+				SectorNumber:     abi.SectorNumber(sectorNumber.(uint64)),
 				SectorStartEpoch: oldDealState.SectorStartEpoch,
 				LastUpdatedEpoch: oldDealState.LastUpdatedEpoch,
 				SlashEpoch:       oldDealState.SlashEpoch,

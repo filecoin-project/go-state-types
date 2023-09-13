@@ -36,7 +36,7 @@ type minerMigrator struct {
 	sectorDeals                *adt12.Map
 	OutCodeCID                 cid.Cid
 	marketSectorDealsIndexLock *sync.Mutex
-	dealToSectorIndex          *map[uint64]uint64
+	dealToSectorIndex          *sync.Map
 }
 
 func newMinerMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid, cache migration.MigrationCache) (*minerMigrator, error) {
@@ -103,7 +103,7 @@ func newMinerMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid
 		sectorDeals:                sectorDeals,
 		OutCodeCID:                 outCode,
 		marketSectorDealsIndexLock: &sync.Mutex{},
-		dealToSectorIndex:          &map[uint64]uint64{},
+		dealToSectorIndex:          &sync.Map{},
 	}, nil
 }
 
@@ -578,7 +578,7 @@ func (m minerMigrator) addSectorNumberToDealIdHAMTandDealIdSectorIndex(hamtMap *
 		return xerrors.Errorf("adding sector number and deal ids to state tree: %w", err)
 	}
 	for _, dealId := range sectorInfo.DealIDs {
-		(*m.dealToSectorIndex)[uint64(dealId)] = uint64(sectorInfo.SectorNumber)
+		m.dealToSectorIndex.Store(uint64(dealId), uint64(sectorInfo.SectorNumber))
 	}
 	return nil
 }
