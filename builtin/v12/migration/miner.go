@@ -313,7 +313,7 @@ func (m minerMigrator) migrateSectorsWithDiff(ctx context.Context, store adt11.S
 			}
 
 			//remove sector from HAMT index
-			err = m.removeSectorNumberToDealIdFromHAMTandDealIdSectorIndex(sectorToDealIdHamt, change.Key, store)
+			err = m.removeSectorNumberToDealIdFromHAMT(sectorToDealIdHamt, change.Key, store)
 			if err != nil {
 				return cid.Undef, cid.Undef, xerrors.Errorf("failed to remove sector from HAMT: %w", err)
 			}
@@ -583,18 +583,10 @@ func (m minerMigrator) addSectorNumberToDealIdHAMTandDealIdSectorIndex(hamtMap *
 	return nil
 }
 
-func (m minerMigrator) removeSectorNumberToDealIdFromHAMTandDealIdSectorIndex(hamtMap *adt12.Map, SectorNumber uint64, store adt11.Store) error {
+func (m minerMigrator) removeSectorNumberToDealIdFromHAMT(hamtMap *adt12.Map, SectorNumber uint64, store adt11.Store) error {
 	err := hamtMap.Delete(abi.IntKey(int64(SectorNumber)))
 	if err != nil {
 		return xerrors.Errorf("failed to delete sector from sectorToDealIdHamt index: %w", err)
-	}
-
-	//note that this is very slow because the index only goes one direction
-	//todo add a second index??
-	for dealId, sectorNum := range *m.dealToSectorIndex {
-		if sectorNum == SectorNumber {
-			delete(*m.dealToSectorIndex, dealId)
-		}
 	}
 	return nil
 }
