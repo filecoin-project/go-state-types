@@ -14,6 +14,7 @@ import (
 	system11 "github.com/filecoin-project/go-state-types/builtin/v11/system"
 	adt11 "github.com/filecoin-project/go-state-types/builtin/v11/util/adt"
 	market12 "github.com/filecoin-project/go-state-types/builtin/v12/market"
+	miner12 "github.com/filecoin-project/go-state-types/builtin/v12/miner"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/go-state-types/migration"
 )
@@ -164,6 +165,41 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	if err = cache.Write(migration.MarketSectorIndexKey(), sectorDealIDs); err != nil {
 		return cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
 	}
+
+	//migrate market.States
+	marketStates, err := adt11.AsMap(adtStore, oldMarketState.States, builtin.DefaultHamtBitwidth)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to read states property from v11 market state: %w", err)
+	}
+
+	var marketState miner12.MarketState
+	_, _ = marketState, marketStates
+
+	//@mikers I need help understanding these types, how to create the varables properly and how to iterate through them and how to update and save them
+
+	//TODO loop through each marketstate.states object and migrate to v12 using the index miner.dealToSectorIndex to update the sector number
+	// marketStates.ForEach(&marketState, func(k string) error {
+	// 	fmt.Println(k)
+	// 	return nil
+	// })
+
+	//get  DealState from v11 which looks like this:
+
+	// type DealState struct {
+	// 	SectorStartEpoch abi.ChainEpoch // -1 if not yet included in proven sector
+	// 	LastUpdatedEpoch abi.ChainEpoch // -1 if deal state never updated
+	// 	SlashEpoch       abi.ChainEpoch // -1 if deal never slashed
+	// 	VerifiedClaim    verifreg.AllocationId
+	// }
+
+	// drop VerifiedClaim and find SectorNumber from the miner.dealToSectorIndex based on the key from marketStates and set the value of DealState:
+
+	// newDealState := market12.DealState{
+	// 	SectorNumber     abi.SectorNumber,
+	// 	SectorStartEpoch: oldDealState.SectorStartEpoch,
+	// 	LastUpdatedEpoch: oldDealState.LastUpdatedEpoch,
+	// 	SlashEpoch:      oldDealState.SlashEpoch,
+	// }
 
 	// Create the new state
 	newMarketState := market12.State{

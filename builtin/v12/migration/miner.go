@@ -36,6 +36,7 @@ type minerMigrator struct {
 	sectorDeals                *adt12.Map
 	OutCodeCID                 cid.Cid
 	marketSectorDealsIndexLock *sync.Mutex
+	dealToSectorIndex          *map[uint64]uint64
 }
 
 func newMinerMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid, cache migration.MigrationCache) (*minerMigrator, error) {
@@ -102,6 +103,7 @@ func newMinerMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid
 		sectorDeals:                sectorDeals,
 		OutCodeCID:                 outCode,
 		marketSectorDealsIndexLock: &sync.Mutex{},
+		dealToSectorIndex:          &map[uint64]uint64{},
 	}, nil
 }
 
@@ -311,7 +313,7 @@ func (m minerMigrator) migrateSectorsWithDiff(ctx context.Context, store adt11.S
 			}
 
 			//remove sector from HAMT index
-			err = removeSectorNumberToDealIdFromHAMT(sectorToDealIdHamt, change.Key, store)
+			err = m.removeSectorNumberToDealIdFromHAMTandDealIdSectorIndex(sectorToDealIdHamt, change.Key, store)
 			if err != nil {
 				return cid.Undef, cid.Undef, xerrors.Errorf("failed to remove sector from HAMT: %w", err)
 			}
@@ -334,7 +336,7 @@ func (m minerMigrator) migrateSectorsWithDiff(ctx context.Context, store adt11.S
 			}
 
 			// add sector to the HAMT
-			err = addSectorNumberToDealIdHAMT(sectorToDealIdHamt, *info, store)
+			err = m.addSectorNumberToDealIdHAMTandDealIdSectorIndex(sectorToDealIdHamt, *info, store)
 			if err != nil {
 				return cid.Undef, cid.Undef, xerrors.Errorf("failed to add sector %d to HAMT: %w", sectorNo, err)
 			}
@@ -372,7 +374,7 @@ func (m minerMigrator) migrateSectorsFromScratch(ctx context.Context, store adt1
 	var sectorInfo miner11.SectorOnChainInfo
 	if err = inArray.ForEach(&sectorInfo, func(k int64) error {
 
-		err = addSectorNumberToDealIdHAMT(sectorToDealIdHamt, sectorInfo, store)
+		err = m.addSectorNumberToDealIdHAMTandDealIdSectorIndex(sectorToDealIdHamt, sectorInfo, store)
 
 		return outArray.Set(uint64(k), migrateSectorInfo(sectorInfo))
 	}); err != nil {
@@ -570,18 +572,29 @@ func migrateDeadlineSectorsFromScratch(ctx context.Context, store adt11.Store, i
 	return outArray, err
 }
 
-func addSectorNumberToDealIdHAMT(hamtMap *adt12.Map, sectorInfo miner11.SectorOnChainInfo, store adt11.Store) error {
+func (m minerMigrator) addSectorNumberToDealIdHAMTandDealIdSectorIndex(hamtMap *adt12.Map, sectorInfo miner11.SectorOnChainInfo, store adt11.Store) error {
 	err := hamtMap.Put(abi.IntKey(int64(sectorInfo.SectorNumber)), &market.SectorDealIDs{DealIDs: sectorInfo.DealIDs})
 	if err != nil {
 		return xerrors.Errorf("adding sector number and deal ids to state tree: %w", err)
 	}
+	for _, dealId := range sectorInfo.DealIDs {
+		(*m.dealToSectorIndex)[uint64(dealId)] = uint64(sectorInfo.SectorNumber)
+	}
 	return nil
 }
 
-func removeSectorNumberToDealIdFromHAMT(hamtMap *adt12.Map, SectorNumber uint64, store adt11.Store) error {
+func (m minerMigrator) removeSectorNumberToDealIdFromHAMTandDealIdSectorIndex(hamtMap *adt12.Map, SectorNumber uint64, store adt11.Store) error {
 	err := hamtMap.Delete(abi.IntKey(int64(SectorNumber)))
 	if err != nil {
 		return xerrors.Errorf("failed to delete sector from sectorToDealIdHamt index: %w", err)
+	}
+
+	//note that this is very slow because the index only goes one direction
+	//todo add a second index??
+	for dealId, sectorNum := range *m.dealToSectorIndex {
+		if sectorNum == SectorNumber {
+			delete(*m.dealToSectorIndex, dealId)
+		}
 	}
 	return nil
 }

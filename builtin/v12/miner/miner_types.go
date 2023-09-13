@@ -9,6 +9,7 @@ import (
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
+	adt11 "github.com/filecoin-project/go-state-types/builtin/v11/util/adt"
 	"github.com/filecoin-project/go-state-types/builtin/v12/power"
 	"github.com/filecoin-project/go-state-types/builtin/v12/util/adt"
 	"github.com/filecoin-project/go-state-types/builtin/v12/util/smoothing"
@@ -260,6 +261,8 @@ type ExpirationQueue struct {
 	*adt.Array
 	quant builtin.QuantSpec
 }
+
+type MarketState *adt11.Map
 
 // Loads a queue root.
 // Epochs provided to subsequent method calls will be quantized upwards to quanta mod offsetSeed before being
