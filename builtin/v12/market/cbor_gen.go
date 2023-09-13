@@ -40,10 +40,10 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 		return xerrors.Errorf("failed to write cid field t.Proposals: %w", err)
 	}
 
-	// t.States (cid.Cid) (struct)
+	// t.DealStates (cid.Cid) (struct)
 
-	if err := cbg.WriteCid(cw, t.States); err != nil {
-		return xerrors.Errorf("failed to write cid field t.States: %w", err)
+	if err := cbg.WriteCid(cw, t.DealStates); err != nil {
+		return xerrors.Errorf("failed to write cid field t.DealStates: %w", err)
 	}
 
 	// t.PendingProposals (cid.Cid) (struct)
@@ -152,16 +152,16 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Proposals = c
 
 	}
-	// t.States (cid.Cid) (struct)
+	// t.DealStates (cid.Cid) (struct)
 
 	{
 
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
-			return xerrors.Errorf("failed to read cid field t.States: %w", err)
+			return xerrors.Errorf("failed to read cid field t.DealStates: %w", err)
 		}
 
-		t.States = c
+		t.DealStates = c
 
 	}
 	// t.PendingProposals (cid.Cid) (struct)

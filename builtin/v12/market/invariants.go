@@ -117,7 +117,7 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 	}
 
 	dealStateCount := uint64(0)
-	if dealStates, err := adt.AsArray(store, st.States, StatesAmtBitwidth); err != nil {
+	if dealStates, err := adt.AsArray(store, st.DealStates, StatesAmtBitwidth); err != nil {
 		acc.Addf("error loading deal states: %v", err)
 	} else {
 		var dealState DealState
