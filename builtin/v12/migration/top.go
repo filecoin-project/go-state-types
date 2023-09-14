@@ -184,52 +184,50 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		}
 	}
 
-	// Migrate market.States
-	// TODO Confirm bitwidth
+	//migrate market.States
+	//todo confirm bitwidth
 	newDealStates, err := adt12.MakeEmptyArray(adtStore, market.StatesAmtBitwidth)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to create new adt empty array newDealStates: %w", err)
 	}
-	dealStates, err := adt11.AsArray(adtStore, oldMarketState.States, market11.StatesAmtBitwidth)
-	if err != nil {
+	if dealStates, err := adt11.AsArray(adtStore, oldMarketState.States, market11.StatesAmtBitwidth); err != nil {
 		return cid.Undef, xerrors.Errorf("failed to read oldMarketState.States: %w", err)
-	}
-	var oldDealState market11.DealState
-	err = dealStates.ForEach(&oldDealState, func(dealID int64) error {
-		var prevRunDealState market12.DealState
-		var sectorNumber uint64
-		found, err := prevDealStates.Get(uint64(dealID), &prevRunDealState)
-		if err != nil {
-			return xerrors.Errorf("failed to load sector number from previous deal states AMT: %d", dealID)
-		}
-		if found {
-			// We have found this deal id in our previous deal state amt, so extract the sector Number from there
-			sectorNumber = uint64(prevRunDealState.SectorNumber)
-		} else {
-			// Deal ID not found in previous run array, so it must be in dealToSectorIndex or error
-			sectorNumberAny, ok := (*minerMigrator.dealToSectorIndex).Load(uint64(dealID))
-			if !ok {
-				return xerrors.Errorf("failed to load sector number for deal ID: %d", dealID)
-			}
-			sectorNumber, ok = sectorNumberAny.(uint64)
-			if !ok {
-				return xerrors.Errorf("failed to assert sectorNumberUint64 to uint64 for deal ID: %d", dealID)
-			}
-		}
+	} else {
+		var oldDealState market11.DealState
+		err = dealStates.ForEach(&oldDealState, func(dealID int64) error {
+			var prevRunDealState market12.DealState
+			var sectorNumber uint64
+			found, err := prevDealStates.Get(uint64(dealID), &prevRunDealState)
+			if err != nil {
+				return xerrors.Errorf("failed to load sector number from previous deal states AMT: %d", dealID)
 
-		newDealState := market12.DealState{
-			SectorNumber:     abi.SectorNumber(sectorNumber),
-			SectorStartEpoch: oldDealState.SectorStartEpoch,
-			LastUpdatedEpoch: oldDealState.LastUpdatedEpoch,
-			SlashEpoch:       oldDealState.SlashEpoch,
-		}
-		if err := newDealStates.Set(uint64(dealID), &newDealState); err != nil {
-			return xerrors.Errorf("failed to set new deal state: %w", err)
-		}
-		return nil
-	})
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to iterate over deal states: %w", err)
+			}
+			if found {
+				// we have found this deal id in our previous deal state amt, so extract the sector Number from there
+				sectorNumber = uint64(prevRunDealState.SectorNumber)
+			} else {
+				// Deal ID not found in previous run array, so it must be in dealToSectorIndex or error
+				sectorNumberAny, ok := (*minerMigrator.dealToSectorIndex).Load(uint64(dealID))
+				if !ok {
+					return xerrors.Errorf("failed to load sector number for deal ID: %d", dealID)
+				}
+				sectorNumber, ok = sectorNumberAny.(uint64)
+				if !ok {
+					return xerrors.Errorf("failed to assert sectorNumberUint64 to uint64 for deal ID: %d", dealID)
+				}
+			}
+
+			newDealState := market12.DealState{
+				SectorNumber:     abi.SectorNumber(sectorNumber),
+				SectorStartEpoch: oldDealState.SectorStartEpoch,
+				LastUpdatedEpoch: oldDealState.LastUpdatedEpoch,
+				SlashEpoch:       oldDealState.SlashEpoch,
+			}
+			if err := newDealStates.Set(uint64(dealID), &newDealState); err != nil {
+				return xerrors.Errorf("failed to set new deal state: %w", err)
+			}
+			return nil
+		})
 	}
 	newDealStatesCid, err := newDealStates.Root()
 	if err != nil {
