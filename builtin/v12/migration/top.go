@@ -167,6 +167,17 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("failed to write inkey to cache: %w", err)
 	}
 
+	var prevDealStates *adt12.Array
+	prevDealStatesOk, prevDealStatesCid, err := cache.Read(migration.PrevMarketStatesAmtKey())
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to read prev market states amt key from cache: %w", err)
+	}
+	if prevDealStatesOk {
+		prevDealStates, err = adt12.AsArray(adtStore, prevDealStatesCid, market.StatesAmtBitwidth)
+	} else {
+		prevDealStates, err = adt12.MakeEmptyArray(adtStore, market.StatesAmtBitwidth)
+	}
+
 	//migrate market.States
 	//todo confirm bitwidth
 	newDealStates, err := adt12.MakeEmptyArray(adtStore, market.StatesAmtBitwidth)
@@ -178,12 +189,30 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	} else {
 		var oldDealState market11.DealState
 		err = dealStates.ForEach(&oldDealState, func(dealID int64) error {
-			sectorNumber, ok := (*minerMigrator.dealToSectorIndex).Load(uint64(dealID))
-			if !ok {
-				return xerrors.Errorf("failed to load sector number for deal ID: %d", dealID)
+			var prevRunDealState market12.DealState
+			var sectorNumber uint64
+			found, err := prevDealStates.Get(uint64(dealID), &prevRunDealState)
+			if err != nil {
+				return xerrors.Errorf("failed to load sector number from previous deal states AMT: %d", dealID)
+
 			}
+			if found {
+				// we have found this deal id in our previous deal state amt, so extract the sector Number from there
+				sectorNumber = uint64(prevRunDealState.SectorNumber)
+			} else {
+				// Deal ID not found in previous run array, so it must be in dealToSectorIndex or error
+				sectorNumberAny, ok := (*minerMigrator.dealToSectorIndex).Load(uint64(dealID))
+				if !ok {
+					return xerrors.Errorf("failed to load sector number for deal ID: %d", dealID)
+				}
+				sectorNumber, ok = sectorNumberAny.(uint64)
+				if !ok {
+					return xerrors.Errorf("failed to assert sectorNumberUint64 to uint64 for deal ID: %d", dealID)
+				}
+			}
+
 			newDealState := market12.DealState{
-				SectorNumber:     abi.SectorNumber(sectorNumber.(uint64)),
+				SectorNumber:     abi.SectorNumber(sectorNumber),
 				SectorStartEpoch: oldDealState.SectorStartEpoch,
 				LastUpdatedEpoch: oldDealState.LastUpdatedEpoch,
 				SlashEpoch:       oldDealState.SlashEpoch,
@@ -196,6 +225,10 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	newDealStatesCid, err := newDealStates.Root()
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to get root of newDealStatesCid: %w", err)
+	}
+
+	if err = cache.Write(migration.PrevMarketStatesAmtKey(), newDealStatesCid); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to write prev market states amt key to cache: %w", err)
 	}
 
 	// Create the new state
