@@ -228,6 +228,10 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 			}
 			return nil
 		})
+		if err != nil {
+			return cid.Undef, xerrors.Errorf("failed to iterate over deal states: %w", err)
+		}
+
 	}
 	newDealStatesCid, err := newDealStates.Root()
 	if err != nil {
