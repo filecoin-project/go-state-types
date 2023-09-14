@@ -174,8 +174,14 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 	if prevDealStatesOk {
 		prevDealStates, err = adt12.AsArray(adtStore, prevDealStatesCid, market.StatesAmtBitwidth)
+		if err != nil {
+			return cid.Undef, xerrors.Errorf("failed to convert prevDealStatesCid to array: %w", err)
+		}
 	} else {
 		prevDealStates, err = adt12.MakeEmptyArray(adtStore, market.StatesAmtBitwidth)
+		if err != nil {
+			return cid.Undef, xerrors.Errorf("failed to create empty array for prevDealStates: %w", err)
+		}
 	}
 
 	//migrate market.States
@@ -217,8 +223,9 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 				LastUpdatedEpoch: oldDealState.LastUpdatedEpoch,
 				SlashEpoch:       oldDealState.SlashEpoch,
 			}
-			newDealStates.Set(uint64(dealID), &newDealState)
-			_ = newDealStates
+			if err := newDealStates.Set(uint64(dealID), &newDealState); err != nil {
+				return xerrors.Errorf("failed to set new deal state: %w", err)
+			}
 			return nil
 		})
 	}
