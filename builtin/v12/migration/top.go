@@ -169,15 +169,20 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 	var prevDealStates *adt12.Array
 	prevDealStatesOk, prevDealStatesCid, err := cache.Read(migration.PrevMarketStatesAmtKey())
+	fmt.Println("prevDealStatesCid: ", prevDealStatesCid.String())
+
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to read prev market states amt key from cache: %w", err)
 	}
 	if prevDealStatesOk {
+		fmt.Println("Loading prevDealStatesCid")
 		prevDealStates, err = adt12.AsArray(adtStore, prevDealStatesCid, market.StatesAmtBitwidth)
 		if err != nil {
 			return cid.Undef, xerrors.Errorf("failed to convert prevDealStatesCid to array: %w", err)
 		}
 	} else {
+		fmt.Println("creating empty array for prevDealStatesCid")
+
 		prevDealStates, err = adt12.MakeEmptyArray(adtStore, market.StatesAmtBitwidth)
 		if err != nil {
 			return cid.Undef, xerrors.Errorf("failed to create empty array for prevDealStates: %w", err)
