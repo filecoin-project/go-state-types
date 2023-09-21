@@ -20,7 +20,6 @@ import (
 )
 
 // The minerMigrator performs the following migrations:
-// - FIP-0061: Updates all miner info PoSt proof types to V1_1 types
 // - #914 fix: Set ActivationEpoch to when the sector was FIRST activated, and PowerBaseEpoch to latest update epoch
 
 type minerMigrator struct {
@@ -86,38 +85,6 @@ func (m minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, i
 		return nil, xerrors.Errorf("failed to load miner state for %s: %w", in.Address, err)
 	}
 
-	var inInfo miner11.MinerInfo
-	if err := store.Get(ctx, inState.Info, &inInfo); err != nil {
-		return nil, xerrors.Errorf("failed to load miner info for %s: %w", in.Address, err)
-	}
-
-	outProof, err := inInfo.WindowPoStProofType.ToV1_1PostProof()
-	if err != nil {
-		return nil, xerrors.Errorf("failed to convert to v1_1 proof: %w", err)
-	}
-
-	outInfo := miner12.MinerInfo{
-		Owner:                      inInfo.Owner,
-		Worker:                     inInfo.Worker,
-		ControlAddresses:           inInfo.ControlAddresses,
-		PendingWorkerKey:           (*miner12.WorkerKeyChange)(inInfo.PendingWorkerKey),
-		PeerId:                     inInfo.PeerId,
-		Multiaddrs:                 inInfo.Multiaddrs,
-		WindowPoStProofType:        outProof,
-		SectorSize:                 inInfo.SectorSize,
-		WindowPoStPartitionSectors: inInfo.WindowPoStPartitionSectors,
-		ConsensusFaultElapsed:      inInfo.ConsensusFaultElapsed,
-		PendingOwnerAddress:        inInfo.PendingOwnerAddress,
-		Beneficiary:                inInfo.Beneficiary,
-		BeneficiaryTerm:            miner12.BeneficiaryTerm(inInfo.BeneficiaryTerm),
-		PendingBeneficiaryTerm:     (*miner12.PendingBeneficiaryChange)(inInfo.PendingBeneficiaryTerm),
-	}
-
-	outInfoCid, err := store.Put(ctx, &outInfo)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to write new miner info: %w", err)
-	}
-
 	wrappedStore := adt11.WrapStore(ctx, store)
 
 	newSectors, err := migrateSectorsWithCache(ctx, wrappedStore, in.Cache, in.Address, inState.Sectors)
@@ -131,7 +98,7 @@ func (m minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, i
 	}
 
 	outState := miner12.State{
-		Info:                       outInfoCid,
+		Info:                       inState.Info,
 		PreCommitDeposits:          inState.PreCommitDeposits,
 		LockedFunds:                inState.LockedFunds,
 		VestingFunds:               inState.VestingFunds,
@@ -207,23 +174,6 @@ func migrateSectorsWithCache(ctx context.Context, store adt11.Store, cache migra
 	})
 }
 
-/*
-mActor {
-
-		..
-		SectorsAMT cid - ~100s of MB (60G)
-		DeadlinesCid -> []Deadline{..  SectorsAMTSnapshot   ..  }
-	}
-
-SectorsAMT ~ SectorsAMTSnapshot
-
-prevInRoot = SectorsAMT
-prevOutRoot = Migrated(SectorsAMT)
-inRoot = SectorsAMTSnapshot
-delta = prevInRoot - inRoot
-
-merge( prevOutRoot, Migrated(delta) )
-*/
 func migrateSectorsWithDiff(ctx context.Context, store adt11.Store, inRoot cid.Cid, prevInRoot cid.Cid, prevOutRoot cid.Cid) (cid.Cid, error) {
 	// we have previous work, but the AMT has changed -- diff them
 	diffs, err := amt.Diff(ctx, store, store, prevInRoot, inRoot, amt.UseTreeBitWidth(miner11.SectorsAmtBitwidth))
