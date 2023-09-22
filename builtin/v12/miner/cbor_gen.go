@@ -5292,6 +5292,102 @@ func (t *CompactPartitionsParams) UnmarshalCBOR(r io.Reader) (err error) {
 	return nil
 }
 
+var lengthBufMovePartitionsParams = []byte{131}
+
+func (t *MovePartitionsParams) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufMovePartitionsParams); err != nil {
+		return err
+	}
+
+	// t.OrigDeadline (uint64) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.OrigDeadline)); err != nil {
+		return err
+	}
+
+	// t.DestDeadline (uint64) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.DestDeadline)); err != nil {
+		return err
+	}
+
+	// t.Partitions (bitfield.BitField) (struct)
+	if err := t.Partitions.MarshalCBOR(cw); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *MovePartitionsParams) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = MovePartitionsParams{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 3 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.OrigDeadline (uint64) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.OrigDeadline = uint64(extra)
+
+	}
+	// t.DestDeadline (uint64) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.DestDeadline = uint64(extra)
+
+	}
+	// t.Partitions (bitfield.BitField) (struct)
+
+	{
+
+		if err := t.Partitions.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.Partitions: %w", err)
+		}
+
+	}
+	return nil
+}
+
 var lengthBufCompactSectorNumbersParams = []byte{129}
 
 func (t *CompactSectorNumbersParams) MarshalCBOR(w io.Writer) error {

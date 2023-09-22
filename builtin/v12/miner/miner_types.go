@@ -366,6 +366,12 @@ type ExpirationExtension2 struct {
 	NewExpiration     abi.ChainEpoch
 }
 
+type MovePartitionsParams struct {
+	OrigDeadline uint64
+	DestDeadline uint64
+	Partitions   bitfield.BitField
+}
+
 type SectorClaim struct {
 	SectorNumber   abi.SectorNumber
 	MaintainClaims []verifreg.ClaimId

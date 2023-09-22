@@ -181,6 +181,7 @@ func main() {
 		miner.ConfirmSectorProofsParams{},
 		miner.ChangeMultiaddrsParams{},
 		miner.CompactPartitionsParams{},
+		miner.MovePartitionsParams{},
 		miner.CompactSectorNumbersParams{},
 		miner.DisputeWindowedPoStParams{},
 		miner.PreCommitSectorBatchParams{},
