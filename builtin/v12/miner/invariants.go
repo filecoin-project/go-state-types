@@ -104,6 +104,14 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount) (
 				minerSummary.SectorsWithDeals[abi.SectorNumber(sno)] = true
 			}
 
+			acc.Require(sector.PowerBaseEpoch >= sector.Activation,
+				"activation %d cannot be after power base %d (sno: %d)", sector.Activation, sector.PowerBaseEpoch, sector.SectorNumber)
+
+			// if non-nil, you must have been Snapped
+			if sector.SectorKeyCID != nil {
+				acc.Require(sector.PowerBaseEpoch > sector.Activation, "activation %d must be strictly before powerBase %d for snapped sector (sno: %d)", sector.Activation, sector.PowerBaseEpoch, sector.SectorNumber)
+			}
+
 			return nil
 		})
 		acc.RequireNoError(err, "error iterating sectors")
