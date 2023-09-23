@@ -17,7 +17,7 @@ var Methods = map[abi.MethodNum]builtin.MethodMeta{
 	5: {"VerifyDealsForActivation", *new(func(*VerifyDealsForActivationParams) *VerifyDealsForActivationReturn)}, // VerifyDealsForActivation
 	6: {"ActivateDeals", *new(func(*ActivateDealsParams) *abi.EmptyValue)},                                       // ActivateDeals
 	7: {"OnMinerSectorsTerminate", *new(func(*OnMinerSectorsTerminateParams) *abi.EmptyValue)},                   // OnMinerSectorsTerminate
-	8: {"ComputeDataCommitment", *new(func(*ComputeDataCommitmentParams) *ComputeDataCommitmentReturn)},          // ComputeDataCommitment
+	8: {"ComputeDataCommitment", nil},                                                                            // deprecated
 	9: {"CronTick", *new(func(*abi.EmptyValue) *abi.EmptyValue)},                                                 // CronTick
 	builtin.MustGenerateFRCMethodNum("GetBalance"):                {"GetBalanceExported", *new(func(*address.Address) *GetBalanceReturn)},                                               // GetBalanceExported
 	builtin.MustGenerateFRCMethodNum("GetDealDataCommitment"):     {"GetDealDataCommitmentExported", *new(func(*GetDealDataCommitmentParams) *GetDealDataCommitmentReturn)},             // GetDealDataCommitmentExported

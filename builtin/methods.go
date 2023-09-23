@@ -112,7 +112,7 @@ var MethodsMarket = struct {
 	VerifyDealsForActivation          abi.MethodNum
 	ActivateDeals                     abi.MethodNum
 	OnMinerSectorsTerminate           abi.MethodNum
-	ComputeDataCommitment             abi.MethodNum
+	Deprecated1                       abi.MethodNum
 	CronTick                          abi.MethodNum
 	GetBalanceExported                abi.MethodNum
 	GetDealDataCommitmentExported     abi.MethodNum
