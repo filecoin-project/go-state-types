@@ -146,7 +146,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -171,7 +171,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -588,7 +588,7 @@ func (t *SignedVoucher) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -613,7 +613,7 @@ func (t *SignedVoucher) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -715,7 +715,7 @@ func (t *SignedVoucher) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -744,13 +744,22 @@ func (t *SignedVoucher) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		var v Merge
-		if err := v.UnmarshalCBOR(cr); err != nil {
-			return err
+			{
+
+				if err := t.Merges[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Merges[i]: %w", err)
+				}
+
+			}
 		}
-
-		t.Merges[i] = v
 	}
 
 	// t.Signature (crypto.Signature) (struct)

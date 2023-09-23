@@ -37,13 +37,9 @@ type SectorDeals struct {
 	DealIDs      []abi.DealID
 }
 
-// - Array of sectors weights
+// Changed to an array of optional CIDs.
 type VerifyDealsForActivationReturn struct {
-	Sectors []SectorDealData
-}
-
-type SectorDealData struct {
-	CommD *cid.Cid
+	UnsealedCIDs []*cid.Cid
 }
 
 type ActivateDealsParams struct {

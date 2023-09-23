@@ -92,13 +92,22 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		var v Entry
-		if err := v.UnmarshalCBOR(cr); err != nil {
-			return err
+			{
+
+				if err := t.Entries[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Entries[i]: %w", err)
+				}
+
+			}
 		}
-
-		t.Entries[i] = v
 	}
 
 	return nil
