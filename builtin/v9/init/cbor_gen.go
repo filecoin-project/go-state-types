@@ -53,7 +53,7 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.NetworkName))); err != nil {
 		return err
 	}
-	if _, err := io.WriteString(w, string(t.NetworkName)); err != nil {
+	if _, err := cw.WriteString(string(t.NetworkName)); err != nil {
 		return err
 	}
 	return nil
@@ -143,7 +143,7 @@ func (t *ConstructorParams) MarshalCBOR(w io.Writer) error {
 	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.NetworkName))); err != nil {
 		return err
 	}
-	if _, err := io.WriteString(w, string(t.NetworkName)); err != nil {
+	if _, err := cw.WriteString(string(t.NetworkName)); err != nil {
 		return err
 	}
 	return nil

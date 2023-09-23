@@ -259,7 +259,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -284,7 +284,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -321,7 +321,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -443,7 +443,7 @@ func (t *Claim) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -690,13 +690,22 @@ func (t *MinerConstructorParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		var v address.Address
-		if err := v.UnmarshalCBOR(cr); err != nil {
-			return err
+			{
+
+				if err := t.ControlAddrs[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.ControlAddrs[i]: %w", err)
+				}
+
+			}
 		}
-
-		t.ControlAddrs[i] = v
 	}
 
 	// t.WindowPoStProofType (abi.RegisteredPoStProof) (int64)
@@ -715,7 +724,7 @@ func (t *MinerConstructorParams) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -769,6 +778,9 @@ func (t *MinerConstructorParams) UnmarshalCBOR(r io.Reader) (err error) {
 			var maj byte
 			var extra uint64
 			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
 			maj, extra, err = cr.ReadHeader()
 			if err != nil {
@@ -924,7 +936,7 @@ func (t *CreateMinerParams) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -978,6 +990,9 @@ func (t *CreateMinerParams) UnmarshalCBOR(r io.Reader) (err error) {
 			var maj byte
 			var extra uint64
 			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
 			maj, extra, err = cr.ReadHeader()
 			if err != nil {
@@ -1251,7 +1266,7 @@ func (t *EnrollCronEventParams) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:

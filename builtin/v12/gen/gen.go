@@ -133,7 +133,6 @@ func main() {
 		market.DealProposal{},
 		market.ClientDealProposal{},
 		market.SectorDeals{},
-		market.SectorDealData{},
 		market.DealSpaces{},
 		market.SectorDataSpec{},
 		market.VerifiedDealInfo{},
