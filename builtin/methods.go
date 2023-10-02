@@ -231,6 +231,7 @@ var MethodsMiner = struct {
 	GetVestingFundsExported            abi.MethodNum
 	GetPeerIDExported                  abi.MethodNum
 	GetMultiaddrsExported              abi.MethodNum
+	MovePartitions                     abi.MethodNum
 }{
 	MethodConstructor,
 	2,
@@ -279,6 +280,7 @@ var MethodsMiner = struct {
 	MustGenerateFRCMethodNum("GetVestingFunds"),
 	MustGenerateFRCMethodNum("GetPeerID"),
 	MustGenerateFRCMethodNum("GetMultiaddrs"),
+	33,
 }
 
 var MethodsVerifiedRegistry = struct {
