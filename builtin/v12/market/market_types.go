@@ -69,14 +69,6 @@ type DealSpaces struct {
 	VerifiedDealSpace abi.DealWeight // Total space of submitted verified deals.
 }
 
-type ComputeDataCommitmentParams struct {
-	Inputs []*SectorDataSpec
-}
-
-type ComputeDataCommitmentReturn struct {
-	CommDs []cbg.CborCid
-}
-
 type OnMinerSectorsTerminateParams struct {
 	Epoch   abi.ChainEpoch
 	DealIDs []abi.DealID
