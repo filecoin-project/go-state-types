@@ -30,6 +30,11 @@ var InitialPledgeLockTarget = builtin.BigFrac{
 	Denominator: big.NewInt(10),
 }
 
+var InitialPledgeFractionForBaseline = builtin.BigFrac{
+	Numerator:   big.NewInt(7), // PARAM_SPEC
+	Denominator: big.NewInt(10),
+}
+
 // The projected block reward a sector would earn over some period.
 // Also known as "BR(t)".
 // BR(t) = ProjectedRewardFraction(t) * SectorQualityAdjustedPower
@@ -101,10 +106,6 @@ func InitialPledgeForPower(qaPower, baselinePower abi.StoragePower, rewardEstima
 	// = SectorInitialConsensusPledge
 	additionalIP := big.Div(additionalIPNum, additionalIPDenom)
 
-	// Target is
-	// 0.3 * SectorQAP / max(NetworkQAP, SectorQAP) + 0.7 * SectorQAP / max(max(NetworkBaseline, NetworkQAP), SectorQAP)
-	//   * CirculatingSupply
-
 	nominalPledge := big.Add(ipBase, additionalIP)
 	spaceRacePledgeCap := big.Mul(InitialPledgeMaxPerByte, qaPower)
 	return big.Min(nominalPledge, spaceRacePledgeCap)
@@ -128,6 +129,45 @@ func initialConsensusPledge(qaPower, baselinePower abi.StoragePower, networkQAPo
 	// 3 * CirculatingSupply * SectorQAP / (10 * max(max(NetworkBaseline, NetworkQAP), SectorQAP))
 	// = SectorInitialConsensusPledge
 	return big.Div(additionalIPNum, additionalIPDenom)
+}
+
+func initialConsensusPledge2(qaPower, baselinePower abi.StoragePower, networkQAPowerEstimate smoothing.FilterEstimate, circulatingSupply abi.TokenAmount) abi.TokenAmount {
+	// Original is
+	// SectorQAP / max(max(NetworkBaseline, NetworkQAP), SectorQAP))
+	//   * 0.3 * CirculatingSupply
+
+	// Target is
+	// (0.3 * SectorQAP / max(NetworkQAP, SectorQAP) + 0.7 * SectorQAP / max(max(NetworkBaseline, NetworkQAP), SectorQAP))
+	//   * 0.3 * CirculatingSupply
+	// That is
+	// (3 * SectorQAP / max(NetworkQAP, SectorQAP) + 7 * SectorQAP / max(max(NetworkBaseline, NetworkQAP), SectorQAP))
+	//  * 3 * CirculatingSupply
+	// ------------------------------------------------------------------------------------------------------------------------
+	// 10 * 10
+
+	// 3 * CirculatingSupply
+	lockTargetNum := big.Mul(InitialPledgeLockTarget.Numerator, circulatingSupply)
+	// 10
+	lockTargetDenom := InitialPledgeLockTarget.Denominator
+	// SectorQAP
+	pledgeShareNum := qaPower
+	// NetworkQAP
+	networkQAPower := smoothing.Estimate(&networkQAPowerEstimate)
+	// max(max(NetworkBaseline, NetworkQAP), SectorQAP)
+	pledgeShareWithBaselineDenom := big.Max(big.Max(networkQAPower, baselinePower), qaPower) // use qaPower in case others are 0
+	// max(NetworkQAP, SectorQAP)
+	pledgeShareWithoutBaselineDenom := big.Max(networkQAPower, qaPower) // use qaPower in case others are 0
+	// 3 * CirculatingSupply * 7 * SectorQAP
+	additionalIPNumWithBaseline := big.Mul(lockTargetNum, big.Mul(InitialPledgeFractionForBaseline.Numerator, pledgeShareNum))
+	// 3 * CirculatingSupply * (10 - 7) * SectorQAP
+	additionalIPNumWithoutBaseline := big.Mul(lockTargetNum, big.Mul(big.Sub(InitialPledgeFractionForBaseline.Denominator, InitialPledgeFractionForBaseline.Numerator), pledgeShareNum))
+	return big.Div(
+		big.Div(
+			big.Add(
+				big.Div(additionalIPNumWithBaseline, pledgeShareWithBaselineDenom),
+				big.Div(additionalIPNumWithoutBaseline, pledgeShareWithoutBaselineDenom)),
+			InitialPledgeFractionForBaseline.Denominator),
+		lockTargetDenom)
 }
 
 var EstimatedSingleProveCommitGasUsage = big.NewInt(49299973) // PARAM_SPEC
