@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestInitialPledgeForPower2_NetworkQAPGreaterThanNetworkBaseline(t *testing.T) {
+func TestInitialPledgeForPower_NetworkQAPGreaterThanNetworkBaseline(t *testing.T) {
 	pledge := initialConsensusPledge(
 		abi.NewStoragePower(5),
 		abi.NewStoragePower(1000),
@@ -18,7 +18,7 @@ func TestInitialPledgeForPower2_NetworkQAPGreaterThanNetworkBaseline(t *testing.
 	assert.Equal(t, big.NewInt(10), pledge)
 }
 
-func TestInitialPledgeForPower2_NetworkQAPLessThanNetworkBaseline(t *testing.T) {
+func TestInitialPledgeForPower_NetworkQAPLessThanNetworkBaseline(t *testing.T) {
 	pledge := initialConsensusPledge(
 		abi.NewStoragePower(5),
 		abi.NewStoragePower(1000),
