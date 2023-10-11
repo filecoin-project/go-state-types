@@ -76,20 +76,58 @@ func PreCommitDepositForPower(rewardEstimate, networkQAPowerEstimate smoothing.F
 // LockTarget = (LockTargetFactorNum / LockTargetFactorDenom) * FILCirculatingSupply(t)
 // PledgeShare(t) = sectorQAPower / max(BaselinePower(t), NetworkQAPower(t))
 func InitialPledgeForPower(qaPower, baselinePower abi.StoragePower, rewardEstimate, networkQAPowerEstimate smoothing.FilterEstimate, circulatingSupply abi.TokenAmount) abi.TokenAmount {
+	// qaPower: SectorQAP
+	// baselinePower: NetworkBaseline
+	// rewardEstimate:
+
+	// SectorInitialPledge (20 days block reward)
 	ipBase := ExpectedRewardForPowerClampedAtAttoFIL(rewardEstimate, networkQAPowerEstimate, qaPower, InitialPledgeProjectionPeriod)
 
+	// 3 * CirculatingSupply
 	lockTargetNum := big.Mul(InitialPledgeLockTarget.Numerator, circulatingSupply)
+	// 10
 	lockTargetDenom := InitialPledgeLockTarget.Denominator
+	// SectorQAP
 	pledgeShareNum := qaPower
+	// NetworkQAP
 	networkQAPower := smoothing.Estimate(&networkQAPowerEstimate)
+	// max(max(NetworkBaseline, NetworkQAP), SectorQAP)
 	pledgeShareDenom := big.Max(big.Max(networkQAPower, baselinePower), qaPower) // use qaPower in case others are 0
+	// 3 * CirculatingSupply * SectorQAP
 	additionalIPNum := big.Mul(lockTargetNum, pledgeShareNum)
+	// 10 * max(max(NetworkBaseline, NetworkQAP), SectorQAP)
 	additionalIPDenom := big.Mul(lockTargetDenom, pledgeShareDenom)
+	// 3 * CirculatingSupply * SectorQAP / (10 * max(max(NetworkBaseline, NetworkQAP), SectorQAP))
+	// = SectorInitialConsensusPledge
 	additionalIP := big.Div(additionalIPNum, additionalIPDenom)
+
+	// Target is
+	// 0.3 * SectorQAP / max(NetworkQAP, SectorQAP) + 0.7 * SectorQAP / max(max(NetworkBaseline, NetworkQAP), SectorQAP)
+	//   * CirculatingSupply
 
 	nominalPledge := big.Add(ipBase, additionalIP)
 	spaceRacePledgeCap := big.Mul(InitialPledgeMaxPerByte, qaPower)
 	return big.Min(nominalPledge, spaceRacePledgeCap)
+}
+
+func initialConsensusPledge(qaPower, baselinePower abi.StoragePower, networkQAPowerEstimate smoothing.FilterEstimate, circulatingSupply abi.TokenAmount) abi.TokenAmount {
+	// 3 * CirculatingSupply
+	lockTargetNum := big.Mul(InitialPledgeLockTarget.Numerator, circulatingSupply)
+	// 10
+	lockTargetDenom := InitialPledgeLockTarget.Denominator
+	// SectorQAP
+	pledgeShareNum := qaPower
+	// NetworkQAP
+	networkQAPower := smoothing.Estimate(&networkQAPowerEstimate)
+	// max(max(NetworkBaseline, NetworkQAP), SectorQAP)
+	pledgeShareDenom := big.Max(big.Max(networkQAPower, baselinePower), qaPower) // use qaPower in case others are 0
+	// 3 * CirculatingSupply * SectorQAP
+	additionalIPNum := big.Mul(lockTargetNum, pledgeShareNum)
+	// 10 * max(max(NetworkBaseline, NetworkQAP), SectorQAP)
+	additionalIPDenom := big.Mul(lockTargetDenom, pledgeShareDenom)
+	// 3 * CirculatingSupply * SectorQAP / (10 * max(max(NetworkBaseline, NetworkQAP), SectorQAP))
+	// = SectorInitialConsensusPledge
+	return big.Div(additionalIPNum, additionalIPDenom)
 }
 
 var EstimatedSingleProveCommitGasUsage = big.NewInt(49299973) // PARAM_SPEC
