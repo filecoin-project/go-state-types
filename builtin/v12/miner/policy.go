@@ -38,6 +38,9 @@ const MaxPartitionsPerDeadline = 3000
 // We set this to same as MaxPartitionsPerDeadline so we can process that many partitions every deadline.
 const AddressedPartitionsMax = MaxPartitionsPerDeadline
 
+// The maximum number of partitions that can be proven in a single PoSt message.
+const PoStedPartitionsMax = 3
+
 // Maximum number of unique "declarations" in batch operations.
 const DeclarationsMax = AddressedPartitionsMax
 
