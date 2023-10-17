@@ -364,6 +364,12 @@ var registeredProofIds = map[RegisteredSealProof]uint64{
 	RegisteredSealProof_StackedDrg512MiBV1_1: 7,
 	RegisteredSealProof_StackedDrg32GiBV1_1:  8,
 	RegisteredSealProof_StackedDrg64GiBV1_1:  9,
+
+	RegisteredSealProof_StackedDrg2KiBV1_1_Feat_SyntheticPoRep:   10,
+	RegisteredSealProof_StackedDrg8MiBV1_1_Feat_SyntheticPoRep:   11,
+	RegisteredSealProof_StackedDrg512MiBV1_1_Feat_SyntheticPoRep: 12,
+	RegisteredSealProof_StackedDrg32GiBV1_1_Feat_SyntheticPoRep:  13,
+	RegisteredSealProof_StackedDrg64GiBV1_1_Feat_SyntheticPoRep:  14,
 }
 
 func (p RegisteredSealProof) porepNonce() uint64 {
