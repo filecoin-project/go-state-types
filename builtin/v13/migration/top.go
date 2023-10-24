@@ -9,8 +9,8 @@ import (
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
-	system11 "github.com/filecoin-project/go-state-types/builtin/v11/system"
-	adt11 "github.com/filecoin-project/go-state-types/builtin/v11/util/adt"
+	system12 "github.com/filecoin-project/go-state-types/builtin/v12/system"
+	adt12 "github.com/filecoin-project/go-state-types/builtin/v12/util/adt"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/filecoin-project/go-state-types/migration"
 )
@@ -22,7 +22,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("invalid migration config with %d workers", cfg.MaxWorkers)
 	}
 
-	adtStore := adt11.WrapStore(ctx, store)
+	adtStore := adt12.WrapStore(ctx, store)
 
 	// Load input and output state trees
 	actorsIn, err := builtin.LoadTree(adtStore, actorsRootIn)
@@ -40,7 +40,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.New("didn't find system actor")
 	}
 
-	var systemState system11.State
+	var systemState system12.State
 	if err := store.Get(ctx, systemActor.Head, &systemState); err != nil {
 		return cid.Undef, xerrors.Errorf("failed to get system actor state: %w", err)
 	}
@@ -65,12 +65,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	// Set of prior version code CIDs for actors to defer during iteration, for explicit migration afterwards.
 	deferredCodeIDs := make(map[cid.Cid]struct{})
 
-	miner11Cid := cid.Undef
-
 	for _, oldEntry := range oldManifestData.Entries {
-		if oldEntry.Name == manifest.MinerKey {
-			miner11Cid = oldEntry.Code
-		}
 		newCodeCID, ok := newManifest.Get(oldEntry.Name)
 		if !ok {
 			return cid.Undef, xerrors.Errorf("code cid for %s actor not found in new manifest", oldEntry.Name)
@@ -88,18 +83,6 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 
 	migrations[systemActor.Code] = systemActorMigrator{OutCodeCID: newSystemCodeCID, ManifestData: newManifest.Data}
-
-	// The Miner Actor
-	miner12Cid, ok := newManifest.Get(manifest.MinerKey)
-	if !ok {
-		return cid.Undef, xerrors.Errorf("code cid for miner actor not found in new manifest")
-	}
-
-	mm, err := newMinerMigrator(ctx, store, miner12Cid)
-	if err != nil {
-		return cid.Undef, xerrors.Errorf("failed to create miner migrator: %w", err)
-	}
-	migrations[miner11Cid] = migration.CachedMigration(cache, *mm)
 
 	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations), len(oldManifestData.Entries))
