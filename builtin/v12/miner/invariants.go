@@ -95,7 +95,7 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount) (
 
 			for _, dealID := range sector.DealIDs {
 				minerSummary.Deals[dealID] = DealSummary{
-					SectorStart:      sector.PowerBaseEpoch,
+					SectorStart:      sector.Activation,
 					SectorExpiration: sector.Expiration,
 				}
 			}

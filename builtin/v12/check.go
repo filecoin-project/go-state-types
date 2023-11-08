@@ -273,7 +273,7 @@ func CheckDealStatesAgainstSectors(acc *builtin.MessageAccumulator, minerSummari
 			continue
 		}
 
-		acc.Require(deal.SectorStartEpoch == sectorDeal.SectorStart,
+		acc.Require(deal.SectorStartEpoch >= sectorDeal.SectorStart,
 			"deal state start %d does not match sector start %d for miner %v",
 			deal.SectorStartEpoch, sectorDeal.SectorStart, deal.Provider)
 
