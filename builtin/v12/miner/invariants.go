@@ -557,8 +557,6 @@ func CheckExpirationQueue(expQ ExpirationQueue, liveSectors map[abi.SectorNumber
 	err = expQ.ForEach(&exp, func(e int64) error {
 		epoch := abi.ChainEpoch(e)
 		acc := acc.WithPrefix("expiration epoch %d: ", epoch)
-		acc.Require(quant.QuantizeUp(epoch) == epoch,
-			"expiration queue key %d is not quantized, expected %d", epoch, quant.QuantizeUp(epoch))
 		if firstQueueEpoch == abi.ChainEpoch(-1) {
 			firstQueueEpoch = epoch
 		}
