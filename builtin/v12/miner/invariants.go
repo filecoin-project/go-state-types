@@ -573,9 +573,8 @@ func CheckExpirationQueue(expQ ExpirationQueue, liveSectors map[abi.SectorNumber
 			if sector, ok := liveSectors[sno]; ok {
 				// The sector can be "on time" either at its target expiration epoch, or in the first queue entry
 				// (a CC-replaced sector moved forward).
-				target := quant.QuantizeUp(sector.Expiration)
-				acc.Require(epoch == target || epoch == firstQueueEpoch, "invalid expiration %d for sector %d, expected %d or %d",
-					epoch, sector.SectorNumber, firstQueueEpoch, target)
+				acc.Require((epoch >= sector.Expiration && epoch < sector.Expiration+builtin.EpochsInDay) || epoch == firstQueueEpoch, "invalid expiration %d for sector %d, expected %d or > %d",
+					epoch, sector.SectorNumber, firstQueueEpoch, sector.Expiration)
 
 				onTimeSectorsPledge = big.Add(onTimeSectorsPledge, sector.InitialPledge)
 			} else {
