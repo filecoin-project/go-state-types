@@ -76,6 +76,11 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount) (
 		allSectors = map[abi.SectorNumber]*SectorOnChainInfo{}
 		var sector SectorOnChainInfo
 		err = sectorsArr.ForEach(&sector, func(sno int64) error {
+			acc.Require(sector.PowerBaseEpoch >= sector.Activation, "sector %d has PBE %d < Activation %d",
+				sector.SectorNumber,
+				sector.PowerBaseEpoch,
+				sector.Activation)
+
 			cpy := sector
 			allSectors[abi.SectorNumber(sno)] = &cpy
 
