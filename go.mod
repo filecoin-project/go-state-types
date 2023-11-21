@@ -2,6 +2,8 @@ module github.com/filecoin-project/go-state-types
 
 go 1.13
 
+retract v0.12.7 // wrongfully skipped a patch version, use v0.12.6 or v0.12.8&^
+
 require (
 	github.com/filecoin-project/go-address v1.1.0
 	github.com/filecoin-project/go-amt-ipld/v4 v4.2.0
