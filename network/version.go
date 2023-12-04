@@ -28,8 +28,8 @@ const (
 	Version18                 // Hygge
 	Version19                 // Lightning
 	Version20                 // Thunder
-	Version21                 // SyntheticPoRep
-	Version22                 // DDO
+	Version21                 // Watermelon
+	Version22                 // TBD
 
 	// VersionMax is the maximum version number
 	VersionMax = Version(math.MaxUint32)
