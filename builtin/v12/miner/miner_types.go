@@ -366,6 +366,7 @@ type ExpirationExtension2 struct {
 	NewExpiration     abi.ChainEpoch
 }
 
+
 type SectorClaim struct {
 	SectorNumber   abi.SectorNumber
 	MaintainClaims []verifreg.ClaimId

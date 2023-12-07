@@ -37,13 +37,9 @@ type SectorDeals struct {
 	DealIDs      []abi.DealID
 }
 
-// - Array of sectors weights
+// Changed to an array of optional CIDs.
 type VerifyDealsForActivationReturn struct {
-	Sectors []SectorDealData
-}
-
-type SectorDealData struct {
-	CommD *cid.Cid
+	UnsealedCIDs []*cid.Cid
 }
 
 type ActivateDealsParams struct {
@@ -71,14 +67,6 @@ type SectorDataSpec struct {
 type DealSpaces struct {
 	DealSpace         abi.DealWeight // Total space of submitted deals.
 	VerifiedDealSpace abi.DealWeight // Total space of submitted verified deals.
-}
-
-type ComputeDataCommitmentParams struct {
-	Inputs []*SectorDataSpec
-}
-
-type ComputeDataCommitmentReturn struct {
-	CommDs []cbg.CborCid
 }
 
 type OnMinerSectorsTerminateParams struct {

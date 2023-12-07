@@ -76,6 +76,11 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount) (
 		allSectors = map[abi.SectorNumber]*SectorOnChainInfo{}
 		var sector SectorOnChainInfo
 		err = sectorsArr.ForEach(&sector, func(sno int64) error {
+			acc.Require(sector.PowerBaseEpoch >= sector.Activation, "sector %d has PBE %d < Activation %d",
+				sector.SectorNumber,
+				sector.PowerBaseEpoch,
+				sector.Activation)
+
 			cpy := sector
 			allSectors[abi.SectorNumber(sno)] = &cpy
 
@@ -557,8 +562,6 @@ func CheckExpirationQueue(expQ ExpirationQueue, liveSectors map[abi.SectorNumber
 	err = expQ.ForEach(&exp, func(e int64) error {
 		epoch := abi.ChainEpoch(e)
 		acc := acc.WithPrefix("expiration epoch %d: ", epoch)
-		acc.Require(quant.QuantizeUp(epoch) == epoch,
-			"expiration queue key %d is not quantized, expected %d", epoch, quant.QuantizeUp(epoch))
 		if firstQueueEpoch == abi.ChainEpoch(-1) {
 			firstQueueEpoch = epoch
 		}

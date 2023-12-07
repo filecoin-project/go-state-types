@@ -275,7 +275,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -534,13 +534,22 @@ func (t *MinerInfo) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		var v address.Address
-		if err := v.UnmarshalCBOR(cr); err != nil {
-			return err
+			{
+
+				if err := t.ControlAddresses[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.ControlAddresses[i]: %w", err)
+				}
+
+			}
 		}
-
-		t.ControlAddresses[i] = v
 	}
 
 	// t.PendingWorkerKey (miner.WorkerKeyChange) (struct)
@@ -607,6 +616,9 @@ func (t *MinerInfo) UnmarshalCBOR(r io.Reader) (err error) {
 			var maj byte
 			var extra uint64
 			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
 			maj, extra, err = cr.ReadHeader()
 			if err != nil {
@@ -646,7 +658,7 @@ func (t *MinerInfo) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -699,7 +711,7 @@ func (t *MinerInfo) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -790,9 +802,11 @@ func (t *Deadlines) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.Due {
-		if err := cbg.WriteCid(w, v); err != nil {
-			return xerrors.Errorf("failed writing cid field t.Due: %w", err)
+
+		if err := cbg.WriteCid(cw, v); err != nil {
+			return xerrors.Errorf("failed to write cid field v: %w", err)
 		}
+
 	}
 	return nil
 }
@@ -842,12 +856,25 @@ func (t *Deadlines) UnmarshalCBOR(r io.Reader) (err error) {
 	t.Due = [48]cid.Cid{}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		c, err := cbg.ReadCid(cr)
-		if err != nil {
-			return xerrors.Errorf("reading cid field t.Due failed: %w", err)
+			{
+
+				c, err := cbg.ReadCid(cr)
+				if err != nil {
+					return xerrors.Errorf("failed to read cid field t.Due[i]: %w", err)
+				}
+
+				t.Due[i] = c
+
+			}
 		}
-		t.Due[i] = c
 	}
 
 	return nil
@@ -1566,7 +1593,7 @@ func (t *SectorPreCommitOnChainInfo) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -1635,9 +1662,11 @@ func (t *SectorPreCommitInfo) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.DealIDs {
-		if err := cw.CborWriteHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
 		}
+
 	}
 
 	// t.Expiration (abi.ChainEpoch) (int64)
@@ -1705,7 +1734,7 @@ func (t *SectorPreCommitInfo) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -1756,7 +1785,7 @@ func (t *SectorPreCommitInfo) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -1785,17 +1814,27 @@ func (t *SectorPreCommitInfo) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		maj, val, err := cr.ReadHeader()
-		if err != nil {
-			return xerrors.Errorf("failed to read uint64 for t.DealIDs slice: %w", err)
+			{
+
+				maj, extra, err = cr.ReadHeader()
+				if err != nil {
+					return err
+				}
+				if maj != cbg.MajUnsignedInt {
+					return fmt.Errorf("wrong type for uint64 field")
+				}
+				t.DealIDs[i] = abi.DealID(extra)
+
+			}
 		}
-
-		if maj != cbg.MajUnsignedInt {
-			return xerrors.Errorf("value read for array t.DealIDs was not a uint, instead got %d", maj)
-		}
-
-		t.DealIDs[i] = abi.DealID(val)
 	}
 
 	// t.Expiration (abi.ChainEpoch) (int64)
@@ -1814,7 +1853,7 @@ func (t *SectorPreCommitInfo) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -1894,9 +1933,11 @@ func (t *SectorOnChainInfo) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.DealIDs {
-		if err := cw.CborWriteHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
 		}
+
 	}
 
 	// t.Activation (abi.ChainEpoch) (int64)
@@ -1974,10 +2015,12 @@ func (t *SectorOnChainInfo) MarshalCBOR(w io.Writer) error {
 		}
 	}
 
-	// t.SimpleQAPower (bool) (bool)
-	if err := cbg.WriteBool(w, t.SimpleQAPower); err != nil {
+	// t.Flags (miner.SectorOnChainInfoFlags) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Flags)); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -2034,7 +2077,7 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -2075,17 +2118,27 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		maj, val, err := cr.ReadHeader()
-		if err != nil {
-			return xerrors.Errorf("failed to read uint64 for t.DealIDs slice: %w", err)
+			{
+
+				maj, extra, err = cr.ReadHeader()
+				if err != nil {
+					return err
+				}
+				if maj != cbg.MajUnsignedInt {
+					return fmt.Errorf("wrong type for uint64 field")
+				}
+				t.DealIDs[i] = abi.DealID(extra)
+
+			}
 		}
-
-		if maj != cbg.MajUnsignedInt {
-			return xerrors.Errorf("value read for array t.DealIDs was not a uint, instead got %d", maj)
-		}
-
-		t.DealIDs[i] = abi.DealID(val)
 	}
 
 	// t.Activation (abi.ChainEpoch) (int64)
@@ -2104,7 +2157,7 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -2129,7 +2182,7 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -2199,7 +2252,7 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -2239,22 +2292,19 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 
 	}
-	// t.SimpleQAPower (bool) (bool)
+	// t.Flags (miner.SectorOnChainInfoFlags) (uint64)
 
-	maj, extra, err = cr.ReadHeader()
-	if err != nil {
-		return err
-	}
-	if maj != cbg.MajOther {
-		return fmt.Errorf("booleans must be major type 7")
-	}
-	switch extra {
-	case 20:
-		t.SimpleQAPower = false
-	case 21:
-		t.SimpleQAPower = true
-	default:
-		return fmt.Errorf("booleans are either major type 7, value 20 or 21 (got %d)", extra)
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.Flags = SectorOnChainInfoFlags(extra)
+
 	}
 	return nil
 }
@@ -2339,7 +2389,7 @@ func (t *WorkerKeyChange) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -2424,13 +2474,22 @@ func (t *VestingFunds) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		var v VestingFund
-		if err := v.UnmarshalCBOR(cr); err != nil {
-			return err
+			{
+
+				if err := t.Funds[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Funds[i]: %w", err)
+				}
+
+			}
 		}
-
-		t.Funds[i] = v
 	}
 
 	return nil
@@ -2507,7 +2566,7 @@ func (t *VestingFund) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -2615,13 +2674,22 @@ func (t *WindowedPoSt) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		var v proof.PoStProof
-		if err := v.UnmarshalCBOR(cr); err != nil {
-			return err
+			{
+
+				if err := t.Proofs[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Proofs[i]: %w", err)
+				}
+
+			}
 		}
-
-		t.Proofs[i] = v
 	}
 
 	return nil
@@ -2791,7 +2859,7 @@ func (t *BeneficiaryTerm) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -2907,7 +2975,7 @@ func (t *PendingBeneficiaryChange) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -3054,13 +3122,22 @@ func (t *GetControlAddressesReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		var v address.Address
-		if err := v.UnmarshalCBOR(cr); err != nil {
-			return err
+			{
+
+				if err := t.ControlAddrs[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.ControlAddrs[i]: %w", err)
+				}
+
+			}
 		}
-
-		t.ControlAddrs[i] = v
 	}
 
 	return nil
@@ -3153,13 +3230,22 @@ func (t *ChangeWorkerAddressParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		var v address.Address
-		if err := v.UnmarshalCBOR(cr); err != nil {
-			return err
+			{
+
+				if err := t.NewControlAddrs[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.NewControlAddrs[i]: %w", err)
+				}
+
+			}
 		}
-
-		t.NewControlAddrs[i] = v
 	}
 
 	return nil
@@ -3372,13 +3458,22 @@ func (t *SubmitWindowedPoStParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		var v PoStPartition
-		if err := v.UnmarshalCBOR(cr); err != nil {
-			return err
+			{
+
+				if err := t.Partitions[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Partitions[i]: %w", err)
+				}
+
+			}
 		}
-
-		t.Partitions[i] = v
 	}
 
 	// t.Proofs ([]proof.PoStProof) (slice)
@@ -3401,13 +3496,22 @@ func (t *SubmitWindowedPoStParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		var v proof.PoStProof
-		if err := v.UnmarshalCBOR(cr); err != nil {
-			return err
+			{
+
+				if err := t.Proofs[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Proofs[i]: %w", err)
+				}
+
+			}
 		}
-
-		t.Proofs[i] = v
 	}
 
 	// t.ChainCommitEpoch (abi.ChainEpoch) (int64)
@@ -3426,7 +3530,7 @@ func (t *SubmitWindowedPoStParams) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -3516,9 +3620,11 @@ func (t *PreCommitSectorParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.DealIDs {
-		if err := cw.CborWriteHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
 		}
+
 	}
 
 	// t.Expiration (abi.ChainEpoch) (int64)
@@ -3597,7 +3703,7 @@ func (t *PreCommitSectorParams) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -3648,7 +3754,7 @@ func (t *PreCommitSectorParams) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -3677,17 +3783,27 @@ func (t *PreCommitSectorParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		maj, val, err := cr.ReadHeader()
-		if err != nil {
-			return xerrors.Errorf("failed to read uint64 for t.DealIDs slice: %w", err)
+			{
+
+				maj, extra, err = cr.ReadHeader()
+				if err != nil {
+					return err
+				}
+				if maj != cbg.MajUnsignedInt {
+					return fmt.Errorf("wrong type for uint64 field")
+				}
+				t.DealIDs[i] = abi.DealID(extra)
+
+			}
 		}
-
-		if maj != cbg.MajUnsignedInt {
-			return xerrors.Errorf("value read for array t.DealIDs was not a uint, instead got %d", maj)
-		}
-
-		t.DealIDs[i] = abi.DealID(val)
 	}
 
 	// t.Expiration (abi.ChainEpoch) (int64)
@@ -3706,7 +3822,7 @@ func (t *PreCommitSectorParams) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -3946,13 +4062,22 @@ func (t *ExtendSectorExpirationParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		var v ExpirationExtension
-		if err := v.UnmarshalCBOR(cr); err != nil {
-			return err
+			{
+
+				if err := t.Extensions[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Extensions[i]: %w", err)
+				}
+
+			}
 		}
-
-		t.Extensions[i] = v
 	}
 
 	return nil
@@ -4031,13 +4156,22 @@ func (t *ExtendSectorExpiration2Params) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		var v ExpirationExtension2
-		if err := v.UnmarshalCBOR(cr); err != nil {
-			return err
+			{
+
+				if err := t.Extensions[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Extensions[i]: %w", err)
+				}
+
+			}
 		}
-
-		t.Extensions[i] = v
 	}
 
 	return nil
@@ -4116,13 +4250,22 @@ func (t *TerminateSectorsParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		var v TerminationDeclaration
-		if err := v.UnmarshalCBOR(cr); err != nil {
-			return err
+			{
+
+				if err := t.Terminations[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Terminations[i]: %w", err)
+				}
+
+			}
 		}
-
-		t.Terminations[i] = v
 	}
 
 	return nil
@@ -4265,13 +4408,22 @@ func (t *DeclareFaultsParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		var v FaultDeclaration
-		if err := v.UnmarshalCBOR(cr); err != nil {
-			return err
+			{
+
+				if err := t.Faults[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Faults[i]: %w", err)
+				}
+
+			}
 		}
-
-		t.Faults[i] = v
 	}
 
 	return nil
@@ -4350,13 +4502,22 @@ func (t *DeclareFaultsRecoveredParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		var v RecoveryDeclaration
-		if err := v.UnmarshalCBOR(cr); err != nil {
-			return err
+			{
+
+				if err := t.Recoveries[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Recoveries[i]: %w", err)
+				}
+
+			}
 		}
-
-		t.Recoveries[i] = v
 	}
 
 	return nil
@@ -4822,9 +4983,11 @@ func (t *ConfirmSectorProofsParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.Sectors {
-		if err := cw.CborWriteHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
 		}
+
 	}
 
 	// t.RewardSmoothed (smoothing.FilterEstimate) (struct)
@@ -4887,17 +5050,27 @@ func (t *ConfirmSectorProofsParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		maj, val, err := cr.ReadHeader()
-		if err != nil {
-			return xerrors.Errorf("failed to read uint64 for t.Sectors slice: %w", err)
+			{
+
+				maj, extra, err = cr.ReadHeader()
+				if err != nil {
+					return err
+				}
+				if maj != cbg.MajUnsignedInt {
+					return fmt.Errorf("wrong type for uint64 field")
+				}
+				t.Sectors[i] = abi.SectorNumber(extra)
+
+			}
 		}
-
-		if maj != cbg.MajUnsignedInt {
-			return xerrors.Errorf("value read for array t.Sectors was not a uint, instead got %d", maj)
-		}
-
-		t.Sectors[i] = abi.SectorNumber(val)
 	}
 
 	// t.RewardSmoothed (smoothing.FilterEstimate) (struct)
@@ -5015,6 +5188,9 @@ func (t *ChangeMultiaddrsParams) UnmarshalCBOR(r io.Reader) (err error) {
 			var maj byte
 			var extra uint64
 			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
 			maj, extra, err = cr.ReadHeader()
 			if err != nil {
@@ -5329,13 +5505,22 @@ func (t *PreCommitSectorBatchParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		var v PreCommitSectorParams
-		if err := v.UnmarshalCBOR(cr); err != nil {
-			return err
+			{
+
+				if err := t.Sectors[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Sectors[i]: %w", err)
+				}
+
+			}
 		}
-
-		t.Sectors[i] = v
 	}
 
 	return nil
@@ -5504,13 +5689,22 @@ func (t *ProveReplicaUpdatesParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		var v ReplicaUpdate
-		if err := v.UnmarshalCBOR(cr); err != nil {
-			return err
+			{
+
+				if err := t.Updates[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Updates[i]: %w", err)
+				}
+
+			}
 		}
-
-		t.Updates[i] = v
 	}
 
 	return nil
@@ -5582,7 +5776,7 @@ func (t *CronEventPayload) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -5667,13 +5861,22 @@ func (t *PreCommitSectorBatchParams2) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		var v SectorPreCommitInfo
-		if err := v.UnmarshalCBOR(cr); err != nil {
-			return err
+			{
+
+				if err := t.Sectors[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Sectors[i]: %w", err)
+				}
+
+			}
 		}
-
-		t.Sectors[i] = v
 	}
 
 	return nil
@@ -5752,13 +5955,22 @@ func (t *ProveReplicaUpdatesParams2) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		var v ReplicaUpdate2
-		if err := v.UnmarshalCBOR(cr); err != nil {
-			return err
+			{
+
+				if err := t.Updates[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Updates[i]: %w", err)
+				}
+
+			}
 		}
-
-		t.Updates[i] = v
 	}
 
 	return nil
@@ -5858,7 +6070,7 @@ func (t *ChangeBeneficiaryParams) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -7576,7 +7788,7 @@ func (t *ExpirationExtension) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -7807,9 +8019,11 @@ func (t *ReplicaUpdate) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.Deals {
-		if err := cw.CborWriteHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
 		}
+
 	}
 
 	// t.UpdateProofType (abi.RegisteredUpdateProof) (int64)
@@ -7935,17 +8149,27 @@ func (t *ReplicaUpdate) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		maj, val, err := cr.ReadHeader()
-		if err != nil {
-			return xerrors.Errorf("failed to read uint64 for t.Deals slice: %w", err)
+			{
+
+				maj, extra, err = cr.ReadHeader()
+				if err != nil {
+					return err
+				}
+				if maj != cbg.MajUnsignedInt {
+					return fmt.Errorf("wrong type for uint64 field")
+				}
+				t.Deals[i] = abi.DealID(extra)
+
+			}
 		}
-
-		if maj != cbg.MajUnsignedInt {
-			return xerrors.Errorf("value read for array t.Deals was not a uint, instead got %d", maj)
-		}
-
-		t.Deals[i] = abi.DealID(val)
 	}
 
 	// t.UpdateProofType (abi.RegisteredUpdateProof) (int64)
@@ -7964,7 +8188,7 @@ func (t *ReplicaUpdate) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -8050,9 +8274,11 @@ func (t *ReplicaUpdate2) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.Deals {
-		if err := cw.CborWriteHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
 		}
+
 	}
 
 	// t.UpdateProofType (abi.RegisteredUpdateProof) (int64)
@@ -8190,17 +8416,27 @@ func (t *ReplicaUpdate2) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		maj, val, err := cr.ReadHeader()
-		if err != nil {
-			return xerrors.Errorf("failed to read uint64 for t.Deals slice: %w", err)
+			{
+
+				maj, extra, err = cr.ReadHeader()
+				if err != nil {
+					return err
+				}
+				if maj != cbg.MajUnsignedInt {
+					return fmt.Errorf("wrong type for uint64 field")
+				}
+				t.Deals[i] = abi.DealID(extra)
+
+			}
 		}
-
-		if maj != cbg.MajUnsignedInt {
-			return xerrors.Errorf("value read for array t.Deals was not a uint, instead got %d", maj)
-		}
-
-		t.Deals[i] = abi.DealID(val)
 	}
 
 	// t.UpdateProofType (abi.RegisteredUpdateProof) (int64)
@@ -8219,7 +8455,7 @@ func (t *ReplicaUpdate2) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -8390,13 +8626,22 @@ func (t *ExpirationExtension2) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		var v SectorClaim
-		if err := v.UnmarshalCBOR(cr); err != nil {
-			return err
+			{
+
+				if err := t.SectorsWithClaims[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.SectorsWithClaims[i]: %w", err)
+				}
+
+			}
 		}
-
-		t.SectorsWithClaims[i] = v
 	}
 
 	// t.NewExpiration (abi.ChainEpoch) (int64)
@@ -8415,7 +8660,7 @@ func (t *ExpirationExtension2) UnmarshalCBOR(r io.Reader) (err error) {
 		case cbg.MajNegativeInt:
 			extraI = int64(extra)
 			if extraI < 0 {
-				return fmt.Errorf("int64 negative oveflow")
+				return fmt.Errorf("int64 negative overflow")
 			}
 			extraI = -1 - extraI
 		default:
@@ -8456,9 +8701,11 @@ func (t *SectorClaim) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.MaintainClaims {
-		if err := cw.CborWriteHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
 		}
+
 	}
 
 	// t.DropClaims ([]verifreg.ClaimId) (slice)
@@ -8470,9 +8717,11 @@ func (t *SectorClaim) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.DropClaims {
-		if err := cw.CborWriteHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -8534,17 +8783,27 @@ func (t *SectorClaim) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		maj, val, err := cr.ReadHeader()
-		if err != nil {
-			return xerrors.Errorf("failed to read uint64 for t.MaintainClaims slice: %w", err)
+			{
+
+				maj, extra, err = cr.ReadHeader()
+				if err != nil {
+					return err
+				}
+				if maj != cbg.MajUnsignedInt {
+					return fmt.Errorf("wrong type for uint64 field")
+				}
+				t.MaintainClaims[i] = verifreg.ClaimId(extra)
+
+			}
 		}
-
-		if maj != cbg.MajUnsignedInt {
-			return xerrors.Errorf("value read for array t.MaintainClaims was not a uint, instead got %d", maj)
-		}
-
-		t.MaintainClaims[i] = verifreg.ClaimId(val)
 	}
 
 	// t.DropClaims ([]verifreg.ClaimId) (slice)
@@ -8567,17 +8826,27 @@ func (t *SectorClaim) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
 
-		maj, val, err := cr.ReadHeader()
-		if err != nil {
-			return xerrors.Errorf("failed to read uint64 for t.DropClaims slice: %w", err)
+			{
+
+				maj, extra, err = cr.ReadHeader()
+				if err != nil {
+					return err
+				}
+				if maj != cbg.MajUnsignedInt {
+					return fmt.Errorf("wrong type for uint64 field")
+				}
+				t.DropClaims[i] = verifreg.ClaimId(extra)
+
+			}
 		}
-
-		if maj != cbg.MajUnsignedInt {
-			return xerrors.Errorf("value read for array t.DropClaims was not a uint, instead got %d", maj)
-		}
-
-		t.DropClaims[i] = verifreg.ClaimId(val)
 	}
 
 	return nil
