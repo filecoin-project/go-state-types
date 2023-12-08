@@ -157,10 +157,6 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 
 			dealStateCount++
 
-			if dealState.VerifiedClaim != verifreg.NoAllocationID {
-				claimIdToDealId[verifreg.ClaimId(dealState.VerifiedClaim)] = abi.DealID(dealID)
-			}
-
 			return nil
 		})
 		acc.RequireNoError(err, "error iterating deal states")

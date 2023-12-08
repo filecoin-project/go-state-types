@@ -394,3 +394,128 @@ type GetPeerIDReturn struct {
 type GetMultiAddrsReturn struct {
 	MultiAddrs []byte
 }
+
+// ProveCommitSectors2Params represents the parameters for proving committed sectors.
+type ProveCommitSectors2Params struct {
+	SectorActivations          []SectorActivationManifest
+	SectorProofs               [][]byte
+	AggregateProof             []byte
+	RequireActivationSuccess   bool
+	RequireNotificationSuccess bool
+}
+
+// SectorActivationManifest contains data to activate a commitment to one sector and its data.
+// All pieces of data must be specified, whether or not not claiming a FIL+ activation or being
+// notified to a data consumer.
+// An implicit zero piece fills any remaining sector capacity.
+type SectorActivationManifest struct {
+	SectorNumber abi.SectorNumber
+	Pieces       []PieceActivationManifest
+}
+
+// PieceActivationManifest represents the manifest for activating a piece.
+type PieceActivationManifest struct {
+	CID                   cid.Cid
+	Size                  abi.PaddedPieceSize
+	VerifiedAllocationKey *VerifiedAllocationKey
+	Notify                []DataActivationNotification
+}
+
+// VerifiedAllocationKey represents the key for a verified allocation.
+type VerifiedAllocationKey struct {
+	Client abi.ActorID
+	ID     verifreg.AllocationId
+}
+
+// DataActivationNotification represents a notification for data activation.
+type DataActivationNotification struct {
+	Address addr.Address
+	Payload []byte
+}
+
+// ProveCommit2Return represents the return value for the ProveCommit2 function.
+type ProveCommit2Return struct {
+	Sectors BatchReturn
+}
+
+type BatchReturn struct {
+	SuccessCount uint64
+	FailCodes    []FailCode
+}
+
+type FailCode struct {
+	// Idx represents the index of the operation that failed within the batch.
+	Idx  uint64
+	Code xc.ExitCode // todo correct?
+}
+
+// PieceActivationReturn represents the return value for piece activation.
+type PieceActivationReturn struct {
+	Claimed       bool
+	Notifications []DataActivationNotificationReturn
+}
+
+// DataActivationNotificationReturn represents the return value for a data activation notification.
+type DataActivationNotificationReturn struct {
+	Code xc.ExitCode // todo correct??
+	Data []byte
+}
+
+// ProveReplicaUpdates3Params represents the parameters for proving replica updates.
+type ProveReplicaUpdates3Params struct {
+	SectorUpdates              []SectorUpdateManifest
+	SectorProofs               [][]byte
+	AggregateProof             []byte
+	UpdateProofsType           abi.RegisteredUpdateProof
+	AggregateProofType         abi.RegisteredAggregationProof
+	RequireActivationSuccess   bool
+	RequireNotificationSuccess bool
+}
+
+// SectorUpdateManifest contains data for sector update.
+type SectorUpdateManifest struct {
+	Sector       abi.SectorNumber
+	Deadline     uint64
+	Partition    uint64
+	NewSealedCID cid.Cid
+	Pieces       []PieceActivationManifest
+}
+
+// ProveReplicaUpdates3Return represents the return value for the ProveReplicaUpdates3 function.
+type ProveReplicaUpdates3Return struct {
+	ActivationResults BatchReturn
+}
+
+// SectorContentChangedParams represents a notification of change committed to sectors.
+type SectorContentChangedParams struct {
+	Sectors []SectorChanges
+}
+
+// SectorChanges describes changes to one sector's content.
+type SectorChanges struct {
+	Sector                 abi.SectorNumber
+	MinimumCommitmentEpoch abi.ChainEpoch
+	Added                  []PieceChange
+}
+
+// PieceChange describes a piece of data committed to a sector.
+type PieceChange struct {
+	Data    cid.Cid
+	Size    abi.PaddedPieceSize
+	Payload []byte
+}
+
+// SectorContentChangedReturn represents the return value for the SectorContentChanged function.
+type SectorContentChangedReturn struct {
+	Sectors []SectorReturn
+}
+
+// SectorReturn represents a result for each sector that was notified.
+type SectorReturn struct {
+	Added []PieceReturn
+}
+
+// PieceReturn represents a result for each piece for the sector that was notified.
+type PieceReturn struct {
+	Accepted bool
+}
