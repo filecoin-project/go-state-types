@@ -20,7 +20,7 @@ var _ = cid.Undef
 var _ = math.E
 var _ = sort.Sort
 
-var lengthBufState = []byte{140}
+var lengthBufState = []byte{141}
 
 func (t *State) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -108,6 +108,12 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 		return xerrors.Errorf("failed to write cid field t.PendingDealAllocationIds: %w", err)
 	}
 
+	// t.ProviderSectors (cid.Cid) (struct)
+
+	if err := cbg.WriteCid(cw, t.ProviderSectors); err != nil {
+		return xerrors.Errorf("failed to write cid field t.ProviderSectors: %w", err)
+	}
+
 	return nil
 }
 
@@ -130,7 +136,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 12 {
+	if extra != 13 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
@@ -284,6 +290,18 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 		t.PendingDealAllocationIds = c
 
 	}
+	// t.ProviderSectors (cid.Cid) (struct)
+
+	{
+
+		c, err := cbg.ReadCid(cr)
+		if err != nil {
+			return xerrors.Errorf("failed to read cid field t.ProviderSectors: %w", err)
+		}
+
+		t.ProviderSectors = c
+
+	}
 	return nil
 }
 
@@ -298,6 +316,12 @@ func (t *DealState) MarshalCBOR(w io.Writer) error {
 	cw := cbg.NewCborWriter(w)
 
 	if _, err := cw.Write(lengthBufDealState); err != nil {
+		return err
+	}
+
+	// t.SectorNumber (abi.SectorNumber) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.SectorNumber)); err != nil {
 		return err
 	}
 
@@ -333,13 +357,6 @@ func (t *DealState) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
-
-	// t.VerifiedClaim (verifreg.AllocationId) (uint64)
-
-	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.VerifiedClaim)); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -366,6 +383,20 @@ func (t *DealState) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
+	// t.SectorNumber (abi.SectorNumber) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.SectorNumber = abi.SectorNumber(extra)
+
+	}
 	// t.SectorStartEpoch (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -440,20 +471,6 @@ func (t *DealState) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 
 		t.SlashEpoch = abi.ChainEpoch(extraI)
-	}
-	// t.VerifiedClaim (verifreg.AllocationId) (uint64)
-
-	{
-
-		maj, extra, err = cr.ReadHeader()
-		if err != nil {
-			return err
-		}
-		if maj != cbg.MajUnsignedInt {
-			return fmt.Errorf("wrong type for uint64 field")
-		}
-		t.VerifiedClaim = verifreg.AllocationId(extra)
-
 	}
 	return nil
 }
