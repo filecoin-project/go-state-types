@@ -51,7 +51,7 @@ func init() {
 func Ln(z big.Int) big.Int {
 	// bitlen - 1 - precision
 	k := int64(z.BitLen()) - 1 - Precision128 // Q.0
-	x := big.Zero()                           // nolint:ineffassign
+	var x big.Int
 
 	if k > 0 {
 		x = big.Rsh(z, uint(k)) // Q.128
