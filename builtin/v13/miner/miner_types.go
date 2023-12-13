@@ -433,8 +433,8 @@ type DataActivationNotification struct {
 	Payload []byte
 }
 
-// ProveCommit2Return represents the return value for the ProveCommit2 function.
-type ProveCommit2Return struct {
+// ProveCommitSectors2Return represents the return value for the ProveCommit2 function.
+type ProveCommitSectors2Return struct {
 	Sectors BatchReturn
 }
 

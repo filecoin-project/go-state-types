@@ -132,3 +132,9 @@ type GetDealActivationReturn struct {
 	// Epoch at which the deal was terminated abnormally, or -1.
 	Terminated abi.ChainEpoch
 }
+
+type GetDealSectorParams = DealQueryParams
+
+type GetDealSectorReturn struct {
+	Sector abi.SectorNumber
+}

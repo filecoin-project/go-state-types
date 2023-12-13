@@ -4,6 +4,7 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
+	"github.com/filecoin-project/go-state-types/builtin/v13/miner"
 )
 
 var Methods = map[abi.MethodNum]builtin.MethodMeta{
@@ -30,4 +31,6 @@ var Methods = map[abi.MethodNum]builtin.MethodMeta{
 	builtin.MustGenerateFRCMethodNum("GetDealProviderCollateral"): {"GetDealProviderCollateralExported", *new(func(*GetDealProviderCollateralParams) *GetDealProviderCollateralReturn)}, // GetDealProviderCollateralExported
 	builtin.MustGenerateFRCMethodNum("GetDealVerified"):           {"GetDealVerifiedExported", *new(func(*GetDealVerifiedParams) *GetDealVerifiedReturn)},                               // GetDealVerifiedExported
 	builtin.MustGenerateFRCMethodNum("GetDealActivation"):         {"GetDealActivationExported", *new(func(*GetDealActivationParams) *GetDealActivationReturn)},                         // GetDealActivationExported
+	builtin.MustGenerateFRCMethodNum("GetDealSector"):             {"GetDealSectorExported", *new(func(*GetDealSectorParams) *GetDealSectorReturn)},                                     // GetDealSectorExported
+	builtin.MethodSectorContentChanged:                            {"SectorContentChanged", *new(func(*miner.SectorContentChangedParams) *miner.SectorContentChangedReturn)},            // SectorContentChanged
 }
