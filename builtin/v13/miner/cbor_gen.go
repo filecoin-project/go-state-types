@@ -7081,7 +7081,7 @@ func (t *DataActivationNotification) UnmarshalCBOR(r io.Reader) (err error) {
 	return nil
 }
 
-var lengthBufProveCommit2Return = []byte{129}
+var lengthBufProveCommitSectors2Return = []byte{129}
 
 func (t *ProveCommitSectors2Return) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -7091,7 +7091,7 @@ func (t *ProveCommitSectors2Return) MarshalCBOR(w io.Writer) error {
 
 	cw := cbg.NewCborWriter(w)
 
-	if _, err := cw.Write(lengthBufProveCommit2Return); err != nil {
+	if _, err := cw.Write(lengthBufProveCommitSectors2Return); err != nil {
 		return err
 	}
 
