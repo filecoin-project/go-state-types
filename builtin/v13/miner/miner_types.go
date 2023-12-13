@@ -434,9 +434,7 @@ type DataActivationNotification struct {
 }
 
 // ProveCommitSectors2Return represents the return value for the ProveCommit2 function.
-type ProveCommitSectors2Return struct {
-	Sectors BatchReturn
-}
+type ProveCommitSectors2Return = BatchReturn
 
 type BatchReturn struct {
 	SuccessCount uint64
@@ -487,9 +485,7 @@ type ProveReplicaUpdates3Return struct {
 }
 
 // SectorContentChangedParams represents a notification of change committed to sectors.
-type SectorContentChangedParams struct {
-	Sectors []SectorChanges
-}
+type SectorContentChangedParams = []SectorChanges
 
 // SectorChanges describes changes to one sector's content.
 type SectorChanges struct {
@@ -506,16 +502,10 @@ type PieceChange struct {
 }
 
 // SectorContentChangedReturn represents the return value for the SectorContentChanged function.
-type SectorContentChangedReturn struct {
-	Sectors []SectorReturn
-}
+type SectorContentChangedReturn = []SectorReturn
 
 // SectorReturn represents a result for each sector that was notified.
-type SectorReturn struct {
-	Added []PieceReturn
-}
+type SectorReturn = []PieceReturn
 
 // PieceReturn represents a result for each piece for the sector that was notified.
-type PieceReturn struct {
-	Accepted bool
-}
+type PieceReturn = bool // Accepted = true
