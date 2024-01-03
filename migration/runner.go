@@ -16,8 +16,25 @@ import (
 	"golang.org/x/xerrors"
 )
 
-func RunMigration(ctx context.Context, cfg Config, cache MigrationCache, store cbor.IpldStore, log Logger, actorsIn *builtin.ActorTree, migrations map[cid.Cid]ActorMigration) (*builtin.ActorTree, error) {
+type migrationSettings struct {
+	deferred *DeferredMigrationSet
+}
+
+type MigrationOption func(*migrationSettings)
+
+func WithDeferredMigrationSet(deferred *DeferredMigrationSet) MigrationOption {
+	return func(settings *migrationSettings) {
+		settings.deferred = deferred
+	}
+}
+
+func RunMigration(ctx context.Context, cfg Config, cache MigrationCache, store cbor.IpldStore, log Logger, actorsIn *builtin.ActorTree, migrations map[cid.Cid]ActorMigration, opts ...MigrationOption) (*builtin.ActorTree, error) {
 	startTime := time.Now()
+
+	settings := migrationSettings{}
+	for _, opt := range opts {
+		opt(&settings)
+	}
 
 	// Setup synchronization
 	grp, ctx := errgroup.WithContext(ctx)
@@ -69,6 +86,10 @@ func RunMigration(ctx context.Context, cfg Config, cache MigrationCache, store c
 			for job := range jobCh {
 				result, err := job.run(ctx, store)
 				if err != nil {
+					if err == errMigrationDeferred {
+						atomic.AddUint32(&doneCount, 1)
+						continue
+					}
 					return xerrors.Errorf("running job: %w", err)
 				}
 				select {
@@ -142,6 +163,52 @@ func RunMigration(ctx context.Context, cfg Config, cache MigrationCache, store c
 
 	if err := grp.Wait(); err != nil {
 		return nil, xerrors.Errorf("migration group error: %w", err)
+	}
+
+	if settings.deferred != nil {
+		// deferred round
+		// NOTE this is not parralelized for now as this was only ever needed for singleton actor migrations
+
+		log.Log(rt.INFO, "Running deferred migrations")
+
+		for addr := range settings.deferred.todo {
+			log.Log(rt.INFO, "Running deferred migration for %s", addr)
+
+			actorIn, found, err := actorsIn.GetActorV5(addr)
+			if err != nil {
+				return nil, xerrors.Errorf("failed to get actor %s: %w", addr, err)
+			}
+
+			if !found {
+				return nil, xerrors.Errorf("failed to find actor %s", addr)
+			}
+
+			actorMigration, ok := migrations[actorIn.Code]
+			if !ok {
+				return nil, xerrors.Errorf("actor with code %s has no registered migration function", actorIn.Code)
+			}
+
+			dm, ok := actorMigration.(*DeferredMigrator)
+			if !ok {
+				return nil, xerrors.Errorf("actor with code %s has a migration which claims to be deferred but isn't", actorIn.Code)
+			}
+
+			actorMigration = dm.sub
+
+			res, err := (&migrationJob{
+				Address:        addr,
+				ActorV5:        *actorIn,
+				ActorMigration: actorMigration,
+				cache:          cache,
+			}).run(ctx, store)
+			if err != nil {
+				return nil, xerrors.Errorf("running deferred job: %w", err)
+			}
+
+			if err := actorsOut.SetActorV5(res.Address, &res.ActorV5); err != nil {
+				return nil, xerrors.Errorf("error setting actor %s: %w", res.Address, err)
+			}
+		}
 	}
 
 	elapsed := time.Since(startTime)

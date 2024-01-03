@@ -204,3 +204,45 @@ func CachedMigration(cache MigrationCache, m ActorMigration) ActorMigration {
 		cache:          cache,
 	}
 }
+
+type DeferredMigrationSet struct {
+	todo map[address.Address]struct{}
+	lk   sync.Mutex
+}
+
+func NewDeferredMigrationSet() *DeferredMigrationSet {
+	return &DeferredMigrationSet{
+		todo: make(map[address.Address]struct{}),
+	}
+}
+
+type DeferredMigrator struct {
+	ds  *DeferredMigrationSet
+	sub ActorMigration
+}
+
+func NewDeferredMigrator(ds *DeferredMigrationSet, sub ActorMigration) *DeferredMigrator {
+	return &DeferredMigrator{
+		ds:  ds,
+		sub: sub,
+	}
+}
+
+func (d DeferredMigrator) MigratedCodeCID() cid.Cid {
+	panic("this can't be called")
+}
+
+var errMigrationDeferred = xerrors.Errorf("migration deferred")
+
+func (d DeferredMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, in ActorMigrationInput) (*ActorMigrationResult, error) {
+	d.ds.lk.Lock()
+	defer d.ds.lk.Unlock()
+
+	_, ok := d.ds.todo[in.Address]
+	if ok {
+		return nil, xerrors.Errorf("actor %s already in deferred set", in.Address)
+	}
+	d.ds.todo[in.Address] = struct{}{}
+
+	return nil, errMigrationDeferred
+}

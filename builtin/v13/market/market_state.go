@@ -19,6 +19,7 @@ const EpochUndefined = abi.ChainEpoch(-1)
 // Bitwidth of AMTs determined empirically from mutation patterns and projections of mainnet data.
 const ProposalsAmtBitwidth = 5
 const StatesAmtBitwidth = 6
+const ProviderSectorsHamtBitwidth = 5
 
 type State struct {
 	// Proposals are deals that have been proposed and not yet cleaned up after expiry or termination.

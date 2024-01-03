@@ -26,7 +26,7 @@ var PieceCIDPrefix = cid.Prefix{
 }
 
 type DealState struct {
-	SectorNumber     abi.SectorNumber // todo verify this
+	SectorNumber     abi.SectorNumber // 0 if not yet included in proven sector (0 is also a valid sector number)
 	SectorStartEpoch abi.ChainEpoch   // -1 if not yet included in proven sector
 	LastUpdatedEpoch abi.ChainEpoch   // -1 if deal state never updated
 	SlashEpoch       abi.ChainEpoch   // -1 if deal never slashed

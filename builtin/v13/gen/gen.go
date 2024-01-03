@@ -113,6 +113,7 @@ func main() {
 		// actor state
 		market.State{},
 		market.DealState{},
+		market.SectorDealIDs{},
 		// method params and returns
 		market.WithdrawBalanceParams{},
 		market.PublishStorageDealsParams{},
