@@ -2,6 +2,7 @@ package migration
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
@@ -232,7 +233,7 @@ func (d DeferredMigrator) MigratedCodeCID() cid.Cid {
 	panic("this can't be called")
 }
 
-var errMigrationDeferred = xerrors.Errorf("migration deferred")
+var errMigrationDeferred = errors.New("migration deferred")
 
 func (d DeferredMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, in ActorMigrationInput) (*ActorMigrationResult, error) {
 	d.ds.lk.Lock()

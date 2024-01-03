@@ -2,6 +2,7 @@ package migration
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -86,7 +87,7 @@ func RunMigration(ctx context.Context, cfg Config, cache MigrationCache, store c
 			for job := range jobCh {
 				result, err := job.run(ctx, store)
 				if err != nil {
-					if err == errMigrationDeferred {
+					if errors.Is(err, errMigrationDeferred) {
 						atomic.AddUint32(&doneCount, 1)
 						continue
 					}
