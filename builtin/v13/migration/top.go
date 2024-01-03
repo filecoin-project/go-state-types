@@ -135,7 +135,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations), len(oldManifestData.Entries))
 	}
 
-	actorsOut, err := migration.RunMigration(ctx, cfg, cache, store, log, actorsIn, migrations)
+	actorsOut, err := migration.RunMigration(ctx, cfg, cache, store, log, actorsIn, migrations, migration.WithDeferredMigrationSet(deferred))
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to run migration: %w", err)
 	}
