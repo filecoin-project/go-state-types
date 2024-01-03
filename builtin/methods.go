@@ -239,7 +239,7 @@ var MethodsMiner = struct {
 	GetPeerIDExported                  abi.MethodNum
 	GetMultiaddrsExported              abi.MethodNum
 	// MovePartitionsExported             abi.MethodNum
-	ProveCommitSectors2  abi.MethodNum
+	ProveCommitSectors3  abi.MethodNum
 	ProveReplicaUpdates3 abi.MethodNum
 }{
 	MethodConstructor,

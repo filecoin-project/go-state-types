@@ -395,8 +395,8 @@ type GetMultiAddrsReturn struct {
 	MultiAddrs []byte
 }
 
-// ProveCommitSectors2Params represents the parameters for proving committed sectors.
-type ProveCommitSectors2Params struct {
+// ProveCommitSectors3Params represents the parameters for proving committed sectors.
+type ProveCommitSectors3Params struct {
 	SectorActivations          []SectorActivationManifest
 	SectorProofs               [][]byte
 	AggregateProof             []byte
@@ -433,8 +433,8 @@ type DataActivationNotification struct {
 	Payload []byte
 }
 
-// ProveCommitSectors2Return represents the return value for the ProveCommit2 function.
-type ProveCommitSectors2Return = BatchReturn
+// ProveCommitSectors3Return represents the return value for the ProveCommit2 function.
+type ProveCommitSectors3Return = BatchReturn
 
 type BatchReturn struct {
 	SuccessCount uint64
@@ -480,9 +480,7 @@ type SectorUpdateManifest struct {
 }
 
 // ProveReplicaUpdates3Return represents the return value for the ProveReplicaUpdates3 function.
-type ProveReplicaUpdates3Return struct {
-	ActivationResults BatchReturn
-}
+type ProveReplicaUpdates3Return = BatchReturn
 
 // SectorContentChangedParams represents a notification of change committed to sectors.
 type SectorContentChangedParams = []SectorChanges

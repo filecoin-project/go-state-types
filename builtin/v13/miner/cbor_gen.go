@@ -6394,9 +6394,9 @@ func (t *GetMultiAddrsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	return nil
 }
 
-var lengthBufProveCommitSectors2Params = []byte{133}
+var lengthBufProveCommitSectors3Params = []byte{133}
 
-func (t *ProveCommitSectors2Params) MarshalCBOR(w io.Writer) error {
+func (t *ProveCommitSectors3Params) MarshalCBOR(w io.Writer) error {
 	if t == nil {
 		_, err := w.Write(cbg.CborNull)
 		return err
@@ -6404,7 +6404,7 @@ func (t *ProveCommitSectors2Params) MarshalCBOR(w io.Writer) error {
 
 	cw := cbg.NewCborWriter(w)
 
-	if _, err := cw.Write(lengthBufProveCommitSectors2Params); err != nil {
+	if _, err := cw.Write(lengthBufProveCommitSectors3Params); err != nil {
 		return err
 	}
 
@@ -6469,8 +6469,8 @@ func (t *ProveCommitSectors2Params) MarshalCBOR(w io.Writer) error {
 	return nil
 }
 
-func (t *ProveCommitSectors2Params) UnmarshalCBOR(r io.Reader) (err error) {
-	*t = ProveCommitSectors2Params{}
+func (t *ProveCommitSectors3Params) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = ProveCommitSectors3Params{}
 
 	cr := cbg.NewCborReader(r)
 
@@ -8006,62 +8006,6 @@ func (t *SectorUpdateManifest) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 	}
 
-	return nil
-}
-
-var lengthBufProveReplicaUpdates3Return = []byte{129}
-
-func (t *ProveReplicaUpdates3Return) MarshalCBOR(w io.Writer) error {
-	if t == nil {
-		_, err := w.Write(cbg.CborNull)
-		return err
-	}
-
-	cw := cbg.NewCborWriter(w)
-
-	if _, err := cw.Write(lengthBufProveReplicaUpdates3Return); err != nil {
-		return err
-	}
-
-	// t.ActivationResults (miner.BatchReturn) (struct)
-	if err := t.ActivationResults.MarshalCBOR(cw); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (t *ProveReplicaUpdates3Return) UnmarshalCBOR(r io.Reader) (err error) {
-	*t = ProveReplicaUpdates3Return{}
-
-	cr := cbg.NewCborReader(r)
-
-	maj, extra, err := cr.ReadHeader()
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-	}()
-
-	if maj != cbg.MajArray {
-		return fmt.Errorf("cbor input should be of type array")
-	}
-
-	if extra != 1 {
-		return fmt.Errorf("cbor input had wrong number of fields")
-	}
-
-	// t.ActivationResults (miner.BatchReturn) (struct)
-
-	{
-
-		if err := t.ActivationResults.UnmarshalCBOR(cr); err != nil {
-			return xerrors.Errorf("unmarshaling t.ActivationResults: %w", err)
-		}
-
-	}
 	return nil
 }
 

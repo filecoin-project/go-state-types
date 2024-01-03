@@ -193,7 +193,7 @@ func main() {
 		miner.GetOwnerReturn{},
 		miner.GetPeerIDReturn{},
 		miner.GetMultiAddrsReturn{},
-		miner.ProveCommitSectors2Params{},
+		miner.ProveCommitSectors3Params{},
 		miner.SectorActivationManifest{},
 		miner.PieceActivationManifest{},
 		miner.VerifiedAllocationKey{},
@@ -204,7 +204,6 @@ func main() {
 		miner.FailCode{},
 		miner.ProveReplicaUpdates3Params{},
 		miner.SectorUpdateManifest{},
-		miner.ProveReplicaUpdates3Return{},
 		miner.SectorChanges{},
 		miner.PieceChange{},
 		// other types
