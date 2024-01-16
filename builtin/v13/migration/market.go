@@ -135,7 +135,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStates(ctx context.Context, st
 
 		var sectorDealIDs market13.SectorDealIDs
 		for sector, deals := range sectors {
-			sectorDealIDs.Deals = deals
+			sectorDealIDs = deals
 
 			if err := actorSectors.Put(miner13.SectorKey(sector), &sectorDealIDs); err != nil {
 				return cid.Undef, cid.Undef, xerrors.Errorf("failed to put sector: %w", err)

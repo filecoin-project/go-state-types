@@ -11,9 +11,7 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v13/verifreg"
 )
 
-type SectorDealIDs struct {
-	Deals []abi.DealID
-}
+type SectorDealIDs = []abi.DealID
 
 type WithdrawBalanceParams struct {
 	ProviderOrClientAddress addr.Address
