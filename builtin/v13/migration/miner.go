@@ -17,9 +17,7 @@ import (
 type providerSectors struct {
 	lk sync.Mutex
 
-	//providerSectors map[address.Address]cid.Cid // HAMT[SectorNumber]SectorDealIDs
-	dealToSector       map[abi.DealID]abi.SectorID
-	minerToSectorDeals map[address.Address]map[abi.SectorNumber][]abi.DealID
+	dealToSector map[abi.DealID]abi.SectorID
 }
 
 // minerMigration is technically a no-op, but it collects a cache for market migration
@@ -68,21 +66,10 @@ func (m *minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, 
 				Miner:  abi.ActorID(mid),
 				Number: abi.SectorNumber(i),
 			}
-			if _, ok := m.providerSectors.minerToSectorDeals[in.Address]; !ok {
-				m.providerSectors.minerToSectorDeals[in.Address] = make(map[abi.SectorNumber][]abi.DealID)
-			}
-			m.providerSectors.minerToSectorDeals[in.Address][sector.SectorNumber] = append(m.providerSectors.minerToSectorDeals[in.Address][sector.SectorNumber], dealID)
-		}
-
-		_, ok := m.providerSectors.minerToSectorDeals[in.Address]
-		if !ok {
-			m.providerSectors.minerToSectorDeals[in.Address] = make(map[abi.SectorNumber][]abi.DealID)
 		}
 
 		dealIDsCopy := make([]abi.DealID, len(sector.DealIDs))
 		copy(dealIDsCopy, sector.DealIDs)
-
-		m.providerSectors.minerToSectorDeals[in.Address][sector.SectorNumber] = dealIDsCopy
 
 		m.providerSectors.lk.Unlock()
 

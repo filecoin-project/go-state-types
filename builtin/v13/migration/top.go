@@ -2,7 +2,6 @@ package migration
 
 import (
 	"context"
-	"github.com/filecoin-project/go-address"
 	adt13 "github.com/filecoin-project/go-state-types/builtin/v13/util/adt"
 
 	system12 "github.com/filecoin-project/go-state-types/builtin/v12/system"
@@ -108,8 +107,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 
 	ps := &providerSectors{
-		dealToSector:       map[abi.DealID]abi.SectorID{},
-		minerToSectorDeals: map[address.Address]map[abi.SectorNumber][]abi.DealID{},
+		dealToSector: map[abi.DealID]abi.SectorID{},
 	}
 
 	minerMig, err := newMinerMigrator(ctx, store, miner13Cid, ps)
