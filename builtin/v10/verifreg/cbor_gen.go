@@ -732,9 +732,9 @@ func (t *RemoveExpiredAllocationsParams) UnmarshalCBOR(r io.Reader) (err error) 
 				t.AllocationIds[i] = AllocationId(extra)
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -843,9 +843,9 @@ func (t *RemoveExpiredAllocationsReturn) UnmarshalCBOR(r io.Reader) (err error) 
 				t.Considered[i] = AllocationId(extra)
 
 			}
+
 		}
 	}
-
 	// t.Results (verifreg.BatchReturn) (struct)
 
 	{
@@ -899,6 +899,7 @@ func (t *BatchReturn) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -975,9 +976,9 @@ func (t *BatchReturn) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -1007,6 +1008,7 @@ func (t *ClaimAllocationsParams) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 
 	// t.AllOrNothing (bool) (bool)
@@ -1074,9 +1076,9 @@ func (t *ClaimAllocationsParams) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	// t.AllOrNothing (bool) (bool)
 
 	maj, extra, err = cr.ReadHeader()
@@ -1282,9 +1284,9 @@ func (t *GetClaimsParams) UnmarshalCBOR(r io.Reader) (err error) {
 				t.ClaimIds[i] = ClaimId(extra)
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -1319,6 +1321,7 @@ func (t *GetClaimsReturn) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -1390,9 +1393,9 @@ func (t *GetClaimsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -1425,9 +1428,10 @@ func (t *UniversalReceiverParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.Payload[:]); err != nil {
+	if _, err := cw.Write(t.Payload); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1486,9 +1490,10 @@ func (t *UniversalReceiverParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Payload = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Payload[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.Payload); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1615,9 +1620,9 @@ func (t *AllocationsResponse) UnmarshalCBOR(r io.Reader) (err error) {
 				t.NewAllocations[i] = AllocationId(extra)
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -1647,6 +1652,7 @@ func (t *ExtendClaimTermsParams) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -1709,9 +1715,9 @@ func (t *ExtendClaimTermsParams) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -1747,6 +1753,7 @@ func (t *ExtendClaimTermsReturn) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -1823,9 +1830,9 @@ func (t *ExtendClaimTermsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -1944,9 +1951,9 @@ func (t *RemoveExpiredClaimsParams) UnmarshalCBOR(r io.Reader) (err error) {
 				t.ClaimIds[i] = ClaimId(extra)
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -2050,9 +2057,9 @@ func (t *RemoveExpiredClaimsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 				t.Considered[i] = AllocationId(extra)
 
 			}
+
 		}
 	}
-
 	// t.Results (verifreg.BatchReturn) (struct)
 
 	{
@@ -3497,6 +3504,7 @@ func (t *AllocationRequests) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 
 	// t.Extensions ([]verifreg.ClaimExtensionRequest) (slice)
@@ -3511,6 +3519,7 @@ func (t *AllocationRequests) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -3573,9 +3582,9 @@ func (t *AllocationRequests) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	// t.Extensions ([]verifreg.ClaimExtensionRequest) (slice)
 
 	maj, extra, err = cr.ReadHeader()
@@ -3611,8 +3620,8 @@ func (t *AllocationRequests) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }

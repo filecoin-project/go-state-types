@@ -375,6 +375,7 @@ func (t *MinerInfo) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 
 	// t.PendingWorkerKey (miner.WorkerKeyChange) (struct)
@@ -391,7 +392,7 @@ func (t *MinerInfo) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.PeerId[:]); err != nil {
+	if _, err := cw.Write(t.PeerId); err != nil {
 		return err
 	}
 
@@ -412,9 +413,10 @@ func (t *MinerInfo) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 
-		if _, err := cw.Write(v[:]); err != nil {
+		if _, err := cw.Write(v); err != nil {
 			return err
 		}
+
 	}
 
 	// t.WindowPoStProofType (abi.RegisteredPoStProof) (int64)
@@ -549,9 +551,9 @@ func (t *MinerInfo) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	// t.PendingWorkerKey (miner.WorkerKeyChange) (struct)
 
 	{
@@ -589,9 +591,10 @@ func (t *MinerInfo) UnmarshalCBOR(r io.Reader) (err error) {
 		t.PeerId = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.PeerId[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.PeerId); err != nil {
 		return err
 	}
+
 	// t.Multiaddrs ([][]uint8) (slice)
 
 	maj, extra, err = cr.ReadHeader()
@@ -636,12 +639,12 @@ func (t *MinerInfo) UnmarshalCBOR(r io.Reader) (err error) {
 				t.Multiaddrs[i] = make([]uint8, extra)
 			}
 
-			if _, err := io.ReadFull(cr, t.Multiaddrs[i][:]); err != nil {
+			if _, err := io.ReadFull(cr, t.Multiaddrs[i]); err != nil {
 				return err
 			}
+
 		}
 	}
-
 	// t.WindowPoStProofType (abi.RegisteredPoStProof) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -848,13 +851,11 @@ func (t *Deadlines) UnmarshalCBOR(r io.Reader) (err error) {
 	if maj != cbg.MajArray {
 		return fmt.Errorf("expected cbor array")
 	}
-
 	if extra != 48 {
 		return fmt.Errorf("expected array to have 48 elements")
 	}
 
 	t.Due = [48]cid.Cid{}
-
 	for i := 0; i < int(extra); i++ {
 		{
 			var maj byte
@@ -1834,9 +1835,9 @@ func (t *SectorPreCommitInfo) UnmarshalCBOR(r io.Reader) (err error) {
 				t.DealIDs[i] = abi.DealID(extra)
 
 			}
+
 		}
 	}
-
 	// t.Expiration (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -2138,9 +2139,9 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) (err error) {
 				t.DealIDs[i] = abi.DealID(extra)
 
 			}
+
 		}
 	}
-
 	// t.Activation (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -2427,6 +2428,7 @@ func (t *VestingFunds) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -2489,9 +2491,9 @@ func (t *VestingFunds) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -2618,6 +2620,7 @@ func (t *WindowedPoSt) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -2689,9 +2692,9 @@ func (t *WindowedPoSt) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -3057,6 +3060,7 @@ func (t *GetControlAddressesReturn) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -3137,9 +3141,9 @@ func (t *GetControlAddressesReturn) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -3174,6 +3178,7 @@ func (t *ChangeWorkerAddressParams) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -3245,9 +3250,9 @@ func (t *ChangeWorkerAddressParams) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -3274,9 +3279,10 @@ func (t *ChangePeerIDParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.NewID[:]); err != nil {
+	if _, err := cw.Write(t.NewID); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -3321,9 +3327,10 @@ func (t *ChangePeerIDParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.NewID = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.NewID[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.NewID); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -3359,6 +3366,7 @@ func (t *SubmitWindowedPoStParams) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 
 	// t.Proofs ([]proof.PoStProof) (slice)
@@ -3373,6 +3381,7 @@ func (t *SubmitWindowedPoStParams) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 
 	// t.ChainCommitEpoch (abi.ChainEpoch) (int64)
@@ -3395,9 +3404,10 @@ func (t *SubmitWindowedPoStParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.ChainCommitRand[:]); err != nil {
+	if _, err := cw.Write(t.ChainCommitRand); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -3473,9 +3483,9 @@ func (t *SubmitWindowedPoStParams) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	// t.Proofs ([]proof.PoStProof) (slice)
 
 	maj, extra, err = cr.ReadHeader()
@@ -3511,9 +3521,9 @@ func (t *SubmitWindowedPoStParams) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	// t.ChainCommitEpoch (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -3557,9 +3567,10 @@ func (t *SubmitWindowedPoStParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.ChainCommitRand = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.ChainCommitRand[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.ChainCommitRand); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -3803,9 +3814,9 @@ func (t *PreCommitSectorParams) UnmarshalCBOR(r io.Reader) (err error) {
 				t.DealIDs[i] = abi.DealID(extra)
 
 			}
+
 		}
 	}
-
 	// t.Expiration (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -3922,9 +3933,10 @@ func (t *ProveCommitSectorParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.Proof[:]); err != nil {
+	if _, err := cw.Write(t.Proof); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -3983,9 +3995,10 @@ func (t *ProveCommitSectorParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Proof = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Proof[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.Proof); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -4015,6 +4028,7 @@ func (t *ExtendSectorExpirationParams) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -4077,9 +4091,9 @@ func (t *ExtendSectorExpirationParams) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -4109,6 +4123,7 @@ func (t *ExtendSectorExpiration2Params) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -4171,9 +4186,9 @@ func (t *ExtendSectorExpiration2Params) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -4203,6 +4218,7 @@ func (t *TerminateSectorsParams) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -4265,9 +4281,9 @@ func (t *TerminateSectorsParams) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -4361,6 +4377,7 @@ func (t *DeclareFaultsParams) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -4423,9 +4440,9 @@ func (t *DeclareFaultsParams) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -4455,6 +4472,7 @@ func (t *DeclareFaultsRecoveredParams) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -4517,9 +4535,9 @@ func (t *DeclareFaultsRecoveredParams) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -4546,7 +4564,7 @@ func (t *DeferredCronEventParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.EventPayload[:]); err != nil {
+	if _, err := cw.Write(t.EventPayload); err != nil {
 		return err
 	}
 
@@ -4603,9 +4621,10 @@ func (t *DeferredCronEventParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.EventPayload = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.EventPayload[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.EventPayload); err != nil {
 		return err
 	}
+
 	// t.RewardSmoothed (smoothing.FilterEstimate) (struct)
 
 	{
@@ -4783,7 +4802,7 @@ func (t *ReportConsensusFaultParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.BlockHeader1[:]); err != nil {
+	if _, err := cw.Write(t.BlockHeader1); err != nil {
 		return err
 	}
 
@@ -4796,7 +4815,7 @@ func (t *ReportConsensusFaultParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.BlockHeader2[:]); err != nil {
+	if _, err := cw.Write(t.BlockHeader2); err != nil {
 		return err
 	}
 
@@ -4809,9 +4828,10 @@ func (t *ReportConsensusFaultParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.BlockHeaderExtra[:]); err != nil {
+	if _, err := cw.Write(t.BlockHeaderExtra); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -4856,9 +4876,10 @@ func (t *ReportConsensusFaultParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.BlockHeader1 = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.BlockHeader1[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.BlockHeader1); err != nil {
 		return err
 	}
+
 	// t.BlockHeader2 ([]uint8) (slice)
 
 	maj, extra, err = cr.ReadHeader()
@@ -4877,9 +4898,10 @@ func (t *ReportConsensusFaultParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.BlockHeader2 = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.BlockHeader2[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.BlockHeader2); err != nil {
 		return err
 	}
+
 	// t.BlockHeaderExtra ([]uint8) (slice)
 
 	maj, extra, err = cr.ReadHeader()
@@ -4898,9 +4920,10 @@ func (t *ReportConsensusFaultParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.BlockHeaderExtra = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.BlockHeaderExtra[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.BlockHeaderExtra); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -5070,9 +5093,9 @@ func (t *ConfirmSectorProofsParams) UnmarshalCBOR(r io.Reader) (err error) {
 				t.Sectors[i] = abi.SectorNumber(extra)
 
 			}
+
 		}
 	}
-
 	// t.RewardSmoothed (smoothing.FilterEstimate) (struct)
 
 	{
@@ -5134,9 +5157,10 @@ func (t *ChangeMultiaddrsParams) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 
-		if _, err := cw.Write(v[:]); err != nil {
+		if _, err := cw.Write(v); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -5208,12 +5232,12 @@ func (t *ChangeMultiaddrsParams) UnmarshalCBOR(r io.Reader) (err error) {
 				t.NewMultiaddrs[i] = make([]uint8, extra)
 			}
 
-			if _, err := io.ReadFull(cr, t.NewMultiaddrs[i][:]); err != nil {
+			if _, err := io.ReadFull(cr, t.NewMultiaddrs[i]); err != nil {
 				return err
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -5458,6 +5482,7 @@ func (t *PreCommitSectorBatchParams) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -5520,9 +5545,9 @@ func (t *PreCommitSectorBatchParams) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -5554,9 +5579,10 @@ func (t *ProveCommitAggregateParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.AggregateProof[:]); err != nil {
+	if _, err := cw.Write(t.AggregateProof); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -5610,9 +5636,10 @@ func (t *ProveCommitAggregateParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.AggregateProof = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.AggregateProof[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.AggregateProof); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -5642,6 +5669,7 @@ func (t *ProveReplicaUpdatesParams) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -5704,9 +5732,9 @@ func (t *ProveReplicaUpdatesParams) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -5814,6 +5842,7 @@ func (t *PreCommitSectorBatchParams2) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -5876,9 +5905,9 @@ func (t *PreCommitSectorBatchParams2) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -5908,6 +5937,7 @@ func (t *ProveReplicaUpdatesParams2) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -5970,9 +6000,9 @@ func (t *ProveReplicaUpdatesParams2) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -6265,9 +6295,10 @@ func (t *GetPeerIDReturn) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.PeerId[:]); err != nil {
+	if _, err := cw.Write(t.PeerId); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -6312,9 +6343,10 @@ func (t *GetPeerIDReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		t.PeerId = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.PeerId[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.PeerId); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -6341,9 +6373,10 @@ func (t *GetMultiAddrsReturn) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.MultiAddrs[:]); err != nil {
+	if _, err := cw.Write(t.MultiAddrs); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -6388,9 +6421,10 @@ func (t *GetMultiAddrsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		t.MultiAddrs = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.MultiAddrs[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.MultiAddrs); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -6420,6 +6454,7 @@ func (t *ProveCommitSectors3Params) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 
 	// t.SectorProofs ([][]uint8) (slice)
@@ -6439,9 +6474,10 @@ func (t *ProveCommitSectors3Params) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 
-		if _, err := cw.Write(v[:]); err != nil {
+		if _, err := cw.Write(v); err != nil {
 			return err
 		}
+
 	}
 
 	// t.AggregateProof ([]uint8) (slice)
@@ -6453,7 +6489,7 @@ func (t *ProveCommitSectors3Params) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.AggregateProof[:]); err != nil {
+	if _, err := cw.Write(t.AggregateProof); err != nil {
 		return err
 	}
 
@@ -6527,9 +6563,9 @@ func (t *ProveCommitSectors3Params) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	// t.SectorProofs ([][]uint8) (slice)
 
 	maj, extra, err = cr.ReadHeader()
@@ -6574,12 +6610,12 @@ func (t *ProveCommitSectors3Params) UnmarshalCBOR(r io.Reader) (err error) {
 				t.SectorProofs[i] = make([]uint8, extra)
 			}
 
-			if _, err := io.ReadFull(cr, t.SectorProofs[i][:]); err != nil {
+			if _, err := io.ReadFull(cr, t.SectorProofs[i]); err != nil {
 				return err
 			}
+
 		}
 	}
-
 	// t.AggregateProof ([]uint8) (slice)
 
 	maj, extra, err = cr.ReadHeader()
@@ -6598,9 +6634,10 @@ func (t *ProveCommitSectors3Params) UnmarshalCBOR(r io.Reader) (err error) {
 		t.AggregateProof = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.AggregateProof[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.AggregateProof); err != nil {
 		return err
 	}
+
 	// t.RequireActivationSuccess (bool) (bool)
 
 	maj, extra, err = cr.ReadHeader()
@@ -6670,6 +6707,7 @@ func (t *SectorActivationManifest) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -6746,9 +6784,9 @@ func (t *SectorActivationManifest) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -6795,6 +6833,7 @@ func (t *PieceActivationManifest) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -6902,9 +6941,9 @@ func (t *PieceActivationManifest) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -7019,9 +7058,10 @@ func (t *DataActivationNotification) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.Payload[:]); err != nil {
+	if _, err := cw.Write(t.Payload); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -7075,9 +7115,10 @@ func (t *DataActivationNotification) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Payload = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Payload[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.Payload); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -7112,6 +7153,7 @@ func (t *PieceActivationReturn) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -7191,9 +7233,9 @@ func (t *PieceActivationReturn) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -7231,9 +7273,10 @@ func (t *DataActivationNotificationReturn) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.Data[:]); err != nil {
+	if _, err := cw.Write(t.Data); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -7303,9 +7346,10 @@ func (t *DataActivationNotificationReturn) UnmarshalCBOR(r io.Reader) (err error
 		t.Data = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Data[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.Data); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -7341,6 +7385,7 @@ func (t *BatchReturn) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -7417,9 +7462,9 @@ func (t *BatchReturn) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -7547,6 +7592,7 @@ func (t *ProveReplicaUpdates3Params) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 
 	// t.SectorProofs ([][]uint8) (slice)
@@ -7566,9 +7612,10 @@ func (t *ProveReplicaUpdates3Params) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 
-		if _, err := cw.Write(v[:]); err != nil {
+		if _, err := cw.Write(v); err != nil {
 			return err
 		}
+
 	}
 
 	// t.AggregateProof ([]uint8) (slice)
@@ -7580,7 +7627,7 @@ func (t *ProveReplicaUpdates3Params) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.AggregateProof[:]); err != nil {
+	if _, err := cw.Write(t.AggregateProof); err != nil {
 		return err
 	}
 
@@ -7676,9 +7723,9 @@ func (t *ProveReplicaUpdates3Params) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	// t.SectorProofs ([][]uint8) (slice)
 
 	maj, extra, err = cr.ReadHeader()
@@ -7723,12 +7770,12 @@ func (t *ProveReplicaUpdates3Params) UnmarshalCBOR(r io.Reader) (err error) {
 				t.SectorProofs[i] = make([]uint8, extra)
 			}
 
-			if _, err := io.ReadFull(cr, t.SectorProofs[i][:]); err != nil {
+			if _, err := io.ReadFull(cr, t.SectorProofs[i]); err != nil {
 				return err
 			}
+
 		}
 	}
-
 	// t.AggregateProof ([]uint8) (slice)
 
 	maj, extra, err = cr.ReadHeader()
@@ -7747,9 +7794,10 @@ func (t *ProveReplicaUpdates3Params) UnmarshalCBOR(r io.Reader) (err error) {
 		t.AggregateProof = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.AggregateProof[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.AggregateProof); err != nil {
 		return err
 	}
+
 	// t.UpdateProofsType (abi.RegisteredUpdateProof) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -7887,6 +7935,7 @@ func (t *SectorUpdateManifest) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -8003,9 +8052,9 @@ func (t *SectorUpdateManifest) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -8052,6 +8101,7 @@ func (t *SectorChanges) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -8153,9 +8203,9 @@ func (t *SectorChanges) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -8194,9 +8244,10 @@ func (t *PieceChange) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.Payload[:]); err != nil {
+	if _, err := cw.Write(t.Payload); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -8267,9 +8318,10 @@ func (t *PieceChange) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Payload = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Payload[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.Payload); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -8843,9 +8895,10 @@ func (t *ReplicaUpdate) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.ReplicaProof[:]); err != nil {
+	if _, err := cw.Write(t.ReplicaProof); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -8966,9 +9019,9 @@ func (t *ReplicaUpdate) UnmarshalCBOR(r io.Reader) (err error) {
 				t.Deals[i] = abi.DealID(extra)
 
 			}
+
 		}
 	}
-
 	// t.UpdateProofType (abi.RegisteredUpdateProof) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -9012,9 +9065,10 @@ func (t *ReplicaUpdate) UnmarshalCBOR(r io.Reader) (err error) {
 		t.ReplicaProof = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.ReplicaProof[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.ReplicaProof); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -9098,9 +9152,10 @@ func (t *ReplicaUpdate2) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.ReplicaProof[:]); err != nil {
+	if _, err := cw.Write(t.ReplicaProof); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -9233,9 +9288,9 @@ func (t *ReplicaUpdate2) UnmarshalCBOR(r io.Reader) (err error) {
 				t.Deals[i] = abi.DealID(extra)
 
 			}
+
 		}
 	}
-
 	// t.UpdateProofType (abi.RegisteredUpdateProof) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -9279,9 +9334,10 @@ func (t *ReplicaUpdate2) UnmarshalCBOR(r io.Reader) (err error) {
 		t.ReplicaProof = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.ReplicaProof[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.ReplicaProof); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -9328,6 +9384,7 @@ func (t *ExpirationExtension2) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 
 	// t.NewExpiration (abi.ChainEpoch) (int64)
@@ -9438,9 +9495,9 @@ func (t *ExpirationExtension2) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	// t.NewExpiration (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -9600,9 +9657,9 @@ func (t *SectorClaim) UnmarshalCBOR(r io.Reader) (err error) {
 				t.MaintainClaims[i] = verifreg.ClaimId(extra)
 
 			}
+
 		}
 	}
-
 	// t.DropClaims ([]verifreg.ClaimId) (slice)
 
 	maj, extra, err = cr.ReadHeader()
@@ -9643,8 +9700,8 @@ func (t *SectorClaim) UnmarshalCBOR(r io.Reader) (err error) {
 				t.DropClaims[i] = verifreg.ClaimId(extra)
 
 			}
+
 		}
 	}
-
 	return nil
 }

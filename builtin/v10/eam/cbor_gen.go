@@ -42,7 +42,7 @@ func (t *CreateParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.Initcode[:]); err != nil {
+	if _, err := cw.Write(t.Initcode); err != nil {
 		return err
 	}
 
@@ -96,9 +96,10 @@ func (t *CreateParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Initcode = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Initcode[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.Initcode); err != nil {
 		return err
 	}
+
 	// t.Nonce (uint64) (uint64)
 
 	{
@@ -225,13 +226,11 @@ func (t *CreateReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	if maj != cbg.MajByteString {
 		return fmt.Errorf("expected byte array")
 	}
-
 	if extra != 20 {
 		return fmt.Errorf("expected array to have 20 elements")
 	}
 
 	t.EthAddress = [20]uint8{}
-
 	if _, err := io.ReadFull(cr, t.EthAddress[:]); err != nil {
 		return err
 	}
@@ -261,7 +260,7 @@ func (t *Create2Params) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.Initcode[:]); err != nil {
+	if _, err := cw.Write(t.Initcode); err != nil {
 		return err
 	}
 
@@ -321,9 +320,10 @@ func (t *Create2Params) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Initcode = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Initcode[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.Initcode); err != nil {
 		return err
 	}
+
 	// t.Salt ([32]uint8) (array)
 
 	maj, extra, err = cr.ReadHeader()
@@ -337,13 +337,11 @@ func (t *Create2Params) UnmarshalCBOR(r io.Reader) (err error) {
 	if maj != cbg.MajByteString {
 		return fmt.Errorf("expected byte array")
 	}
-
 	if extra != 32 {
 		return fmt.Errorf("expected array to have 32 elements")
 	}
 
 	t.Salt = [32]uint8{}
-
 	if _, err := io.ReadFull(cr, t.Salt[:]); err != nil {
 		return err
 	}
@@ -459,13 +457,11 @@ func (t *Create2Return) UnmarshalCBOR(r io.Reader) (err error) {
 	if maj != cbg.MajByteString {
 		return fmt.Errorf("expected byte array")
 	}
-
 	if extra != 20 {
 		return fmt.Errorf("expected array to have 20 elements")
 	}
 
 	t.EthAddress = [20]uint8{}
-
 	if _, err := io.ReadFull(cr, t.EthAddress[:]); err != nil {
 		return err
 	}
@@ -581,13 +577,11 @@ func (t *CreateExternalReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	if maj != cbg.MajByteString {
 		return fmt.Errorf("expected byte array")
 	}
-
 	if extra != 20 {
 		return fmt.Errorf("expected array to have 20 elements")
 	}
 
 	t.EthAddress = [20]uint8{}
-
 	if _, err := io.ReadFull(cr, t.EthAddress[:]); err != nil {
 		return err
 	}

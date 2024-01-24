@@ -155,8 +155,8 @@ github.com/whyrusleeping/cbor-gen v0.0.0-20200715143311-227fab5a2377/go.mod h1:f
 github.com/whyrusleeping/cbor-gen v0.0.0-20200806213330-63aa96ca5488/go.mod h1:fgkXqYy7bV2cFeIEOkVTZS/WjXARfBqSH6Q2qHL33hQ=
 github.com/whyrusleeping/cbor-gen v0.0.0-20200810223238-211df3b9e24c/go.mod h1:fgkXqYy7bV2cFeIEOkVTZS/WjXARfBqSH6Q2qHL33hQ=
 github.com/whyrusleeping/cbor-gen v0.0.0-20200812213548-958ddffe352c/go.mod h1:fgkXqYy7bV2cFeIEOkVTZS/WjXARfBqSH6Q2qHL33hQ=
-github.com/whyrusleeping/cbor-gen v0.0.0-20230923211252-36a87e1ba72f h1:SBuSxXJL0/ZJMtTxbXZgHZkThl9dNrzyaNhlyaqscRo=
-github.com/whyrusleeping/cbor-gen v0.0.0-20230923211252-36a87e1ba72f/go.mod h1:fgkXqYy7bV2cFeIEOkVTZS/WjXARfBqSH6Q2qHL33hQ=
+github.com/whyrusleeping/cbor-gen v0.0.0-20240124134906-0efd71a8493b h1:+Yd0HVs6f9v2sRlpqcODhojlOd2PiBtWZTPcYmaSm5A=
+github.com/whyrusleeping/cbor-gen v0.0.0-20240124134906-0efd71a8493b/go.mod h1:fgkXqYy7bV2cFeIEOkVTZS/WjXARfBqSH6Q2qHL33hQ=
 github.com/xlab/c-for-go v0.0.0-20200718154222-87b0065af829 h1:wb7xrDzfkLgPHsSEBm+VSx6aDdi64VtV0xvP0E6j8bk=
 github.com/xlab/c-for-go v0.0.0-20200718154222-87b0065af829/go.mod h1:h/1PEBwj7Ym/8kOuMWvO2ujZ6Lt+TMbySEXNhjjR87I=
 github.com/xlab/pkgconfig v0.0.0-20170226114623-cea12a0fd245 h1:Sw125DKxZhPUI4JLlWugkzsrlB50jR9v2khiD9FxuSo=

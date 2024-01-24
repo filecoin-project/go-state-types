@@ -370,9 +370,10 @@ func (t *UpdateChannelStateParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.Secret[:]); err != nil {
+	if _, err := cw.Write(t.Secret); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -426,9 +427,10 @@ func (t *UpdateChannelStateParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Secret = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Secret[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.Secret); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -482,7 +484,7 @@ func (t *SignedVoucher) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.SecretHash[:]); err != nil {
+	if _, err := cw.Write(t.SecretHash); err != nil {
 		return err
 	}
 
@@ -531,6 +533,7 @@ func (t *SignedVoucher) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 
 	// t.Signature (crypto.Signature) (struct)
@@ -640,9 +643,10 @@ func (t *SignedVoucher) UnmarshalCBOR(r io.Reader) (err error) {
 		t.SecretHash = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.SecretHash[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.SecretHash); err != nil {
 		return err
 	}
+
 	// t.Extra (paych.ModVerifyParams) (struct)
 
 	{
@@ -759,9 +763,9 @@ func (t *SignedVoucher) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	// t.Signature (crypto.Signature) (struct)
 
 	{
@@ -818,9 +822,10 @@ func (t *ModVerifyParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.Data[:]); err != nil {
+	if _, err := cw.Write(t.Data); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -888,9 +893,10 @@ func (t *ModVerifyParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Data = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Data[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.Data); err != nil {
 		return err
 	}
+
 	return nil
 }
 

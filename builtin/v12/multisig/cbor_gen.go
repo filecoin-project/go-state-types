@@ -47,6 +47,7 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 
 	// t.NumApprovalsThreshold (uint64) (uint64)
@@ -160,9 +161,9 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	// t.NumApprovalsThreshold (uint64) (uint64)
 
 	{
@@ -315,7 +316,7 @@ func (t *Transaction) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.Params[:]); err != nil {
+	if _, err := cw.Write(t.Params); err != nil {
 		return err
 	}
 
@@ -331,6 +332,7 @@ func (t *Transaction) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -408,9 +410,10 @@ func (t *Transaction) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Params = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Params[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.Params); err != nil {
 		return err
 	}
+
 	// t.Approved ([]address.Address) (slice)
 
 	maj, extra, err = cr.ReadHeader()
@@ -446,9 +449,9 @@ func (t *Transaction) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -496,9 +499,10 @@ func (t *ProposalHashData) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.Params[:]); err != nil {
+	if _, err := cw.Write(t.Params); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -584,9 +588,10 @@ func (t *ProposalHashData) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Params = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Params[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.Params); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -616,6 +621,7 @@ func (t *ConstructorParams) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 
 	// t.NumApprovalsThreshold (uint64) (uint64)
@@ -706,9 +712,9 @@ func (t *ConstructorParams) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	// t.NumApprovalsThreshold (uint64) (uint64)
 
 	{
@@ -815,9 +821,10 @@ func (t *ProposeParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.Params[:]); err != nil {
+	if _, err := cw.Write(t.Params); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -894,9 +901,10 @@ func (t *ProposeParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Params = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Params[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.Params); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -950,9 +958,10 @@ func (t *ProposeReturn) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.Ret[:]); err != nil {
+	if _, err := cw.Write(t.Ret); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1064,9 +1073,10 @@ func (t *ProposeReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Ret = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Ret[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.Ret); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1260,9 +1270,10 @@ func (t *TxnIDParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.ProposalHash[:]); err != nil {
+	if _, err := cw.Write(t.ProposalHash); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1332,9 +1343,10 @@ func (t *TxnIDParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.ProposalHash = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.ProposalHash[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.ProposalHash); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1377,9 +1389,10 @@ func (t *ApproveReturn) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.Ret[:]); err != nil {
+	if _, err := cw.Write(t.Ret); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1466,9 +1479,10 @@ func (t *ApproveReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Ret = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Ret[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.Ret); err != nil {
 		return err
 	}
+
 	return nil
 }
 

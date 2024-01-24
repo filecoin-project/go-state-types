@@ -238,6 +238,7 @@ func (t *MintParams) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -318,9 +319,9 @@ func (t *MintParams) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -357,9 +358,10 @@ func (t *MintReturn) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.RecipientData[:]); err != nil {
+	if _, err := cw.Write(t.RecipientData); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -422,9 +424,10 @@ func (t *MintReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		t.RecipientData = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.RecipientData[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.RecipientData); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -531,9 +534,10 @@ func (t *TransferParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.OperatorData[:]); err != nil {
+	if _, err := cw.Write(t.OperatorData); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -596,9 +600,10 @@ func (t *TransferParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.OperatorData = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.OperatorData[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.OperatorData); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -635,9 +640,10 @@ func (t *TransferReturn) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.RecipientData[:]); err != nil {
+	if _, err := cw.Write(t.RecipientData); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -700,9 +706,10 @@ func (t *TransferReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		t.RecipientData = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.RecipientData[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.RecipientData); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -744,9 +751,10 @@ func (t *TransferFromParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.OperatorData[:]); err != nil {
+	if _, err := cw.Write(t.OperatorData); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -818,9 +826,10 @@ func (t *TransferFromParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.OperatorData = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.OperatorData[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.OperatorData); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -862,9 +871,10 @@ func (t *TransferFromReturn) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.RecipientData[:]); err != nil {
+	if _, err := cw.Write(t.RecipientData); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -936,9 +946,10 @@ func (t *TransferFromReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		t.RecipientData = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.RecipientData[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.RecipientData); err != nil {
 		return err
 	}
+
 	return nil
 }
 

@@ -202,13 +202,11 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	if maj != cbg.MajByteString {
 		return fmt.Errorf("expected byte array")
 	}
-
 	if extra != 32 {
 		return fmt.Errorf("expected array to have 32 elements")
 	}
 
 	t.BytecodeHash = [32]uint8{}
-
 	if _, err := io.ReadFull(cr, t.BytecodeHash[:]); err != nil {
 		return err
 	}
@@ -296,9 +294,10 @@ func (t *ConstructorParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.Initcode[:]); err != nil {
+	if _, err := cw.Write(t.Initcode); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -338,13 +337,11 @@ func (t *ConstructorParams) UnmarshalCBOR(r io.Reader) (err error) {
 	if maj != cbg.MajByteString {
 		return fmt.Errorf("expected byte array")
 	}
-
 	if extra != 20 {
 		return fmt.Errorf("expected array to have 20 elements")
 	}
 
 	t.Creator = [20]uint8{}
-
 	if _, err := io.ReadFull(cr, t.Creator[:]); err != nil {
 		return err
 	}
@@ -366,9 +363,10 @@ func (t *ConstructorParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Initcode = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Initcode[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.Initcode); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -437,13 +435,11 @@ func (t *GetStorageAtParams) UnmarshalCBOR(r io.Reader) (err error) {
 	if maj != cbg.MajByteString {
 		return fmt.Errorf("expected byte array")
 	}
-
 	if extra != 32 {
 		return fmt.Errorf("expected array to have 32 elements")
 	}
 
 	t.StorageKey = [32]uint8{}
-
 	if _, err := io.ReadFull(cr, t.StorageKey[:]); err != nil {
 		return err
 	}
@@ -479,7 +475,7 @@ func (t *DelegateCallParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.Input[:]); err != nil {
+	if _, err := cw.Write(t.Input); err != nil {
 		return err
 	}
 
@@ -556,9 +552,10 @@ func (t *DelegateCallParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Input = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Input[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.Input); err != nil {
 		return err
 	}
+
 	// t.Caller ([20]uint8) (array)
 
 	maj, extra, err = cr.ReadHeader()
@@ -572,13 +569,11 @@ func (t *DelegateCallParams) UnmarshalCBOR(r io.Reader) (err error) {
 	if maj != cbg.MajByteString {
 		return fmt.Errorf("expected byte array")
 	}
-
 	if extra != 20 {
 		return fmt.Errorf("expected array to have 20 elements")
 	}
 
 	t.Caller = [20]uint8{}
-
 	if _, err := io.ReadFull(cr, t.Caller[:]); err != nil {
 		return err
 	}

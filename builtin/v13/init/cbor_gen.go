@@ -214,9 +214,10 @@ func (t *ExecParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.ConstructorParams[:]); err != nil {
+	if _, err := cw.Write(t.ConstructorParams); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -273,9 +274,10 @@ func (t *ExecParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.ConstructorParams = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.ConstructorParams[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.ConstructorParams); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -378,7 +380,7 @@ func (t *Exec4Params) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.ConstructorParams[:]); err != nil {
+	if _, err := cw.Write(t.ConstructorParams); err != nil {
 		return err
 	}
 
@@ -391,9 +393,10 @@ func (t *Exec4Params) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.SubAddress[:]); err != nil {
+	if _, err := cw.Write(t.SubAddress); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -450,9 +453,10 @@ func (t *Exec4Params) UnmarshalCBOR(r io.Reader) (err error) {
 		t.ConstructorParams = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.ConstructorParams[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.ConstructorParams); err != nil {
 		return err
 	}
+
 	// t.SubAddress ([]uint8) (slice)
 
 	maj, extra, err = cr.ReadHeader()
@@ -471,8 +475,9 @@ func (t *Exec4Params) UnmarshalCBOR(r io.Reader) (err error) {
 		t.SubAddress = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.SubAddress[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.SubAddress); err != nil {
 		return err
 	}
+
 	return nil
 }

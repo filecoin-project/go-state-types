@@ -554,6 +554,7 @@ func (t *PublishStorageDealsParams) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -616,9 +617,9 @@ func (t *PublishStorageDealsParams) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -722,9 +723,9 @@ func (t *PublishStorageDealsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 				t.IDs[i] = abi.DealID(extra)
 
 			}
+
 		}
 	}
-
 	// t.ValidDeals (bitfield.BitField) (struct)
 
 	{
@@ -843,9 +844,9 @@ func (t *ActivateDealsParams) UnmarshalCBOR(r io.Reader) (err error) {
 				t.DealIDs[i] = abi.DealID(extra)
 
 			}
+
 		}
 	}
-
 	// t.SectorExpiry (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -905,6 +906,7 @@ func (t *ActivateDealsResult) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -976,9 +978,9 @@ func (t *ActivateDealsResult) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -1008,6 +1010,7 @@ func (t *VerifyDealsForActivationParams) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -1070,9 +1073,9 @@ func (t *VerifyDealsForActivationParams) UnmarshalCBOR(r io.Reader) (err error) 
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -1185,9 +1188,9 @@ func (t *VerifyDealsForActivationReturn) UnmarshalCBOR(r io.Reader) (err error) 
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -1701,9 +1704,9 @@ func (t *OnMinerSectorsTerminateParams) UnmarshalCBOR(r io.Reader) (err error) {
 				t.DealIDs[i] = abi.DealID(extra)
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -2202,9 +2205,9 @@ func (t *SectorDeals) UnmarshalCBOR(r io.Reader) (err error) {
 				t.DealIDs[i] = abi.DealID(extra)
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -2384,9 +2387,9 @@ func (t *SectorDataSpec) UnmarshalCBOR(r io.Reader) (err error) {
 				t.DealIDs[i] = abi.DealID(extra)
 
 			}
+
 		}
 	}
-
 	// t.SectorType (abi.RegisteredSealProof) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()

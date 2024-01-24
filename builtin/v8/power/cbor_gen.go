@@ -579,6 +579,7 @@ func (t *MinerConstructorParams) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 
 	// t.WindowPoStProofType (abi.RegisteredPoStProof) (int64)
@@ -601,7 +602,7 @@ func (t *MinerConstructorParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.PeerId[:]); err != nil {
+	if _, err := cw.Write(t.PeerId); err != nil {
 		return err
 	}
 
@@ -622,9 +623,10 @@ func (t *MinerConstructorParams) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 
-		if _, err := cw.Write(v[:]); err != nil {
+		if _, err := cw.Write(v); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -705,9 +707,9 @@ func (t *MinerConstructorParams) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	// t.WindowPoStProofType (abi.RegisteredPoStProof) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -751,9 +753,10 @@ func (t *MinerConstructorParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.PeerId = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.PeerId[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.PeerId); err != nil {
 		return err
 	}
+
 	// t.Multiaddrs ([][]uint8) (slice)
 
 	maj, extra, err = cr.ReadHeader()
@@ -798,12 +801,12 @@ func (t *MinerConstructorParams) UnmarshalCBOR(r io.Reader) (err error) {
 				t.Multiaddrs[i] = make([]uint8, extra)
 			}
 
-			if _, err := io.ReadFull(cr, t.Multiaddrs[i][:]); err != nil {
+			if _, err := io.ReadFull(cr, t.Multiaddrs[i]); err != nil {
 				return err
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -851,7 +854,7 @@ func (t *CreateMinerParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.Peer[:]); err != nil {
+	if _, err := cw.Write(t.Peer); err != nil {
 		return err
 	}
 
@@ -872,9 +875,10 @@ func (t *CreateMinerParams) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 
-		if _, err := cw.Write(v[:]); err != nil {
+		if _, err := cw.Write(v); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -963,9 +967,10 @@ func (t *CreateMinerParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Peer = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Peer[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.Peer); err != nil {
 		return err
 	}
+
 	// t.Multiaddrs ([][]uint8) (slice)
 
 	maj, extra, err = cr.ReadHeader()
@@ -1010,12 +1015,12 @@ func (t *CreateMinerParams) UnmarshalCBOR(r io.Reader) (err error) {
 				t.Multiaddrs[i] = make([]uint8, extra)
 			}
 
-			if _, err := io.ReadFull(cr, t.Multiaddrs[i][:]); err != nil {
+			if _, err := io.ReadFull(cr, t.Multiaddrs[i]); err != nil {
 				return err
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -1221,9 +1226,10 @@ func (t *EnrollCronEventParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.Payload[:]); err != nil {
+	if _, err := cw.Write(t.Payload); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1293,9 +1299,10 @@ func (t *EnrollCronEventParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Payload = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Payload[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.Payload); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1327,9 +1334,10 @@ func (t *CronEvent) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.CallbackPayload[:]); err != nil {
+	if _, err := cw.Write(t.CallbackPayload); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1383,8 +1391,9 @@ func (t *CronEvent) UnmarshalCBOR(r io.Reader) (err error) {
 		t.CallbackPayload = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.CallbackPayload[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.CallbackPayload); err != nil {
 		return err
 	}
+
 	return nil
 }
