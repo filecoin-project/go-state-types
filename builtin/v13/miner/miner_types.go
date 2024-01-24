@@ -400,6 +400,7 @@ type ProveCommitSectors3Params struct {
 	SectorActivations          []SectorActivationManifest
 	SectorProofs               [][]byte
 	AggregateProof             []byte
+	AggregateProofType         abi.RegisteredAggregationProof
 	RequireActivationSuccess   bool
 	RequireNotificationSuccess bool
 }
