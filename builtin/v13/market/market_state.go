@@ -62,7 +62,7 @@ type State struct {
 	/// or has data replaced.
 	/// Grouping by provider limits the cost of operations in the expected use case
 	/// of multiple sectors all belonging to the same provider.
-	/// HAMT[Address]HAMT[SectorNumber]SectorDealIDs
+	/// HAMT[ActorID]HAMT[SectorNumber]SectorDealIDs
 	ProviderSectors cid.Cid
 }
 

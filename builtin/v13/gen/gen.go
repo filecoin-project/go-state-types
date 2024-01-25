@@ -127,7 +127,6 @@ func main() {
 		market.GetDealTermReturn{},
 		market.GetDealActivationReturn{},
 		market.OnMinerSectorsTerminateParams{},
-		market.GetDealSectorReturn{},
 
 		// other types
 		market.DealProposal{},
@@ -199,8 +198,6 @@ func main() {
 		miner.PieceActivationManifest{},
 		miner.VerifiedAllocationKey{},
 		miner.DataActivationNotification{},
-		miner.PieceActivationReturn{},
-		miner.DataActivationNotificationReturn{},
 		miner.BatchReturn{},
 		miner.FailCode{},
 		miner.ProveReplicaUpdates3Params{},

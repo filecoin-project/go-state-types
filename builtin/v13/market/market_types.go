@@ -137,6 +137,4 @@ type GetDealActivationReturn struct {
 
 type GetDealSectorParams = DealQueryParams
 
-type GetDealSectorReturn struct {
-	Sector abi.SectorNumber
-}
+type GetDealSectorReturn = abi.SectorNumber // abi.SectorNumber

@@ -2,7 +2,6 @@ package migration
 
 import (
 	"context"
-	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	market12 "github.com/filecoin-project/go-state-types/builtin/v12/market"
 	market13 "github.com/filecoin-project/go-state-types/builtin/v13/market"
@@ -70,7 +69,7 @@ func (m *marketMigrator) MigratedCodeCID() cid.Cid {
 
 func (m *marketMigrator) migrateProviderSectorsAndStates(ctx context.Context, store cbor.IpldStore, states cid.Cid) (cid.Cid, cid.Cid, error) {
 
-	// out HAMT[Address]HAMT[SectorNumber]SectorDealIDs
+	// out HAMT[ActorID]HAMT[SectorNumber]SectorDealIDs
 	ctxStore := adt.WrapStore(ctx, store)
 
 	oldStateArray, err := adt.AsArray(ctxStore, states, market12.StatesAmtBitwidth)
@@ -142,12 +141,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStates(ctx context.Context, st
 			}
 		}
 
-		maddr, err := address.NewIDAddress(uint64(miner))
-		if err != nil {
-			return cid.Undef, cid.Undef, xerrors.Errorf("failed to convert miner ID to address: %w", err)
-		}
-
-		if err := outProviderSectors.Put(abi.AddrKey(maddr), actorSectors); err != nil {
+		if err := outProviderSectors.Put(abi.UIntKey(uint64(miner)), actorSectors); err != nil {
 			return cid.Undef, cid.Undef, xerrors.Errorf("failed to put actor sectors: %w", err)
 		}
 	}

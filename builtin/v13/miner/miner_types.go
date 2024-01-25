@@ -448,18 +448,6 @@ type FailCode struct {
 	Code xc.ExitCode // todo correct?
 }
 
-// PieceActivationReturn represents the return value for piece activation.
-type PieceActivationReturn struct {
-	Claimed       bool
-	Notifications []DataActivationNotificationReturn
-}
-
-// DataActivationNotificationReturn represents the return value for a data activation notification.
-type DataActivationNotificationReturn struct {
-	Code xc.ExitCode // todo correct??
-	Data []byte
-}
-
 // ProveReplicaUpdates3Params represents the parameters for proving replica updates.
 type ProveReplicaUpdates3Params struct {
 	SectorUpdates              []SectorUpdateManifest

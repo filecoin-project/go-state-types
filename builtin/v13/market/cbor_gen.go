@@ -1802,69 +1802,6 @@ func (t *OnMinerSectorsTerminateParams) UnmarshalCBOR(r io.Reader) (err error) {
 	return nil
 }
 
-var lengthBufGetDealSectorReturn = []byte{129}
-
-func (t *GetDealSectorReturn) MarshalCBOR(w io.Writer) error {
-	if t == nil {
-		_, err := w.Write(cbg.CborNull)
-		return err
-	}
-
-	cw := cbg.NewCborWriter(w)
-
-	if _, err := cw.Write(lengthBufGetDealSectorReturn); err != nil {
-		return err
-	}
-
-	// t.Sector (abi.SectorNumber) (uint64)
-
-	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Sector)); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (t *GetDealSectorReturn) UnmarshalCBOR(r io.Reader) (err error) {
-	*t = GetDealSectorReturn{}
-
-	cr := cbg.NewCborReader(r)
-
-	maj, extra, err := cr.ReadHeader()
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-	}()
-
-	if maj != cbg.MajArray {
-		return fmt.Errorf("cbor input should be of type array")
-	}
-
-	if extra != 1 {
-		return fmt.Errorf("cbor input had wrong number of fields")
-	}
-
-	// t.Sector (abi.SectorNumber) (uint64)
-
-	{
-
-		maj, extra, err = cr.ReadHeader()
-		if err != nil {
-			return err
-		}
-		if maj != cbg.MajUnsignedInt {
-			return fmt.Errorf("wrong type for uint64 field")
-		}
-		t.Sector = abi.SectorNumber(extra)
-
-	}
-	return nil
-}
-
 var lengthBufDealProposal = []byte{139}
 
 func (t *DealProposal) MarshalCBOR(w io.Writer) error {
