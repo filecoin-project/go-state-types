@@ -6,7 +6,6 @@ import (
 	"errors"
 	"github.com/filecoin-project/go-amt-ipld/v4"
 	"github.com/filecoin-project/go-state-types/abi"
-	miner11 "github.com/filecoin-project/go-state-types/builtin/v11/miner"
 	market12 "github.com/filecoin-project/go-state-types/builtin/v12/market"
 	market13 "github.com/filecoin-project/go-state-types/builtin/v13/market"
 	miner13 "github.com/filecoin-project/go-state-types/builtin/v13/miner"
@@ -123,7 +122,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStates(ctx context.Context, st
 }
 
 func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Context, store cbor.IpldStore, in migration.ActorMigrationInput, prevInStatesCid, prevOutStatesCid, prevOutProviderSectorsCid, inStatesCid cid.Cid) (cid.Cid, cid.Cid, error) {
-	diffs, err := amt.Diff(ctx, store, store, prevInStatesCid, inStatesCid, amt.UseTreeBitWidth(miner11.SectorsAmtBitwidth))
+	diffs, err := amt.Diff(ctx, store, store, prevInStatesCid, inStatesCid, amt.UseTreeBitWidth(market12.StatesAmtBitwidth))
 	if err != nil {
 		return cid.Undef, cid.Undef, xerrors.Errorf("failed to diff old and new deal state AMTs: %w", err)
 	}
