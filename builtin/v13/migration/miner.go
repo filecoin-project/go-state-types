@@ -57,7 +57,7 @@ func (m *minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, 
 		return nil, xerrors.Errorf("failed to get miner ID: %w", err)
 	}
 
-	inSectors, err := adt.AsArray(ctxStore, inState.Sectors, miner.SectorsAmtBitwidth)
+	inSectors, err := adt.AsArray(ctxStore, inState.Sectors, miner12.SectorsAmtBitwidth)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to load sectors array: %w", err)
 	}
