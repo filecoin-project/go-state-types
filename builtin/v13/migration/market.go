@@ -95,7 +95,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStates(ctx context.Context, st
 	var providerSectorsRoot, newStateArrayRoot cid.Cid
 
 	if okIn && okOut && okOutPs {
-		providerSectorsRoot, newStateArrayRoot, err = m.migrateProviderSectorsAndStatesWithDiff(ctx, store, in, prevInStates, prevOutStates, prevOutProviderSectors, states)
+		providerSectorsRoot, newStateArrayRoot, err = m.migrateProviderSectorsAndStatesWithDiff(ctx, store, prevInStates, prevOutStates, prevOutProviderSectors, states)
 		if err != nil {
 			return cid.Undef, cid.Undef, xerrors.Errorf("failed to migrate provider sectors (diff): %w", err)
 		}
@@ -121,7 +121,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStates(ctx context.Context, st
 	return providerSectorsRoot, newStateArrayRoot, nil
 }
 
-func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Context, store cbor.IpldStore, in migration.ActorMigrationInput, prevInStatesCid, prevOutStatesCid, prevOutProviderSectorsCid, inStatesCid cid.Cid) (cid.Cid, cid.Cid, error) {
+func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Context, store cbor.IpldStore, prevInStatesCid, prevOutStatesCid, prevOutProviderSectorsCid, inStatesCid cid.Cid) (cid.Cid, cid.Cid, error) {
 	diffs, err := amt.Diff(ctx, store, store, prevInStatesCid, inStatesCid, amt.UseTreeBitWidth(market12.StatesAmtBitwidth))
 	if err != nil {
 		return cid.Undef, cid.Undef, xerrors.Errorf("failed to diff old and new deal state AMTs: %w", err)
@@ -426,7 +426,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesFromScratch(ctx context.
 			providerSectorsMem[sid.Miner][sid.Number] = append(providerSectorsMem[sid.Miner][sid.Number], deal)
 		}
 
-		if err := newStateArray.AppendContinuous(&newState); err != nil {
+		if err := newStateArray.Set(uint64(deal), &newState); err != nil {
 			return xerrors.Errorf("failed to append new state: %w", err)
 		}
 
