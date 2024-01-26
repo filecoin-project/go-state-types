@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"github.com/filecoin-project/go-amt-ipld/v4"
 	"github.com/filecoin-project/go-state-types/abi"
 	market12 "github.com/filecoin-project/go-state-types/builtin/v12/market"
@@ -173,6 +174,10 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 		return nil
 	}
 
+	//fmt.Printf("state diffs: %d\n", len(diffs))
+	//fmt.Printf("dealToSector: %d\n", len(m.providerSectors.dealToSector))
+	//fmt.Printf("removedDealToSector: %d\n", len(m.providerSectors.removedDealToSector))
+
 	var oldState, prevOldState market12.DealState
 	var newState market13.DealState
 	for _, change := range diffs {
@@ -184,12 +189,14 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 				return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to unmarshal old state: %w", err)
 			}
 
+			//fmt.Printf("add deal %d\n", deal)
+
 			newState.SlashEpoch = oldState.SlashEpoch
 			newState.LastUpdatedEpoch = oldState.LastUpdatedEpoch
 			newState.SectorStartEpoch = oldState.SectorStartEpoch
 			newState.SectorNumber = 0 // terminated / not found (?)
 
-			if oldState.SlashEpoch == -1 { // todo slashEpoch != -1? or is this correct??
+			if oldState.SectorStartEpoch == -1 { // todo slashEpoch != -1? or is this correct??
 				if err := addProviderSectorEntry(deal, &newState); err != nil {
 					return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to add provider sector entry: %w", err)
 				}
@@ -200,6 +207,8 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 			}
 
 		case amt.Remove:
+			//fmt.Printf("remove deal %d\n", deal)
+
 			ok, err := prevOutStates.Get(uint64(deal), &newState)
 			if err != nil {
 				return cid.Undef, cid.Undef, xerrors.Errorf("failed to get previous newstate: %w", err)
@@ -219,6 +228,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 			}
 
 		case amt.Modify:
+
 			if err := prevOldState.UnmarshalCBOR(bytes.NewReader(change.Before.Raw)); err != nil {
 				return cid.Undef, cid.Undef, xerrors.Errorf("failed to unmarshal old state: %w", err)
 			}
@@ -238,10 +248,12 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 			newState.SectorStartEpoch = oldState.SectorStartEpoch
 
 			if oldState.SectorStartEpoch == -1 && prevOldState.SectorStartEpoch != -1 {
+				//fmt.Printf("deal %d start -1 both\n", deal)
 				// neither was in a sector, unclear if this can happen, but we handle this case anyway
 			}
 
 			if (oldState.SectorStartEpoch != -1 && prevOldState.SectorStartEpoch == -1) && oldState.SlashEpoch == -1 {
+				//fmt.Printf("deal %d start -1 -> %d\n", deal, oldState.SectorStartEpoch)
 				// wasn't in a sector, now is
 				if err := addProviderSectorEntry(deal, &newState); err != nil {
 					return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to add provider sector entry: %w", err)
@@ -249,6 +261,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 			}
 
 			if (oldState.SectorStartEpoch == -1 && prevOldState.SectorStartEpoch != -1) && prevOldState.SlashEpoch != -1 {
+				//fmt.Printf("deal %d start %d -> -1\n", deal, prevOldState.SectorStartEpoch)
 				// was in a sector, now isn't
 				if err := removeProviderSectorEntry(deal, &newState); err != nil {
 					return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to remove provider sector entry: %w", err)
@@ -256,9 +269,11 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 			}
 
 			if (oldState.SectorStartEpoch != -1 && prevOldState.SectorStartEpoch != -1) && oldState.SlashEpoch == -1 {
+				//fmt.Printf("deal %d start %d -> %d\n", deal, prevOldState.SectorStartEpoch, oldState.SectorStartEpoch)
 				// both in a sector, check if the same
 				_, rm := m.providerSectors.removedDealToSector[deal]
 				if rm {
+					fmt.Printf(" !! change\n")
 					// changed which sector it's in
 
 					if err := removeProviderSectorEntry(deal, &newState); err != nil {
@@ -268,6 +283,8 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 					if err := addProviderSectorEntry(deal, &newState); err != nil {
 						return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to add provider sector entry: %w", err)
 					}
+				} else if _, added := m.providerSectors.dealToSector[deal]; added {
+					return cid.Cid{}, cid.Cid{}, xerrors.Errorf("deal %d with modified state was added to providerSectors, but was not in removedDealToSector", deal)
 				}
 			}
 
@@ -412,7 +429,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesFromScratch(ctx context.
 		newState.SectorStartEpoch = oldState.SectorStartEpoch
 		newState.SectorNumber = 0 // terminated / not found (?)
 
-		if oldState.SlashEpoch == -1 {
+		if oldState.SectorStartEpoch == -1 {
 			sid, ok := m.providerSectors.dealToSector[deal]
 			if ok {
 				newState.SectorNumber = sid.Number
