@@ -142,6 +142,18 @@ func MinerPrevSectorsOutKey(m address.Address) string {
 	return "prevSectorsOut-" + m.String()
 }
 
+func MarketPrevDealStatesInKey(m address.Address) string {
+	return "prevDealStatesIn-" + m.String()
+}
+
+func MarketPrevDealStatesOutKey(m address.Address) string {
+	return "prevDealStatesOut-" + m.String()
+}
+
+func MarketPrevProviderSectorsOutKey(m address.Address) string {
+	return "prevProviderSectorsOut-" + m.String()
+}
+
 type ActorMigrationInput struct {
 	Address address.Address // actor's address
 	Head    cid.Cid
