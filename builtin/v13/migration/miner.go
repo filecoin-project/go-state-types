@@ -2,22 +2,29 @@ package migration
 
 import (
 	"context"
+	"sync"
+
 	"github.com/filecoin-project/go-address"
-	"github.com/filecoin-project/go-state-types/abi"
-	miner12 "github.com/filecoin-project/go-state-types/builtin/v12/miner"
-	"github.com/filecoin-project/go-state-types/builtin/v13/miner"
-	"github.com/filecoin-project/go-state-types/builtin/v13/util/adt"
-	"github.com/filecoin-project/go-state-types/migration"
+	"github.com/filecoin-project/go-amt-ipld/v4"
 	"github.com/ipfs/go-cid"
 	cbor "github.com/ipfs/go-ipld-cbor"
 	"golang.org/x/xerrors"
-	"sync"
+
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/builtin/v13/miner"
+	"github.com/filecoin-project/go-state-types/builtin/v13/util/adt"
+
+	miner12 "github.com/filecoin-project/go-state-types/builtin/v12/miner"
+	"github.com/filecoin-project/go-state-types/migration"
 )
 
 type providerSectors struct {
 	lk sync.Mutex
 
 	dealToSector map[abi.DealID]abi.SectorID
+
+	// diff mode removes
+	removedDealToSector map[abi.DealID]abi.SectorID
 }
 
 // minerMigration is technically a no-op, but it collects a cache for market migration
@@ -43,11 +50,6 @@ func (m *minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, 
 
 	ctxStore := adt.WrapStore(ctx, store)
 
-	sa, err := adt.AsArray(ctxStore, inState.Sectors, miner.SectorsAmtBitwidth)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to load sectors array: %w", err)
-	}
-
 	var sector miner.SectorOnChainInfo
 
 	mid, err := address.IDFromAddress(in.Address)
@@ -55,28 +57,110 @@ func (m *minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, 
 		return nil, xerrors.Errorf("failed to get miner ID: %w", err)
 	}
 
-	err = sa.ForEach(&sector, func(i int64) error {
-		if len(sector.DealIDs) == 0 {
+	inSectors, err := adt.AsArray(ctxStore, inState.Sectors, miner.SectorsAmtBitwidth)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to load sectors array: %w", err)
+	}
+
+	hasCached, prevSectors, err := in.Cache.Read(migration.MinerPrevSectorsInKey(in.Address))
+	if err != nil {
+		return nil, xerrors.Errorf("failed to read prev sectors from cache: %w", err)
+	}
+
+	if !hasCached {
+		// no cached migration, so we simply iterate all sectors and collect deal IDs
+
+		err = inSectors.ForEach(&sector, func(i int64) error {
+			if len(sector.DealIDs) == 0 {
+				return nil
+			}
+
+			m.providerSectors.lk.Lock()
+			for _, dealID := range sector.DealIDs {
+				m.providerSectors.dealToSector[dealID] = abi.SectorID{
+					Miner:  abi.ActorID(mid),
+					Number: abi.SectorNumber(i),
+				}
+			}
+			m.providerSectors.lk.Unlock()
+
 			return nil
+		})
+		if err != nil {
+			return nil, xerrors.Errorf("failed to iterate sectors: %w", err)
+		}
+	} else {
+		diffs, err := amt.Diff(ctx, store, store, prevSectors, inState.Sectors, amt.UseTreeBitWidth(miner12.SectorsAmtBitwidth))
+		if err != nil {
+			return nil, xerrors.Errorf("failed to diff old and new Sector AMTs: %w", err)
 		}
 
-		m.providerSectors.lk.Lock()
-		for _, dealID := range sector.DealIDs {
-			m.providerSectors.dealToSector[dealID] = abi.SectorID{
-				Miner:  abi.ActorID(mid),
-				Number: abi.SectorNumber(i),
+		prevInSectors, err := adt.AsArray(ctxStore, prevSectors, miner12.SectorsAmtBitwidth)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to load prev sectors array: %w", err)
+		}
+
+		for i, change := range diffs {
+			sectorNo := abi.SectorNumber(change.Key)
+
+			switch change.Type {
+			case amt.Add:
+
+				found, err := inSectors.Get(change.Key, &sector)
+				if err != nil {
+					return nil, xerrors.Errorf("failed to get sector %d in inSectors: %w", sectorNo, err)
+				}
+
+				if !found {
+					return nil, xerrors.Errorf("didn't find sector %d in inSectors", sectorNo)
+				}
+
+				if len(sector.DealIDs) == 0 {
+					// if no deals don't even bother taking the lock
+					continue
+				}
+
+				m.providerSectors.lk.Lock()
+				for _, dealID := range sector.DealIDs {
+					m.providerSectors.dealToSector[dealID] = abi.SectorID{
+						Miner:  abi.ActorID(mid),
+						Number: abi.SectorNumber(i),
+					}
+				}
+				m.providerSectors.lk.Unlock()
+			case amt.Modify:
+				return nil, xerrors.Errorf("WHAT?! sector %d modified, this not supported and not supposed to happen", i) // todo: is it?
+			case amt.Remove:
+				// related deals will also get removed in the market, so we don't have anything to do here
+
+				found, err := prevInSectors.Get(change.Key, &sector)
+				if err != nil {
+					return nil, xerrors.Errorf("failed to get sector %d in prevInSectors: %w", sectorNo, err)
+				}
+				if !found {
+					return nil, xerrors.Errorf("didn't find sector %d in prevInSectors", sectorNo)
+				}
+
+				if len(sector.DealIDs) == 0 {
+					// if no deals don't even bother taking the lock
+					continue
+				}
+
+				m.providerSectors.lk.Lock()
+				for _, dealID := range sector.DealIDs {
+					m.providerSectors.removedDealToSector[dealID] = abi.SectorID{
+						Miner:  abi.ActorID(mid),
+						Number: abi.SectorNumber(i),
+					}
+				}
+				m.providerSectors.lk.Unlock()
 			}
 		}
+	}
 
-		dealIDsCopy := make([]abi.DealID, len(sector.DealIDs))
-		copy(dealIDsCopy, sector.DealIDs)
-
-		m.providerSectors.lk.Unlock()
-
-		return nil
-	})
+	err = in.Cache.Write(migration.MinerPrevSectorsInKey(in.Address), inState.Sectors)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to iterate sectors: %w", err)
+		return nil, xerrors.Errorf("failed to write prev sectors to cache: %w", err)
 	}
 
 	return &migration.ActorMigrationResult{
