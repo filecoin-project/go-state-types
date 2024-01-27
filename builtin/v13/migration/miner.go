@@ -1,7 +1,10 @@
 package migration
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
 	"sync"
 
 	"github.com/filecoin-project/go-address"
@@ -129,7 +132,46 @@ func (m *minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, 
 				}
 				m.providerSectors.lk.Unlock()
 			case amt.Modify:
-				return nil, xerrors.Errorf("WHAT?! sector %d modified, this not supported and not supposed to happen", i) // todo: is it?
+				// oh snap deals??
+
+				var sectorBefore miner.SectorOnChainInfo
+				if err := sectorBefore.UnmarshalCBOR(bytes.NewReader(change.Before.Raw)); err != nil {
+					return nil, xerrors.Errorf("failed to unmarshal sector %d before: %w", sectorNo, err)
+				}
+				pjsonb, err := json.MarshalIndent(sectorBefore, "", "  ")
+				if err != nil {
+					return nil, err
+				}
+
+				var sectorAfter miner.SectorOnChainInfo
+
+				if err := sectorAfter.UnmarshalCBOR(bytes.NewReader(change.After.Raw)); err != nil {
+					return nil, xerrors.Errorf("failed to unmarshal sector %d after: %w", sectorNo, err)
+				}
+				pjson, err := json.MarshalIndent(sectorAfter, "", "  ")
+				if err != nil {
+					return nil, err
+				}
+
+				if len(sectorBefore.DealIDs) != len(sectorAfter.DealIDs) {
+					if len(sectorBefore.DealIDs) != 0 {
+						fmt.Println("sector before: ", string(pjsonb))
+						fmt.Println("sector after: ", string(pjson))
+						return nil, xerrors.Errorf("WHAT?! sector %d modified, this not supported and not supposed to happen", i) // todo: is it? Can't happen w/o a deep, deep reorg, and even then we wouldn't use the cache??
+					}
+					// snap
+
+					m.providerSectors.lk.Lock()
+					for _, dealID := range sectorAfter.DealIDs {
+						m.providerSectors.dealToSector[dealID] = abi.SectorID{
+							Miner:  abi.ActorID(mid),
+							Number: abi.SectorNumber(i),
+						}
+					}
+					m.providerSectors.lk.Unlock()
+				}
+
+				// extensions, etc. here; we don't care about those
 			case amt.Remove:
 				// related deals will also get removed in the market, so we don't have anything to do here
 
