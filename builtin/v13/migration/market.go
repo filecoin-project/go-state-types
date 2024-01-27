@@ -217,7 +217,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 				return cid.Undef, cid.Undef, xerrors.Errorf("failed to get previous newstate: not found")
 			}
 
-			if newState.SlashEpoch == -1 {
+			if newState.SlashEpoch != -1 {
 				if err := removeProviderSectorEntry(deal, &newState); err != nil {
 					return cid.Undef, cid.Undef, xerrors.Errorf("failed to remove provider sector entry: %w", err)
 				}
@@ -247,10 +247,10 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 			newState.LastUpdatedEpoch = oldState.LastUpdatedEpoch
 			newState.SectorStartEpoch = oldState.SectorStartEpoch
 
-			if oldState.SectorStartEpoch == -1 && prevOldState.SectorStartEpoch != -1 {
-				//fmt.Printf("deal %d start -1 both\n", deal)
-				// neither was in a sector, unclear if this can happen, but we handle this case anyway
-			}
+			//if oldState.SectorStartEpoch == -1 && prevOldState.SectorStartEpoch != -1 {
+			//fmt.Printf("deal %d start -1 both\n", deal)
+			// neither was in a sector, unclear if this can happen, but we handle this case anyway
+			//}
 
 			if (oldState.SectorStartEpoch != -1 && prevOldState.SectorStartEpoch == -1) && oldState.SlashEpoch == -1 {
 				//fmt.Printf("deal %d start -1 -> %d\n", deal, oldState.SectorStartEpoch)
@@ -327,7 +327,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 		})
 		var nonEmpty bool
 		if err == errItemFound {
-			found = true
+			nonEmpty = true
 			err = nil
 		}
 		if err != nil {
