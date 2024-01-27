@@ -218,8 +218,13 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 			}
 
 			if newState.SlashEpoch != -1 {
-				if err := removeProviderSectorEntry(deal, &newState); err != nil {
-					return cid.Undef, cid.Undef, xerrors.Errorf("failed to remove provider sector entry: %w", err)
+				_, ok := m.providerSectors.removedDealToSector[deal]
+				if ok {
+					if err := removeProviderSectorEntry(deal, &newState); err != nil {
+						return cid.Undef, cid.Undef, xerrors.Errorf("failed to remove provider sector entry: %w", err)
+					}
+				} else {
+					fmt.Printf("missing deal?? weird market cron? %d\n", deal) // todo review can someone confirm that just ignoring this is fine??
 				}
 			}
 
