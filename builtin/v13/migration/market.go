@@ -496,4 +496,8 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesFromScratch(ctx context.
 	return providerSectorsRoot, newStateArrayRoot, nil
 }
 
+func (m *marketMigrator) Deferred() bool {
+	return true
+}
+
 var _ migration.ActorMigration = (*marketMigrator)(nil)

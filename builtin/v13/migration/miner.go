@@ -215,4 +215,8 @@ func (m *minerMigrator) MigratedCodeCID() cid.Cid {
 	return m.OutCodeCID
 }
 
+func (m *minerMigrator) Deferred() bool {
+	return false
+}
+
 var _ migration.ActorMigration = (*minerMigrator)(nil)

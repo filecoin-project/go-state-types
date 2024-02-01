@@ -87,3 +87,7 @@ func (m minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, i
 		NewHead:    newHead,
 	}, nil
 }
+
+func (m minerMigrator) Deferred() bool {
+	return false
+}
