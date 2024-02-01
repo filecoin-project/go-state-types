@@ -2,7 +2,6 @@ package migration
 
 import (
 	"context"
-	"errors"
 	"sync"
 	"time"
 
@@ -170,6 +169,9 @@ type ActorMigration interface {
 	// Returns the new state head CID.
 	MigrateState(ctx context.Context, store cbor.IpldStore, input ActorMigrationInput) (result *ActorMigrationResult, err error)
 	MigratedCodeCID() cid.Cid
+
+	// Deferred returns true if this migration should be run after all non-deferred migrations have completed.
+	Deferred() bool
 }
 
 // Migrator which preserves the head CID and provides a fixed result code CID.
@@ -186,6 +188,10 @@ func (n CodeMigrator) MigrateState(_ context.Context, _ cbor.IpldStore, in Actor
 
 func (n CodeMigrator) MigratedCodeCID() cid.Cid {
 	return n.OutCodeCID
+}
+
+func (n CodeMigrator) Deferred() bool {
+	return false
 }
 
 // Migrator that uses cached transformation if it exists
@@ -211,51 +217,13 @@ func (c CachedMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, 
 	}, nil
 }
 
+func (c CachedMigrator) Deferred() bool {
+	return c.ActorMigration.Deferred()
+}
+
 func CachedMigration(cache MigrationCache, m ActorMigration) ActorMigration {
 	return CachedMigrator{
 		ActorMigration: m,
 		cache:          cache,
 	}
-}
-
-type DeferredMigrationSet struct {
-	todo map[address.Address]struct{}
-	lk   sync.Mutex
-}
-
-func NewDeferredMigrationSet() *DeferredMigrationSet {
-	return &DeferredMigrationSet{
-		todo: make(map[address.Address]struct{}),
-	}
-}
-
-type DeferredMigrator struct {
-	ds  *DeferredMigrationSet
-	sub ActorMigration
-}
-
-func NewDeferredMigrator(ds *DeferredMigrationSet, sub ActorMigration) *DeferredMigrator {
-	return &DeferredMigrator{
-		ds:  ds,
-		sub: sub,
-	}
-}
-
-func (d DeferredMigrator) MigratedCodeCID() cid.Cid {
-	panic("this can't be called")
-}
-
-var errMigrationDeferred = errors.New("migration deferred")
-
-func (d DeferredMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, in ActorMigrationInput) (*ActorMigrationResult, error) {
-	d.ds.lk.Lock()
-	defer d.ds.lk.Unlock()
-
-	_, ok := d.ds.todo[in.Address]
-	if ok {
-		return nil, xerrors.Errorf("actor %s already in deferred set", in.Address)
-	}
-	d.ds.todo[in.Address] = struct{}{}
-
-	return nil, errMigrationDeferred
 }

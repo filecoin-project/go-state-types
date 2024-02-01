@@ -85,8 +85,6 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 	// migrations that migrate both code and state, override entries in `migrations`
 
-	deferred := migration.NewDeferredMigrationSet()
-
 	// The System Actor
 
 	newSystemCodeCID, ok := newManifest.Get(manifest.SystemKey)
@@ -127,13 +125,13 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to create market migrator: %w", err)
 	}
-	migrations[market12Cid] = migration.NewDeferredMigrator(deferred, marketMig) // migration.CachedMigration(cache, marketMig)
+	migrations[market12Cid] = migration.CachedMigration(cache, marketMig)
 
 	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations), len(oldManifestData.Entries))
 	}
 
-	actorsOut, err := migration.RunMigration(ctx, cfg, cache, store, log, actorsIn, migrations, migration.WithDeferredMigrationSet(deferred))
+	actorsOut, err := migration.RunMigration(ctx, cfg, cache, store, log, actorsIn, migrations)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to run migration: %w", err)
 	}

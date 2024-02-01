@@ -68,3 +68,7 @@ func (m initActorMigrator) MigrateState(ctx context.Context, store cbor.IpldStor
 		NewHead:    outHead,
 	}, nil
 }
+
+func (m initActorMigrator) Deferred() bool {
+	return false
+}

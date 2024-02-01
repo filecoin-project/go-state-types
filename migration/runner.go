@@ -2,7 +2,6 @@ package migration
 
 import (
 	"context"
-	"errors"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -17,25 +16,11 @@ import (
 	"golang.org/x/xerrors"
 )
 
-type migrationSettings struct {
-	deferred *DeferredMigrationSet
-}
-
-type MigrationOption func(*migrationSettings)
-
-func WithDeferredMigrationSet(deferred *DeferredMigrationSet) MigrationOption {
-	return func(settings *migrationSettings) {
-		settings.deferred = deferred
-	}
-}
-
-func RunMigration(ctx context.Context, cfg Config, cache MigrationCache, store cbor.IpldStore, log Logger, actorsIn *builtin.ActorTree, migrations map[cid.Cid]ActorMigration, opts ...MigrationOption) (*builtin.ActorTree, error) {
+func RunMigration(ctx context.Context, cfg Config, cache MigrationCache, store cbor.IpldStore, log Logger, actorsIn *builtin.ActorTree, migrations map[cid.Cid]ActorMigration) (*builtin.ActorTree, error) {
 	startTime := time.Now()
 
-	settings := migrationSettings{}
-	for _, opt := range opts {
-		opt(&settings)
-	}
+	deferred := map[address.Address]struct{}{}
+	var deferredLk sync.Mutex
 
 	// Setup synchronization
 	grp, ctx := errgroup.WithContext(ctx)
@@ -85,12 +70,17 @@ func RunMigration(ctx context.Context, cfg Config, cache MigrationCache, store c
 		grp.Go(func() error {
 			defer workerWg.Done()
 			for job := range jobCh {
+				if job.ActorMigration.Deferred() {
+					deferredLk.Lock()
+					deferred[job.Address] = struct{}{}
+					deferredLk.Unlock()
+
+					atomic.AddUint32(&doneCount, 1)
+					continue
+				}
+
 				result, err := job.run(ctx, store)
 				if err != nil {
-					if errors.Is(err, errMigrationDeferred) {
-						atomic.AddUint32(&doneCount, 1)
-						continue
-					}
 					return xerrors.Errorf("running job: %w", err)
 				}
 				select {
@@ -166,13 +156,13 @@ func RunMigration(ctx context.Context, cfg Config, cache MigrationCache, store c
 		return nil, xerrors.Errorf("migration group error: %w", err)
 	}
 
-	if settings.deferred != nil {
+	if len(deferred) > 0 {
 		// deferred round
 		// NOTE this is not parralelized for now as this was only ever needed for singleton actor migrations
 
 		log.Log(rt.INFO, "Running deferred migrations")
 
-		for addr := range settings.deferred.todo {
+		for addr := range deferred {
 			log.Log(rt.INFO, "Running deferred migration for %s", addr)
 
 			actorIn, found, err := actorsIn.GetActorV5(addr)
@@ -188,13 +178,6 @@ func RunMigration(ctx context.Context, cfg Config, cache MigrationCache, store c
 			if !ok {
 				return nil, xerrors.Errorf("actor with code %s has no registered migration function", actorIn.Code)
 			}
-
-			dm, ok := actorMigration.(*DeferredMigrator)
-			if !ok {
-				return nil, xerrors.Errorf("actor with code %s has a migration which claims to be deferred but isn't", actorIn.Code)
-			}
-
-			actorMigration = dm.sub
 
 			res, err := (&migrationJob{
 				Address:        addr,
