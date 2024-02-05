@@ -288,6 +288,10 @@ func CheckDealStatesAgainstSectors(acc *builtin.MessageAccumulator, minerSummari
 		acc.Require(deal.SlashEpoch <= sectorDeal.SectorExpiration,
 			"deal state slashed at %d after sector expiration %d for miner %v",
 			deal.SlashEpoch, sectorDeal.SectorExpiration, deal.Provider)
+
+		acc.Require(deal.SectorNumber == sectorDeal.SectorNumber,
+			"deal sector number %d does not match sector %d for miner %v",
+			deal.SectorNumber, sectorDeal.SectorNumber, deal.Provider)
 	}
 }
 

@@ -22,6 +22,7 @@ type DealSummary struct {
 	SectorStartEpoch abi.ChainEpoch
 	LastUpdatedEpoch abi.ChainEpoch
 	SlashEpoch       abi.ChainEpoch
+	SectorNumber     abi.SectorNumber
 	PieceCid         cid.Cid
 }
 
@@ -151,6 +152,7 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 				stats.SectorStartEpoch = dealState.SectorStartEpoch
 				stats.LastUpdatedEpoch = dealState.LastUpdatedEpoch
 				stats.SlashEpoch = dealState.SlashEpoch
+				stats.SectorNumber = dealState.SectorNumber
 			}
 			_, found = pendingDealAllocationIds[abi.DealID(dealID)]
 			acc.Require(!found, "deal %d has pending allocation", dealID)

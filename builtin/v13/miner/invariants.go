@@ -15,6 +15,7 @@ import (
 type DealSummary struct {
 	SectorStart      abi.ChainEpoch
 	SectorExpiration abi.ChainEpoch
+	SectorNumber     abi.SectorNumber
 }
 
 type StateSummary struct {
@@ -102,6 +103,7 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount) (
 				minerSummary.Deals[dealID] = DealSummary{
 					SectorStart:      sector.Activation,
 					SectorExpiration: sector.Expiration,
+					SectorNumber:     sector.SectorNumber,
 				}
 			}
 
