@@ -432,7 +432,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesFromScratch(ctx context.
 		newState.SlashEpoch = oldState.SlashEpoch
 		newState.LastUpdatedEpoch = oldState.LastUpdatedEpoch
 		newState.SectorStartEpoch = oldState.SectorStartEpoch
-		newState.SectorNumber = 0 // terminated / not found (?)
+		newState.SectorNumber = 0
 
 		if oldState.SectorStartEpoch == -1 {
 			sid, ok := m.providerSectors.dealToSector[deal]
