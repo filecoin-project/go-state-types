@@ -196,7 +196,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 			newState.SectorStartEpoch = oldState.SectorStartEpoch
 			newState.SectorNumber = 0 // terminated / not found (?)
 
-			if oldState.SectorStartEpoch == -1 { // todo slashEpoch != -1? or is this correct??
+			if oldState.SectorStartEpoch != -1 { // todo slashEpoch != -1? or is this correct??
 				if err := addProviderSectorEntry(deal, &newState); err != nil {
 					return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to add provider sector entry: %w", err)
 				}
@@ -434,7 +434,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesFromScratch(ctx context.
 		newState.SectorStartEpoch = oldState.SectorStartEpoch
 		newState.SectorNumber = 0
 
-		if oldState.SectorStartEpoch == -1 {
+		if oldState.SectorStartEpoch != -1 {
 			sid, ok := m.providerSectors.dealToSector[deal]
 			if ok {
 				newState.SectorNumber = sid.Number

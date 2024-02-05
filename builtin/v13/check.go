@@ -290,8 +290,65 @@ func CheckDealStatesAgainstSectors(acc *builtin.MessageAccumulator, minerSummari
 			deal.SlashEpoch, sectorDeal.SectorExpiration, deal.Provider)
 
 		acc.Require(deal.SectorNumber == sectorDeal.SectorNumber,
-			"deal sector number %d does not match sector %d for miner %v",
-			deal.SectorNumber, sectorDeal.SectorNumber, deal.Provider)
+			"deal sector number %d does not match sector %d for miner %v (ds: %#v; ss %#v)",
+			deal.SectorNumber, sectorDeal.SectorNumber, deal.Provider, deal, sectorDeal)
+	}
+
+	//	/// HAMT[ActorID]HAMT[SectorNumber]SectorDealIDs
+	foundSectorDeals := make(map[abi.DealID]abi.SectorID)
+
+	for sectorID, dealIDs := range marketSummary.ProviderSectors {
+		maddr, err := address.NewIDAddress(uint64(sectorID.Miner))
+		if err != nil {
+			acc.Addf("error creating ID address: %v", err)
+			continue
+		}
+
+		minerSummary, found := minerSummaries[maddr]
+		if !found {
+			acc.Addf("provider %v for sector %v not found among miners", sectorID, sectorID)
+			continue
+		}
+
+		sector := minerSummary.SectorsWithDeals[sectorID.Number]
+		acc.Require(sector, "sector %v not found in miner %v for deals %v", sectorID, maddr, dealIDs)
+
+		for _, dealID := range dealIDs {
+			_, found := minerSummary.Deals[dealID]
+			acc.Require(found, "deal %d not found in miner %v for sector %v", dealID, maddr, sectorID)
+
+			_, found = foundSectorDeals[dealID]
+			acc.Require(!found, "deal %d found in multiple sectors", dealID)
+
+			foundSectorDeals[dealID] = sectorID
+		}
+	}
+
+	inverseSectorDeals := make(map[abi.DealID]abi.SectorID)
+	for a, summary := range minerSummaries {
+		mid, err := address.IDFromAddress(a)
+		if err != nil {
+			acc.Addf("error creating ID address: %v", err)
+			continue
+		}
+		for dealID, dealSummary := range summary.Deals {
+			_, found := inverseSectorDeals[dealID]
+			acc.Require(!found, "deal %d found in multiple sectors", dealID)
+
+			inverseSectorDeals[dealID] = abi.SectorID{Miner: abi.ActorID(mid), Number: dealSummary.SectorNumber}
+		}
+	}
+
+	for dealID, sectorID := range inverseSectorDeals {
+		ds := marketSummary.Deals[dealID]
+		_, found := marketSummary.ProviderSectors[sectorID]
+		if ds == nil {
+			acc.Require(!found, "expired deal %d found in sector %v", dealID, sectorID)
+
+			continue // expired deal
+		}
+
+		acc.Require(found, "deal %d found in sector %v not found in market (ds: %v)", dealID, sectorID, ds)
 	}
 }
 
