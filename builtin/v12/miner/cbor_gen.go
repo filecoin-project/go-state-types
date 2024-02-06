@@ -363,7 +363,7 @@ func (t *MinerInfo) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ControlAddresses ([]address.Address) (slice)
-	if len(t.ControlAddresses) > cbg.MaxLength {
+	if uint64(len(t.ControlAddresses)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.ControlAddresses was too long")
 	}
 
@@ -383,7 +383,7 @@ func (t *MinerInfo) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.PeerId ([]uint8) (slice)
-	if len(t.PeerId) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.PeerId)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.PeerId was too long")
 	}
 
@@ -396,7 +396,7 @@ func (t *MinerInfo) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Multiaddrs ([][]uint8) (slice)
-	if len(t.Multiaddrs) > cbg.MaxLength {
+	if uint64(len(t.Multiaddrs)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Multiaddrs was too long")
 	}
 
@@ -404,7 +404,7 @@ func (t *MinerInfo) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.Multiaddrs {
-		if len(v) > cbg.ByteArrayMaxLen {
+		if uint64(len(v)) > cbg.ByteArrayMaxLen {
 			return xerrors.Errorf("Byte array in field v was too long")
 		}
 
@@ -796,7 +796,7 @@ func (t *Deadlines) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Due ([48]cid.Cid) (array)
-	if len(t.Due) > cbg.MaxLength {
+	if uint64(len(t.Due)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Due was too long")
 	}
 
@@ -1533,6 +1533,7 @@ func (t *SectorPreCommitOnChainInfo) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -1654,7 +1655,7 @@ func (t *SectorPreCommitInfo) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.DealIDs ([]abi.DealID) (slice)
-	if len(t.DealIDs) > cbg.MaxLength {
+	if uint64(len(t.DealIDs)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.DealIDs was too long")
 	}
 
@@ -1925,7 +1926,7 @@ func (t *SectorOnChainInfo) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.DealIDs ([]abi.DealID) (slice)
-	if len(t.DealIDs) > cbg.MaxLength {
+	if uint64(len(t.DealIDs)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.DealIDs was too long")
 	}
 
@@ -2338,6 +2339,7 @@ func (t *WorkerKeyChange) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -2416,7 +2418,7 @@ func (t *VestingFunds) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Funds ([]miner.VestingFund) (slice)
-	if len(t.Funds) > cbg.MaxLength {
+	if uint64(len(t.Funds)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Funds was too long")
 	}
 
@@ -2608,7 +2610,7 @@ func (t *WindowedPoSt) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Proofs ([]proof.PoStProof) (slice)
-	if len(t.Proofs) > cbg.MaxLength {
+	if uint64(len(t.Proofs)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Proofs was too long")
 	}
 
@@ -2801,6 +2803,7 @@ func (t *BeneficiaryTerm) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -3048,7 +3051,7 @@ func (t *GetControlAddressesReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ControlAddrs ([]address.Address) (slice)
-	if len(t.ControlAddrs) > cbg.MaxLength {
+	if uint64(len(t.ControlAddrs)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.ControlAddrs was too long")
 	}
 
@@ -3166,7 +3169,7 @@ func (t *ChangeWorkerAddressParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.NewControlAddrs ([]address.Address) (slice)
-	if len(t.NewControlAddrs) > cbg.MaxLength {
+	if uint64(len(t.NewControlAddrs)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.NewControlAddrs was too long")
 	}
 
@@ -3270,7 +3273,7 @@ func (t *ChangePeerIDParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.NewID ([]uint8) (slice)
-	if len(t.NewID) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.NewID)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.NewID was too long")
 	}
 
@@ -3354,7 +3357,7 @@ func (t *SubmitWindowedPoStParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Partitions ([]miner.PoStPartition) (slice)
-	if len(t.Partitions) > cbg.MaxLength {
+	if uint64(len(t.Partitions)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Partitions was too long")
 	}
 
@@ -3369,7 +3372,7 @@ func (t *SubmitWindowedPoStParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Proofs ([]proof.PoStProof) (slice)
-	if len(t.Proofs) > cbg.MaxLength {
+	if uint64(len(t.Proofs)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Proofs was too long")
 	}
 
@@ -3395,7 +3398,7 @@ func (t *SubmitWindowedPoStParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ChainCommitRand (abi.Randomness) (slice)
-	if len(t.ChainCommitRand) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.ChainCommitRand)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.ChainCommitRand was too long")
 	}
 
@@ -3622,7 +3625,7 @@ func (t *PreCommitSectorParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.DealIDs ([]abi.DealID) (slice)
-	if len(t.DealIDs) > cbg.MaxLength {
+	if uint64(len(t.DealIDs)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.DealIDs was too long")
 	}
 
@@ -3924,7 +3927,7 @@ func (t *ProveCommitSectorParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Proof ([]uint8) (slice)
-	if len(t.Proof) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.Proof)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.Proof was too long")
 	}
 
@@ -4016,7 +4019,7 @@ func (t *ExtendSectorExpirationParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Extensions ([]miner.ExpirationExtension) (slice)
-	if len(t.Extensions) > cbg.MaxLength {
+	if uint64(len(t.Extensions)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Extensions was too long")
 	}
 
@@ -4111,7 +4114,7 @@ func (t *ExtendSectorExpiration2Params) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Extensions ([]miner.ExpirationExtension2) (slice)
-	if len(t.Extensions) > cbg.MaxLength {
+	if uint64(len(t.Extensions)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Extensions was too long")
 	}
 
@@ -4206,7 +4209,7 @@ func (t *TerminateSectorsParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Terminations ([]miner.TerminationDeclaration) (slice)
-	if len(t.Terminations) > cbg.MaxLength {
+	if uint64(len(t.Terminations)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Terminations was too long")
 	}
 
@@ -4365,7 +4368,7 @@ func (t *DeclareFaultsParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Faults ([]miner.FaultDeclaration) (slice)
-	if len(t.Faults) > cbg.MaxLength {
+	if uint64(len(t.Faults)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Faults was too long")
 	}
 
@@ -4460,7 +4463,7 @@ func (t *DeclareFaultsRecoveredParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Recoveries ([]miner.RecoveryDeclaration) (slice)
-	if len(t.Recoveries) > cbg.MaxLength {
+	if uint64(len(t.Recoveries)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Recoveries was too long")
 	}
 
@@ -4555,7 +4558,7 @@ func (t *DeferredCronEventParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.EventPayload ([]uint8) (slice)
-	if len(t.EventPayload) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.EventPayload)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.EventPayload was too long")
 	}
 
@@ -4793,7 +4796,7 @@ func (t *ReportConsensusFaultParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.BlockHeader1 ([]uint8) (slice)
-	if len(t.BlockHeader1) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.BlockHeader1)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.BlockHeader1 was too long")
 	}
 
@@ -4806,7 +4809,7 @@ func (t *ReportConsensusFaultParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.BlockHeader2 ([]uint8) (slice)
-	if len(t.BlockHeader2) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.BlockHeader2)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.BlockHeader2 was too long")
 	}
 
@@ -4819,7 +4822,7 @@ func (t *ReportConsensusFaultParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.BlockHeaderExtra ([]uint8) (slice)
-	if len(t.BlockHeaderExtra) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.BlockHeaderExtra)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.BlockHeaderExtra was too long")
 	}
 
@@ -4997,7 +5000,7 @@ func (t *ConfirmSectorProofsParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Sectors ([]abi.SectorNumber) (slice)
-	if len(t.Sectors) > cbg.MaxLength {
+	if uint64(len(t.Sectors)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Sectors was too long")
 	}
 
@@ -5140,7 +5143,7 @@ func (t *ChangeMultiaddrsParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.NewMultiaddrs ([][]uint8) (slice)
-	if len(t.NewMultiaddrs) > cbg.MaxLength {
+	if uint64(len(t.NewMultiaddrs)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.NewMultiaddrs was too long")
 	}
 
@@ -5148,7 +5151,7 @@ func (t *ChangeMultiaddrsParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.NewMultiaddrs {
-		if len(v) > cbg.ByteArrayMaxLen {
+		if uint64(len(v)) > cbg.ByteArrayMaxLen {
 			return xerrors.Errorf("Byte array in field v was too long")
 		}
 
@@ -5470,7 +5473,7 @@ func (t *PreCommitSectorBatchParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Sectors ([]miner.PreCommitSectorParams) (slice)
-	if len(t.Sectors) > cbg.MaxLength {
+	if uint64(len(t.Sectors)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Sectors was too long")
 	}
 
@@ -5570,7 +5573,7 @@ func (t *ProveCommitAggregateParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.AggregateProof ([]uint8) (slice)
-	if len(t.AggregateProof) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.AggregateProof)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.AggregateProof was too long")
 	}
 
@@ -5657,7 +5660,7 @@ func (t *ProveReplicaUpdatesParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Updates ([]miner.ReplicaUpdate) (slice)
-	if len(t.Updates) > cbg.MaxLength {
+	if uint64(len(t.Updates)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Updates was too long")
 	}
 
@@ -5761,6 +5764,7 @@ func (t *CronEventPayload) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -5830,7 +5834,7 @@ func (t *PreCommitSectorBatchParams2) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Sectors ([]miner.SectorPreCommitInfo) (slice)
-	if len(t.Sectors) > cbg.MaxLength {
+	if uint64(len(t.Sectors)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Sectors was too long")
 	}
 
@@ -5925,7 +5929,7 @@ func (t *ProveReplicaUpdatesParams2) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Updates ([]miner.ReplicaUpdate2) (slice)
-	if len(t.Updates) > cbg.MaxLength {
+	if uint64(len(t.Updates)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Updates was too long")
 	}
 
@@ -6039,6 +6043,7 @@ func (t *ChangeBeneficiaryParams) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -6286,7 +6291,7 @@ func (t *GetPeerIDReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.PeerId ([]uint8) (slice)
-	if len(t.PeerId) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.PeerId)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.PeerId was too long")
 	}
 
@@ -6364,7 +6369,7 @@ func (t *GetMultiAddrsReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.MultiAddrs ([]uint8) (slice)
-	if len(t.MultiAddrs) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.MultiAddrs)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.MultiAddrs was too long")
 	}
 
@@ -6660,6 +6665,7 @@ func (t *ExpirationExtension) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -6962,7 +6968,7 @@ func (t *ReplicaUpdate) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Deals ([]abi.DealID) (slice)
-	if len(t.Deals) > cbg.MaxLength {
+	if uint64(len(t.Deals)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Deals was too long")
 	}
 
@@ -6989,7 +6995,7 @@ func (t *ReplicaUpdate) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ReplicaProof ([]uint8) (slice)
-	if len(t.ReplicaProof) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.ReplicaProof)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.ReplicaProof was too long")
 	}
 
@@ -7219,7 +7225,7 @@ func (t *ReplicaUpdate2) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Deals ([]abi.DealID) (slice)
-	if len(t.Deals) > cbg.MaxLength {
+	if uint64(len(t.Deals)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Deals was too long")
 	}
 
@@ -7246,7 +7252,7 @@ func (t *ReplicaUpdate2) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ReplicaProof ([]uint8) (slice)
-	if len(t.ReplicaProof) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.ReplicaProof)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.ReplicaProof was too long")
 	}
 
@@ -7475,7 +7481,7 @@ func (t *ExpirationExtension2) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.SectorsWithClaims ([]miner.SectorClaim) (slice)
-	if len(t.SectorsWithClaims) > cbg.MaxLength {
+	if uint64(len(t.SectorsWithClaims)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.SectorsWithClaims was too long")
 	}
 
@@ -7499,6 +7505,7 @@ func (t *ExpirationExtension2) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -7649,7 +7656,7 @@ func (t *SectorClaim) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.MaintainClaims ([]verifreg.ClaimId) (slice)
-	if len(t.MaintainClaims) > cbg.MaxLength {
+	if uint64(len(t.MaintainClaims)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.MaintainClaims was too long")
 	}
 
@@ -7665,7 +7672,7 @@ func (t *SectorClaim) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.DropClaims ([]verifreg.ClaimId) (slice)
-	if len(t.DropClaims) > cbg.MaxLength {
+	if uint64(len(t.DropClaims)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.DropClaims was too long")
 	}
 

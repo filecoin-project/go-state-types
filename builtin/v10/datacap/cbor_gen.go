@@ -227,7 +227,7 @@ func (t *MintParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Operators ([]address.Address) (slice)
-	if len(t.Operators) > cbg.MaxLength {
+	if uint64(len(t.Operators)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Operators was too long")
 	}
 
@@ -350,7 +350,7 @@ func (t *MintReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.RecipientData ([]uint8) (slice)
-	if len(t.RecipientData) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.RecipientData)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.RecipientData was too long")
 	}
 
@@ -526,7 +526,7 @@ func (t *TransferParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.OperatorData ([]uint8) (slice)
-	if len(t.OperatorData) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.OperatorData)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.OperatorData was too long")
 	}
 
@@ -632,7 +632,7 @@ func (t *TransferReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.RecipientData ([]uint8) (slice)
-	if len(t.RecipientData) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.RecipientData)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.RecipientData was too long")
 	}
 
@@ -743,7 +743,7 @@ func (t *TransferFromParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.OperatorData ([]uint8) (slice)
-	if len(t.OperatorData) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.OperatorData)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.OperatorData was too long")
 	}
 
@@ -863,7 +863,7 @@ func (t *TransferFromReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.RecipientData ([]uint8) (slice)
-	if len(t.RecipientData) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.RecipientData)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.RecipientData was too long")
 	}
 

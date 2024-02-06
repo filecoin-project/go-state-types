@@ -110,7 +110,7 @@ func (label *DealLabel) MarshalCBOR(w io.Writer) error {
 		_, err := io.WriteString(w, string(""))
 		return err
 	}
-	if len(label.bs) > cbg.ByteArrayMaxLen {
+	if uint64(len(label.bs)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("label is too long to marshal (%d), max allowed (%d)", len(label.bs), cbg.ByteArrayMaxLen)
 	}
 

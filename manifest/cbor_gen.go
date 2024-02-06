@@ -101,7 +101,7 @@ func (t *ManifestEntry) MarshalCBOR(w io.Writer) error {
 	scratch := make([]byte, 9)
 
 	// t.Name (string) (string)
-	if len(t.Name) > cbg.MaxLength {
+	if uint64(len(t.Name)) > cbg.MaxLength {
 		return xerrors.Errorf("Value in field t.Name was too long")
 	}
 

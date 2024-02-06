@@ -34,7 +34,7 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Entries ([]cron.Entry) (slice)
-	if len(t.Entries) > cbg.MaxLength {
+	if uint64(len(t.Entries)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Entries was too long")
 	}
 

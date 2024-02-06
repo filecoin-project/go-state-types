@@ -362,7 +362,7 @@ func (t *UpdateChannelStateParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Secret ([]uint8) (slice)
-	if len(t.Secret) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.Secret)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.Secret was too long")
 	}
 
@@ -476,7 +476,7 @@ func (t *SignedVoucher) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.SecretHash ([]uint8) (slice)
-	if len(t.SecretHash) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.SecretHash)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.SecretHash was too long")
 	}
 
@@ -522,7 +522,7 @@ func (t *SignedVoucher) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Merges ([]paych.Merge) (slice)
-	if len(t.Merges) > cbg.MaxLength {
+	if uint64(len(t.Merges)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Merges was too long")
 	}
 
@@ -814,7 +814,7 @@ func (t *ModVerifyParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Data ([]uint8) (slice)
-	if len(t.Data) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.Data)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.Data was too long")
 	}
 

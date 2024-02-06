@@ -368,6 +368,7 @@ func (t *AwardBlockRewardParams) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
 	return nil
 }
 

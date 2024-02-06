@@ -89,7 +89,7 @@ func (t *AuthenticateMessageParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Signature ([]uint8) (slice)
-	if len(t.Signature) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.Signature)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.Signature was too long")
 	}
 
@@ -102,7 +102,7 @@ func (t *AuthenticateMessageParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Message ([]uint8) (slice)
-	if len(t.Message) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.Message)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.Message was too long")
 	}
 

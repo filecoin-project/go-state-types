@@ -638,7 +638,7 @@ func (t *RemoveExpiredAllocationsParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.AllocationIds ([]verifreg.AllocationId) (slice)
-	if len(t.AllocationIds) > cbg.MaxLength {
+	if uint64(len(t.AllocationIds)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.AllocationIds was too long")
 	}
 
@@ -753,7 +753,7 @@ func (t *RemoveExpiredAllocationsReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Considered ([]verifreg.AllocationId) (slice)
-	if len(t.Considered) > cbg.MaxLength {
+	if uint64(len(t.Considered)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Considered was too long")
 	}
 
@@ -888,7 +888,7 @@ func (t *BatchReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.FailCodes ([]verifreg.FailCode) (slice)
-	if len(t.FailCodes) > cbg.MaxLength {
+	if uint64(len(t.FailCodes)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.FailCodes was too long")
 	}
 
@@ -997,7 +997,7 @@ func (t *ClaimAllocationsParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Sectors ([]verifreg.SectorAllocationClaim) (slice)
-	if len(t.Sectors) > cbg.MaxLength {
+	if uint64(len(t.Sectors)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Sectors was too long")
 	}
 
@@ -1190,7 +1190,7 @@ func (t *GetClaimsParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ClaimIds ([]verifreg.ClaimId) (slice)
-	if len(t.ClaimIds) > cbg.MaxLength {
+	if uint64(len(t.ClaimIds)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.ClaimIds was too long")
 	}
 
@@ -1310,7 +1310,7 @@ func (t *GetClaimsReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Claims ([]verifreg.Claim) (slice)
-	if len(t.Claims) > cbg.MaxLength {
+	if uint64(len(t.Claims)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Claims was too long")
 	}
 
@@ -1420,7 +1420,7 @@ func (t *UniversalReceiverParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Payload ([]uint8) (slice)
-	if len(t.Payload) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.Payload)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.Payload was too long")
 	}
 
@@ -1522,7 +1522,7 @@ func (t *AllocationsResponse) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.NewAllocations ([]verifreg.AllocationId) (slice)
-	if len(t.NewAllocations) > cbg.MaxLength {
+	if uint64(len(t.NewAllocations)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.NewAllocations was too long")
 	}
 
@@ -1641,7 +1641,7 @@ func (t *ExtendClaimTermsParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Terms ([]verifreg.ClaimTerm) (slice)
-	if len(t.Terms) > cbg.MaxLength {
+	if uint64(len(t.Terms)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Terms was too long")
 	}
 
@@ -1742,7 +1742,7 @@ func (t *ExtendClaimTermsReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.FailCodes ([]verifreg.FailCode) (slice)
-	if len(t.FailCodes) > cbg.MaxLength {
+	if uint64(len(t.FailCodes)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.FailCodes was too long")
 	}
 
@@ -1857,7 +1857,7 @@ func (t *RemoveExpiredClaimsParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ClaimIds ([]verifreg.ClaimId) (slice)
-	if len(t.ClaimIds) > cbg.MaxLength {
+	if uint64(len(t.ClaimIds)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.ClaimIds was too long")
 	}
 
@@ -1972,7 +1972,7 @@ func (t *RemoveExpiredClaimsReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Considered ([]verifreg.AllocationId) (slice)
-	if len(t.Considered) > cbg.MaxLength {
+	if uint64(len(t.Considered)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Considered was too long")
 	}
 
@@ -2319,6 +2319,7 @@ func (t *FailCode) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -2441,6 +2442,7 @@ func (t *SectorAllocationClaim) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -2848,6 +2850,7 @@ func (t *ClaimTerm) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -2965,6 +2968,7 @@ func (t *ClaimExtensionRequest) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -3112,6 +3116,7 @@ func (t *Allocation) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -3334,6 +3339,7 @@ func (t *AllocationRequest) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -3493,7 +3499,7 @@ func (t *AllocationRequests) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Allocations ([]verifreg.AllocationRequest) (slice)
-	if len(t.Allocations) > cbg.MaxLength {
+	if uint64(len(t.Allocations)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Allocations was too long")
 	}
 
@@ -3508,7 +3514,7 @@ func (t *AllocationRequests) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Extensions ([]verifreg.ClaimExtensionRequest) (slice)
-	if len(t.Extensions) > cbg.MaxLength {
+	if uint64(len(t.Extensions)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Extensions was too long")
 	}
 
