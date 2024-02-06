@@ -426,26 +426,33 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesFromScratch(ctx context.
 
 	var oldState market12.DealState
 	var newState market13.DealState
+
+	// FIP: For each deal state object in the market actor state that has a terminated epoch set to -1:
 	err = oldStateArray.ForEach(&oldState, func(i int64) error {
 		deal := abi.DealID(i)
 
 		newState.SlashEpoch = oldState.SlashEpoch
 		newState.LastUpdatedEpoch = oldState.LastUpdatedEpoch
 		newState.SectorStartEpoch = oldState.SectorStartEpoch
-		newState.SectorNumber = 0
+		newState.SectorNumber = 0 // non- -1 slashed eport
 
-		if oldState.SectorStartEpoch != -1 {
+		if oldState.SlashEpoch == -1 {
+			// FIP: find the corresponding deal proposal object and extract the provider's actor ID;
+			// - we do this by collecting all dealIDs in providerSectors in miner migration
+
+			// in the provider's miner state, find the ID of the sector with the corresponding deal ID in sector metadata;
 			sid, ok := m.providerSectors.dealToSector[deal]
 			if ok {
-				newState.SectorNumber = sid.Number
-			} else {
-				return xerrors.Errorf("deal %d not found in providerSectors", deal) // todo is this normal and possible??
-			}
+				newState.SectorNumber = sid.Number // FIP: set the new deal state object's sector number to the sector ID found;
 
-			if _, ok := providerSectorsMem[sid.Miner]; !ok {
-				providerSectorsMem[sid.Miner] = make(map[abi.SectorNumber][]abi.DealID)
+				// FIP: add the deal ID to the ProviderSectors mapping for the provider's actor ID and sector number.
+				if _, ok := providerSectorsMem[sid.Miner]; !ok {
+					providerSectorsMem[sid.Miner] = make(map[abi.SectorNumber][]abi.DealID)
+				}
+				providerSectorsMem[sid.Miner][sid.Number] = append(providerSectorsMem[sid.Miner][sid.Number], deal)
+			} else {
+				newState.SectorNumber = 0 // FIP: if such a sector cannot be found, assert that the deal's end epoch has passed and use sector ID 0
 			}
-			providerSectorsMem[sid.Miner][sid.Number] = append(providerSectorsMem[sid.Miner][sid.Number], deal)
 		}
 
 		if err := newStateArray.Set(uint64(deal), &newState); err != nil {
