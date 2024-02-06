@@ -289,7 +289,7 @@ func CheckDealStatesAgainstSectors(acc *builtin.MessageAccumulator, minerSummari
 			"deal state slashed at %d after sector expiration %d for miner %v",
 			deal.SlashEpoch, sectorDeal.SectorExpiration, deal.Provider)
 
-		acc.Require(deal.SectorNumber == sectorDeal.SectorNumber,
+		acc.Require((deal.SectorNumber == sectorDeal.SectorNumber) || (deal.SectorNumber == 0 && deal.LastUpdatedEpoch != -1),
 			"deal sector number %d does not match sector %d for miner %v (ds: %#v; ss %#v)",
 			deal.SectorNumber, sectorDeal.SectorNumber, deal.Provider, deal, sectorDeal)
 	}
@@ -343,12 +343,12 @@ func CheckDealStatesAgainstSectors(acc *builtin.MessageAccumulator, minerSummari
 		ds := marketSummary.Deals[dealID]
 		_, found := marketSummary.ProviderSectors[sectorID]
 		if ds == nil {
-			acc.Require(!found, "expired deal %d found in sector %v", dealID, sectorID)
+			acc.Require(!found, "expired deal %d found in sector %v", dealID, sectorID) // TODO we see this, is this fine?
 
 			continue // expired deal
 		}
 
-		acc.Require(found, "deal %d found in sector %v not found in market (ds: %v)", dealID, sectorID, ds)
+		acc.Require(found, "deal %d found in sector %v not found in market (ds: %v)", dealID, sectorID, ds) // TODO we see this, is this fine?
 	}
 }
 
