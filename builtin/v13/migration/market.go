@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-amt-ipld/v4"
 	"github.com/filecoin-project/go-state-types/abi"
@@ -229,14 +228,14 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 				newState.SectorNumber = si
 			}
 
-			fmt.Printf("add deal %d to sector %d\n", deal, newState.SectorNumber)
+			//fmt.Printf("add deal %d to sector %d\n", deal, newState.SectorNumber)
 
 			if err := prevOutStates.Set(uint64(deal), &newState); err != nil {
 				return cid.Undef, cid.Undef, xerrors.Errorf("failed to set new state: %w", err)
 			}
 
 		case amt.Remove:
-			fmt.Printf("remove deal %d\n", deal)
+			//fmt.Printf("remove deal %d\n", deal)
 
 			ok, err := prevOutStates.Get(uint64(deal), &newState)
 			if err != nil {
@@ -279,11 +278,11 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 			// if nowOld.Slash == -1, then 'now' is not slashed, so we should try to find the sector
 			// we probably don't care about prevOldSlash?? beyond it changing from newSlash?
 
-			fmt.Printf("deal %d slash %d -> %d, update %d -> %d (prev sec: %d)\n", deal, prevOldState.SlashEpoch, oldState.SlashEpoch, prevOldState.LastUpdatedEpoch, oldState.LastUpdatedEpoch, newState.SectorNumber)
+			//fmt.Printf("deal %d slash %d -> %d, update %d -> %d (prev sec: %d)\n", deal, prevOldState.SlashEpoch, oldState.SlashEpoch, prevOldState.LastUpdatedEpoch, oldState.LastUpdatedEpoch, newState.SectorNumber)
 
 			if oldState.SlashEpoch != -1 && prevOldState.SlashEpoch == -1 {
 				// not slashed -> slashed
-				fmt.Printf("deal %d slash -1 -> %d\n", deal, oldState.SlashEpoch)
+				//fmt.Printf("deal %d slash -1 -> %d\n", deal, oldState.SlashEpoch)
 
 				if err := removeProviderSectorEntry(deal, &newState); err != nil {
 					return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to remove provider sector entry: %w", err)
