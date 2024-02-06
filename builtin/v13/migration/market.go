@@ -144,10 +144,10 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 	providerSectorsMem := map[abi.ActorID]map[abi.SectorNumber][]abi.DealID{}        // added
 	providerSectorsMemRemoved := map[abi.ActorID]map[abi.SectorNumber][]abi.DealID{} // removed
 
-	addProviderSectorEntry := func(deal abi.DealID, newState *market13.DealState) error {
+	addProviderSectorEntry := func(deal abi.DealID, newState *market13.DealState) (abi.SectorNumber, error) {
 		sid, ok := m.providerSectors.dealToSector[deal]
 		if !ok {
-			return xerrors.Errorf("deal %d not found in providerSectors", deal) // todo is this normal and possible??
+			return 0, xerrors.Errorf("deal %d not found in providerSectors", deal) // todo is this normal and possible??
 		}
 
 		newState.SectorNumber = sid.Number
@@ -156,13 +156,23 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 		}
 		providerSectorsMem[sid.Miner][sid.Number] = append(providerSectorsMem[sid.Miner][sid.Number], deal)
 
-		return nil
+		return sid.Number, nil
 	}
 
 	removeProviderSectorEntry := func(deal abi.DealID, newState *market13.DealState) error {
 		sid, ok := m.providerSectors.removedDealToSector[deal]
 		if !ok {
-			return xerrors.Errorf("deal %d not found in providerSectors", deal) // todo is this normal and possible??
+			if newState.SectorNumber == 0 {
+				// already removed, sector was likely terminated/slashed, but not
+				// yet picked up by the market
+				return nil
+			}
+
+			// this can happen if the deal was terminated between premigration and migration
+			// if it's not here it wasn't in premigration ProviderSectors either
+			fmt.Printf("notice: deal %d not found in removedDealToSector\n", deal)
+			newState.SectorNumber = 0
+			return nil
 		}
 
 		newState.SectorNumber = 0
@@ -189,25 +199,27 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 				return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to unmarshal old state: %w", err)
 			}
 
-			//fmt.Printf("add deal %d\n", deal)
-
 			newState.SlashEpoch = oldState.SlashEpoch
 			newState.LastUpdatedEpoch = oldState.LastUpdatedEpoch
 			newState.SectorStartEpoch = oldState.SectorStartEpoch
 			newState.SectorNumber = 0 // terminated / not found (?)
 
-			if oldState.SectorStartEpoch != -1 { // todo slashEpoch != -1? or is this correct??
-				if err := addProviderSectorEntry(deal, &newState); err != nil {
+			if oldState.SlashEpoch == -1 {
+				si, err := addProviderSectorEntry(deal, &newState)
+				if err != nil {
 					return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to add provider sector entry: %w", err)
 				}
+				newState.SectorNumber = si
 			}
+
+			fmt.Printf("add deal %d to sector %d\n", deal, newState.SectorNumber)
 
 			if err := prevOutStates.Set(uint64(deal), &newState); err != nil {
 				return cid.Undef, cid.Undef, xerrors.Errorf("failed to set new state: %w", err)
 			}
 
 		case amt.Remove:
-			//fmt.Printf("remove deal %d\n", deal)
+			fmt.Printf("remove deal %d\n", deal)
 
 			ok, err := prevOutStates.Get(uint64(deal), &newState)
 			if err != nil {
@@ -252,21 +264,35 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 			newState.LastUpdatedEpoch = oldState.LastUpdatedEpoch
 			newState.SectorStartEpoch = oldState.SectorStartEpoch
 
-			//if oldState.SectorStartEpoch == -1 && prevOldState.SectorStartEpoch != -1 {
-			//fmt.Printf("deal %d start -1 both\n", deal)
-			// neither was in a sector, unclear if this can happen, but we handle this case anyway
-			//}
+			// if nowOld.Slash == -1, then 'now' is not slashed, so we should try to find the sector
+			// we probably don't care about prevOldSlash?? beyond it changing from newSlash?
+
+			fmt.Printf("deal %d slash %d -> %d, update %d -> %d (prev sec: %d)\n", deal, prevOldState.SlashEpoch, oldState.SlashEpoch, prevOldState.LastUpdatedEpoch, oldState.LastUpdatedEpoch, newState.SectorNumber)
+
+			if oldState.SlashEpoch != -1 && prevOldState.SlashEpoch == -1 {
+				// not slashed -> slashed
+				fmt.Printf("deal %d slash -1 -> %d\n", deal, oldState.SlashEpoch)
+
+				if err := removeProviderSectorEntry(deal, &newState); err != nil {
+					return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to remove provider sector entry: %w", err)
+				}
+			}
+
+			/*if oldState.SectorStartEpoch == -1 && prevOldState.SectorStartEpoch != -1 {
+				fmt.Printf("deal %d start -1 both\n", deal)
+				// neither was in a sector, unclear if this can happen, but we handle this case anyway
+			}
 
 			if (oldState.SectorStartEpoch != -1 && prevOldState.SectorStartEpoch == -1) && oldState.SlashEpoch == -1 {
-				//fmt.Printf("deal %d start -1 -> %d\n", deal, oldState.SectorStartEpoch)
+				fmt.Printf("deal %d start -1 -> %d\n", deal, oldState.SectorStartEpoch)
 				// wasn't in a sector, now is
-				if err := addProviderSectorEntry(deal, &newState); err != nil {
+				if _, err := addProviderSectorEntry(deal, &newState); err != nil {
 					return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to add provider sector entry: %w", err)
 				}
 			}
 
 			if (oldState.SectorStartEpoch == -1 && prevOldState.SectorStartEpoch != -1) && prevOldState.SlashEpoch != -1 {
-				//fmt.Printf("deal %d start %d -> -1\n", deal, prevOldState.SectorStartEpoch)
+				fmt.Printf("deal %d start %d -> -1\n", deal, prevOldState.SectorStartEpoch)
 				// was in a sector, now isn't
 				if err := removeProviderSectorEntry(deal, &newState); err != nil {
 					return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to remove provider sector entry: %w", err)
@@ -274,7 +300,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 			}
 
 			if (oldState.SectorStartEpoch != -1 && prevOldState.SectorStartEpoch != -1) && oldState.SlashEpoch == -1 {
-				//fmt.Printf("deal %d start %d -> %d\n", deal, prevOldState.SectorStartEpoch, oldState.SectorStartEpoch)
+				fmt.Printf("deal %d start %d -> %d\n", deal, prevOldState.SectorStartEpoch, oldState.SectorStartEpoch)
 				// both in a sector, check if the same
 				_, rm := m.providerSectors.removedDealToSector[deal]
 				if rm {
@@ -285,13 +311,13 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 						return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to remove provider sector entry: %w", err)
 					}
 
-					if err := addProviderSectorEntry(deal, &newState); err != nil {
+					if _, err := addProviderSectorEntry(deal, &newState); err != nil {
 						return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to add provider sector entry: %w", err)
 					}
 				} else if _, added := m.providerSectors.dealToSector[deal]; added {
 					return cid.Cid{}, cid.Cid{}, xerrors.Errorf("deal %d with modified state was added to providerSectors, but was not in removedDealToSector", deal)
 				}
-			}
+			}*/
 
 			if err := prevOutStates.Set(uint64(deal), &newState); err != nil {
 				return cid.Undef, cid.Undef, xerrors.Errorf("failed to set new state: %w", err)
@@ -434,7 +460,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesFromScratch(ctx context.
 		newState.SlashEpoch = oldState.SlashEpoch
 		newState.LastUpdatedEpoch = oldState.LastUpdatedEpoch
 		newState.SectorStartEpoch = oldState.SectorStartEpoch
-		newState.SectorNumber = 0 // non- -1 slashed eport
+		newState.SectorNumber = 0 // non- -1 slashed epoch
 
 		if oldState.SlashEpoch == -1 {
 			// FIP: find the corresponding deal proposal object and extract the provider's actor ID;

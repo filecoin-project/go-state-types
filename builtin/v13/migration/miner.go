@@ -123,11 +123,13 @@ func (m *minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, 
 					continue
 				}
 
+				fmt.Printf("prov ds ADD %d: %v\n", sectorNo, sector.DealIDs)
+
 				m.providerSectors.lk.Lock()
 				for _, dealID := range sector.DealIDs {
 					m.providerSectors.dealToSector[dealID] = abi.SectorID{
 						Miner:  abi.ActorID(mid),
-						Number: abi.SectorNumber(i),
+						Number: sectorNo,
 					}
 				}
 				m.providerSectors.lk.Unlock()
@@ -161,14 +163,19 @@ func (m *minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, 
 					}
 					// snap
 
+					fmt.Printf("prov ds MOD %d: %v -> %v\n", sectorNo, sectorBefore.DealIDs, sectorAfter.DealIDs)
+
 					m.providerSectors.lk.Lock()
 					for _, dealID := range sectorAfter.DealIDs {
 						m.providerSectors.dealToSector[dealID] = abi.SectorID{
 							Miner:  abi.ActorID(mid),
-							Number: abi.SectorNumber(i),
+							Number: sectorNo,
 						}
 					}
 					m.providerSectors.lk.Unlock()
+				} else {
+					fmt.Println("sector2 before: ", string(pjsonb))
+					fmt.Println("sector2 after: ", string(pjson))
 				}
 
 				// extensions, etc. here; we don't care about those
@@ -188,11 +195,13 @@ func (m *minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, 
 					continue
 				}
 
+				fmt.Printf("prov ds REM %d: %v\n", sectorNo, sector.DealIDs)
+
 				m.providerSectors.lk.Lock()
 				for _, dealID := range sector.DealIDs {
 					m.providerSectors.removedDealToSector[dealID] = abi.SectorID{
 						Miner:  abi.ActorID(mid),
-						Number: abi.SectorNumber(i),
+						Number: sectorNo,
 					}
 				}
 				m.providerSectors.lk.Unlock()
