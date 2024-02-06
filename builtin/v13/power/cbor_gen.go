@@ -568,7 +568,7 @@ func (t *MinerConstructorParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ControlAddrs ([]address.Address) (slice)
-	if len(t.ControlAddrs) > cbg.MaxLength {
+	if uint64(len(t.ControlAddrs)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.ControlAddrs was too long")
 	}
 
@@ -594,7 +594,7 @@ func (t *MinerConstructorParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.PeerId ([]uint8) (slice)
-	if len(t.PeerId) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.PeerId)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.PeerId was too long")
 	}
 
@@ -607,7 +607,7 @@ func (t *MinerConstructorParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Multiaddrs ([][]uint8) (slice)
-	if len(t.Multiaddrs) > cbg.MaxLength {
+	if uint64(len(t.Multiaddrs)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Multiaddrs was too long")
 	}
 
@@ -615,7 +615,7 @@ func (t *MinerConstructorParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.Multiaddrs {
-		if len(v) > cbg.ByteArrayMaxLen {
+		if uint64(len(v)) > cbg.ByteArrayMaxLen {
 			return xerrors.Errorf("Byte array in field v was too long")
 		}
 
@@ -846,7 +846,7 @@ func (t *CreateMinerParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Peer ([]uint8) (slice)
-	if len(t.Peer) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.Peer)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.Peer was too long")
 	}
 
@@ -859,7 +859,7 @@ func (t *CreateMinerParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Multiaddrs ([][]uint8) (slice)
-	if len(t.Multiaddrs) > cbg.MaxLength {
+	if uint64(len(t.Multiaddrs)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Multiaddrs was too long")
 	}
 
@@ -867,7 +867,7 @@ func (t *CreateMinerParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.Multiaddrs {
-		if len(v) > cbg.ByteArrayMaxLen {
+		if uint64(len(v)) > cbg.ByteArrayMaxLen {
 			return xerrors.Errorf("Byte array in field v was too long")
 		}
 
@@ -1218,7 +1218,7 @@ func (t *EnrollCronEventParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Payload ([]uint8) (slice)
-	if len(t.Payload) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.Payload)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.Payload was too long")
 	}
 
@@ -1404,7 +1404,7 @@ func (t *CronEvent) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.CallbackPayload ([]uint8) (slice)
-	if len(t.CallbackPayload) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.CallbackPayload)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.CallbackPayload was too long")
 	}
 

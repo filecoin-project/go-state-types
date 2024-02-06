@@ -34,7 +34,7 @@ func (t *CreateParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Initcode ([]uint8) (slice)
-	if len(t.Initcode) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.Initcode)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.Initcode was too long")
 	}
 
@@ -143,7 +143,7 @@ func (t *CreateReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.EthAddress ([20]uint8) (array)
-	if len(t.EthAddress) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.EthAddress)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.EthAddress was too long")
 	}
 
@@ -252,7 +252,7 @@ func (t *Create2Params) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Initcode ([]uint8) (slice)
-	if len(t.Initcode) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.Initcode)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.Initcode was too long")
 	}
 
@@ -265,7 +265,7 @@ func (t *Create2Params) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Salt ([32]uint8) (array)
-	if len(t.Salt) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.Salt)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.Salt was too long")
 	}
 
@@ -374,7 +374,7 @@ func (t *Create2Return) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.EthAddress ([20]uint8) (array)
-	if len(t.EthAddress) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.EthAddress)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.EthAddress was too long")
 	}
 
@@ -494,7 +494,7 @@ func (t *CreateExternalReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.EthAddress ([20]uint8) (array)
-	if len(t.EthAddress) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.EthAddress)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.EthAddress was too long")
 	}
 

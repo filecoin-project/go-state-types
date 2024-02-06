@@ -543,7 +543,7 @@ func (t *PublishStorageDealsParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Deals ([]market.ClientDealProposal) (slice)
-	if len(t.Deals) > cbg.MaxLength {
+	if uint64(len(t.Deals)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Deals was too long")
 	}
 
@@ -638,7 +638,7 @@ func (t *PublishStorageDealsReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.IDs ([]abi.DealID) (slice)
-	if len(t.IDs) > cbg.MaxLength {
+	if uint64(len(t.IDs)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.IDs was too long")
 	}
 
@@ -753,7 +753,7 @@ func (t *ActivateDealsParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.DealIDs ([]abi.DealID) (slice)
-	if len(t.DealIDs) > cbg.MaxLength {
+	if uint64(len(t.DealIDs)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.DealIDs was too long")
 	}
 
@@ -778,6 +778,7 @@ func (t *ActivateDealsParams) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -895,7 +896,7 @@ func (t *ActivateDealsResult) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.VerifiedInfos ([]market.VerifiedDealInfo) (slice)
-	if len(t.VerifiedInfos) > cbg.MaxLength {
+	if uint64(len(t.VerifiedInfos)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.VerifiedInfos was too long")
 	}
 
@@ -999,7 +1000,7 @@ func (t *VerifyDealsForActivationParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Sectors ([]market.SectorDeals) (slice)
-	if len(t.Sectors) > cbg.MaxLength {
+	if uint64(len(t.Sectors)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Sectors was too long")
 	}
 
@@ -1094,7 +1095,7 @@ func (t *VerifyDealsForActivationReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.UnsealedCIDs ([]*cid.Cid) (slice)
-	if len(t.UnsealedCIDs) > cbg.MaxLength {
+	if uint64(len(t.UnsealedCIDs)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.UnsealedCIDs was too long")
 	}
 
@@ -1380,6 +1381,7 @@ func (t *GetDealTermReturn) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -1494,6 +1496,7 @@ func (t *GetDealActivationReturn) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -1599,7 +1602,7 @@ func (t *OnMinerSectorsTerminateParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.DealIDs ([]abi.DealID) (slice)
-	if len(t.DealIDs) > cbg.MaxLength {
+	if uint64(len(t.DealIDs)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.DealIDs was too long")
 	}
 
@@ -2075,7 +2078,7 @@ func (t *SectorDeals) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.DealIDs ([]abi.DealID) (slice)
-	if len(t.DealIDs) > cbg.MaxLength {
+	if uint64(len(t.DealIDs)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.DealIDs was too long")
 	}
 
@@ -2296,7 +2299,7 @@ func (t *SectorDataSpec) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.DealIDs ([]abi.DealID) (slice)
-	if len(t.DealIDs) > cbg.MaxLength {
+	if uint64(len(t.DealIDs)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.DealIDs was too long")
 	}
 
@@ -2321,6 +2324,7 @@ func (t *SectorDataSpec) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
 	return nil
 }
 

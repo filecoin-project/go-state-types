@@ -36,7 +36,7 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Signers ([]address.Address) (slice)
-	if len(t.Signers) > cbg.MaxLength {
+	if uint64(len(t.Signers)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Signers was too long")
 	}
 
@@ -308,7 +308,7 @@ func (t *Transaction) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Params ([]uint8) (slice)
-	if len(t.Params) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.Params)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.Params was too long")
 	}
 
@@ -321,7 +321,7 @@ func (t *Transaction) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Approved ([]address.Address) (slice)
-	if len(t.Approved) > cbg.MaxLength {
+	if uint64(len(t.Approved)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Approved was too long")
 	}
 
@@ -491,7 +491,7 @@ func (t *ProposalHashData) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Params ([]uint8) (slice)
-	if len(t.Params) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.Params)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.Params was too long")
 	}
 
@@ -610,7 +610,7 @@ func (t *ConstructorParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Signers ([]address.Address) (slice)
-	if len(t.Signers) > cbg.MaxLength {
+	if uint64(len(t.Signers)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Signers was too long")
 	}
 
@@ -651,6 +651,7 @@ func (t *ConstructorParams) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -813,7 +814,7 @@ func (t *ProposeParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Params ([]uint8) (slice)
-	if len(t.Params) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.Params)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.Params was too long")
 	}
 
@@ -950,7 +951,7 @@ func (t *ProposeReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Ret ([]uint8) (slice)
-	if len(t.Ret) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.Ret)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.Ret was too long")
 	}
 
@@ -1262,7 +1263,7 @@ func (t *TxnIDParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ProposalHash ([]uint8) (slice)
-	if len(t.ProposalHash) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.ProposalHash)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.ProposalHash was too long")
 	}
 
@@ -1381,7 +1382,7 @@ func (t *ApproveReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Ret ([]uint8) (slice)
-	if len(t.Ret) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.Ret)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.Ret was too long")
 	}
 

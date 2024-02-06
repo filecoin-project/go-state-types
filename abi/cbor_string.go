@@ -13,7 +13,7 @@ type CborString string
 func (t *CborString) MarshalCBOR(w io.Writer) error {
 	scratch := make([]byte, 8)
 
-	if len(*t) > cbg.MaxLength {
+	if uint64(len(*t)) > cbg.MaxLength {
 		return xerrors.Errorf("Value in t was too long")
 	}
 

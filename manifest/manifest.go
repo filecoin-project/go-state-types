@@ -15,10 +15,10 @@ import (
 )
 
 const (
-	AccountKey    = "account"
-	CronKey       = "cron"
-	InitKey       = "init"
-	MarketKey     = "storagemarket"
+	AccountKey     = "account"
+	CronKey        = "cron"
+	InitKey        = "init"
+	MarketKey      = "storagemarket"
 	MinerKey       = "storageminer"
 	MultisigKey    = "multisig"
 	PaychKey       = "paymentchannel"
@@ -137,7 +137,7 @@ func (d *ManifestData) MarshalCBOR(w io.Writer) error {
 
 	scratch := make([]byte, 9)
 
-	if len(d.Entries) > cbg.MaxLength {
+	if uint64(len(d.Entries)) > cbg.MaxLength {
 		return fmt.Errorf("too many manifest entries")
 	}
 

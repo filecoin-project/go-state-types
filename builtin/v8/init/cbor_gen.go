@@ -46,7 +46,7 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.NetworkName (string) (string)
-	if len(t.NetworkName) > cbg.MaxLength {
+	if uint64(len(t.NetworkName)) > cbg.MaxLength {
 		return xerrors.Errorf("Value in field t.NetworkName was too long")
 	}
 
@@ -136,7 +136,7 @@ func (t *ConstructorParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.NetworkName (string) (string)
-	if len(t.NetworkName) > cbg.MaxLength {
+	if uint64(len(t.NetworkName)) > cbg.MaxLength {
 		return xerrors.Errorf("Value in field t.NetworkName was too long")
 	}
 
@@ -206,7 +206,7 @@ func (t *ExecParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ConstructorParams ([]uint8) (slice)
-	if len(t.ConstructorParams) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.ConstructorParams)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.ConstructorParams was too long")
 	}
 

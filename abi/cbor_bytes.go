@@ -11,7 +11,7 @@ import (
 type CborBytes []byte
 
 func (t *CborBytes) MarshalCBOR(w io.Writer) error {
-	if len(*t) > cbg.ByteArrayMaxLen {
+	if uint64(len(*t)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("byte array was too long")
 	}
 
