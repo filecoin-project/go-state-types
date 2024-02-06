@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-amt-ipld/v4"
 	"github.com/filecoin-project/go-state-types/abi"
 	market12 "github.com/filecoin-project/go-state-types/builtin/v12/market"
@@ -39,7 +40,7 @@ func (m *marketMigrator) MigrateState(ctx context.Context, store cbor.IpldStore,
 		return nil, xerrors.Errorf("failed to load market state for %s: %w", in.Address, err)
 	}
 
-	providerSectors, newStates, err := m.migrateProviderSectorsAndStates(ctx, store, in, inState.States)
+	providerSectors, newStates, err := m.migrateProviderSectorsAndStates(ctx, store, in, inState.States, inState.Proposals)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to migrate provider sectors: %w", err)
 	}
@@ -75,10 +76,15 @@ func (m *marketMigrator) MigratedCodeCID() cid.Cid {
 	return m.OutCodeCID
 }
 
-func (m *marketMigrator) migrateProviderSectorsAndStates(ctx context.Context, store cbor.IpldStore, in migration.ActorMigrationInput, states cid.Cid) (cid.Cid, cid.Cid, error) {
+func (m *marketMigrator) migrateProviderSectorsAndStates(ctx context.Context, store cbor.IpldStore, in migration.ActorMigrationInput, states, proposals cid.Cid) (cid.Cid, cid.Cid, error) {
 	// providerSectorsRoot: HAMT[ActorID]HAMT[SectorNumber]SectorDealIDs
 
 	okIn, prevInStates, err := in.Cache.Read(migration.MarketPrevDealStatesInKey(in.Address))
+	if err != nil {
+		return cid.Undef, cid.Undef, xerrors.Errorf("failed to get previous inRoot from cache: %w", err)
+	}
+
+	okInPr, prevInProposals, err := in.Cache.Read(migration.MarketPrevDealProposalsInKey(in.Address))
 	if err != nil {
 		return cid.Undef, cid.Undef, xerrors.Errorf("failed to get previous inRoot from cache: %w", err)
 	}
@@ -95,8 +101,8 @@ func (m *marketMigrator) migrateProviderSectorsAndStates(ctx context.Context, st
 
 	var providerSectorsRoot, newStateArrayRoot cid.Cid
 
-	if okIn && okOut && okOutPs {
-		providerSectorsRoot, newStateArrayRoot, err = m.migrateProviderSectorsAndStatesWithDiff(ctx, store, prevInStates, prevOutStates, prevOutProviderSectors, states)
+	if okIn && okInPr && okOut && okOutPs {
+		providerSectorsRoot, newStateArrayRoot, err = m.migrateProviderSectorsAndStatesWithDiff(ctx, store, prevInStates, prevOutStates, prevOutProviderSectors, states, prevInProposals)
 		if err != nil {
 			return cid.Undef, cid.Undef, xerrors.Errorf("failed to migrate provider sectors (diff): %w", err)
 		}
@@ -111,6 +117,10 @@ func (m *marketMigrator) migrateProviderSectorsAndStates(ctx context.Context, st
 		return cid.Undef, cid.Undef, xerrors.Errorf("failed to write previous inRoot to cache: %w", err)
 	}
 
+	if err := in.Cache.Write(migration.MarketPrevDealProposalsInKey(in.Address), proposals); err != nil {
+		return cid.Undef, cid.Undef, xerrors.Errorf("failed to write previous inRoot to cache: %w", err)
+	}
+
 	if err := in.Cache.Write(migration.MarketPrevDealStatesOutKey(in.Address), newStateArrayRoot); err != nil {
 		return cid.Undef, cid.Undef, xerrors.Errorf("failed to write previous outRoot to cache: %w", err)
 	}
@@ -122,7 +132,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStates(ctx context.Context, st
 	return providerSectorsRoot, newStateArrayRoot, nil
 }
 
-func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Context, store cbor.IpldStore, prevInStatesCid, prevOutStatesCid, prevOutProviderSectorsCid, inStatesCid cid.Cid) (cid.Cid, cid.Cid, error) {
+func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Context, store cbor.IpldStore, prevInStatesCid, prevOutStatesCid, prevOutProviderSectorsCid, inStatesCid, proposals cid.Cid) (cid.Cid, cid.Cid, error) {
 	diffs, err := amt.Diff(ctx, store, store, prevInStatesCid, inStatesCid, amt.UseTreeBitWidth(market12.StatesAmtBitwidth))
 	if err != nil {
 		return cid.Undef, cid.Undef, xerrors.Errorf("failed to diff old and new deal state AMTs: %w", err)
@@ -138,6 +148,11 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 	prevOutProviderSectors, err := adt.AsMap(ctxStore, prevOutProviderSectorsCid, market13.ProviderSectorsHamtBitwidth)
 	if err != nil {
 		return cid.Undef, cid.Undef, xerrors.Errorf("failed to load prevOutProviderSectors map: %w", err)
+	}
+
+	proposalsArr, err := adt.AsArray(ctxStore, proposals, market12.ProposalsAmtBitwidth)
+	if err != nil {
+		return cid.Undef, cid.Undef, xerrors.Errorf("failed to load proposals map: %w", err)
 	}
 
 	// in-memory maps with changesets to be applied to prevOutProviderSectors
@@ -159,27 +174,29 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 		return sid.Number, nil
 	}
 
-	removeProviderSectorEntry := func(deal abi.DealID, newState *market13.DealState) error {
-		sid, ok := m.providerSectors.removedDealToSector[deal]
-		if !ok {
-			if newState.SectorNumber == 0 {
-				// already removed, sector was likely terminated/slashed, but not
-				// yet picked up by the market
-				return nil
-			}
+	removeProviderSectorEntry := func(deal abi.DealID, newStatePrevState *market13.DealState) error {
+		snum := newStatePrevState.SectorNumber
 
-			// this can happen if the deal was terminated between premigration and migration
-			// if it's not here it wasn't in premigration ProviderSectors either
-			fmt.Printf("notice: deal %d not found in removedDealToSector\n", deal)
-			newState.SectorNumber = 0
-			return nil
+		var proposals market12.DealProposal
+		found, err := proposalsArr.Get(uint64(deal), &proposals)
+		if err != nil {
+			return xerrors.Errorf("failed to get proposal for removed deal: %w", err)
+		}
+		if !found {
+			return xerrors.Errorf("proposal not found")
 		}
 
-		newState.SectorNumber = 0
-		if _, ok := providerSectorsMemRemoved[sid.Miner]; !ok {
-			providerSectorsMemRemoved[sid.Miner] = make(map[abi.SectorNumber][]abi.DealID)
+		midd, err := address.IDFromAddress(proposals.Provider)
+		if err != nil {
+			return xerrors.Errorf("failed to get miner ID: %w", err)
 		}
-		providerSectorsMemRemoved[sid.Miner][sid.Number] = append(providerSectorsMemRemoved[sid.Miner][sid.Number], deal)
+		mid := abi.ActorID(midd)
+
+		newStatePrevState.SectorNumber = 0
+		if _, ok := providerSectorsMemRemoved[mid]; !ok {
+			providerSectorsMemRemoved[mid] = make(map[abi.SectorNumber][]abi.DealID)
+		}
+		providerSectorsMemRemoved[mid][snum] = append(providerSectorsMemRemoved[mid][snum], deal)
 
 		return nil
 	}
@@ -229,14 +246,9 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 				return cid.Undef, cid.Undef, xerrors.Errorf("failed to get previous newstate: not found")
 			}
 
-			if newState.SlashEpoch != -1 {
-				_, ok := m.providerSectors.removedDealToSector[deal]
-				if ok {
-					if err := removeProviderSectorEntry(deal, &newState); err != nil {
-						return cid.Undef, cid.Undef, xerrors.Errorf("failed to remove provider sector entry: %w", err)
-					}
-				} else {
-					fmt.Printf("missing deal?? weird market cron? %d\n", deal) // todo review can someone confirm that just ignoring this is fine??
+			if newState.SlashEpoch != -1 && prevOldState.SlashEpoch == -1 {
+				if err := removeProviderSectorEntry(deal, &newState); err != nil {
+					return cid.Undef, cid.Undef, xerrors.Errorf("failed to remove provider sector entry: %w", err)
 				}
 			}
 

@@ -145,6 +145,10 @@ func MarketPrevDealStatesInKey(m address.Address) string {
 	return "prevDealStatesIn-" + m.String()
 }
 
+func MarketPrevDealProposalsInKey(m address.Address) string {
+	return "prevDealProposalsIn-" + m.String()
+}
+
 func MarketPrevDealStatesOutKey(m address.Address) string {
 	return "prevDealStatesOut-" + m.String()
 }

@@ -140,23 +140,24 @@ func (m *minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, 
 				if err := sectorBefore.UnmarshalCBOR(bytes.NewReader(change.Before.Raw)); err != nil {
 					return nil, xerrors.Errorf("failed to unmarshal sector %d before: %w", sectorNo, err)
 				}
-				pjsonb, err := json.MarshalIndent(sectorBefore, "", "  ")
-				if err != nil {
-					return nil, err
-				}
 
 				var sectorAfter miner.SectorOnChainInfo
 
 				if err := sectorAfter.UnmarshalCBOR(bytes.NewReader(change.After.Raw)); err != nil {
 					return nil, xerrors.Errorf("failed to unmarshal sector %d after: %w", sectorNo, err)
 				}
-				pjson, err := json.MarshalIndent(sectorAfter, "", "  ")
-				if err != nil {
-					return nil, err
-				}
 
 				if len(sectorBefore.DealIDs) != len(sectorAfter.DealIDs) {
 					if len(sectorBefore.DealIDs) != 0 {
+						pjsonb, err := json.MarshalIndent(sectorBefore, "", "  ")
+						if err != nil {
+							return nil, err
+						}
+						pjson, err := json.MarshalIndent(sectorAfter, "", "  ")
+						if err != nil {
+							return nil, err
+						}
+
 						fmt.Println("sector before: ", string(pjsonb))
 						fmt.Println("sector after: ", string(pjson))
 						return nil, xerrors.Errorf("WHAT?! sector %d modified, this not supported and not supposed to happen", i) // todo: is it? Can't happen w/o a deep, deep reorg, and even then we wouldn't use the cache??
@@ -173,9 +174,6 @@ func (m *minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, 
 						}
 					}
 					m.providerSectors.lk.Unlock()
-				} else {
-					fmt.Println("sector2 before: ", string(pjsonb))
-					fmt.Println("sector2 after: ", string(pjson))
 				}
 
 				// extensions, etc. here; we don't care about those
