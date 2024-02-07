@@ -246,10 +246,10 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.MinerCount (int64) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -271,10 +271,10 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.MinerAboveMinPowerCount (int64) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -308,10 +308,10 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.FirstCronEpoch (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -430,10 +430,10 @@ func (t *Claim) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.WindowPoStProofType (abi.RegisteredPoStProof) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -568,7 +568,7 @@ func (t *MinerConstructorParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ControlAddrs ([]address.Address) (slice)
-	if uint64(len(t.ControlAddrs)) > cbg.MaxLength {
+	if len(t.ControlAddrs) > 8192 {
 		return xerrors.Errorf("Slice value in field t.ControlAddrs was too long")
 	}
 
@@ -594,7 +594,7 @@ func (t *MinerConstructorParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.PeerId ([]uint8) (slice)
-	if uint64(len(t.PeerId)) > cbg.ByteArrayMaxLen {
+	if len(t.PeerId) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.PeerId was too long")
 	}
 
@@ -607,7 +607,7 @@ func (t *MinerConstructorParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Multiaddrs ([][]uint8) (slice)
-	if uint64(len(t.Multiaddrs)) > cbg.MaxLength {
+	if len(t.Multiaddrs) > 8192 {
 		return xerrors.Errorf("Slice value in field t.Multiaddrs was too long")
 	}
 
@@ -615,7 +615,7 @@ func (t *MinerConstructorParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.Multiaddrs {
-		if uint64(len(v)) > cbg.ByteArrayMaxLen {
+		if len(v) > 2097152 {
 			return xerrors.Errorf("Byte array in field v was too long")
 		}
 
@@ -679,7 +679,7 @@ func (t *MinerConstructorParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.ControlAddrs: array too large (%d)", extra)
 	}
 
@@ -713,10 +713,10 @@ func (t *MinerConstructorParams) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.WindowPoStProofType (abi.RegisteredPoStProof) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -742,7 +742,7 @@ func (t *MinerConstructorParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.PeerId: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {
@@ -764,7 +764,7 @@ func (t *MinerConstructorParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.Multiaddrs: array too large (%d)", extra)
 	}
 
@@ -790,7 +790,7 @@ func (t *MinerConstructorParams) UnmarshalCBOR(r io.Reader) (err error) {
 				return err
 			}
 
-			if extra > cbg.ByteArrayMaxLen {
+			if extra > 2097152 {
 				return fmt.Errorf("t.Multiaddrs[i]: byte array too large (%d)", extra)
 			}
 			if maj != cbg.MajByteString {
@@ -846,7 +846,7 @@ func (t *CreateMinerParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Peer ([]uint8) (slice)
-	if uint64(len(t.Peer)) > cbg.ByteArrayMaxLen {
+	if len(t.Peer) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.Peer was too long")
 	}
 
@@ -859,7 +859,7 @@ func (t *CreateMinerParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Multiaddrs ([][]uint8) (slice)
-	if uint64(len(t.Multiaddrs)) > cbg.MaxLength {
+	if len(t.Multiaddrs) > 8192 {
 		return xerrors.Errorf("Slice value in field t.Multiaddrs was too long")
 	}
 
@@ -867,7 +867,7 @@ func (t *CreateMinerParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.Multiaddrs {
-		if uint64(len(v)) > cbg.ByteArrayMaxLen {
+		if len(v) > 2097152 {
 			return xerrors.Errorf("Byte array in field v was too long")
 		}
 
@@ -927,10 +927,10 @@ func (t *CreateMinerParams) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.WindowPoStProofType (abi.RegisteredPoStProof) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -956,7 +956,7 @@ func (t *CreateMinerParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.Peer: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {
@@ -978,7 +978,7 @@ func (t *CreateMinerParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.Multiaddrs: array too large (%d)", extra)
 	}
 
@@ -1004,7 +1004,7 @@ func (t *CreateMinerParams) UnmarshalCBOR(r io.Reader) (err error) {
 				return err
 			}
 
-			if extra > cbg.ByteArrayMaxLen {
+			if extra > 2097152 {
 				return fmt.Errorf("t.Multiaddrs[i]: byte array too large (%d)", extra)
 			}
 			if maj != cbg.MajByteString {
@@ -1218,7 +1218,7 @@ func (t *EnrollCronEventParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Payload ([]uint8) (slice)
-	if uint64(len(t.Payload)) > cbg.ByteArrayMaxLen {
+	if len(t.Payload) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.Payload was too long")
 	}
 
@@ -1259,10 +1259,10 @@ func (t *EnrollCronEventParams) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.EventEpoch (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -1288,7 +1288,7 @@ func (t *EnrollCronEventParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.Payload: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {
@@ -1404,7 +1404,7 @@ func (t *CronEvent) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.CallbackPayload ([]uint8) (slice)
-	if uint64(len(t.CallbackPayload)) > cbg.ByteArrayMaxLen {
+	if len(t.CallbackPayload) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.CallbackPayload was too long")
 	}
 
@@ -1458,7 +1458,7 @@ func (t *CronEvent) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.CallbackPayload: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {

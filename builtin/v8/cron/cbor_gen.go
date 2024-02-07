@@ -34,7 +34,7 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Entries ([]cron.Entry) (slice)
-	if uint64(len(t.Entries)) > cbg.MaxLength {
+	if len(t.Entries) > 8192 {
 		return xerrors.Errorf("Slice value in field t.Entries was too long")
 	}
 
@@ -80,7 +80,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.Entries: array too large (%d)", extra)
 	}
 

@@ -123,7 +123,7 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.BytecodeHash ([32]uint8) (array)
-	if uint64(len(t.BytecodeHash)) > cbg.ByteArrayMaxLen {
+	if len(t.BytecodeHash) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.BytecodeHash was too long")
 	}
 
@@ -196,7 +196,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.BytecodeHash: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {
@@ -273,7 +273,7 @@ func (t *ConstructorParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Creator ([20]uint8) (array)
-	if uint64(len(t.Creator)) > cbg.ByteArrayMaxLen {
+	if len(t.Creator) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.Creator was too long")
 	}
 
@@ -286,7 +286,7 @@ func (t *ConstructorParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Initcode ([]uint8) (slice)
-	if uint64(len(t.Initcode)) > cbg.ByteArrayMaxLen {
+	if len(t.Initcode) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.Initcode was too long")
 	}
 
@@ -331,7 +331,7 @@ func (t *ConstructorParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.Creator: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {
@@ -352,7 +352,7 @@ func (t *ConstructorParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.Initcode: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {
@@ -385,7 +385,7 @@ func (t *GetStorageAtParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.StorageKey ([32]uint8) (array)
-	if uint64(len(t.StorageKey)) > cbg.ByteArrayMaxLen {
+	if len(t.StorageKey) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.StorageKey was too long")
 	}
 
@@ -429,7 +429,7 @@ func (t *GetStorageAtParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.StorageKey: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {
@@ -467,7 +467,7 @@ func (t *DelegateCallParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Input ([]uint8) (slice)
-	if uint64(len(t.Input)) > cbg.ByteArrayMaxLen {
+	if len(t.Input) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.Input was too long")
 	}
 
@@ -480,7 +480,7 @@ func (t *DelegateCallParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Caller ([20]uint8) (array)
-	if uint64(len(t.Caller)) > cbg.ByteArrayMaxLen {
+	if len(t.Caller) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.Caller was too long")
 	}
 
@@ -541,7 +541,7 @@ func (t *DelegateCallParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.Input: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {
@@ -563,7 +563,7 @@ func (t *DelegateCallParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.Caller: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {

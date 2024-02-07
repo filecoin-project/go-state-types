@@ -4,14 +4,12 @@ go 1.18
 
 retract v0.12.7 // wrongfully skipped a patch version, use v0.12.6 or v0.12.8&^
 
-replace github.com/whyrusleeping/cbor-gen => ../../whyrusleeping/cbor-gen
-
 require (
 	github.com/filecoin-project/go-address v1.1.0
-	github.com/filecoin-project/go-amt-ipld/v4 v4.2.1-0.20240206063011-8207d7a1e4ef
+	github.com/filecoin-project/go-amt-ipld/v4 v4.2.0
 	github.com/filecoin-project/go-bitfield v0.2.4
 	github.com/filecoin-project/go-commp-utils/nonffi v0.0.0-20220905160352-62059082a837
-	github.com/filecoin-project/go-hamt-ipld/v3 v3.3.1-0.20240206064418-6c31c2ab8045
+	github.com/filecoin-project/go-hamt-ipld/v3 v3.1.0
 	github.com/ipfs/go-block-format v0.0.3
 	github.com/ipfs/go-cid v0.3.2
 	github.com/ipfs/go-ipld-cbor v0.0.6
@@ -22,8 +20,8 @@ require (
 	github.com/multiformats/go-multihash v0.2.1
 	github.com/multiformats/go-varint v0.0.6
 	github.com/stretchr/testify v1.7.0
-	github.com/whyrusleeping/cbor-gen v0.0.0-20240202185644-fcdaca49d05c
-	golang.org/x/crypto v0.17.0
+	github.com/whyrusleeping/cbor-gen v0.0.0-20240207022414-c5f90eb30d41
+	golang.org/x/crypto v0.1.0
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 )
@@ -41,7 +39,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/polydawn/refmt v0.0.0-20201211092308-30ac6d18308e // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
-	golang.org/x/sys v0.15.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0 // indirect
+	golang.org/x/sys v0.1.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	lukechampine.com/blake3 v1.1.6 // indirect
 )
