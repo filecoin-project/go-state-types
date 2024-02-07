@@ -347,7 +347,12 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 			return cid.Undef, cid.Undef, xerrors.Errorf("failed to get actor sectors: %w", err)
 		}
 		if !found {
-			return cid.Undef, cid.Undef, xerrors.Errorf("failed to get actor sectors: not found")
+			// this is fine, all sectors of this miner were already not present
+			// in ProviderSectors. Sadly because the default value of a non-present
+			// sector number in deal state is 0, we can't tell if a sector was
+			// removed or if it was never there to begin with, which is why we
+			// may occasionally end up here.
+			continue
 		}
 
 		actorSectors, err := adt.AsMap(ctxStore, cid.Cid(actorSectorsMapRoot), market13.ProviderSectorsHamtBitwidth)
@@ -358,8 +363,8 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 		for sector := range sectors {
 			// todo should we bother checking deals in the sector?
 
-			if err := actorSectors.Delete(miner13.SectorKey(sector)); err != nil {
-				return cid.Cid{}, cid.Cid{}, err
+			if _, err := actorSectors.TryDelete(miner13.SectorKey(sector)); err != nil {
+				return cid.Cid{}, cid.Cid{}, xerrors.Errorf("removing providerSectors entry: %w", err)
 			}
 		}
 
