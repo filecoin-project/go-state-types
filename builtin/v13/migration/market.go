@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-amt-ipld/v4"
 	"github.com/filecoin-project/go-state-types/abi"
@@ -228,14 +229,14 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 				newState.SectorNumber = si
 			}
 
-			//fmt.Printf("add deal %d to sector %d\n", deal, newState.SectorNumber)
+			fmt.Printf("add deal %d to sector %d\n", deal, newState.SectorNumber)
 
 			if err := prevOutStates.Set(uint64(deal), &newState); err != nil {
 				return cid.Undef, cid.Undef, xerrors.Errorf("failed to set new state: %w", err)
 			}
 
 		case amt.Remove:
-			//fmt.Printf("remove deal %d\n", deal)
+			fmt.Printf("remove deal %d\n", deal)
 
 			ok, err := prevOutStates.Get(uint64(deal), &newState)
 			if err != nil {
@@ -278,7 +279,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 			// if nowOld.Slash == -1, then 'now' is not slashed, so we should try to find the sector
 			// we probably don't care about prevOldSlash?? beyond it changing from newSlash?
 
-			//fmt.Printf("deal %d slash %d -> %d, update %d -> %d (prev sec: %d)\n", deal, prevOldState.SlashEpoch, oldState.SlashEpoch, prevOldState.LastUpdatedEpoch, oldState.LastUpdatedEpoch, newState.SectorNumber)
+			fmt.Printf("deal %d slash %d -> %d, update %d -> %d (prev sec: %d)\n", deal, prevOldState.SlashEpoch, oldState.SlashEpoch, prevOldState.LastUpdatedEpoch, oldState.LastUpdatedEpoch, newState.SectorNumber)
 
 			if oldState.SlashEpoch != -1 && prevOldState.SlashEpoch == -1 {
 				// not slashed -> slashed
@@ -352,6 +353,9 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 			// sector number in deal state is 0, we can't tell if a sector was
 			// removed or if it was never there to begin with, which is why we
 			// may occasionally end up here.
+
+			fmt.Printf("no actor sectors for miner %d\n", miner)
+
 			continue
 		}
 
@@ -363,8 +367,10 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 		for sector := range sectors {
 			// todo should we bother checking deals in the sector?
 
-			if _, err := actorSectors.TryDelete(miner13.SectorKey(sector)); err != nil {
+			if found, err := actorSectors.TryDelete(miner13.SectorKey(sector)); err != nil {
 				return cid.Cid{}, cid.Cid{}, xerrors.Errorf("removing providerSectors entry: %w", err)
+			} else if !found {
+				fmt.Printf("not deleting sector %d, not found for miner %d\n", sector, miner)
 			}
 		}
 
