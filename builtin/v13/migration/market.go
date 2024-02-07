@@ -205,17 +205,17 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 	//fmt.Printf("dealToSector: %d\n", len(m.providerSectors.dealToSector))
 	//fmt.Printf("removedDealToSector: %d\n", len(m.providerSectors.removedDealToSector))
 
-	var oldState, prevOldState market12.DealState
-	var newState market13.DealState
 	for _, change := range diffs {
 		deal := abi.DealID(change.Key)
 
 		switch change.Type {
 		case amt.Add:
+			var oldState market12.DealState
 			if err := oldState.UnmarshalCBOR(bytes.NewReader(change.After.Raw)); err != nil {
 				return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to unmarshal old state: %w", err)
 			}
 
+			var newState market13.DealState
 			newState.SlashEpoch = oldState.SlashEpoch
 			newState.LastUpdatedEpoch = oldState.LastUpdatedEpoch
 			newState.SectorStartEpoch = oldState.SectorStartEpoch
@@ -238,7 +238,8 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 		case amt.Remove:
 			fmt.Printf("remove deal %d\n", deal)
 
-			ok, err := prevOutStates.Get(uint64(deal), &newState)
+			var prevOutState market13.DealState // note: this says "prevOut", not "prevOld"
+			ok, err := prevOutStates.Get(uint64(deal), &prevOutState)
 			if err != nil {
 				return cid.Undef, cid.Undef, xerrors.Errorf("failed to get previous newstate: %w", err)
 			}
@@ -246,8 +247,10 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 				return cid.Undef, cid.Undef, xerrors.Errorf("failed to get previous newstate: not found")
 			}
 
-			if newState.SlashEpoch != -1 && prevOldState.SlashEpoch == -1 {
-				if err := removeProviderSectorEntry(deal, &newState); err != nil {
+			if prevOutState.SlashEpoch != -1 {
+				// if the previous OUT state was not slashed then it has a provider sector entry that needs to be removed
+
+				if err := removeProviderSectorEntry(deal, &prevOutState); err != nil {
 					return cid.Undef, cid.Undef, xerrors.Errorf("failed to remove provider sector entry: %w", err)
 				}
 			}
@@ -258,6 +261,8 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 
 		case amt.Modify:
 
+			var oldState, prevOldState market12.DealState
+			var newState market13.DealState
 			if err := prevOldState.UnmarshalCBOR(bytes.NewReader(change.Before.Raw)); err != nil {
 				return cid.Undef, cid.Undef, xerrors.Errorf("failed to unmarshal old state: %w", err)
 			}
