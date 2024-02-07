@@ -247,7 +247,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 				return cid.Undef, cid.Undef, xerrors.Errorf("failed to get previous newstate: not found")
 			}
 
-			if prevOutState.SlashEpoch != -1 {
+			if prevOutState.SlashEpoch == -1 {
 				// if the previous OUT state was not slashed then it has a provider sector entry that needs to be removed
 
 				if err := removeProviderSectorEntry(deal, &prevOutState); err != nil {
