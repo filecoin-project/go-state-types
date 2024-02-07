@@ -146,10 +146,10 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.EffectiveNetworkTime (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -207,10 +207,10 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.Epoch (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -425,10 +425,10 @@ func (t *AwardBlockRewardParams) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.WinCount (int64) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)

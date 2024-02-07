@@ -46,7 +46,7 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.NetworkName (string) (string)
-	if uint64(len(t.NetworkName)) > cbg.MaxLength {
+	if len(t.NetworkName) > 8192 {
 		return xerrors.Errorf("Value in field t.NetworkName was too long")
 	}
 
@@ -111,7 +111,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.NetworkName (string) (string)
 
 	{
-		sval, err := cbg.ReadString(cr)
+		sval, err := cbg.ReadStringWithMax(cr, 8192)
 		if err != nil {
 			return err
 		}
@@ -136,7 +136,7 @@ func (t *ConstructorParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.NetworkName (string) (string)
-	if uint64(len(t.NetworkName)) > cbg.MaxLength {
+	if len(t.NetworkName) > 8192 {
 		return xerrors.Errorf("Value in field t.NetworkName was too long")
 	}
 
@@ -175,7 +175,7 @@ func (t *ConstructorParams) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.NetworkName (string) (string)
 
 	{
-		sval, err := cbg.ReadString(cr)
+		sval, err := cbg.ReadStringWithMax(cr, 8192)
 		if err != nil {
 			return err
 		}
@@ -206,7 +206,7 @@ func (t *ExecParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ConstructorParams ([]uint8) (slice)
-	if uint64(len(t.ConstructorParams)) > cbg.ByteArrayMaxLen {
+	if len(t.ConstructorParams) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.ConstructorParams was too long")
 	}
 
@@ -263,7 +263,7 @@ func (t *ExecParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.ConstructorParams: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {
@@ -372,7 +372,7 @@ func (t *Exec4Params) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ConstructorParams ([]uint8) (slice)
-	if uint64(len(t.ConstructorParams)) > cbg.ByteArrayMaxLen {
+	if len(t.ConstructorParams) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.ConstructorParams was too long")
 	}
 
@@ -385,7 +385,7 @@ func (t *Exec4Params) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.SubAddress ([]uint8) (slice)
-	if uint64(len(t.SubAddress)) > cbg.ByteArrayMaxLen {
+	if len(t.SubAddress) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.SubAddress was too long")
 	}
 
@@ -442,7 +442,7 @@ func (t *Exec4Params) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.ConstructorParams: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {
@@ -464,7 +464,7 @@ func (t *Exec4Params) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.SubAddress: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {

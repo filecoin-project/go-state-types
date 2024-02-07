@@ -89,7 +89,7 @@ func (t *AuthenticateMessageParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Signature ([]uint8) (slice)
-	if uint64(len(t.Signature)) > cbg.ByteArrayMaxLen {
+	if len(t.Signature) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.Signature was too long")
 	}
 
@@ -102,7 +102,7 @@ func (t *AuthenticateMessageParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Message ([]uint8) (slice)
-	if uint64(len(t.Message)) > cbg.ByteArrayMaxLen {
+	if len(t.Message) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.Message was too long")
 	}
 
@@ -147,7 +147,7 @@ func (t *AuthenticateMessageParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.Signature: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {
@@ -169,7 +169,7 @@ func (t *AuthenticateMessageParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.Message: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {

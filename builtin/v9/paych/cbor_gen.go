@@ -133,10 +133,10 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.SettlingAt (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -158,10 +158,10 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.MinSettleHeight (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -362,7 +362,7 @@ func (t *UpdateChannelStateParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Secret ([]uint8) (slice)
-	if uint64(len(t.Secret)) > cbg.ByteArrayMaxLen {
+	if len(t.Secret) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.Secret was too long")
 	}
 
@@ -416,7 +416,7 @@ func (t *UpdateChannelStateParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.Secret: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {
@@ -476,7 +476,7 @@ func (t *SignedVoucher) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.SecretHash ([]uint8) (slice)
-	if uint64(len(t.SecretHash)) > cbg.ByteArrayMaxLen {
+	if len(t.SecretHash) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.SecretHash was too long")
 	}
 
@@ -522,7 +522,7 @@ func (t *SignedVoucher) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Merges ([]paych.Merge) (slice)
-	if uint64(len(t.Merges)) > cbg.MaxLength {
+	if len(t.Merges) > 8192 {
 		return xerrors.Errorf("Slice value in field t.Merges was too long")
 	}
 
@@ -578,10 +578,10 @@ func (t *SignedVoucher) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.TimeLockMin (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -603,10 +603,10 @@ func (t *SignedVoucher) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.TimeLockMax (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -632,7 +632,7 @@ func (t *SignedVoucher) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.SecretHash: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {
@@ -706,10 +706,10 @@ func (t *SignedVoucher) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.MinSettleHeight (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -735,7 +735,7 @@ func (t *SignedVoucher) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.Merges: array too large (%d)", extra)
 	}
 
@@ -814,7 +814,7 @@ func (t *ModVerifyParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Data ([]uint8) (slice)
-	if uint64(len(t.Data)) > cbg.ByteArrayMaxLen {
+	if len(t.Data) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.Data was too long")
 	}
 
@@ -882,7 +882,7 @@ func (t *ModVerifyParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.Data: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {

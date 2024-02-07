@@ -215,10 +215,10 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.LastCron (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -343,10 +343,10 @@ func (t *DealState) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.SectorStartEpoch (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -368,10 +368,10 @@ func (t *DealState) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.LastUpdatedEpoch (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -393,10 +393,10 @@ func (t *DealState) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.SlashEpoch (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -503,7 +503,7 @@ func (t *PublishStorageDealsParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Deals ([]market.ClientDealProposal) (slice)
-	if uint64(len(t.Deals)) > cbg.MaxLength {
+	if len(t.Deals) > 8192 {
 		return xerrors.Errorf("Slice value in field t.Deals was too long")
 	}
 
@@ -549,7 +549,7 @@ func (t *PublishStorageDealsParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.Deals: array too large (%d)", extra)
 	}
 
@@ -598,7 +598,7 @@ func (t *PublishStorageDealsReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.IDs ([]abi.DealID) (slice)
-	if uint64(len(t.IDs)) > cbg.MaxLength {
+	if len(t.IDs) > 8192 {
 		return xerrors.Errorf("Slice value in field t.IDs was too long")
 	}
 
@@ -650,7 +650,7 @@ func (t *PublishStorageDealsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.IDs: array too large (%d)", extra)
 	}
 
@@ -713,7 +713,7 @@ func (t *ActivateDealsParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.DealIDs ([]abi.DealID) (slice)
-	if uint64(len(t.DealIDs)) > cbg.MaxLength {
+	if len(t.DealIDs) > 8192 {
 		return xerrors.Errorf("Slice value in field t.DealIDs was too long")
 	}
 
@@ -772,7 +772,7 @@ func (t *ActivateDealsParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.DealIDs: array too large (%d)", extra)
 	}
 
@@ -811,10 +811,10 @@ func (t *ActivateDealsParams) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.SectorExpiry (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -851,7 +851,7 @@ func (t *VerifyDealsForActivationParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Sectors ([]market.SectorDeals) (slice)
-	if uint64(len(t.Sectors)) > cbg.MaxLength {
+	if len(t.Sectors) > 8192 {
 		return xerrors.Errorf("Slice value in field t.Sectors was too long")
 	}
 
@@ -897,7 +897,7 @@ func (t *VerifyDealsForActivationParams) UnmarshalCBOR(r io.Reader) (err error) 
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.Sectors: array too large (%d)", extra)
 	}
 
@@ -946,7 +946,7 @@ func (t *VerifyDealsForActivationReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Sectors ([]market.SectorWeights) (slice)
-	if uint64(len(t.Sectors)) > cbg.MaxLength {
+	if len(t.Sectors) > 8192 {
 		return xerrors.Errorf("Slice value in field t.Sectors was too long")
 	}
 
@@ -992,7 +992,7 @@ func (t *VerifyDealsForActivationReturn) UnmarshalCBOR(r io.Reader) (err error) 
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.Sectors: array too large (%d)", extra)
 	}
 
@@ -1041,7 +1041,7 @@ func (t *ComputeDataCommitmentParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Inputs ([]*market.SectorDataSpec) (slice)
-	if uint64(len(t.Inputs)) > cbg.MaxLength {
+	if len(t.Inputs) > 8192 {
 		return xerrors.Errorf("Slice value in field t.Inputs was too long")
 	}
 
@@ -1087,7 +1087,7 @@ func (t *ComputeDataCommitmentParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.Inputs: array too large (%d)", extra)
 	}
 
@@ -1146,7 +1146,7 @@ func (t *ComputeDataCommitmentReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.CommDs ([]typegen.CborCid) (slice)
-	if uint64(len(t.CommDs)) > cbg.MaxLength {
+	if len(t.CommDs) > 8192 {
 		return xerrors.Errorf("Slice value in field t.CommDs was too long")
 	}
 
@@ -1192,7 +1192,7 @@ func (t *ComputeDataCommitmentReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.CommDs: array too large (%d)", extra)
 	}
 
@@ -1252,7 +1252,7 @@ func (t *OnMinerSectorsTerminateParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.DealIDs ([]abi.DealID) (slice)
-	if uint64(len(t.DealIDs)) > cbg.MaxLength {
+	if len(t.DealIDs) > 8192 {
 		return xerrors.Errorf("Slice value in field t.DealIDs was too long")
 	}
 
@@ -1295,10 +1295,10 @@ func (t *OnMinerSectorsTerminateParams) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.Epoch (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -1324,7 +1324,7 @@ func (t *OnMinerSectorsTerminateParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.DealIDs: array too large (%d)", extra)
 	}
 
@@ -1544,10 +1544,10 @@ func (t *DealProposal) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.StartEpoch (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -1569,10 +1569,10 @@ func (t *DealProposal) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.EndEpoch (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -1717,7 +1717,7 @@ func (t *SectorDeals) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.DealIDs ([]abi.DealID) (slice)
-	if uint64(len(t.DealIDs)) > cbg.MaxLength {
+	if len(t.DealIDs) > 8192 {
 		return xerrors.Errorf("Slice value in field t.DealIDs was too long")
 	}
 
@@ -1760,10 +1760,10 @@ func (t *SectorDeals) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.SectorExpiry (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -1789,7 +1789,7 @@ func (t *SectorDeals) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.DealIDs: array too large (%d)", extra)
 	}
 
@@ -1933,7 +1933,7 @@ func (t *SectorDataSpec) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.DealIDs ([]abi.DealID) (slice)
-	if uint64(len(t.DealIDs)) > cbg.MaxLength {
+	if len(t.DealIDs) > 8192 {
 		return xerrors.Errorf("Slice value in field t.DealIDs was too long")
 	}
 
@@ -1992,7 +1992,7 @@ func (t *SectorDataSpec) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.DealIDs: array too large (%d)", extra)
 	}
 
@@ -2031,10 +2031,10 @@ func (t *SectorDataSpec) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.SectorType (abi.RegisteredSealProof) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)

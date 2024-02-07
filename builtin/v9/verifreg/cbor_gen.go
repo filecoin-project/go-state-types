@@ -638,7 +638,7 @@ func (t *RemoveExpiredAllocationsParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.AllocationIds ([]verifreg.AllocationId) (slice)
-	if uint64(len(t.AllocationIds)) > cbg.MaxLength {
+	if len(t.AllocationIds) > 8192 {
 		return xerrors.Errorf("Slice value in field t.AllocationIds was too long")
 	}
 
@@ -699,7 +699,7 @@ func (t *RemoveExpiredAllocationsParams) UnmarshalCBOR(r io.Reader) (err error) 
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.AllocationIds: array too large (%d)", extra)
 	}
 
@@ -753,7 +753,7 @@ func (t *RemoveExpiredAllocationsReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Considered ([]verifreg.AllocationId) (slice)
-	if uint64(len(t.Considered)) > cbg.MaxLength {
+	if len(t.Considered) > 8192 {
 		return xerrors.Errorf("Slice value in field t.Considered was too long")
 	}
 
@@ -810,7 +810,7 @@ func (t *RemoveExpiredAllocationsReturn) UnmarshalCBOR(r io.Reader) (err error) 
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.Considered: array too large (%d)", extra)
 	}
 
@@ -888,7 +888,7 @@ func (t *BatchReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.FailCodes ([]verifreg.FailCode) (slice)
-	if uint64(len(t.FailCodes)) > cbg.MaxLength {
+	if len(t.FailCodes) > 8192 {
 		return xerrors.Errorf("Slice value in field t.FailCodes was too long")
 	}
 
@@ -948,7 +948,7 @@ func (t *BatchReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.FailCodes: array too large (%d)", extra)
 	}
 
@@ -997,7 +997,7 @@ func (t *ClaimAllocationsParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Sectors ([]verifreg.SectorAllocationClaim) (slice)
-	if uint64(len(t.Sectors)) > cbg.MaxLength {
+	if len(t.Sectors) > 8192 {
 		return xerrors.Errorf("Slice value in field t.Sectors was too long")
 	}
 
@@ -1048,7 +1048,7 @@ func (t *ClaimAllocationsParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.Sectors: array too large (%d)", extra)
 	}
 
@@ -1190,7 +1190,7 @@ func (t *GetClaimsParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ClaimIds ([]verifreg.ClaimId) (slice)
-	if uint64(len(t.ClaimIds)) > cbg.MaxLength {
+	if len(t.ClaimIds) > 8192 {
 		return xerrors.Errorf("Slice value in field t.ClaimIds was too long")
 	}
 
@@ -1251,7 +1251,7 @@ func (t *GetClaimsParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.ClaimIds: array too large (%d)", extra)
 	}
 
@@ -1310,7 +1310,7 @@ func (t *GetClaimsReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Claims ([]verifreg.Claim) (slice)
-	if uint64(len(t.Claims)) > cbg.MaxLength {
+	if len(t.Claims) > 8192 {
 		return xerrors.Errorf("Slice value in field t.Claims was too long")
 	}
 
@@ -1365,7 +1365,7 @@ func (t *GetClaimsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.Claims: array too large (%d)", extra)
 	}
 
@@ -1420,7 +1420,7 @@ func (t *UniversalReceiverParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Payload ([]uint8) (slice)
-	if uint64(len(t.Payload)) > cbg.ByteArrayMaxLen {
+	if len(t.Payload) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.Payload was too long")
 	}
 
@@ -1479,7 +1479,7 @@ func (t *UniversalReceiverParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.Payload: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {
@@ -1522,7 +1522,7 @@ func (t *AllocationsResponse) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.NewAllocations ([]verifreg.AllocationId) (slice)
-	if uint64(len(t.NewAllocations)) > cbg.MaxLength {
+	if len(t.NewAllocations) > 8192 {
 		return xerrors.Errorf("Slice value in field t.NewAllocations was too long")
 	}
 
@@ -1587,7 +1587,7 @@ func (t *AllocationsResponse) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.NewAllocations: array too large (%d)", extra)
 	}
 
@@ -1641,7 +1641,7 @@ func (t *ExtendClaimTermsParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Terms ([]verifreg.ClaimTerm) (slice)
-	if uint64(len(t.Terms)) > cbg.MaxLength {
+	if len(t.Terms) > 8192 {
 		return xerrors.Errorf("Slice value in field t.Terms was too long")
 	}
 
@@ -1687,7 +1687,7 @@ func (t *ExtendClaimTermsParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.Terms: array too large (%d)", extra)
 	}
 
@@ -1742,7 +1742,7 @@ func (t *ExtendClaimTermsReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.FailCodes ([]verifreg.FailCode) (slice)
-	if uint64(len(t.FailCodes)) > cbg.MaxLength {
+	if len(t.FailCodes) > 8192 {
 		return xerrors.Errorf("Slice value in field t.FailCodes was too long")
 	}
 
@@ -1802,7 +1802,7 @@ func (t *ExtendClaimTermsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.FailCodes: array too large (%d)", extra)
 	}
 
@@ -1857,7 +1857,7 @@ func (t *RemoveExpiredClaimsParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ClaimIds ([]verifreg.ClaimId) (slice)
-	if uint64(len(t.ClaimIds)) > cbg.MaxLength {
+	if len(t.ClaimIds) > 8192 {
 		return xerrors.Errorf("Slice value in field t.ClaimIds was too long")
 	}
 
@@ -1918,7 +1918,7 @@ func (t *RemoveExpiredClaimsParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.ClaimIds: array too large (%d)", extra)
 	}
 
@@ -1972,7 +1972,7 @@ func (t *RemoveExpiredClaimsReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Considered ([]verifreg.AllocationId) (slice)
-	if uint64(len(t.Considered)) > cbg.MaxLength {
+	if len(t.Considered) > 8192 {
 		return xerrors.Errorf("Slice value in field t.Considered was too long")
 	}
 
@@ -2024,7 +2024,7 @@ func (t *RemoveExpiredClaimsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.Considered: array too large (%d)", extra)
 	}
 
@@ -2363,10 +2363,10 @@ func (t *FailCode) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.Code (exitcode.ExitCode) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -2540,10 +2540,10 @@ func (t *SectorAllocationClaim) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.SectorExpiry (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -2725,10 +2725,10 @@ func (t *Claim) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.TermMin (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -2750,10 +2750,10 @@ func (t *Claim) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.TermMax (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -2775,10 +2775,10 @@ func (t *Claim) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.TermStart (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -2908,10 +2908,10 @@ func (t *ClaimTerm) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.TermMax (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -3021,10 +3021,10 @@ func (t *ClaimExtensionRequest) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.TermMax (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -3200,10 +3200,10 @@ func (t *Allocation) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.TermMin (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -3225,10 +3225,10 @@ func (t *Allocation) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.TermMax (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -3250,10 +3250,10 @@ func (t *Allocation) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.Expiration (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -3409,10 +3409,10 @@ func (t *AllocationRequest) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.TermMin (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -3434,10 +3434,10 @@ func (t *AllocationRequest) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.TermMax (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -3459,10 +3459,10 @@ func (t *AllocationRequest) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.Expiration (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -3499,7 +3499,7 @@ func (t *AllocationRequests) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Allocations ([]verifreg.AllocationRequest) (slice)
-	if uint64(len(t.Allocations)) > cbg.MaxLength {
+	if len(t.Allocations) > 8192 {
 		return xerrors.Errorf("Slice value in field t.Allocations was too long")
 	}
 
@@ -3514,7 +3514,7 @@ func (t *AllocationRequests) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Extensions ([]verifreg.ClaimExtensionRequest) (slice)
-	if uint64(len(t.Extensions)) > cbg.MaxLength {
+	if len(t.Extensions) > 8192 {
 		return xerrors.Errorf("Slice value in field t.Extensions was too long")
 	}
 
@@ -3560,7 +3560,7 @@ func (t *AllocationRequests) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.Allocations: array too large (%d)", extra)
 	}
 
@@ -3598,7 +3598,7 @@ func (t *AllocationRequests) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.Extensions: array too large (%d)", extra)
 	}
 
