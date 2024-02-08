@@ -369,13 +369,37 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 			return cid.Undef, cid.Undef, xerrors.Errorf("failed to load actor sectors map: %w", err)
 		}
 
-		for sector := range sectors {
-			// todo should we bother checking deals in the sector?
+		for sector, deals := range sectors {
+			var sectorDeals market13.SectorDealIDs // []abi.DealID
+			found, err := actorSectors.Get(miner13.SectorKey(sector), &sectorDeals)
+			if err != nil {
+				return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to get sector: %w", err)
+			}
+			if !found {
+				continue
+			}
 
-			if found, err := actorSectors.TryDelete(miner13.SectorKey(sector)); err != nil {
-				return cid.Cid{}, cid.Cid{}, xerrors.Errorf("removing providerSectors entry: %w", err)
-			} else if !found {
-				fmt.Printf("not deleting sector %d, not found for miner %d\n", sector, miner)
+			// remove deals from sectorDeals
+			for _, deal := range deals {
+				for j, d := range sectorDeals {
+					if d == deal {
+						// delete j-th element
+						sectorDeals = append(sectorDeals[:j], sectorDeals[j+1:]...)
+						break
+					}
+				}
+			}
+
+			if len(sectorDeals) == 0 {
+				fmt.Printf("delete providersector %d, deals %v\n", sector, deals)
+				if err := actorSectors.Delete(miner13.SectorKey(sector)); err != nil {
+					return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to delete sector: %w", err)
+				}
+			} else {
+				fmt.Printf("update providersector %d, deals %v\n", sector, sectorDeals)
+				if err := actorSectors.Put(miner13.SectorKey(sector), &sectorDeals); err != nil {
+					return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to put sector: %w", err)
+				}
 			}
 		}
 
