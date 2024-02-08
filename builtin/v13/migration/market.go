@@ -504,8 +504,12 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesFromScratch(ctx context.
 				}
 				providerSectorsMem[sid.Miner][sid.Number] = append(providerSectorsMem[sid.Miner][sid.Number], deal)
 			} else {
+				fmt.Printf("deal %d not found in providerSectors: %v\n", deal, oldState)
+
 				newState.SectorNumber = 0 // FIP: if such a sector cannot be found, assert that the deal's end epoch has passed and use sector ID 0
 			}
+		} else {
+			fmt.Printf("deal %d slashed, not inserting ProviderSectors record: %v\n", deal, oldState)
 		}
 
 		if err := newStateArray.Set(uint64(deal), &newState); err != nil {
