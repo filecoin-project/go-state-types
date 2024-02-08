@@ -123,7 +123,7 @@ func (m *minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, 
 					continue
 				}
 
-				fmt.Printf("prov dealsector ADD %d: %v\n", sectorNo, sector.DealIDs)
+				//fmt.Printf("prov dealsector ADD %d: %v\n", sectorNo, sector.DealIDs)
 
 				m.providerSectors.lk.Lock()
 				for _, dealID := range sector.DealIDs {
@@ -164,7 +164,7 @@ func (m *minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, 
 					}
 					// snap
 
-					fmt.Printf("prov dealsector MOD %d: %v -> %v\n", sectorNo, sectorBefore.DealIDs, sectorAfter.DealIDs)
+					//fmt.Printf("prov dealsector MOD %d: %v -> %v\n", sectorNo, sectorBefore.DealIDs, sectorAfter.DealIDs)
 
 					m.providerSectors.lk.Lock()
 					for _, dealID := range sectorAfter.DealIDs {
@@ -193,7 +193,7 @@ func (m *minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, 
 					continue
 				}
 
-				fmt.Printf("prov dealsector REM %d: %v\n", sectorNo, sector.DealIDs)
+				//fmt.Printf("prov dealsector REM %d: %v\n", sectorNo, sector.DealIDs)
 
 				m.providerSectors.lk.Lock()
 				for _, dealID := range sector.DealIDs {

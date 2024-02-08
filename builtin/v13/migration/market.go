@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-amt-ipld/v4"
 	"github.com/filecoin-project/go-state-types/abi"
@@ -229,14 +228,14 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 				newState.SectorNumber = si
 			}
 
-			fmt.Printf("add deal %d to sector %d\n", deal, newState.SectorNumber)
+			//fmt.Printf("add deal %d to sector %d\n", deal, newState.SectorNumber)
 
 			if err := prevOutStates.Set(uint64(deal), &newState); err != nil {
 				return cid.Undef, cid.Undef, xerrors.Errorf("failed to set new state: %w", err)
 			}
 
 		case amt.Remove:
-			fmt.Printf("remove deal %d\n", deal)
+			//fmt.Printf("remove deal %d\n", deal)
 
 			var prevOutState market13.DealState // note: this says "prevOut", not "prevOld"
 			ok, err := prevOutStates.Get(uint64(deal), &prevOutState)
@@ -284,7 +283,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 			// if nowOld.Slash == -1, then 'now' is not slashed, so we should try to find the sector
 			// we probably don't care about prevOldSlash?? beyond it changing from newSlash?
 
-			fmt.Printf("deal %d slash %d -> %d, update %d -> %d (prev sec: %d)\n", deal, prevOldState.SlashEpoch, oldState.SlashEpoch, prevOldState.LastUpdatedEpoch, oldState.LastUpdatedEpoch, newState.SectorNumber)
+			//fmt.Printf("deal %d slash %d -> %d, update %d -> %d (prev sec: %d)\n", deal, prevOldState.SlashEpoch, oldState.SlashEpoch, prevOldState.LastUpdatedEpoch, oldState.LastUpdatedEpoch, newState.SectorNumber)
 
 			if oldState.SlashEpoch != -1 && prevOldState.SlashEpoch == -1 {
 				// not slashed -> slashed
@@ -359,7 +358,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 			// removed or if it was never there to begin with, which is why we
 			// may occasionally end up here.
 
-			fmt.Printf("no actor sectors for miner %d\n", miner)
+			//fmt.Printf("no actor sectors for miner %d\n", miner)
 
 			continue
 		}
@@ -391,12 +390,12 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 			}
 
 			if len(sectorDeals) == 0 {
-				fmt.Printf("delete providersector %d, deals %v\n", sector, deals)
+				//fmt.Printf("delete providersector %d, deals %v\n", sector, deals)
 				if err := actorSectors.Delete(miner13.SectorKey(sector)); err != nil {
 					return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to delete sector: %w", err)
 				}
 			} else {
-				fmt.Printf("update providersector %d, deals %v\n", sector, sectorDeals)
+				//fmt.Printf("update providersector %d, deals %v\n", sector, sectorDeals)
 				if err := actorSectors.Put(miner13.SectorKey(sector), &sectorDeals); err != nil {
 					return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to put sector: %w", err)
 				}
@@ -528,13 +527,13 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesFromScratch(ctx context.
 				}
 				providerSectorsMem[sid.Miner][sid.Number] = append(providerSectorsMem[sid.Miner][sid.Number], deal)
 			} else {
-				fmt.Printf("deal %d not found in providerSectors: %v\n", deal, oldState)
+				//fmt.Printf("deal %d not found in providerSectors: %v\n", deal, oldState)
 
 				newState.SectorNumber = 0 // FIP: if such a sector cannot be found, assert that the deal's end epoch has passed and use sector ID 0
 			}
-		} else {
+		} /*else {
 			fmt.Printf("deal %d slashed, not inserting ProviderSectors record: %v\n", deal, oldState)
-		}
+		}*/
 
 		if err := newStateArray.Set(uint64(deal), &newState); err != nil {
 			return xerrors.Errorf("failed to append new state: %w", err)
