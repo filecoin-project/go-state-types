@@ -158,13 +158,12 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 	providerSectorsMem := map[abi.ActorID]map[abi.SectorNumber][]abi.DealID{}        // added
 	providerSectorsMemRemoved := map[abi.ActorID]map[abi.SectorNumber][]abi.DealID{} // removed
 
-	addProviderSectorEntry := func(deal abi.DealID, newState *market13.DealState) (abi.SectorNumber, error) {
+	addProviderSectorEntry := func(deal abi.DealID) (abi.SectorNumber, error) {
 		sid, ok := m.providerSectors.dealToSector[deal]
 		if !ok {
 			return 0, xerrors.Errorf("deal %d not found in providerSectors", deal) // todo is this normal and possible??
 		}
 
-		newState.SectorNumber = sid.Number
 		if _, ok := providerSectorsMem[sid.Miner]; !ok {
 			providerSectorsMem[sid.Miner] = make(map[abi.SectorNumber][]abi.DealID)
 		}
@@ -221,7 +220,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 			newState.SectorNumber = 0 // terminated / not found (?)
 
 			if oldState.SlashEpoch == -1 {
-				si, err := addProviderSectorEntry(deal, &newState)
+				si, err := addProviderSectorEntry(deal)
 				if err != nil {
 					return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to add provider sector entry: %w", err)
 				}
@@ -285,7 +284,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 
 			//fmt.Printf("deal %d slash %d -> %d, update %d -> %d (prev sec: %d)\n", deal, prevOldState.SlashEpoch, oldState.SlashEpoch, prevOldState.LastUpdatedEpoch, oldState.LastUpdatedEpoch, newState.SectorNumber)
 
-			if oldState.SlashEpoch != -1 && prevOldState.SlashEpoch == -1 {
+			if prevOldState.SlashEpoch == -1 && oldState.SlashEpoch != -1 {
 				// not slashed -> slashed
 				//fmt.Printf("deal %d slash -1 -> %d\n", deal, oldState.SlashEpoch)
 
@@ -293,47 +292,6 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 					return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to remove provider sector entry: %w", err)
 				}
 			}
-
-			/*if oldState.SectorStartEpoch == -1 && prevOldState.SectorStartEpoch != -1 {
-				fmt.Printf("deal %d start -1 both\n", deal)
-				// neither was in a sector, unclear if this can happen, but we handle this case anyway
-			}
-
-			if (oldState.SectorStartEpoch != -1 && prevOldState.SectorStartEpoch == -1) && oldState.SlashEpoch == -1 {
-				fmt.Printf("deal %d start -1 -> %d\n", deal, oldState.SectorStartEpoch)
-				// wasn't in a sector, now is
-				if _, err := addProviderSectorEntry(deal, &newState); err != nil {
-					return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to add provider sector entry: %w", err)
-				}
-			}
-
-			if (oldState.SectorStartEpoch == -1 && prevOldState.SectorStartEpoch != -1) && prevOldState.SlashEpoch != -1 {
-				fmt.Printf("deal %d start %d -> -1\n", deal, prevOldState.SectorStartEpoch)
-				// was in a sector, now isn't
-				if err := removeProviderSectorEntry(deal, &newState); err != nil {
-					return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to remove provider sector entry: %w", err)
-				}
-			}
-
-			if (oldState.SectorStartEpoch != -1 && prevOldState.SectorStartEpoch != -1) && oldState.SlashEpoch == -1 {
-				fmt.Printf("deal %d start %d -> %d\n", deal, prevOldState.SectorStartEpoch, oldState.SectorStartEpoch)
-				// both in a sector, check if the same
-				_, rm := m.providerSectors.removedDealToSector[deal]
-				if rm {
-					fmt.Printf(" !! change\n")
-					// changed which sector it's in
-
-					if err := removeProviderSectorEntry(deal, &newState); err != nil {
-						return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to remove provider sector entry: %w", err)
-					}
-
-					if _, err := addProviderSectorEntry(deal, &newState); err != nil {
-						return cid.Cid{}, cid.Cid{}, xerrors.Errorf("failed to add provider sector entry: %w", err)
-					}
-				} else if _, added := m.providerSectors.dealToSector[deal]; added {
-					return cid.Cid{}, cid.Cid{}, xerrors.Errorf("deal %d with modified state was added to providerSectors, but was not in removedDealToSector", deal)
-				}
-			}*/
 
 			if err := prevOutStates.Set(uint64(deal), &newState); err != nil {
 				return cid.Undef, cid.Undef, xerrors.Errorf("failed to set new state: %w", err)
