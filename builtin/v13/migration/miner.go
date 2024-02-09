@@ -3,8 +3,6 @@ package migration
 import (
 	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
 	"sync"
 
 	"github.com/filecoin-project/go-address"
@@ -25,9 +23,6 @@ type providerSectors struct {
 	lk sync.Mutex
 
 	dealToSector map[abi.DealID]abi.SectorID
-
-	// diff mode removes
-	removedDealToSector map[abi.DealID]abi.SectorID
 }
 
 // minerMigration is technically a no-op, but it collects a cache for market migration
@@ -98,11 +93,6 @@ func (m *minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, 
 			return nil, xerrors.Errorf("failed to diff old and new Sector AMTs: %w", err)
 		}
 
-		prevInSectors, err := adt.AsArray(ctxStore, prevSectors, miner12.SectorsAmtBitwidth)
-		if err != nil {
-			return nil, xerrors.Errorf("failed to load prev sectors array: %w", err)
-		}
-
 		for i, change := range diffs {
 			sectorNo := abi.SectorNumber(change.Key)
 
@@ -149,17 +139,6 @@ func (m *minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, 
 
 				if len(sectorBefore.DealIDs) != len(sectorAfter.DealIDs) {
 					if len(sectorBefore.DealIDs) != 0 {
-						pjsonb, err := json.MarshalIndent(sectorBefore, "", "  ")
-						if err != nil {
-							return nil, err
-						}
-						pjson, err := json.MarshalIndent(sectorAfter, "", "  ")
-						if err != nil {
-							return nil, err
-						}
-
-						fmt.Println("sector before: ", string(pjsonb))
-						fmt.Println("sector after: ", string(pjson))
 						return nil, xerrors.Errorf("WHAT?! sector %d modified, this not supported and not supposed to happen", i) // todo: is it? Can't happen w/o a deep, deep reorg, and even then we wouldn't use the cache??
 					}
 					// snap
@@ -178,31 +157,10 @@ func (m *minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, 
 
 				// extensions, etc. here; we don't care about those
 			case amt.Remove:
-				// related deals will also get removed in the market, so we don't have anything to do here
-
-				found, err := prevInSectors.Get(change.Key, &sector)
-				if err != nil {
-					return nil, xerrors.Errorf("failed to get sector %d in prevInSectors: %w", sectorNo, err)
-				}
-				if !found {
-					return nil, xerrors.Errorf("didn't find sector %d in prevInSectors", sectorNo)
-				}
-
-				if len(sector.DealIDs) == 0 {
-					// if no deals don't even bother taking the lock
-					continue
-				}
+				// nothing to do here, market removes deals based on activation/slash status, and can tell what
+				// mappings to remove because non-slashed deals already had them
 
 				//fmt.Printf("prov dealsector REM %d: %v\n", sectorNo, sector.DealIDs)
-
-				m.providerSectors.lk.Lock()
-				for _, dealID := range sector.DealIDs {
-					m.providerSectors.removedDealToSector[dealID] = abi.SectorID{
-						Miner:  abi.ActorID(mid),
-						Number: sectorNo,
-					}
-				}
-				m.providerSectors.lk.Unlock()
 			}
 		}
 	}

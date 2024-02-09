@@ -83,6 +83,10 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		migrations[oldEntry.Code] = migration.CachedMigration(cache, migration.CodeMigrator{OutCodeCID: newCodeCID})
 	}
 
+	if market12Cid == cid.Undef || miner12Cid == cid.Undef {
+		return cid.Undef, xerrors.Errorf("could not find market or miner actor in old manifest")
+	}
+
 	// migrations that migrate both code and state, override entries in `migrations`
 
 	// The System Actor
@@ -118,7 +122,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	// The Market Actor
 	market13Cid, ok := newManifest.Get(manifest.MarketKey)
 	if !ok {
-		return cid.Undef, xerrors.Errorf("code cid for miner actor not found in new manifest")
+		return cid.Undef, xerrors.Errorf("code cid for market actor not found in new manifest")
 	}
 
 	marketMig, err := newMarketMigrator(ctx, store, market13Cid, ps)
@@ -128,7 +132,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	migrations[market12Cid] = migration.CachedMigration(cache, marketMig)
 
 	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
-		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations), len(oldManifestData.Entries))
+		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations)+len(deferredCodeIDs), len(oldManifestData.Entries))
 	}
 
 	actorsOut, err := migration.RunMigration(ctx, cfg, cache, store, log, actorsIn, migrations)
