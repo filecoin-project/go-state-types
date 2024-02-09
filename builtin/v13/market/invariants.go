@@ -121,6 +121,7 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 
 	dealStateCount := uint64(0)
 	claimIdToDealId := make(map[verifreg.ClaimId]abi.DealID)
+	expectedProviderSectors := make(map[abi.DealID]struct{})
 	if dealStates, err := adt.AsArray(store, st.States, StatesAmtBitwidth); err != nil {
 		acc.Addf("error loading deal states: %v", err)
 	} else {
@@ -157,6 +158,10 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 			}
 			_, found = pendingDealAllocationIds[abi.DealID(dealID)]
 			acc.Require(!found, "deal %d has pending allocation", dealID)
+
+			if dealState.SlashEpoch == EpochUndefined && dealState.SectorStartEpoch != EpochUndefined {
+				expectedProviderSectors[abi.DealID(dealID)] = struct{}{}
+			}
 
 			dealStateCount++
 
@@ -288,6 +293,8 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 					st, found := proposalStats[dealID]
 					acc.Require(found, "deal id %d in provider sectors not found in proposals", dealID)
 					acc.Require(st.SectorNumber == abi.SectorNumber(sectorNumber), "deal id %d sector number %d does not match sector id %d", dealID, st.SectorNumber, sectorNumber)
+
+					delete(expectedProviderSectors, dealID)
 				}
 
 				return nil
@@ -297,6 +304,8 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 		})
 		acc.RequireNoError(err, "error iterating sector deals")
 	}
+
+	acc.Require(len(expectedProviderSectors) == 0, "missing %d providersectors entries for deals", len(expectedProviderSectors))
 
 	return &StateSummary{
 		Deals:                    proposalStats,
