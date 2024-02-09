@@ -323,27 +323,6 @@ func CheckDealStatesAgainstSectors(acc *builtin.MessageAccumulator, minerSummari
 			marketDealToSector[dealID] = sectorID
 		}
 	}
-
-	for sectorID, ids := range marketSummary.ProviderSectors {
-		acc.Require(len(ids) > 0, "no deal ids in sector %v", sectorID)
-
-		for _, dealID := range ids {
-			deal, found := marketSummary.Deals[dealID]
-			acc.Require(found, "providersectors %v sector deal %d not found in market", sectorID, dealID)
-			if !found {
-				continue
-			}
-
-			provID, err := address.IDFromAddress(deal.Provider)
-			if err != nil {
-				acc.Addf("error creating ID address: %v", err)
-				continue
-			}
-
-			acc.Require(abi.ActorID(provID) == sectorID.Miner, "deal %d has provider %v, expected %v", dealID, deal.Provider, sectorID)
-			acc.Require(deal.SectorNumber == sectorID.Number, "deal %d has sector number %d, expected %d", dealID, deal.SectorNumber, sectorID.Number)
-		}
-	}
 }
 
 func CheckVerifregAgainstDatacap(acc *builtin.MessageAccumulator, verifregSummary *verifreg.StateSummary, datacapSummary *datacap.StateSummary) {

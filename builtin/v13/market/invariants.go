@@ -283,6 +283,8 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 				sectorNumber, err := abi.ParseUIntKey(sectorID)
 				acc.RequireNoError(err, "error sector number from bytes")
 
+				acc.Require(len(dealIDs) > 0, "no deal ids in sector %v", sectorID)
+
 				dealIDsCopy := make([]abi.DealID, len(dealIDs))
 				copy(dealIDsCopy, dealIDs)
 
@@ -295,6 +297,14 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 					acc.Require(st.SectorNumber == abi.SectorNumber(sectorNumber), "deal id %d sector number %d does not match sector id %d", dealID, st.SectorNumber, sectorNumber)
 
 					delete(expectedProviderSectors, dealID)
+
+					provID, err := address.IDFromAddress(st.Provider)
+					if err != nil {
+						acc.Addf("error creating ID address: %v", err)
+						continue
+					}
+
+					acc.Require(provider == provID, "deal %d has provider %v, expected %v", dealID, provID, provider)
 				}
 
 				return nil
