@@ -46,7 +46,7 @@ type DealLabel struct {
 var EmptyDealLabel = DealLabel{}
 
 func NewLabelFromString(s string) (DealLabel, error) {
-	if len(s) > DealMaxLabelSize {
+	if uint64(len(s)) > DealMaxLabelSize {
 		return EmptyDealLabel, xerrors.Errorf("provided string is too large to be a label (%d), max length (%d)", len(s), DealMaxLabelSize)
 	}
 	if !utf8.ValidString(s) {
@@ -59,7 +59,7 @@ func NewLabelFromString(s string) (DealLabel, error) {
 }
 
 func NewLabelFromBytes(b []byte) (DealLabel, error) {
-	if len(b) > DealMaxLabelSize {
+	if uint64(len(b)) > DealMaxLabelSize {
 		return EmptyDealLabel, xerrors.Errorf("provided bytes are too large to be a label (%d), max length (%d)", len(b), DealMaxLabelSize)
 	}
 
@@ -112,7 +112,7 @@ func (label *DealLabel) MarshalCBOR(w io.Writer) error {
 		_, err := io.WriteString(w, string(""))
 		return err
 	}
-	if len(label.bs) > cbg.ByteArrayMaxLen {
+	if uint64(len(label.bs)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("label is too long to marshal (%d), max allowed (%d)", len(label.bs), cbg.ByteArrayMaxLen)
 	}
 

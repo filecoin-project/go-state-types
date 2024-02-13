@@ -36,7 +36,7 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Signers ([]address.Address) (slice)
-	if len(t.Signers) > cbg.MaxLength {
+	if len(t.Signers) > 8192 {
 		return xerrors.Errorf("Slice value in field t.Signers was too long")
 	}
 
@@ -47,6 +47,7 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 
 	// t.NumApprovalsThreshold (uint64) (uint64)
@@ -132,7 +133,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.Signers: array too large (%d)", extra)
 	}
 
@@ -160,9 +161,9 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	// t.NumApprovalsThreshold (uint64) (uint64)
 
 	{
@@ -180,10 +181,10 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.NextTxnID (multisig.TxnID) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -214,10 +215,10 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.StartEpoch (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -239,10 +240,10 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.UnlockDuration (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -307,7 +308,7 @@ func (t *Transaction) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Params ([]uint8) (slice)
-	if len(t.Params) > cbg.ByteArrayMaxLen {
+	if len(t.Params) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.Params was too long")
 	}
 
@@ -315,12 +316,12 @@ func (t *Transaction) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.Params[:]); err != nil {
+	if _, err := cw.Write(t.Params); err != nil {
 		return err
 	}
 
 	// t.Approved ([]address.Address) (slice)
-	if len(t.Approved) > cbg.MaxLength {
+	if len(t.Approved) > 8192 {
 		return xerrors.Errorf("Slice value in field t.Approved was too long")
 	}
 
@@ -331,6 +332,7 @@ func (t *Transaction) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
@@ -397,7 +399,7 @@ func (t *Transaction) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.Params: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {
@@ -408,9 +410,10 @@ func (t *Transaction) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Params = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Params[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.Params); err != nil {
 		return err
 	}
+
 	// t.Approved ([]address.Address) (slice)
 
 	maj, extra, err = cr.ReadHeader()
@@ -418,7 +421,7 @@ func (t *Transaction) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.Approved: array too large (%d)", extra)
 	}
 
@@ -446,9 +449,9 @@ func (t *Transaction) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -488,7 +491,7 @@ func (t *ProposalHashData) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Params ([]uint8) (slice)
-	if len(t.Params) > cbg.ByteArrayMaxLen {
+	if len(t.Params) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.Params was too long")
 	}
 
@@ -496,9 +499,10 @@ func (t *ProposalHashData) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.Params[:]); err != nil {
+	if _, err := cw.Write(t.Params); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -573,7 +577,7 @@ func (t *ProposalHashData) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.Params: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {
@@ -584,9 +588,10 @@ func (t *ProposalHashData) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Params = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Params[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.Params); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -605,7 +610,7 @@ func (t *ConstructorParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Signers ([]address.Address) (slice)
-	if len(t.Signers) > cbg.MaxLength {
+	if len(t.Signers) > 8192 {
 		return xerrors.Errorf("Slice value in field t.Signers was too long")
 	}
 
@@ -616,6 +621,7 @@ func (t *ConstructorParams) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
+
 	}
 
 	// t.NumApprovalsThreshold (uint64) (uint64)
@@ -645,6 +651,7 @@ func (t *ConstructorParams) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -678,7 +685,7 @@ func (t *ConstructorParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.MaxLength {
+	if extra > 8192 {
 		return fmt.Errorf("t.Signers: array too large (%d)", extra)
 	}
 
@@ -706,9 +713,9 @@ func (t *ConstructorParams) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+
 		}
 	}
-
 	// t.NumApprovalsThreshold (uint64) (uint64)
 
 	{
@@ -726,10 +733,10 @@ func (t *ConstructorParams) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.UnlockDuration (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -751,10 +758,10 @@ func (t *ConstructorParams) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.StartEpoch (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -807,7 +814,7 @@ func (t *ProposeParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Params ([]uint8) (slice)
-	if len(t.Params) > cbg.ByteArrayMaxLen {
+	if len(t.Params) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.Params was too long")
 	}
 
@@ -815,9 +822,10 @@ func (t *ProposeParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.Params[:]); err != nil {
+	if _, err := cw.Write(t.Params); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -883,7 +891,7 @@ func (t *ProposeParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.Params: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {
@@ -894,9 +902,10 @@ func (t *ProposeParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Params = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Params[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.Params); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -942,7 +951,7 @@ func (t *ProposeReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Ret ([]uint8) (slice)
-	if len(t.Ret) > cbg.ByteArrayMaxLen {
+	if len(t.Ret) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.Ret was too long")
 	}
 
@@ -950,9 +959,10 @@ func (t *ProposeReturn) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.Ret[:]); err != nil {
+	if _, err := cw.Write(t.Ret); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -982,10 +992,10 @@ func (t *ProposeReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.TxnID (multisig.TxnID) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -1024,10 +1034,10 @@ func (t *ProposeReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.Code (exitcode.ExitCode) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -1053,7 +1063,7 @@ func (t *ProposeReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.Ret: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {
@@ -1064,9 +1074,10 @@ func (t *ProposeReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Ret = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Ret[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.Ret); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1252,7 +1263,7 @@ func (t *TxnIDParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ProposalHash ([]uint8) (slice)
-	if len(t.ProposalHash) > cbg.ByteArrayMaxLen {
+	if len(t.ProposalHash) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.ProposalHash was too long")
 	}
 
@@ -1260,9 +1271,10 @@ func (t *TxnIDParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.ProposalHash[:]); err != nil {
+	if _, err := cw.Write(t.ProposalHash); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1292,10 +1304,10 @@ func (t *TxnIDParams) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.ID (multisig.TxnID) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -1321,7 +1333,7 @@ func (t *TxnIDParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.ProposalHash: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {
@@ -1332,9 +1344,10 @@ func (t *TxnIDParams) UnmarshalCBOR(r io.Reader) (err error) {
 		t.ProposalHash = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.ProposalHash[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.ProposalHash); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1369,7 +1382,7 @@ func (t *ApproveReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Ret ([]uint8) (slice)
-	if len(t.Ret) > cbg.ByteArrayMaxLen {
+	if len(t.Ret) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.Ret was too long")
 	}
 
@@ -1377,9 +1390,10 @@ func (t *ApproveReturn) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if _, err := cw.Write(t.Ret[:]); err != nil {
+	if _, err := cw.Write(t.Ret); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1426,10 +1440,10 @@ func (t *ApproveReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.Code (exitcode.ExitCode) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -1455,7 +1469,7 @@ func (t *ApproveReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		return err
 	}
 
-	if extra > cbg.ByteArrayMaxLen {
+	if extra > 2097152 {
 		return fmt.Errorf("t.Ret: byte array too large (%d)", extra)
 	}
 	if maj != cbg.MajByteString {
@@ -1466,9 +1480,10 @@ func (t *ApproveReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Ret = make([]uint8, extra)
 	}
 
-	if _, err := io.ReadFull(cr, t.Ret[:]); err != nil {
+	if _, err := io.ReadFull(cr, t.Ret); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1674,10 +1689,10 @@ func (t *LockBalanceParams) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.StartEpoch (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)
@@ -1699,10 +1714,10 @@ func (t *LockBalanceParams) UnmarshalCBOR(r io.Reader) (err error) {
 	// t.UnlockDuration (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
-		var extraI int64
 		if err != nil {
 			return err
 		}
+		var extraI int64
 		switch maj {
 		case cbg.MajUnsignedInt:
 			extraI = int64(extra)

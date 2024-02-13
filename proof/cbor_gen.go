@@ -38,7 +38,7 @@ func (t *PoStProof) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ProofBytes ([]uint8) (slice)
-	if len(t.ProofBytes) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.ProofBytes)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.ProofBytes was too long")
 	}
 
@@ -294,7 +294,7 @@ func (t *SealVerifyInfo) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.DealIDs ([]abi.DealID) (slice)
-	if len(t.DealIDs) > cbg.MaxLength {
+	if uint64(len(t.DealIDs)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.DealIDs was too long")
 	}
 
@@ -308,7 +308,7 @@ func (t *SealVerifyInfo) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Randomness (abi.SealRandomness) (slice)
-	if len(t.Randomness) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.Randomness)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.Randomness was too long")
 	}
 
@@ -321,7 +321,7 @@ func (t *SealVerifyInfo) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.InteractiveRandomness (abi.InteractiveSealRandomness) (slice)
-	if len(t.InteractiveRandomness) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.InteractiveRandomness)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.InteractiveRandomness was too long")
 	}
 
@@ -334,7 +334,7 @@ func (t *SealVerifyInfo) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Proof ([]uint8) (slice)
-	if len(t.Proof) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.Proof)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.Proof was too long")
 	}
 
@@ -550,7 +550,7 @@ func (t *WindowPoStVerifyInfo) MarshalCBOR(w io.Writer) error {
 	scratch := make([]byte, 9)
 
 	// t.Randomness (abi.PoStRandomness) (slice)
-	if len(t.Randomness) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.Randomness)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.Randomness was too long")
 	}
 
@@ -563,7 +563,7 @@ func (t *WindowPoStVerifyInfo) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Proofs ([]proof.PoStProof) (slice)
-	if len(t.Proofs) > cbg.MaxLength {
+	if uint64(len(t.Proofs)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Proofs was too long")
 	}
 
@@ -577,7 +577,7 @@ func (t *WindowPoStVerifyInfo) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ChallengedSectors ([]proof.SectorInfo) (slice)
-	if len(t.ChallengedSectors) > cbg.MaxLength {
+	if uint64(len(t.ChallengedSectors)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.ChallengedSectors was too long")
 	}
 
@@ -727,7 +727,7 @@ func (t *WinningPoStVerifyInfo) MarshalCBOR(w io.Writer) error {
 	scratch := make([]byte, 9)
 
 	// t.Randomness (abi.PoStRandomness) (slice)
-	if len(t.Randomness) > cbg.ByteArrayMaxLen {
+	if uint64(len(t.Randomness)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("Byte array in field t.Randomness was too long")
 	}
 
@@ -740,7 +740,7 @@ func (t *WinningPoStVerifyInfo) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Proofs ([]proof.PoStProof) (slice)
-	if len(t.Proofs) > cbg.MaxLength {
+	if uint64(len(t.Proofs)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.Proofs was too long")
 	}
 
@@ -754,7 +754,7 @@ func (t *WinningPoStVerifyInfo) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ChallengedSectors ([]proof.SectorInfo) (slice)
-	if len(t.ChallengedSectors) > cbg.MaxLength {
+	if uint64(len(t.ChallengedSectors)) > cbg.MaxLength {
 		return xerrors.Errorf("Slice value in field t.ChallengedSectors was too long")
 	}
 
