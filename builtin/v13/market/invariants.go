@@ -22,6 +22,7 @@ type DealSummary struct {
 	SectorStartEpoch abi.ChainEpoch
 	LastUpdatedEpoch abi.ChainEpoch
 	SlashEpoch       abi.ChainEpoch
+	SectorNumber     abi.SectorNumber
 	PieceCid         cid.Cid
 }
 
@@ -30,6 +31,7 @@ type StateSummary struct {
 	PendingDealAllocationIds map[abi.DealID]verifreg.AllocationId
 	ClaimIdToDealId          map[verifreg.ClaimId]abi.DealID
 	AllocIdToDealId          map[verifreg.AllocationId]abi.DealID
+	ProviderSectors          map[abi.SectorID][]abi.DealID
 	PendingProposalCount     uint64
 	DealStateCount           uint64
 	LockTableCount           uint64
@@ -119,6 +121,7 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 
 	dealStateCount := uint64(0)
 	claimIdToDealId := make(map[verifreg.ClaimId]abi.DealID)
+	expectedProviderSectors := make(map[abi.DealID]struct{})
 	if dealStates, err := adt.AsArray(store, st.States, StatesAmtBitwidth); err != nil {
 		acc.Addf("error loading deal states: %v", err)
 	} else {
@@ -151,9 +154,14 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 				stats.SectorStartEpoch = dealState.SectorStartEpoch
 				stats.LastUpdatedEpoch = dealState.LastUpdatedEpoch
 				stats.SlashEpoch = dealState.SlashEpoch
+				stats.SectorNumber = dealState.SectorNumber
 			}
 			_, found = pendingDealAllocationIds[abi.DealID(dealID)]
 			acc.Require(!found, "deal %d has pending allocation", dealID)
+
+			if dealState.SlashEpoch == EpochUndefined && dealState.SectorStartEpoch != EpochUndefined && stats.EndEpoch > currEpoch {
+				expectedProviderSectors[abi.DealID(dealID)] = struct{}{}
+			}
 
 			dealStateCount++
 
@@ -254,6 +262,65 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 
 	acc.Require(len(expectedDealOps) == 0, "missing deal ops for proposals: %v", expectedDealOps)
 
+	//
+	// Provider Sectors
+	// Provider->sector->deal mapping
+	// Each entry corresponds to non-terminated deal state.
+	// A deal may have expired but remain in the mapping until settlement.
+
+	providerSectors := make(map[abi.SectorID][]abi.DealID)
+	if sectorDeals, err := adt.AsMap(store, st.ProviderSectors, ProviderSectorsHamtBitwidth); err != nil {
+		acc.Addf("error loading st.ProviderSectors: %v", err)
+	} else {
+		var sectorMapRoot cbg.CborCid
+		err = sectorDeals.ForEach(&sectorMapRoot, func(providerID string) error {
+			provider, err := abi.ParseUIntKey(providerID)
+			acc.RequireNoError(err, "error getting address from bytes")
+
+			sectorMap, err := adt.AsMap(store, cid.Cid(sectorMapRoot), ProviderSectorsHamtBitwidth)
+			acc.RequireNoError(err, "error loading sector map for provider %s", provider)
+
+			var dealIDs SectorDealIDs
+			err = sectorMap.ForEach(&dealIDs, func(sectorID string) error {
+				sectorNumber, err := abi.ParseUIntKey(sectorID)
+				acc.RequireNoError(err, "error sector number from bytes")
+
+				acc.Require(len(dealIDs) > 0, "no deal ids in sector %v", sectorID)
+
+				dealIDsCopy := make([]abi.DealID, len(dealIDs))
+				copy(dealIDsCopy, dealIDs)
+
+				providerSectors[abi.SectorID{Miner: abi.ActorID(provider), Number: abi.SectorNumber(sectorNumber)}] = dealIDsCopy
+
+				// check against proposalStats
+				for _, dealID := range dealIDsCopy {
+					st, found := proposalStats[dealID]
+					acc.Require(found, "deal id %d in provider sectors not found in proposals", dealID)
+					acc.Require(st.SectorNumber == abi.SectorNumber(sectorNumber), "deal id %d sector number %d does not match sector id %d", dealID, st.SectorNumber, sectorNumber)
+
+					delete(expectedProviderSectors, dealID)
+
+					provID, err := address.IDFromAddress(st.Provider)
+					if err != nil {
+						acc.Addf("error creating ID address: %v", err)
+						continue
+					}
+
+					acc.Require(provider == provID, "deal %d has provider %v, expected %v", dealID, provID, provider)
+
+					acc.Require(st.SlashEpoch == EpochUndefined, "provider sector deal %d is slashed", dealID)
+				}
+
+				return nil
+			})
+			acc.RequireNoError(err, "error iterating sector deals")
+			return nil
+		})
+		acc.RequireNoError(err, "error iterating sector deals")
+	}
+
+	acc.Require(len(expectedProviderSectors) == 0, "missing %d providersectors entries for deals", len(expectedProviderSectors))
+
 	return &StateSummary{
 		Deals:                    proposalStats,
 		PendingDealAllocationIds: pendingDealAllocationIds,
@@ -264,5 +331,6 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 		DealOpCount:              dealOpCount,
 		ClaimIdToDealId:          claimIdToDealId,
 		AllocIdToDealId:          allocationIdToDealId,
+		ProviderSectors:          providerSectors,
 	}, acc
 }
