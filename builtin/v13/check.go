@@ -288,6 +288,42 @@ func CheckDealStatesAgainstSectors(acc *builtin.MessageAccumulator, minerSummari
 		acc.Require(deal.SlashEpoch <= sectorDeal.SectorExpiration,
 			"deal state slashed at %d after sector expiration %d for miner %v",
 			deal.SlashEpoch, sectorDeal.SectorExpiration, deal.Provider)
+
+		acc.Require((deal.SectorNumber == sectorDeal.SectorNumber) || (deal.SectorNumber == 0 && deal.SlashEpoch != -1),
+			"deal sector number %d does not match sector %d for miner %v (ds: %#v; ss %#v)",
+			deal.SectorNumber, sectorDeal.SectorNumber, deal.Provider, deal, sectorDeal)
+	}
+
+	// HAMT[ActorID]HAMT[SectorNumber]SectorDealIDs
+	marketDealToSector := make(map[abi.DealID]abi.SectorID)
+
+	for sectorID, dealIDs := range marketSummary.ProviderSectors {
+		maddr, err := address.NewIDAddress(uint64(sectorID.Miner))
+		if err != nil {
+			acc.Addf("error creating ID address: %v", err)
+			continue
+		}
+
+		minerSummary, found := minerSummaries[maddr]
+		if !found {
+			acc.Addf("provider %v for sector %v not found among miners", sectorID, sectorID)
+			continue
+		}
+
+		sector := minerSummary.SectorsWithDeals[sectorID.Number]
+		acc.Require(sector, "sector %v not found in miner %v for deals %v", sectorID, maddr, dealIDs)
+
+		for _, dealID := range dealIDs {
+			_, found := minerSummary.Deals[dealID]
+			// TODO: If you are reading this error after nv22 (v13 actors), delete this invariant.
+			// It exists to test the v13 migration ONLY.
+			acc.Require(found, "MIGRATION-ONLY: deal %d not found in miner %v for sector %v", dealID, maddr, sectorID)
+
+			_, found = marketDealToSector[dealID]
+			acc.Require(!found, "deal %d found in multiple sectors", dealID)
+
+			marketDealToSector[dealID] = sectorID
+		}
 	}
 }
 
