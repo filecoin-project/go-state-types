@@ -113,6 +113,7 @@ func main() {
 		// actor state
 		market.State{},
 		market.DealState{},
+		market.SectorDealIDs{},
 		// method params and returns
 		market.WithdrawBalanceParams{},
 		market.PublishStorageDealsParams{},
@@ -192,6 +193,17 @@ func main() {
 		miner.GetOwnerReturn{},
 		miner.GetPeerIDReturn{},
 		miner.GetMultiAddrsReturn{},
+		miner.ProveCommitSectors3Params{},
+		miner.SectorActivationManifest{},
+		miner.PieceActivationManifest{},
+		miner.VerifiedAllocationKey{},
+		miner.DataActivationNotification{},
+		miner.BatchReturn{},
+		miner.FailCode{},
+		miner.ProveReplicaUpdates3Params{},
+		miner.SectorUpdateManifest{},
+		miner.SectorChanges{},
+		miner.PieceChange{},
 		// other types
 		miner.FaultDeclaration{},
 		miner.RecoveryDeclaration{},

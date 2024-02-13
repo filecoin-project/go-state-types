@@ -15,7 +15,6 @@ import (
 	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
-	"github.com/filecoin-project/go-state-types/builtin/v13/verifreg"
 	acrypto "github.com/filecoin-project/go-state-types/crypto"
 )
 
@@ -27,10 +26,10 @@ var PieceCIDPrefix = cid.Prefix{
 }
 
 type DealState struct {
-	SectorStartEpoch abi.ChainEpoch // -1 if not yet included in proven sector
-	LastUpdatedEpoch abi.ChainEpoch // -1 if deal state never updated
-	SlashEpoch       abi.ChainEpoch // -1 if deal never slashed
-	VerifiedClaim    verifreg.AllocationId
+	SectorNumber     abi.SectorNumber // 0 if not yet included in proven sector (0 is also a valid sector number)
+	SectorStartEpoch abi.ChainEpoch   // -1 if not yet included in proven sector
+	LastUpdatedEpoch abi.ChainEpoch   // -1 if deal state never updated
+	SlashEpoch       abi.ChainEpoch   // -1 if deal never slashed
 }
 
 // The DealLabel is a kinded union of string or byte slice.
@@ -111,7 +110,7 @@ func (label *DealLabel) MarshalCBOR(w io.Writer) error {
 		_, err := io.WriteString(w, string(""))
 		return err
 	}
-	if len(label.bs) > cbg.ByteArrayMaxLen {
+	if uint64(len(label.bs)) > cbg.ByteArrayMaxLen {
 		return xerrors.Errorf("label is too long to marshal (%d), max allowed (%d)", len(label.bs), cbg.ByteArrayMaxLen)
 	}
 
