@@ -101,6 +101,9 @@ var MethodsPaych = struct {
 	4,
 }
 
+// ext::miner::SECTOR_CONTENT_CHANGED
+var MethodSectorContentChanged = MustGenerateFRCMethodNum("SectorContentChanged")
+
 var MethodsMarket = struct {
 	Constructor                       abi.MethodNum
 	AddBalance                        abi.MethodNum
@@ -125,6 +128,8 @@ var MethodsMarket = struct {
 	GetDealProviderCollateralExported abi.MethodNum
 	GetDealVerifiedExported           abi.MethodNum
 	GetDealActivationExported         abi.MethodNum
+	GetDealSectorExported             abi.MethodNum
+	SectorContentChangedExported      abi.MethodNum
 }{
 	MethodConstructor,
 	2,
@@ -149,6 +154,8 @@ var MethodsMarket = struct {
 	MustGenerateFRCMethodNum("GetDealProviderCollateral"),
 	MustGenerateFRCMethodNum("GetDealVerified"),
 	MustGenerateFRCMethodNum("GetDealActivation"),
+	MustGenerateFRCMethodNum("GetDealSector"),
+	MethodSectorContentChanged,
 }
 
 var MethodsPower = struct {
@@ -191,7 +198,7 @@ var MethodsMiner = struct {
 	ChangePeerID                       abi.MethodNum
 	ChangePeerIDExported               abi.MethodNum
 	SubmitWindowedPoSt                 abi.MethodNum
-	PreCommitSector                    abi.MethodNum
+	PreCommitSector                    abi.MethodNum // deprecated av13
 	ProveCommitSector                  abi.MethodNum
 	ExtendSectorExpiration             abi.MethodNum
 	TerminateSectors                   abi.MethodNum
@@ -215,11 +222,11 @@ var MethodsMiner = struct {
 	ChangeOwnerAddress                 abi.MethodNum
 	ChangeOwnerAddressExported         abi.MethodNum
 	DisputeWindowedPoSt                abi.MethodNum
-	PreCommitSectorBatch               abi.MethodNum
+	PreCommitSectorBatch               abi.MethodNum // deprecated av13
 	ProveCommitAggregate               abi.MethodNum
 	ProveReplicaUpdates                abi.MethodNum
 	PreCommitSectorBatch2              abi.MethodNum
-	ProveReplicaUpdates2               abi.MethodNum
+	ProveReplicaUpdates2               abi.MethodNum // deprecated av13
 	ChangeBeneficiary                  abi.MethodNum
 	ChangeBeneficiaryExported          abi.MethodNum
 	GetBeneficiary                     abi.MethodNum
@@ -231,6 +238,9 @@ var MethodsMiner = struct {
 	GetVestingFundsExported            abi.MethodNum
 	GetPeerIDExported                  abi.MethodNum
 	GetMultiaddrsExported              abi.MethodNum
+	// MovePartitionsExported             abi.MethodNum
+	ProveCommitSectors3  abi.MethodNum
+	ProveReplicaUpdates3 abi.MethodNum
 }{
 	MethodConstructor,
 	2,
@@ -279,6 +289,9 @@ var MethodsMiner = struct {
 	MustGenerateFRCMethodNum("GetVestingFunds"),
 	MustGenerateFRCMethodNum("GetPeerID"),
 	MustGenerateFRCMethodNum("GetMultiaddrs"),
+	// MovePartitions: 33,
+	34,
+	35,
 }
 
 var MethodsVerifiedRegistry = struct {

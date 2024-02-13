@@ -20,7 +20,7 @@ var _ = cid.Undef
 var _ = math.E
 var _ = sort.Sort
 
-var lengthBufState = []byte{140}
+var lengthBufState = []byte{141}
 
 func (t *State) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -108,6 +108,12 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 		return xerrors.Errorf("failed to write cid field t.PendingDealAllocationIds: %w", err)
 	}
 
+	// t.ProviderSectors (cid.Cid) (struct)
+
+	if err := cbg.WriteCid(cw, t.ProviderSectors); err != nil {
+		return xerrors.Errorf("failed to write cid field t.ProviderSectors: %w", err)
+	}
+
 	return nil
 }
 
@@ -130,7 +136,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 12 {
+	if extra != 13 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
@@ -284,6 +290,18 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 		t.PendingDealAllocationIds = c
 
 	}
+	// t.ProviderSectors (cid.Cid) (struct)
+
+	{
+
+		c, err := cbg.ReadCid(cr)
+		if err != nil {
+			return xerrors.Errorf("failed to read cid field t.ProviderSectors: %w", err)
+		}
+
+		t.ProviderSectors = c
+
+	}
 	return nil
 }
 
@@ -298,6 +316,12 @@ func (t *DealState) MarshalCBOR(w io.Writer) error {
 	cw := cbg.NewCborWriter(w)
 
 	if _, err := cw.Write(lengthBufDealState); err != nil {
+		return err
+	}
+
+	// t.SectorNumber (abi.SectorNumber) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.SectorNumber)); err != nil {
 		return err
 	}
 
@@ -334,12 +358,6 @@ func (t *DealState) MarshalCBOR(w io.Writer) error {
 		}
 	}
 
-	// t.VerifiedClaim (verifreg.AllocationId) (uint64)
-
-	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.VerifiedClaim)); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -366,6 +384,20 @@ func (t *DealState) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
+	// t.SectorNumber (abi.SectorNumber) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.SectorNumber = abi.SectorNumber(extra)
+
+	}
 	// t.SectorStartEpoch (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -441,19 +473,80 @@ func (t *DealState) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.SlashEpoch = abi.ChainEpoch(extraI)
 	}
-	// t.VerifiedClaim (verifreg.AllocationId) (uint64)
+	return nil
+}
 
-	{
+func (t *SectorDealIDs) MarshalCBOR(w io.Writer) error {
+	cw := cbg.NewCborWriter(w)
 
-		maj, extra, err = cr.ReadHeader()
-		if err != nil {
+	// (*t) (market.SectorDealIDs) (slice)
+	if len((*t)) > 8192 {
+		return xerrors.Errorf("Slice value in field (*t) was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len((*t)))); err != nil {
+		return err
+	}
+	for _, v := range *t {
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
 		}
-		if maj != cbg.MajUnsignedInt {
-			return fmt.Errorf("wrong type for uint64 field")
-		}
-		t.VerifiedClaim = verifreg.AllocationId(extra)
 
+	}
+	return nil
+}
+
+func (t *SectorDealIDs) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = SectorDealIDs{}
+
+	cr := cbg.NewCborReader(r)
+	var maj byte
+	var extra uint64
+	_ = maj
+	_ = extra
+	// (*t) (market.SectorDealIDs) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 8192 {
+		return fmt.Errorf("(*t): array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		(*t) = make([]abi.DealID, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
+
+			{
+
+				maj, extra, err = cr.ReadHeader()
+				if err != nil {
+					return err
+				}
+				if maj != cbg.MajUnsignedInt {
+					return fmt.Errorf("wrong type for uint64 field")
+				}
+				(*t)[i] = abi.DealID(extra)
+
+			}
+
+		}
 	}
 	return nil
 }

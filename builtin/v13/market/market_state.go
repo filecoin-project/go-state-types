@@ -19,6 +19,7 @@ const EpochUndefined = abi.ChainEpoch(-1)
 // Bitwidth of AMTs determined empirically from mutation patterns and projections of mainnet data.
 const ProposalsAmtBitwidth = 5
 const StatesAmtBitwidth = 6
+const ProviderSectorsHamtBitwidth = 5
 
 type State struct {
 	// Proposals are deals that have been proposed and not yet cleaned up after expiry or termination.
@@ -55,6 +56,14 @@ type State struct {
 
 	// Verified registry allocation IDs for deals that are not yet activated.
 	PendingDealAllocationIds cid.Cid // HAMT[DealID]AllocationID
+
+	/// Maps providers to their sector IDs to deal IDs.
+	/// This supports finding affected deals when a sector is terminated early
+	/// or has data replaced.
+	/// Grouping by provider limits the cost of operations in the expected use case
+	/// of multiple sectors all belonging to the same provider.
+	/// HAMT[ActorID]HAMT[SectorNumber]SectorDealIDs
+	ProviderSectors cid.Cid
 }
 
 func ConstructState(store adt.Store) (*State, error) {
@@ -83,6 +92,10 @@ func ConstructState(store adt.Store) (*State, error) {
 	if err != nil {
 		return nil, xerrors.Errorf("failed to create empty map: %w", err)
 	}
+	emptyProviderSectorsMap, err := adt.StoreEmptyMap(store, ProviderSectorsHamtBitwidth)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to create empty map: %w", err)
+	}
 
 	return &State{
 		Proposals:                emptyProposalsArrayCid,
@@ -94,6 +107,7 @@ func ConstructState(store adt.Store) (*State, error) {
 		DealOpsByEpoch:           emptyDealOpsHamtCid,
 		LastCron:                 abi.ChainEpoch(-1),
 		PendingDealAllocationIds: emptyPendingDealAllocationMapCid,
+		ProviderSectors:          emptyProviderSectorsMap,
 
 		TotalClientLockedCollateral:   abi.NewTokenAmount(0),
 		TotalProviderLockedCollateral: abi.NewTokenAmount(0),

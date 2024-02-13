@@ -59,4 +59,7 @@ var Methods = map[abi.MethodNum]builtin.MethodMeta{
 	builtin.MustGenerateFRCMethodNum("GetVestingFunds"):      {"GetVestingFundsExported", *new(func(*abi.EmptyValue) *GetVestingFundsReturn)},                              // GetVestingFundsExported
 	builtin.MustGenerateFRCMethodNum("GetPeerID"):            {"GetPeerIDExported", *new(func(*abi.EmptyValue) *GetPeerIDReturn)},                                          // GetPeerIDExported
 	builtin.MustGenerateFRCMethodNum("GetMultiaddrs"):        {"GetMultiaddrsExported", *new(func(*abi.EmptyValue) *GetMultiAddrsReturn)},                                  // GetMultiaddrsExported
+	// 33 MovePartitions
+	34: {"ProveCommitSectors3", *new(func(*ProveCommitSectors3Params) *ProveCommitSectors3Return)},    // ProveCommitSectors3
+	35: {"ProveReplicaUpdates3", *new(func(*ProveReplicaUpdates3Params) *ProveReplicaUpdates3Return)}, // ProveReplicaUpdates3
 }
