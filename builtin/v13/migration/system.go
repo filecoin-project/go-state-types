@@ -34,3 +34,7 @@ func (m systemActorMigrator) MigrateState(ctx context.Context, store cbor.IpldSt
 		NewHead:    stateHead,
 	}, nil
 }
+
+func (m systemActorMigrator) Deferred() bool {
+	return false
+}
