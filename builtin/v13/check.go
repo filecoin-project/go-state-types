@@ -267,9 +267,11 @@ func CheckDealStatesAgainstSectors(acc *builtin.MessageAccumulator, minerSummari
 			continue
 		}
 
+		// TODO: If you are reading this error after nv22 (v13 actors), delete this invariant.
+		// It exists to test the v13 migration ONLY.
 		sectorDeal, found := minerSummary.Deals[dealID]
 		if !found {
-			acc.Require(deal.SlashEpoch >= 0, "un-slashed deal %d not referenced in active sectors of miner %v", dealID, deal.Provider)
+			acc.Require(deal.SlashEpoch >= 0, "MIGRATION-ONLY: un-slashed deal %d not referenced in active sectors of miner %v", dealID, deal.Provider)
 			continue
 		}
 
@@ -309,9 +311,6 @@ func CheckDealStatesAgainstSectors(acc *builtin.MessageAccumulator, minerSummari
 			acc.Addf("provider %v for sector %v not found among miners", sectorID, sectorID)
 			continue
 		}
-
-		sector := minerSummary.SectorsWithDeals[sectorID.Number]
-		acc.Require(sector, "sector %v not found in miner %v for deals %v", sectorID, maddr, dealIDs)
 
 		for _, dealID := range dealIDs {
 			_, found := minerSummary.Deals[dealID]

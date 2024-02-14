@@ -275,10 +275,16 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 		var sectorMapRoot cbg.CborCid
 		err = sectorDeals.ForEach(&sectorMapRoot, func(providerID string) error {
 			provider, err := abi.ParseUIntKey(providerID)
-			acc.RequireNoError(err, "error getting address from bytes")
+			if err != nil {
+				acc.RequireNoError(err, "error getting address from bytes")
+				return nil
+			}
 
 			sectorMap, err := adt.AsMap(store, cid.Cid(sectorMapRoot), ProviderSectorsHamtBitwidth)
-			acc.RequireNoError(err, "error loading sector map for provider %s", provider)
+			if err != nil {
+				acc.RequireNoError(err, "error loading sector map for provider %s", provider)
+				return nil
+			}
 
 			var dealIDs SectorDealIDs
 			err = sectorMap.ForEach(&dealIDs, func(sectorID string) error {
@@ -298,6 +304,8 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 					acc.Require(found, "deal id %d in provider sectors not found in proposals", dealID)
 					acc.Require(st.SectorNumber == abi.SectorNumber(sectorNumber), "deal id %d sector number %d does not match sector id %d", dealID, st.SectorNumber, sectorNumber)
 
+					_, ok := expectedProviderSectors[dealID]
+					acc.Require(ok, "found unexpected deal in ProviderSectors")
 					delete(expectedProviderSectors, dealID)
 
 					provID, err := address.IDFromAddress(st.Provider)
