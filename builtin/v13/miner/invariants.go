@@ -25,7 +25,6 @@ type StateSummary struct {
 	Deals               map[abi.DealID]DealSummary
 	WindowPoStProofType abi.RegisteredPoStProof
 	DeadlineCronActive  bool
-	SectorsWithDeals    map[abi.SectorNumber]bool
 }
 
 // Checks internal invariants of init state.
@@ -70,7 +69,6 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount) (
 
 	minerSummary.Deals = map[abi.DealID]DealSummary{}
 	var allSectors map[abi.SectorNumber]*SectorOnChainInfo
-	minerSummary.SectorsWithDeals = make(map[abi.SectorNumber]bool)
 	if sectorsArr, err := adt.AsArray(store, st.Sectors, SectorsAmtBitwidth); err != nil {
 		acc.Addf("error loading sectors")
 	} else {
@@ -105,10 +103,6 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount) (
 					SectorExpiration: sector.Expiration,
 					SectorNumber:     sector.SectorNumber,
 				}
-			}
-
-			if len(sector.DealIDs) > 0 {
-				minerSummary.SectorsWithDeals[abi.SectorNumber(sno)] = true
 			}
 
 			return nil
