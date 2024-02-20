@@ -25,6 +25,8 @@ const (
 	// ErrReadOnly indicates that the actor cannot perform the requested operation
 	// in read-only mode.
 	ErrReadOnly
+	/// ErrNotPayable indicates the method cannot handle a transfer of value.
+	ErrNotPayable
 
 	// Common error codes stop here.  If you define a common error code above
 	// this value it will have conflicting interpretations
