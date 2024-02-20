@@ -127,6 +127,8 @@ func main() {
 		market.GetDealTermReturn{},
 		market.GetDealActivationReturn{},
 		market.OnMinerSectorsTerminateParams{},
+		market.SettleDealPaymentsParams{},
+		market.SettleDealPaymentsReturn{},
 
 		// other types
 		market.DealProposal{},
@@ -135,6 +137,9 @@ func main() {
 		market.DealSpaces{},
 		market.SectorDataSpec{},
 		market.VerifiedDealInfo{},
+		market.DealSettlementSummary{},
+		market.SettleDealPaymentsReturnResult{},
+		market.SettleDealPaymentsReturnResultFailCodes{},
 	); err != nil {
 		panic(err)
 	}

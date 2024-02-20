@@ -10,6 +10,7 @@ import (
 
 	abi "github.com/filecoin-project/go-state-types/abi"
 	verifreg "github.com/filecoin-project/go-state-types/builtin/v13/verifreg"
+	exitcode "github.com/filecoin-project/go-state-types/exitcode"
 	cid "github.com/ipfs/go-cid"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	xerrors "golang.org/x/xerrors"
@@ -1806,6 +1807,171 @@ func (t *OnMinerSectorsTerminateParams) UnmarshalCBOR(r io.Reader) (err error) {
 	return nil
 }
 
+var lengthBufSettleDealPaymentsParams = []byte{129}
+
+func (t *SettleDealPaymentsParams) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufSettleDealPaymentsParams); err != nil {
+		return err
+	}
+
+	// t.Deals (bitfield.BitField) (struct)
+	if err := t.Deals.MarshalCBOR(cw); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *SettleDealPaymentsParams) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = SettleDealPaymentsParams{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Deals (bitfield.BitField) (struct)
+
+	{
+
+		if err := t.Deals.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.Deals: %w", err)
+		}
+
+	}
+	return nil
+}
+
+var lengthBufSettleDealPaymentsReturn = []byte{130}
+
+func (t *SettleDealPaymentsReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufSettleDealPaymentsReturn); err != nil {
+		return err
+	}
+
+	// t.Results (market.SettleDealPaymentsReturnResult) (struct)
+	if err := t.Results.MarshalCBOR(cw); err != nil {
+		return err
+	}
+
+	// t.Settlements ([]market.DealSettlementSummary) (slice)
+	if len(t.Settlements) > 8192 {
+		return xerrors.Errorf("Slice value in field t.Settlements was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Settlements))); err != nil {
+		return err
+	}
+	for _, v := range t.Settlements {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+
+	}
+	return nil
+}
+
+func (t *SettleDealPaymentsReturn) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = SettleDealPaymentsReturn{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Results (market.SettleDealPaymentsReturnResult) (struct)
+
+	{
+
+		if err := t.Results.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.Results: %w", err)
+		}
+
+	}
+	// t.Settlements ([]market.DealSettlementSummary) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 8192 {
+		return fmt.Errorf("t.Settlements: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.Settlements = make([]DealSettlementSummary, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
+
+			{
+
+				if err := t.Settlements[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Settlements[i]: %w", err)
+				}
+
+			}
+
+		}
+	}
+	return nil
+}
+
 var lengthBufDealProposal = []byte{139}
 
 func (t *DealProposal) MarshalCBOR(w io.Writer) error {
@@ -2632,6 +2798,298 @@ func (t *VerifiedDealInfo) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 		t.Size = abi.PaddedPieceSize(extra)
 
+	}
+	return nil
+}
+
+var lengthBufDealSettlementSummary = []byte{130}
+
+func (t *DealSettlementSummary) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufDealSettlementSummary); err != nil {
+		return err
+	}
+
+	// t.Payment (big.Int) (struct)
+	if err := t.Payment.MarshalCBOR(cw); err != nil {
+		return err
+	}
+
+	// t.Completed (bool) (bool)
+	if err := cbg.WriteBool(w, t.Completed); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *DealSettlementSummary) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = DealSettlementSummary{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Payment (big.Int) (struct)
+
+	{
+
+		if err := t.Payment.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.Payment: %w", err)
+		}
+
+	}
+	// t.Completed (bool) (bool)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajOther {
+		return fmt.Errorf("booleans must be major type 7")
+	}
+	switch extra {
+	case 20:
+		t.Completed = false
+	case 21:
+		t.Completed = true
+	default:
+		return fmt.Errorf("booleans are either major type 7, value 20 or 21 (got %d)", extra)
+	}
+	return nil
+}
+
+var lengthBufSettleDealPaymentsReturnResult = []byte{130}
+
+func (t *SettleDealPaymentsReturnResult) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufSettleDealPaymentsReturnResult); err != nil {
+		return err
+	}
+
+	// t.SuccessCount (uint64) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.SuccessCount)); err != nil {
+		return err
+	}
+
+	// t.FailCount ([]market.SettleDealPaymentsReturnResultFailCodes) (slice)
+	if len(t.FailCount) > 8192 {
+		return xerrors.Errorf("Slice value in field t.FailCount was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.FailCount))); err != nil {
+		return err
+	}
+	for _, v := range t.FailCount {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+
+	}
+	return nil
+}
+
+func (t *SettleDealPaymentsReturnResult) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = SettleDealPaymentsReturnResult{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.SuccessCount (uint64) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.SuccessCount = uint64(extra)
+
+	}
+	// t.FailCount ([]market.SettleDealPaymentsReturnResultFailCodes) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 8192 {
+		return fmt.Errorf("t.FailCount: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.FailCount = make([]SettleDealPaymentsReturnResultFailCodes, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
+
+			{
+
+				if err := t.FailCount[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.FailCount[i]: %w", err)
+				}
+
+			}
+
+		}
+	}
+	return nil
+}
+
+var lengthBufSettleDealPaymentsReturnResultFailCodes = []byte{130}
+
+func (t *SettleDealPaymentsReturnResultFailCodes) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufSettleDealPaymentsReturnResultFailCodes); err != nil {
+		return err
+	}
+
+	// t.Index (uint64) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Index)); err != nil {
+		return err
+	}
+
+	// t.ExitCode (exitcode.ExitCode) (int64)
+	if t.ExitCode >= 0 {
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.ExitCode)); err != nil {
+			return err
+		}
+	} else {
+		if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-t.ExitCode-1)); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (t *SettleDealPaymentsReturnResultFailCodes) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = SettleDealPaymentsReturnResultFailCodes{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Index (uint64) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.Index = uint64(extra)
+
+	}
+	// t.ExitCode (exitcode.ExitCode) (int64)
+	{
+		maj, extra, err := cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		var extraI int64
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
+			}
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative overflow")
+			}
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
+		}
+
+		t.ExitCode = exitcode.ExitCode(extraI)
 	}
 	return nil
 }

@@ -33,4 +33,5 @@ var Methods = map[abi.MethodNum]builtin.MethodMeta{
 	builtin.MustGenerateFRCMethodNum("GetDealActivation"):         {"GetDealActivationExported", *new(func(*GetDealActivationParams) *GetDealActivationReturn)},                         // GetDealActivationExported
 	builtin.MustGenerateFRCMethodNum("GetDealSector"):             {"GetDealSectorExported", *new(func(*GetDealSectorParams) *GetDealSectorReturn)},                                     // GetDealSectorExported
 	builtin.MethodSectorContentChanged:                            {"SectorContentChanged", *new(func(*miner.SectorContentChangedParams) *miner.SectorContentChangedReturn)},            // SectorContentChanged
+	builtin.MustGenerateFRCMethodNum("SettleDealPayments"):        {"SettleDealPaymentsExported", *new(func(*SettleDealPaymentsParams) *SettleDealPaymentsReturn)},                      // SettleDealPaymentsExported
 }
