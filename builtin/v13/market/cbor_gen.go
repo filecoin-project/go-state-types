@@ -1807,62 +1807,6 @@ func (t *OnMinerSectorsTerminateParams) UnmarshalCBOR(r io.Reader) (err error) {
 	return nil
 }
 
-var lengthBufSettleDealPaymentsParams = []byte{129}
-
-func (t *SettleDealPaymentsParams) MarshalCBOR(w io.Writer) error {
-	if t == nil {
-		_, err := w.Write(cbg.CborNull)
-		return err
-	}
-
-	cw := cbg.NewCborWriter(w)
-
-	if _, err := cw.Write(lengthBufSettleDealPaymentsParams); err != nil {
-		return err
-	}
-
-	// t.Deals (bitfield.BitField) (struct)
-	if err := t.Deals.MarshalCBOR(cw); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (t *SettleDealPaymentsParams) UnmarshalCBOR(r io.Reader) (err error) {
-	*t = SettleDealPaymentsParams{}
-
-	cr := cbg.NewCborReader(r)
-
-	maj, extra, err := cr.ReadHeader()
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-	}()
-
-	if maj != cbg.MajArray {
-		return fmt.Errorf("cbor input should be of type array")
-	}
-
-	if extra != 1 {
-		return fmt.Errorf("cbor input had wrong number of fields")
-	}
-
-	// t.Deals (bitfield.BitField) (struct)
-
-	{
-
-		if err := t.Deals.UnmarshalCBOR(cr); err != nil {
-			return xerrors.Errorf("unmarshaling t.Deals: %w", err)
-		}
-
-	}
-	return nil
-}
-
 var lengthBufSettleDealPaymentsReturn = []byte{130}
 
 func (t *SettleDealPaymentsReturn) MarshalCBOR(w io.Writer) error {
@@ -1877,7 +1821,7 @@ func (t *SettleDealPaymentsReturn) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.Results (market.SettleDealPaymentsReturnResult) (struct)
+	// t.Results (market.BatchReturn) (struct)
 	if err := t.Results.MarshalCBOR(cw); err != nil {
 		return err
 	}
@@ -1922,7 +1866,7 @@ func (t *SettleDealPaymentsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	// t.Results (market.SettleDealPaymentsReturnResult) (struct)
+	// t.Results (market.BatchReturn) (struct)
 
 	{
 
@@ -2880,9 +2824,9 @@ func (t *DealSettlementSummary) UnmarshalCBOR(r io.Reader) (err error) {
 	return nil
 }
 
-var lengthBufSettleDealPaymentsReturnResult = []byte{130}
+var lengthBufBatchReturn = []byte{130}
 
-func (t *SettleDealPaymentsReturnResult) MarshalCBOR(w io.Writer) error {
+func (t *BatchReturn) MarshalCBOR(w io.Writer) error {
 	if t == nil {
 		_, err := w.Write(cbg.CborNull)
 		return err
@@ -2890,7 +2834,7 @@ func (t *SettleDealPaymentsReturnResult) MarshalCBOR(w io.Writer) error {
 
 	cw := cbg.NewCborWriter(w)
 
-	if _, err := cw.Write(lengthBufSettleDealPaymentsReturnResult); err != nil {
+	if _, err := cw.Write(lengthBufBatchReturn); err != nil {
 		return err
 	}
 
@@ -2900,7 +2844,7 @@ func (t *SettleDealPaymentsReturnResult) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.FailCount ([]market.SettleDealPaymentsReturnResultFailCodes) (slice)
+	// t.FailCount ([]market.FailCode) (slice)
 	if len(t.FailCount) > 8192 {
 		return xerrors.Errorf("Slice value in field t.FailCount was too long")
 	}
@@ -2917,8 +2861,8 @@ func (t *SettleDealPaymentsReturnResult) MarshalCBOR(w io.Writer) error {
 	return nil
 }
 
-func (t *SettleDealPaymentsReturnResult) UnmarshalCBOR(r io.Reader) (err error) {
-	*t = SettleDealPaymentsReturnResult{}
+func (t *BatchReturn) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = BatchReturn{}
 
 	cr := cbg.NewCborReader(r)
 
@@ -2954,7 +2898,7 @@ func (t *SettleDealPaymentsReturnResult) UnmarshalCBOR(r io.Reader) (err error) 
 		t.SuccessCount = uint64(extra)
 
 	}
-	// t.FailCount ([]market.SettleDealPaymentsReturnResultFailCodes) (slice)
+	// t.FailCount ([]market.FailCode) (slice)
 
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
@@ -2970,7 +2914,7 @@ func (t *SettleDealPaymentsReturnResult) UnmarshalCBOR(r io.Reader) (err error) 
 	}
 
 	if extra > 0 {
-		t.FailCount = make([]SettleDealPaymentsReturnResultFailCodes, extra)
+		t.FailCount = make([]FailCode, extra)
 	}
 
 	for i := 0; i < int(extra); i++ {
@@ -2995,9 +2939,9 @@ func (t *SettleDealPaymentsReturnResult) UnmarshalCBOR(r io.Reader) (err error) 
 	return nil
 }
 
-var lengthBufSettleDealPaymentsReturnResultFailCodes = []byte{130}
+var lengthBufFailCode = []byte{130}
 
-func (t *SettleDealPaymentsReturnResultFailCodes) MarshalCBOR(w io.Writer) error {
+func (t *FailCode) MarshalCBOR(w io.Writer) error {
 	if t == nil {
 		_, err := w.Write(cbg.CborNull)
 		return err
@@ -3005,7 +2949,7 @@ func (t *SettleDealPaymentsReturnResultFailCodes) MarshalCBOR(w io.Writer) error
 
 	cw := cbg.NewCborWriter(w)
 
-	if _, err := cw.Write(lengthBufSettleDealPaymentsReturnResultFailCodes); err != nil {
+	if _, err := cw.Write(lengthBufFailCode); err != nil {
 		return err
 	}
 
@@ -3029,8 +2973,8 @@ func (t *SettleDealPaymentsReturnResultFailCodes) MarshalCBOR(w io.Writer) error
 	return nil
 }
 
-func (t *SettleDealPaymentsReturnResultFailCodes) UnmarshalCBOR(r io.Reader) (err error) {
-	*t = SettleDealPaymentsReturnResultFailCodes{}
+func (t *FailCode) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = FailCode{}
 
 	cr := cbg.NewCborReader(r)
 

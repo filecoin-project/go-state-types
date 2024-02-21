@@ -140,18 +140,16 @@ type GetDealSectorParams = DealQueryParams
 
 type GetDealSectorReturn = abi.SectorNumber
 
-type SettleDealPaymentsParams struct {
-	Deals bitfield.BitField
-}
+type SettleDealPaymentsParams = bitfield.BitField
 
-type SettleDealPaymentsReturnResultFailCodes struct {
+type FailCode struct {
 	Index    uint64
 	ExitCode exitcode.ExitCode
 }
 
-type SettleDealPaymentsReturnResult struct {
+type BatchReturn struct {
 	SuccessCount uint64
-	FailCount    []SettleDealPaymentsReturnResultFailCodes
+	FailCount    []FailCode
 }
 
 type DealSettlementSummary struct {
@@ -163,7 +161,7 @@ type DealSettlementSummary struct {
 
 type SettleDealPaymentsReturn struct {
 	// Indicators of success or failure for each deal.
-	Results SettleDealPaymentsReturnResult
+	Results BatchReturn
 	// Results for those deals that successfully settled.
 	Settlements []DealSettlementSummary
 }
