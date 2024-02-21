@@ -130,6 +130,7 @@ var MethodsMarket = struct {
 	GetDealActivationExported         abi.MethodNum
 	GetDealSectorExported             abi.MethodNum
 	SectorContentChangedExported      abi.MethodNum
+	SettleDealPaymentsExported        abi.MethodNum
 }{
 	MethodConstructor,
 	2,
@@ -156,6 +157,7 @@ var MethodsMarket = struct {
 	MustGenerateFRCMethodNum("GetDealActivation"),
 	MustGenerateFRCMethodNum("GetDealSector"),
 	MethodSectorContentChanged,
+	MustGenerateFRCMethodNum("SettleDealPayments"),
 }
 
 var MethodsPower = struct {

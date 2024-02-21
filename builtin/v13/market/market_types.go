@@ -1,6 +1,7 @@
 package market
 
 import (
+	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/ipfs/go-cid"
 	cbg "github.com/whyrusleeping/cbor-gen"
 
@@ -138,3 +139,29 @@ type GetDealActivationReturn struct {
 type GetDealSectorParams = DealQueryParams
 
 type GetDealSectorReturn = abi.SectorNumber
+
+type SettleDealPaymentsParams = bitfield.BitField
+
+type FailCode struct {
+	Index    uint64
+	ExitCode exitcode.ExitCode
+}
+
+type BatchReturn struct {
+	SuccessCount uint64
+	FailCount    []FailCode
+}
+
+type DealSettlementSummary struct {
+	// Incremental amount paid to the provider.
+	Payment abi.TokenAmount
+	// Whether the deal has settled for the final time.
+	Completed bool
+}
+
+type SettleDealPaymentsReturn struct {
+	// Indicators of success or failure for each deal.
+	Results BatchReturn
+	// Results for those deals that successfully settled.
+	Settlements []DealSettlementSummary
+}
