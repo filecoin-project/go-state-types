@@ -265,7 +265,6 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 	//
 	// Provider Sectors
 	// Provider->sector->deal mapping
-	// Each entry corresponds to non-terminated deal state.
 	// A deal may have expired but remain in the mapping until settlement.
 
 	providerSectors := make(map[abi.SectorID][]abi.DealID)
@@ -301,7 +300,9 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 				// check against proposalStats
 				for _, dealID := range dealIDsCopy {
 					st, found := proposalStats[dealID]
-					acc.Require(found, "deal id %d in provider sectors not found in proposals", dealID)
+					if !found {
+						continue
+					}
 					acc.Require(st.SectorNumber == abi.SectorNumber(sectorNumber), "deal id %d sector number %d does not match sector id %d", dealID, st.SectorNumber, sectorNumber)
 
 					_, ok := expectedProviderSectors[dealID]

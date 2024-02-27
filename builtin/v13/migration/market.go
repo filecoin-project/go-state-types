@@ -337,11 +337,12 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesFromScratch(ctx context.
 			sid, ok := m.providerSectors.dealToSector[deal]
 			if ok {
 				newState.SectorNumber = sid.Number // FIP: set the new deal state object's sector number to the sector ID found;
-			} else {
-				// TODO: This SHOULD be a fail if we ever get here, but we seem to do so on mainnet.
-				// The theory is that because of the "ghost deals" bug, but further investigation is needed.
-				//fmt.Println("SUSPECTED GHOST DEAL: ", deal)
 			}
+			//else {
+			// TODO: This SHOULD be a fail if we ever get here, but we seem to do so on mainnet.
+			// The theory is that because of the "ghost deals" bug, but further investigation is needed.
+			//fmt.Println("SUSPECTED GHOST DEAL: ", deal)
+			//}
 		}
 
 		if err := newStateArray.Set(uint64(deal), &newState); err != nil {
