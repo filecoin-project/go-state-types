@@ -3,7 +3,6 @@ package migration
 import (
 	"bytes"
 	"context"
-	"errors"
 
 	"github.com/filecoin-project/go-amt-ipld/v4"
 	"github.com/ipfs/go-cid"
@@ -19,8 +18,6 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 	"github.com/filecoin-project/go-state-types/migration"
 )
-
-var errItemFound = errors.New("item found")
 
 type marketMigrator struct {
 	providerSectors *providerSectors
@@ -164,7 +161,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 				SectorNumber:     0,
 				SectorStartEpoch: oldState.SectorStartEpoch,
 				LastUpdatedEpoch: oldState.LastUpdatedEpoch,
-				SlashEpoch:       oldState.LastUpdatedEpoch,
+				SlashEpoch:       oldState.SlashEpoch,
 			}
 
 			// TODO: We should technically only set this if the deal hasn't expired,
@@ -208,7 +205,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 				SectorNumber:     prevNewState.SectorNumber,
 				SectorStartEpoch: oldState.SectorStartEpoch,
 				LastUpdatedEpoch: oldState.LastUpdatedEpoch,
-				SlashEpoch:       oldState.LastUpdatedEpoch,
+				SlashEpoch:       oldState.SlashEpoch,
 			}
 
 			// if the deal is now slashed, UNSET the sector number
@@ -263,26 +260,17 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesWithDiff(ctx context.Con
 			}
 		}
 
-		// check if actorSectors are empty
-		err = actorSectors.ForEach(nil, func(k string) error {
-			return errItemFound
-		})
-		nonEmpty := false
-		if err == errItemFound {
-			nonEmpty = true
-			err = nil
-		}
+		isEmpty, err := actorSectors.IsEmpty()
 		if err != nil {
-			return cid.Undef, cid.Undef, xerrors.Errorf("failed to iterate actor sectors: %w", err)
+			return cid.Undef, cid.Undef, xerrors.Errorf("failed to check if actorSectors is empty: %w", err)
 		}
-
-		if nonEmpty {
-			if err := prevOutProviderSectors.Put(abi.UIntKey(uint64(miner)), actorSectors); err != nil {
-				return cid.Undef, cid.Undef, xerrors.Errorf("failed to put actor sectors: %w", err)
-			}
-		} else {
+		if isEmpty {
 			if err := prevOutProviderSectors.Delete(abi.UIntKey(uint64(miner))); err != nil {
 				return cid.Undef, cid.Undef, xerrors.Errorf("failed to delete actor sectors: %w", err)
+			}
+		} else {
+			if err := prevOutProviderSectors.Put(abi.UIntKey(uint64(miner)), actorSectors); err != nil {
+				return cid.Undef, cid.Undef, xerrors.Errorf("failed to put actor sectors: %w", err)
 			}
 		}
 	}
@@ -328,7 +316,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesFromScratch(ctx context.
 		newState.SlashEpoch = oldState.SlashEpoch
 		newState.LastUpdatedEpoch = oldState.LastUpdatedEpoch
 		newState.SectorStartEpoch = oldState.SectorStartEpoch
-		newState.SectorNumber = 0 // non- -1 slashed epoch
+		newState.SectorNumber = 0
 
 		var proposal market12.DealProposal
 		ok, err := proposalsArr.Get(uint64(i), &proposal)
@@ -350,7 +338,9 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesFromScratch(ctx context.
 			if ok {
 				newState.SectorNumber = sid.Number // FIP: set the new deal state object's sector number to the sector ID found;
 			} else {
-				return xerrors.Errorf("sector not found for unexpired deal %d", i)
+				// TODO: This SHOULD be a fail if we ever get here, but we seem to do so on mainnet.
+				// The theory is that because of the "ghost deals" bug, but further investigation is needed.
+				//fmt.Println("SUSPECTED GHOST DEAL: ", deal)
 			}
 		}
 

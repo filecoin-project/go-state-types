@@ -17,7 +17,8 @@ import (
 	"golang.org/x/xerrors"
 )
 
-const UpgradeHeight = abi.ChainEpoch(1000)
+// TODO: Make input to migration
+const UpgradeHeight = abi.ChainEpoch(3654004)
 
 // MigrateStateTree Migrates the filecoin state tree starting from the global state tree and upgrading all actor state.
 // The store must support concurrent writes (even if the configured worker count is 1).
