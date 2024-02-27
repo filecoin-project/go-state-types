@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/filecoin-project/go-state-types/test_util"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/manifest"
 	"github.com/ipfs/go-cid"
@@ -19,7 +21,7 @@ import (
 
 func TestMigration(t *testing.T) {
 	ctx := context.Background()
-	bs := cbor.NewCborStore(NewSyncBlockStoreInMemory())
+	bs := cbor.NewCborStore(test_util.NewSyncBlockStoreInMemory())
 	adtStore := adt.WrapStore(ctx, bs)
 
 	startRoot := makeInputTree(ctx, t, adtStore)

@@ -3,6 +3,7 @@ package adt
 import (
 	"bytes"
 	"crypto/sha256"
+	"errors"
 	"io"
 
 	cid "github.com/ipfs/go-cid"
@@ -190,5 +191,21 @@ func (m *Map) Pop(k abi.Keyer, out cbor.Unmarshaler) (bool, error) {
 	} else if !found {
 		return false, xerrors.Errorf("failed to find key %v to delete", k.Key())
 	}
+	return true, nil
+}
+
+// IsEmpty returns false if there are any elements in the Map, true otherwise.
+func (m *Map) IsEmpty() (bool, error) {
+	var errItemFound = errors.New("item found")
+	err := m.ForEach(nil, func(k string) error {
+		return errItemFound
+	})
+
+	if err == errItemFound {
+		return false, nil
+	} else if err != nil {
+		return false, xerrors.Errorf("failed to iterate over map: %w", err)
+	}
+
 	return true, nil
 }

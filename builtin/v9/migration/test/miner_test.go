@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/filecoin-project/go-state-types/test_util"
+
 	commp "github.com/filecoin-project/go-commp-utils/nonffi"
 	market8 "github.com/filecoin-project/go-state-types/builtin/v8/market"
 
@@ -25,7 +27,7 @@ import (
 
 func TestMinerMigration(t *testing.T) {
 	ctx := context.Background()
-	bs := cbor.NewCborStore(NewSyncBlockStoreInMemory())
+	bs := cbor.NewCborStore(test_util.NewSyncBlockStoreInMemory())
 	adtStore := adt.WrapStore(ctx, bs)
 
 	startRoot := makeInputTree(ctx, t, adtStore)
@@ -317,7 +319,7 @@ func TestMinerMigration(t *testing.T) {
 
 func TestFip0029MinerMigration(t *testing.T) {
 	ctx := context.Background()
-	bs := cbor.NewCborStore(NewSyncBlockStoreInMemory())
+	bs := cbor.NewCborStore(test_util.NewSyncBlockStoreInMemory())
 	adtStore := adt.WrapStore(ctx, bs)
 
 	startRoot := makeInputTree(ctx, t, adtStore)

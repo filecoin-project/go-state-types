@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/filecoin-project/go-state-types/test_util"
+
 	"github.com/filecoin-project/go-state-types/builtin/v9/util/adt"
 
 	"github.com/filecoin-project/go-state-types/abi"
@@ -18,7 +20,7 @@ func TestParallelMigrationCalls(t *testing.T) {
 	// Construct simple prior state tree over a synchronized store
 	ctx := context.Background()
 	log := TestLogger{TB: t}
-	bs := NewSyncBlockStoreInMemory()
+	bs := test_util.NewSyncBlockStoreInMemory()
 
 	// Run migration
 	adtStore := adt.WrapStore(ctx, cbor.NewCborStore(bs))
