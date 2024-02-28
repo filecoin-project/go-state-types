@@ -141,6 +141,22 @@ func MinerPrevSectorsOutKey(m address.Address) string {
 	return "prevSectorsOut-" + m.String()
 }
 
+func MarketPrevDealStatesInKey(m address.Address) string {
+	return "prevDealStatesIn-" + m.String()
+}
+
+func MarketPrevDealProposalsInKey(m address.Address) string {
+	return "prevDealProposalsIn-" + m.String()
+}
+
+func MarketPrevDealStatesOutKey(m address.Address) string {
+	return "prevDealStatesOut-" + m.String()
+}
+
+func MarketPrevProviderSectorsOutKey(m address.Address) string {
+	return "prevProviderSectorsOut-" + m.String()
+}
+
 type ActorMigrationInput struct {
 	Address address.Address // actor's address
 	Head    cid.Cid
@@ -157,6 +173,9 @@ type ActorMigration interface {
 	// Returns the new state head CID.
 	MigrateState(ctx context.Context, store cbor.IpldStore, input ActorMigrationInput) (result *ActorMigrationResult, err error)
 	MigratedCodeCID() cid.Cid
+
+	// Deferred returns true if this migration should be run after all non-deferred migrations have completed.
+	Deferred() bool
 }
 
 // Migrator which preserves the head CID and provides a fixed result code CID.
@@ -173,6 +192,10 @@ func (n CodeMigrator) MigrateState(_ context.Context, _ cbor.IpldStore, in Actor
 
 func (n CodeMigrator) MigratedCodeCID() cid.Cid {
 	return n.OutCodeCID
+}
+
+func (n CodeMigrator) Deferred() bool {
+	return false
 }
 
 // Migrator that uses cached transformation if it exists
@@ -196,6 +219,10 @@ func (c CachedMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, 
 		NewCodeCID: c.MigratedCodeCID(),
 		NewHead:    newHead,
 	}, nil
+}
+
+func (c CachedMigrator) Deferred() bool {
+	return c.ActorMigration.Deferred()
 }
 
 func CachedMigration(cache MigrationCache, m ActorMigration) ActorMigration {

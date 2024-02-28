@@ -112,3 +112,7 @@ func (m powerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, i
 		NewHead:    newHead,
 	}, nil
 }
+
+func (m powerMigrator) Deferred() bool {
+	return false
+}

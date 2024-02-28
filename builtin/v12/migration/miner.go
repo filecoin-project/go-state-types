@@ -79,6 +79,10 @@ func (m minerMigrator) MigratedCodeCID() cid.Cid {
 	return m.OutCodeCID
 }
 
+func (m minerMigrator) Deferred() bool {
+	return false
+}
+
 func (m minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, in migration.ActorMigrationInput) (*migration.ActorMigrationResult, error) {
 	var inState miner11.State
 	if err := store.Get(ctx, in.Head, &inState); err != nil {

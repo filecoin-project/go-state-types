@@ -19,6 +19,9 @@ import (
 func RunMigration(ctx context.Context, cfg Config, cache MigrationCache, store cbor.IpldStore, log Logger, actorsIn *builtin.ActorTree, migrations map[cid.Cid]ActorMigration) (*builtin.ActorTree, error) {
 	startTime := time.Now()
 
+	deferred := map[address.Address]struct{}{}
+	var deferredLk sync.Mutex
+
 	// Setup synchronization
 	grp, ctx := errgroup.WithContext(ctx)
 	// Input and output queues for workers.
@@ -67,6 +70,15 @@ func RunMigration(ctx context.Context, cfg Config, cache MigrationCache, store c
 		grp.Go(func() error {
 			defer workerWg.Done()
 			for job := range jobCh {
+				if job.ActorMigration.Deferred() {
+					deferredLk.Lock()
+					deferred[job.Address] = struct{}{}
+					deferredLk.Unlock()
+
+					atomic.AddUint32(&doneCount, 1)
+					continue
+				}
+
 				result, err := job.run(ctx, store)
 				if err != nil {
 					return xerrors.Errorf("running job: %w", err)
@@ -142,6 +154,45 @@ func RunMigration(ctx context.Context, cfg Config, cache MigrationCache, store c
 
 	if err := grp.Wait(); err != nil {
 		return nil, xerrors.Errorf("migration group error: %w", err)
+	}
+
+	if len(deferred) > 0 {
+		// deferred round
+		// NOTE this is not parralelized for now as this was only ever needed for singleton actor migrations
+
+		log.Log(rt.INFO, "Running deferred migrations")
+
+		for addr := range deferred {
+			log.Log(rt.INFO, "Running deferred migration for %s", addr)
+
+			actorIn, found, err := actorsIn.GetActorV5(addr)
+			if err != nil {
+				return nil, xerrors.Errorf("failed to get actor %s: %w", addr, err)
+			}
+
+			if !found {
+				return nil, xerrors.Errorf("failed to find actor %s", addr)
+			}
+
+			actorMigration, ok := migrations[actorIn.Code]
+			if !ok {
+				return nil, xerrors.Errorf("actor with code %s has no registered migration function", actorIn.Code)
+			}
+
+			res, err := (&migrationJob{
+				Address:        addr,
+				ActorV5:        *actorIn,
+				ActorMigration: actorMigration,
+				cache:          cache,
+			}).run(ctx, store)
+			if err != nil {
+				return nil, xerrors.Errorf("running deferred job: %w", err)
+			}
+
+			if err := actorsOut.SetActorV5(res.Address, &res.ActorV5); err != nil {
+				return nil, xerrors.Errorf("error setting actor %s: %w", res.Address, err)
+			}
+		}
 	}
 
 	elapsed := time.Since(startTime)
