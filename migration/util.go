@@ -5,6 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/filecoin-project/go-state-types/abi"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/rt"
 	cbor "github.com/ipfs/go-ipld-cbor"
@@ -83,6 +85,8 @@ type Config struct {
 	// Time between progress logs to emit.
 	// Zero (the default) results in no progress logs.
 	ProgressLogPeriod time.Duration
+	// The epoch at which the upgrade will run.
+	UpgradeEpoch abi.ChainEpoch
 }
 
 type Logger interface {

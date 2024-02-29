@@ -33,15 +33,15 @@ type providerSectors struct {
 // minerMigration is technically a no-op, but it collects a cache for market migration
 type minerMigrator struct {
 	providerSectors *providerSectors
-
-	OutCodeCID cid.Cid
+	upgradeEpoch    abi.ChainEpoch
+	OutCodeCID      cid.Cid
 }
 
-func newMinerMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid, ps *providerSectors) (*minerMigrator, error) {
+func newMinerMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid, ps *providerSectors, upgradeEpoch abi.ChainEpoch) (*minerMigrator, error) {
 	return &minerMigrator{
 		providerSectors: ps,
-
-		OutCodeCID: outCode,
+		upgradeEpoch:    upgradeEpoch,
+		OutCodeCID:      outCode,
 	}, nil
 }
 
@@ -73,7 +73,7 @@ func (m *minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, 
 		// no cached migration, so we simply iterate all sectors and collect deal IDs
 
 		err = inSectors.ForEach(&sector, func(i int64) error {
-			if len(sector.DealIDs) == 0 || sector.Expiration < UpgradeHeight {
+			if len(sector.DealIDs) == 0 || sector.Expiration < m.upgradeEpoch {
 				return nil
 			}
 
