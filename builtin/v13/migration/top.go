@@ -17,9 +17,6 @@ import (
 	"golang.org/x/xerrors"
 )
 
-// TODO: Make input to migration
-const UpgradeHeight = abi.ChainEpoch(3654004)
-
 // MigrateStateTree Migrates the filecoin state tree starting from the global state tree and upgrading all actor state.
 // The store must support concurrent writes (even if the configured worker count is 1).
 func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID cid.Cid, actorsRootIn cid.Cid, priorEpoch abi.ChainEpoch, cfg migration.Config, log migration.Logger, cache migration.MigrationCache) (cid.Cid, error) {
@@ -119,7 +116,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		updatesToMinerToSectorToDeals: map[abi.ActorID]map[abi.SectorNumber][]abi.DealID{},
 	}
 
-	minerMig, err := newMinerMigrator(ctx, store, miner13Cid, ps)
+	minerMig, err := newMinerMigrator(ctx, store, miner13Cid, ps, cfg.UpgradeEpoch)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to create miner migrator: %w", err)
 	}
@@ -132,7 +129,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("code cid for market actor not found in new manifest")
 	}
 
-	marketMig, err := newMarketMigrator(ctx, store, market13Cid, ps)
+	marketMig, err := newMarketMigrator(ctx, store, market13Cid, ps, cfg.UpgradeEpoch)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to create market migrator: %w", err)
 	}

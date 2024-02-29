@@ -21,12 +21,14 @@ import (
 
 type marketMigrator struct {
 	providerSectors *providerSectors
+	upgradeEpoch    abi.ChainEpoch
 	OutCodeCID      cid.Cid
 }
 
-func newMarketMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid, ps *providerSectors) (*marketMigrator, error) {
+func newMarketMigrator(ctx context.Context, store cbor.IpldStore, outCode cid.Cid, ps *providerSectors, upgradeEpoch abi.ChainEpoch) (*marketMigrator, error) {
 	return &marketMigrator{
 		providerSectors: ps,
+		upgradeEpoch:    upgradeEpoch,
 		OutCodeCID:      outCode,
 	}, nil
 }
@@ -329,7 +331,7 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesFromScratch(ctx context.
 		}
 
 		// FIP: For each unexpired deal state object in the market actor state that has a terminated epoch set to -1:
-		if oldState.SlashEpoch == -1 && proposal.EndEpoch >= UpgradeHeight {
+		if oldState.SlashEpoch == -1 && proposal.EndEpoch >= m.upgradeEpoch {
 			// FIP: find the corresponding deal proposal object and extract the provider's actor ID;
 			// - we do this by collecting all dealIDs in providerSectors in miner migration
 
