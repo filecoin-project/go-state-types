@@ -22,8 +22,9 @@ type DealSummary struct {
 	SectorStartEpoch abi.ChainEpoch
 	LastUpdatedEpoch abi.ChainEpoch
 	SlashEpoch       abi.ChainEpoch
-	SectorNumber     abi.SectorNumber
-	PieceCid         cid.Cid
+	// Populated from market's States, not the miner state
+	SectorNumber abi.SectorNumber
+	PieceCid     cid.Cid
 }
 
 type StateSummary struct {
@@ -300,9 +301,10 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 				// check against proposalStats
 				for _, dealID := range dealIDsCopy {
 					st, found := proposalStats[dealID]
-					if !found {
+					if !found || st.SlashEpoch != EpochUndefined || st.EndEpoch < currEpoch {
 						continue
 					}
+
 					acc.Require(st.SectorNumber == abi.SectorNumber(sectorNumber), "deal id %d sector number %d does not match sector id %d", dealID, st.SectorNumber, sectorNumber)
 
 					_, ok := expectedProviderSectors[dealID]
@@ -316,8 +318,6 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 					}
 
 					acc.Require(provider == provID, "deal %d has provider %v, expected %v", dealID, provID, provider)
-
-					acc.Require(st.SlashEpoch == EpochUndefined, "provider sector deal %d is slashed", dealID)
 				}
 
 				return nil

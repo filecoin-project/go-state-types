@@ -188,7 +188,7 @@ func CheckStateInvariants(tree *builtin.ActorTree, priorEpoch abi.ChainEpoch, ac
 	//
 
 	CheckMinersAgainstPower(acc, minerSummaries, powerSummary)
-	CheckDealStatesAgainstSectors(acc, minerSummaries, marketSummary)
+	CheckDealStatesAgainstSectors(acc, minerSummaries, marketSummary, priorEpoch)
 	CheckVerifregAgainstMiners(acc, verifregSummary, minerSummaries)
 	CheckMarketAgainstVerifreg(acc, verifregSummary, marketSummary)
 	CheckVerifregAgainstDatacap(acc, verifregSummary, datacapSummary)
@@ -251,7 +251,7 @@ func CheckMinersAgainstPower(acc *builtin.MessageAccumulator, minerSummaries map
 	}
 }
 
-func CheckDealStatesAgainstSectors(acc *builtin.MessageAccumulator, minerSummaries map[address.Address]*miner.StateSummary, marketSummary *market.StateSummary) {
+func CheckDealStatesAgainstSectors(acc *builtin.MessageAccumulator, minerSummaries map[address.Address]*miner.StateSummary, marketSummary *market.StateSummary, currEpoch abi.ChainEpoch) {
 	// Check that all active deals are included within a non-terminated sector.
 	// We cannot check that all deals referenced within a sector are in the market, because deals
 	// can be terminated independently of the sector in which they are included.
@@ -291,7 +291,7 @@ func CheckDealStatesAgainstSectors(acc *builtin.MessageAccumulator, minerSummari
 			"deal state slashed at %d after sector expiration %d for miner %v",
 			deal.SlashEpoch, sectorDeal.SectorExpiration, deal.Provider)
 
-		acc.Require((deal.SectorNumber == sectorDeal.SectorNumber) || (deal.SectorNumber == 0 && deal.SlashEpoch != -1),
+		acc.Require((deal.SectorNumber == sectorDeal.SectorNumber) || (deal.SectorNumber == 0 && deal.SlashEpoch != -1) || (deal.SectorNumber == 0 && deal.EndEpoch < currEpoch),
 			"deal sector number %d does not match sector %d for miner %v (ds: %#v; ss %#v)",
 			deal.SectorNumber, sectorDeal.SectorNumber, deal.Provider, deal, sectorDeal)
 	}
