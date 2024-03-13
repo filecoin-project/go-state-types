@@ -218,9 +218,13 @@ type AllocationRequest struct {
 }
 
 type ClaimExtensionRequest struct {
-	Provider addr.Address
-	Claim    ClaimId
-	TermMax  abi.ChainEpoch
+	// The provider (miner actor) which may claim the allocation.
+	Provider abi.ActorID
+	// Identifier of the claim to be extended.
+	Claim ClaimId
+	// The new maximum period for which a provider can earn quality-adjusted power
+	// for the piece (epochs).
+	TermMax abi.ChainEpoch
 }
 
 type AllocationRequests struct {
