@@ -2947,8 +2947,9 @@ func (t *ClaimExtensionRequest) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.Provider (address.Address) (struct)
-	if err := t.Provider.MarshalCBOR(cw); err != nil {
+	// t.Provider (abi.ActorID) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Provider)); err != nil {
 		return err
 	}
 
@@ -2995,13 +2996,18 @@ func (t *ClaimExtensionRequest) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	// t.Provider (address.Address) (struct)
+	// t.Provider (abi.ActorID) (uint64)
 
 	{
 
-		if err := t.Provider.UnmarshalCBOR(cr); err != nil {
-			return xerrors.Errorf("unmarshaling t.Provider: %w", err)
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
 		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.Provider = abi.ActorID(extra)
 
 	}
 	// t.Claim (verifreg.ClaimId) (uint64)
