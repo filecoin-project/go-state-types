@@ -164,7 +164,8 @@ func (m *minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, 
 					return nil, xerrors.Errorf("didn't find previous sector info for %d", sectorNo)
 				}
 
-				if len(oldSector.DealIDs) != 0 {
+				if len(oldSector.DealIDs) != 0 && oldSector.Expiration >= m.upgradeEpoch {
+					m.providerSectors.lk.Lock()
 					sectorDeals, ok := m.providerSectors.updatesToMinerToSectorToDeals[abi.ActorID(mid)]
 					if !ok {
 						sectorDeals = make(map[abi.SectorNumber][]abi.DealID)
@@ -172,6 +173,8 @@ func (m *minerMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, 
 					}
 					// TODO: Is it better to use nil to communicate deals to be removed, or just a separate map (of maps)?
 					sectorDeals[sectorNo] = nil
+					m.providerSectors.lk.Unlock()
+
 				}
 			}
 		}
