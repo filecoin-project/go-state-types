@@ -267,11 +267,8 @@ func CheckDealStatesAgainstSectors(acc *builtin.MessageAccumulator, minerSummari
 			continue
 		}
 
-		// TODO: If you are reading this error after nv22 (v13 actors), delete this invariant.
-		// It exists to test the v13 migration ONLY.
 		sectorDeal, found := minerSummary.Deals[dealID]
 		if !found {
-			acc.Require(deal.SlashEpoch >= 0, "MIGRATION-ONLY: un-slashed deal %d not referenced in active sectors of miner %v", dealID, deal.Provider)
 			continue
 		}
 
@@ -300,25 +297,10 @@ func CheckDealStatesAgainstSectors(acc *builtin.MessageAccumulator, minerSummari
 	marketDealToSector := make(map[abi.DealID]abi.SectorID)
 
 	for sectorID, dealIDs := range marketSummary.ProviderSectors {
-		maddr, err := address.NewIDAddress(uint64(sectorID.Miner))
-		if err != nil {
-			acc.Addf("error creating ID address: %v", err)
-			continue
-		}
-
-		minerSummary, found := minerSummaries[maddr]
-		if !found {
-			acc.Addf("provider %v for sector %v not found among miners", sectorID, sectorID)
-			continue
-		}
 
 		for _, dealID := range dealIDs {
-			_, found := minerSummary.Deals[dealID]
-			// TODO: If you are reading this error after nv22 (v13 actors), delete this invariant.
-			// It exists to test the v13 migration ONLY.
-			acc.Require(found, "MIGRATION-ONLY: deal %d not found in miner %v for sector %v", dealID, maddr, sectorID)
 
-			_, found = marketDealToSector[dealID]
+			_, found := marketDealToSector[dealID]
 			acc.Require(!found, "deal %d found in multiple sectors", dealID)
 
 			marketDealToSector[dealID] = sectorID
