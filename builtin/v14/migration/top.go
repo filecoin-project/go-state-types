@@ -101,11 +101,11 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	f090Migration := func(actors *builtin.ActorTree) error {
 		f090ID, err := address.NewIDAddress(90)
 		if err != nil {
-			return xerrors.Errorf("failed to construct f090 id addr", err)
+			return xerrors.Errorf("failed to construct f090 id addr: %w", err)
 		}
 		f090OldAct, found, err := actorsOut.GetActorV5(f090ID)
 		if err != nil {
-			return xerrors.Errorf("failed to get old f090 actor", err)
+			return xerrors.Errorf("failed to get old f090 actor: %w", err)
 		}
 		if !found {
 			return xerrors.Errorf("failed to find old f090 actor")
@@ -121,7 +121,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 			return xerrors.Errorf("invalid manifest missing account code cid")
 		}
 
-		actorsOut.SetActorV5(f090ID, &builtin.ActorV5{
+		return actorsOut.SetActorV5(f090ID, &builtin.ActorV5{
 			// unchanged
 			CallSeqNum: f090OldAct.CallSeqNum,
 			Balance:    f090OldAct.Balance,
@@ -131,8 +131,6 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 			Code: newAccountCodeCID,
 			Head: h,
 		})
-
-		return nil
 	}
 	if err := f090Migration(actorsOut); err != nil {
 		return cid.Undef, err
