@@ -309,10 +309,21 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesFromScratch(ctx context.
 		return cid.Undef, cid.Undef, xerrors.Errorf("failed to load proposals array: %w", err)
 	}
 
+	proposalsSize := proposalsArr.Length()
+
 	var oldState market12.DealState
 	var newState market13.DealState
 
 	err = oldStateArray.ForEach(&oldState, func(i int64) error {
+		// Refresh proposals array periodically to avoid holding onto all ~10GB of memory
+		// throughout whole migration.
+		// This has limited impact on caching speedups because the access pattern is sequential.
+		if i%(int64(proposalsSize)/1000) == 0 {
+			proposalsArr, err = adt.AsArray(ctxStore, proposals, market12.ProposalsAmtBitwidth)
+			if err != nil {
+				return xerrors.Errorf("failed to load proposals array: %w", err)
+			}
+		}
 		deal := abi.DealID(i)
 
 		newState.SlashEpoch = oldState.SlashEpoch
