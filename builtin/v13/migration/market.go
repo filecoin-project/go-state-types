@@ -318,8 +318,10 @@ func (m *marketMigrator) migrateProviderSectorsAndStatesFromScratch(ctx context.
 		// Refresh proposals array periodically to avoid holding onto all ~10GB of memory
 		// throughout whole migration.
 		// This has limited impact on caching speedups because the access pattern is sequential.
+		// The minimum batch-size is 100 (hence a 100,000 minimum proposals before this
+		// kicks in).
 		cnt += 1
-		if proposalsSize > 0 && cnt%(int(proposalsSize/1000)) == 0 {
+		if proposalsSize > 100_000 && cnt%(int(proposalsSize/1000)) == 0 {
 			proposalsArr, err = adt.AsArray(ctxStore, proposals, market12.ProposalsAmtBitwidth)
 			if err != nil {
 				return xerrors.Errorf("failed to load proposals array: %w", err)
