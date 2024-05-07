@@ -996,7 +996,7 @@ func (t *ClaimAllocationsParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.Sectors ([]verifreg.SectorAllocationClaim) (slice)
+	// t.Sectors ([]verifreg.SectorAllocationClaims) (slice)
 	if len(t.Sectors) > 8192 {
 		return xerrors.Errorf("Slice value in field t.Sectors was too long")
 	}
@@ -1041,7 +1041,7 @@ func (t *ClaimAllocationsParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	// t.Sectors ([]verifreg.SectorAllocationClaim) (slice)
+	// t.Sectors ([]verifreg.SectorAllocationClaims) (slice)
 
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
@@ -1057,7 +1057,7 @@ func (t *ClaimAllocationsParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	if extra > 0 {
-		t.Sectors = make([]SectorAllocationClaim, extra)
+		t.Sectors = make([]SectorAllocationClaims, extra)
 	}
 
 	for i := 0; i < int(extra); i++ {
@@ -2388,9 +2388,9 @@ func (t *FailCode) UnmarshalCBOR(r io.Reader) (err error) {
 	return nil
 }
 
-var lengthBufSectorAllocationClaim = []byte{134}
+var lengthBufSectorAllocationClaims = []byte{131}
 
-func (t *SectorAllocationClaim) MarshalCBOR(w io.Writer) error {
+func (t *SectorAllocationClaims) MarshalCBOR(w io.Writer) error {
 	if t == nil {
 		_, err := w.Write(cbg.CborNull)
 		return err
@@ -2398,7 +2398,158 @@ func (t *SectorAllocationClaim) MarshalCBOR(w io.Writer) error {
 
 	cw := cbg.NewCborWriter(w)
 
-	if _, err := cw.Write(lengthBufSectorAllocationClaim); err != nil {
+	if _, err := cw.Write(lengthBufSectorAllocationClaims); err != nil {
+		return err
+	}
+
+	// t.Sector (abi.SectorNumber) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Sector)); err != nil {
+		return err
+	}
+
+	// t.SectorExpiry (abi.ChainEpoch) (int64)
+	if t.SectorExpiry >= 0 {
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.SectorExpiry)); err != nil {
+			return err
+		}
+	} else {
+		if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-t.SectorExpiry-1)); err != nil {
+			return err
+		}
+	}
+
+	// t.Claims ([]verifreg.AllocationClaim) (slice)
+	if len(t.Claims) > 8192 {
+		return xerrors.Errorf("Slice value in field t.Claims was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Claims))); err != nil {
+		return err
+	}
+	for _, v := range t.Claims {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+
+	}
+	return nil
+}
+
+func (t *SectorAllocationClaims) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = SectorAllocationClaims{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 3 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Sector (abi.SectorNumber) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.Sector = abi.SectorNumber(extra)
+
+	}
+	// t.SectorExpiry (abi.ChainEpoch) (int64)
+	{
+		maj, extra, err := cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		var extraI int64
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
+			}
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative overflow")
+			}
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
+		}
+
+		t.SectorExpiry = abi.ChainEpoch(extraI)
+	}
+	// t.Claims ([]verifreg.AllocationClaim) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 8192 {
+		return fmt.Errorf("t.Claims: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.Claims = make([]AllocationClaim, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
+
+			{
+
+				if err := t.Claims[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Claims[i]: %w", err)
+				}
+
+			}
+
+		}
+	}
+	return nil
+}
+
+var lengthBufAllocationClaim = []byte{132}
+
+func (t *AllocationClaim) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufAllocationClaim); err != nil {
 		return err
 	}
 
@@ -2426,28 +2577,11 @@ func (t *SectorAllocationClaim) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.Sector (abi.SectorNumber) (uint64)
-
-	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Sector)); err != nil {
-		return err
-	}
-
-	// t.SectorExpiry (abi.ChainEpoch) (int64)
-	if t.SectorExpiry >= 0 {
-		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.SectorExpiry)); err != nil {
-			return err
-		}
-	} else {
-		if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-t.SectorExpiry-1)); err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
-func (t *SectorAllocationClaim) UnmarshalCBOR(r io.Reader) (err error) {
-	*t = SectorAllocationClaim{}
+func (t *AllocationClaim) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = AllocationClaim{}
 
 	cr := cbg.NewCborReader(r)
 
@@ -2465,7 +2599,7 @@ func (t *SectorAllocationClaim) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 6 {
+	if extra != 4 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
@@ -2522,45 +2656,6 @@ func (t *SectorAllocationClaim) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 		t.Size = abi.PaddedPieceSize(extra)
 
-	}
-	// t.Sector (abi.SectorNumber) (uint64)
-
-	{
-
-		maj, extra, err = cr.ReadHeader()
-		if err != nil {
-			return err
-		}
-		if maj != cbg.MajUnsignedInt {
-			return fmt.Errorf("wrong type for uint64 field")
-		}
-		t.Sector = abi.SectorNumber(extra)
-
-	}
-	// t.SectorExpiry (abi.ChainEpoch) (int64)
-	{
-		maj, extra, err := cr.ReadHeader()
-		if err != nil {
-			return err
-		}
-		var extraI int64
-		switch maj {
-		case cbg.MajUnsignedInt:
-			extraI = int64(extra)
-			if extraI < 0 {
-				return fmt.Errorf("int64 positive overflow")
-			}
-		case cbg.MajNegativeInt:
-			extraI = int64(extra)
-			if extraI < 0 {
-				return fmt.Errorf("int64 negative overflow")
-			}
-			extraI = -1 - extraI
-		default:
-			return fmt.Errorf("wrong type for int64 field: %d", maj)
-		}
-
-		t.SectorExpiry = abi.ChainEpoch(extraI)
 	}
 	return nil
 }
