@@ -108,12 +108,12 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 			return xerrors.Errorf("failed to get old f090 actor: %w", err)
 		}
 		if !found {
-			return xerrors.Errorf("failed to find old f090 actor")
+			return xerrors.Errorf("failed to find old f090 actor: %w", err)
 		}
 		f090NewSt := account14.State{Address: f090ID} // State points to ID addr
 		h, err := actors.Store.Put(ctx, f090NewSt)
 		if err != nil {
-			return xerrors.Errorf("failed to write new f090 state")
+			return xerrors.Errorf("failed to write new f090 state: %w", err)
 		}
 
 		newAccountCodeCID, ok := newManifest.Get(manifest.AccountKey)
