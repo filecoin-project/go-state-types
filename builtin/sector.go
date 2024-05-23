@@ -67,6 +67,22 @@ var SealProofPoliciesV11 = map[stabi.RegisteredSealProof]*SealProofPolicy{
 	stabi.RegisteredSealProof_StackedDrg64GiBV1_1_Feat_SyntheticPoRep: {
 		SectorMaxLifetime: EpochsInFiveYears,
 	},
+
+	stabi.RegisteredSealProof_StackedDrg2KiBV1_1_Feat_NiPoRep: {
+		SectorMaxLifetime: EpochsInFiveYears,
+	},
+	stabi.RegisteredSealProof_StackedDrg8MiBV1_1_Feat_NiPoRep: {
+		SectorMaxLifetime: EpochsInFiveYears,
+	},
+	stabi.RegisteredSealProof_StackedDrg512MiBV1_1_Feat_NiPoRep: {
+		SectorMaxLifetime: EpochsInFiveYears,
+	},
+	stabi.RegisteredSealProof_StackedDrg32GiBV1_1_Feat_NiPoRep: {
+		SectorMaxLifetime: EpochsInFiveYears,
+	},
+	stabi.RegisteredSealProof_StackedDrg64GiBV1_1_Feat_NiPoRep: {
+		SectorMaxLifetime: EpochsInFiveYears,
+	},
 }
 
 // SectorMaximumLifetime is the maximum duration a sector sealed with this proof may exist between activation and expiration
