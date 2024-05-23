@@ -91,6 +91,12 @@ const (
 	RegisteredSealProof_StackedDrg512MiBV1_1_Feat_SyntheticPoRep = RegisteredSealProof(12)
 	RegisteredSealProof_StackedDrg32GiBV1_1_Feat_SyntheticPoRep  = RegisteredSealProof(13)
 	RegisteredSealProof_StackedDrg64GiBV1_1_Feat_SyntheticPoRep  = RegisteredSealProof(14)
+
+	RegisteredSealProof_StackedDrg2KiBV1_1_Feat_NiPoRep   = RegisteredSealProof(15)
+	RegisteredSealProof_StackedDrg8MiBV1_1_Feat_NiPoRep   = RegisteredSealProof(16)
+	RegisteredSealProof_StackedDrg512MiBV1_1_Feat_NiPoRep = RegisteredSealProof(17)
+	RegisteredSealProof_StackedDrg32GiBV1_1_Feat_NiPoRep  = RegisteredSealProof(18)
+	RegisteredSealProof_StackedDrg64GiBV1_1_Feat_NiPoRep  = RegisteredSealProof(19)
 )
 
 var Synthetic = map[RegisteredSealProof]bool{
@@ -99,6 +105,14 @@ var Synthetic = map[RegisteredSealProof]bool{
 	RegisteredSealProof_StackedDrg512MiBV1_1_Feat_SyntheticPoRep: true,
 	RegisteredSealProof_StackedDrg32GiBV1_1_Feat_SyntheticPoRep:  true,
 	RegisteredSealProof_StackedDrg64GiBV1_1_Feat_SyntheticPoRep:  true,
+}
+
+var NonInteractive = map[RegisteredSealProof]bool{
+	RegisteredSealProof_StackedDrg2KiBV1_1_Feat_NiPoRep:   true,
+	RegisteredSealProof_StackedDrg8MiBV1_1_Feat_NiPoRep:   true,
+	RegisteredSealProof_StackedDrg512MiBV1_1_Feat_NiPoRep: true,
+	RegisteredSealProof_StackedDrg32GiBV1_1_Feat_NiPoRep:  true,
+	RegisteredSealProof_StackedDrg64GiBV1_1_Feat_NiPoRep:  true,
 }
 
 type RegisteredPoStProof int64
@@ -278,6 +292,41 @@ var SealProofInfos = map[RegisteredSealProof]*SealProofInfo{
 		UpdateProof:      RegisteredUpdateProof_StackedDrg32GiBV1,
 	},
 	RegisteredSealProof_StackedDrg64GiBV1_1_Feat_SyntheticPoRep: {
+		ProofSize:        1920,
+		SectorSize:       ss64GiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning64GiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow64GiBV1,
+		UpdateProof:      RegisteredUpdateProof_StackedDrg64GiBV1,
+	},
+	RegisteredSealProof_StackedDrg2KiBV1_1_Feat_NiPoRep: {
+		ProofSize:        192,
+		SectorSize:       ss2KiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning2KiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow2KiBV1,
+		UpdateProof:      RegisteredUpdateProof_StackedDrg2KiBV1,
+	},
+	RegisteredSealProof_StackedDrg8MiBV1_1_Feat_NiPoRep: {
+		ProofSize:        192,
+		SectorSize:       ss8MiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning8MiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow8MiBV1,
+		UpdateProof:      RegisteredUpdateProof_StackedDrg8MiBV1,
+	},
+	RegisteredSealProof_StackedDrg512MiBV1_1_Feat_NiPoRep: {
+		ProofSize:        192,
+		SectorSize:       ss512MiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning512MiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow512MiBV1,
+		UpdateProof:      RegisteredUpdateProof_StackedDrg512MiBV1,
+	},
+	RegisteredSealProof_StackedDrg32GiBV1_1_Feat_NiPoRep: {
+		ProofSize:        1920,
+		SectorSize:       ss32GiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning32GiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow32GiBV1,
+		UpdateProof:      RegisteredUpdateProof_StackedDrg32GiBV1,
+	},
+	RegisteredSealProof_StackedDrg64GiBV1_1_Feat_NiPoRep: {
 		ProofSize:        1920,
 		SectorSize:       ss64GiB,
 		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning64GiBV1,
