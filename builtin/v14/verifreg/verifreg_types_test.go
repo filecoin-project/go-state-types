@@ -17,24 +17,11 @@ func TestSerializationSlaimAllocationsParams(t *testing.T) {
 		hex    string
 	}{
 		{
-			/*
-			 82                                                # array(2)
-			   80                                              #   array(0)
-			   f4                                              #   false
-			*/
 			params: ClaimAllocationsParams{Sectors: nil, AllOrNothing: false},
-			hex:    "8280f4",
+			// [[],false]
+			hex: "8280f4",
 		},
 		{
-			/*
-			 82                                                # array(2)
-			   81                                              #   array(1)
-			     83                                            #     array(3)
-			       18 65                                       #       uint(101)
-			       18 ca                                       #       uint(202)
-			       80                                          #       array(0)
-			   f5                                              #   true
-			*/
 			params: ClaimAllocationsParams{
 				Sectors: []SectorAllocationClaims{{
 					Sector:       101,
@@ -43,36 +30,10 @@ func TestSerializationSlaimAllocationsParams(t *testing.T) {
 				}},
 				AllOrNothing: true,
 			},
+			// [[[101,202,[]]],true]
 			hex: "828183186518ca80f5",
 		},
 		{
-			/*
-			 82                                                # array(2)
-			   82                                              #   array(2)
-			     83                                            #     array(3)
-			       18 65                                       #       uint(101)
-			       18 ca                                       #       uint(202)
-			       82                                          #       array(2)
-			         84                                        #         array(4)
-			           19 012f                                 #           uint(303)
-			           19 0194                                 #           uint(404)
-			           d8 2a                                   #           tag(42)
-			             49                                    #             bytes(9)
-			               000181e20392200100                  #               "\x00\x01\x81â\x03\x92 \x01\x00"
-			           19 01f9                                 #           uint(505)
-			         84                                        #         array(4)
-			           19 025e                                 #           uint(606)
-			           19 02c3                                 #           uint(707)
-			           d8 2a                                   #           tag(42)
-			             49                                    #             bytes(9)
-			               000181e20392200101                  #               "\x00\x01\x81â\x03\x92 \x01\x01"
-			           19 0328                                 #           uint(808)
-			     83                                            #     array(3)
-			       19 012f                                     #       uint(303)
-			       19 0194                                     #       uint(404)
-			       80                                          #       array(0)
-			   f5                                              #   true
-			*/
 			params: ClaimAllocationsParams{
 				Sectors: []SectorAllocationClaims{{
 					Sector:       101,
@@ -96,6 +57,7 @@ func TestSerializationSlaimAllocationsParams(t *testing.T) {
 				},
 				AllOrNothing: true,
 			},
+			// [[[101,202,[[303,404,baga6ea4seaaqa,505],[606,707,baga6ea4seaaqc,808]]],[303,404,[]]],true]
 			hex: "828283186518ca828419012f190194d82a49000181e203922001001901f98419025e1902c3d82a49000181e203922001011903288319012f19019480f5",
 		},
 	}
