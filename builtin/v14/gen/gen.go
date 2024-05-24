@@ -218,6 +218,8 @@ func main() {
 		miner.ReplicaUpdate2{},
 		miner.ExpirationExtension2{},
 		miner.SectorClaim{},
+		miner.SectorNIActivationInfo{},
+		miner.ProveCommitSectorsNIParams{},
 	); err != nil {
 		panic(err)
 	}
