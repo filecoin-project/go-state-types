@@ -68,19 +68,19 @@ var SealProofPoliciesV11 = map[stabi.RegisteredSealProof]*SealProofPolicy{
 		SectorMaxLifetime: EpochsInFiveYears,
 	},
 
-	stabi.RegisteredSealProof_StackedDrg2KiBV1_1_Feat_NiPoRep: {
+	stabi.RegisteredSealProof_StackedDrg2KiBV1_2_Feat_NiPoRep: {
 		SectorMaxLifetime: EpochsInFiveYears,
 	},
-	stabi.RegisteredSealProof_StackedDrg8MiBV1_1_Feat_NiPoRep: {
+	stabi.RegisteredSealProof_StackedDrg8MiBV1_2_Feat_NiPoRep: {
 		SectorMaxLifetime: EpochsInFiveYears,
 	},
-	stabi.RegisteredSealProof_StackedDrg512MiBV1_1_Feat_NiPoRep: {
+	stabi.RegisteredSealProof_StackedDrg512MiBV1_2_Feat_NiPoRep: {
 		SectorMaxLifetime: EpochsInFiveYears,
 	},
-	stabi.RegisteredSealProof_StackedDrg32GiBV1_1_Feat_NiPoRep: {
+	stabi.RegisteredSealProof_StackedDrg32GiBV1_2_Feat_NiPoRep: {
 		SectorMaxLifetime: EpochsInFiveYears,
 	},
-	stabi.RegisteredSealProof_StackedDrg64GiBV1_1_Feat_NiPoRep: {
+	stabi.RegisteredSealProof_StackedDrg64GiBV1_2_Feat_NiPoRep: {
 		SectorMaxLifetime: EpochsInFiveYears,
 	},
 }
