@@ -11,7 +11,7 @@ import (
 
 // Tests to match with Rust fil_actor_verifreg::serialization
 
-func TestSerializationSlaimAllocationsParams(t *testing.T) {
+func TestSerializationClaimAllocationsParams(t *testing.T) {
 	testCases := []struct {
 		params ClaimAllocationsParams
 		hex    string
