@@ -488,6 +488,16 @@ func (p RegisteredSealProof) ReplicaId(prover ActorID, sector SectorNumber, tick
 	return bytesIntoFr32Safe(s.Sum(nil)), nil
 }
 
+func (p RegisteredSealProof) IsSynthetic() bool {
+	_, ok := Synthetic[p]
+	return ok
+}
+
+func (p RegisteredSealProof) IsNonInteractive() bool {
+	_, ok := NonInteractive[p]
+	return ok
+}
+
 type ProverID [32]byte
 
 // ProverID returns a 32 byte proverID used when computing ReplicaID
