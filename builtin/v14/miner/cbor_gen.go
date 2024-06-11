@@ -9773,40 +9773,6 @@ func (t *ProveCommitSectorsNIParams) MarshalCBOR(w io.Writer) error {
 
 	}
 
-	// t.SealProofType (abi.RegisteredSealProof) (int64)
-	if t.SealProofType >= 0 {
-		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.SealProofType)); err != nil {
-			return err
-		}
-	} else {
-		if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-t.SealProofType-1)); err != nil {
-			return err
-		}
-	}
-
-	// t.SectorProofs ([][]uint8) (slice)
-	if len(t.SectorProofs) > 8192 {
-		return xerrors.Errorf("Slice value in field t.SectorProofs was too long")
-	}
-
-	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.SectorProofs))); err != nil {
-		return err
-	}
-	for _, v := range t.SectorProofs {
-		if len(v) > 2097152 {
-			return xerrors.Errorf("Byte array in field v was too long")
-		}
-
-		if err := cw.WriteMajorTypeHeader(cbg.MajByteString, uint64(len(v))); err != nil {
-			return err
-		}
-
-		if _, err := cw.Write(v); err != nil {
-			return err
-		}
-
-	}
-
 	// t.AggregateProof ([]uint8) (slice)
 	if len(t.AggregateProof) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.AggregateProof was too long")
@@ -9820,21 +9786,32 @@ func (t *ProveCommitSectorsNIParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.AggregateProofType (abi.RegisteredAggregationProof) (int64)
-	if t.AggregateProofType == nil {
-		if _, err := cw.Write(cbg.CborNull); err != nil {
+	// t.SealProofType (abi.RegisteredSealProof) (int64)
+	if t.SealProofType >= 0 {
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.SealProofType)); err != nil {
 			return err
 		}
 	} else {
-		if *t.AggregateProofType >= 0 {
-			if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(*t.AggregateProofType)); err != nil {
-				return err
-			}
-		} else {
-			if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-*t.AggregateProofType-1)); err != nil {
-				return err
-			}
+		if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-t.SealProofType-1)); err != nil {
+			return err
 		}
+	}
+
+	// t.AggregateProofType (abi.RegisteredAggregationProof) (int64)
+	if t.AggregateProofType >= 0 {
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.AggregateProofType)); err != nil {
+			return err
+		}
+	} else {
+		if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-t.AggregateProofType-1)); err != nil {
+			return err
+		}
+	}
+
+	// t.ProvingDeadline (uint64) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.ProvingDeadline)); err != nil {
+		return err
 	}
 
 	// t.RequireActivationSuccess (bool) (bool)
@@ -9905,6 +9882,28 @@ func (t *ProveCommitSectorsNIParams) UnmarshalCBOR(r io.Reader) (err error) {
 
 		}
 	}
+	// t.AggregateProof ([]uint8) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 2097152 {
+		return fmt.Errorf("t.AggregateProof: byte array too large (%d)", extra)
+	}
+	if maj != cbg.MajByteString {
+		return fmt.Errorf("expected byte array")
+	}
+
+	if extra > 0 {
+		t.AggregateProof = make([]uint8, extra)
+	}
+
+	if _, err := io.ReadFull(cr, t.AggregateProof); err != nil {
+		return err
+	}
+
 	// t.SealProofType (abi.RegisteredSealProof) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -9930,112 +9929,44 @@ func (t *ProveCommitSectorsNIParams) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.SealProofType = abi.RegisteredSealProof(extraI)
 	}
-	// t.SectorProofs ([][]uint8) (slice)
-
-	maj, extra, err = cr.ReadHeader()
-	if err != nil {
-		return err
-	}
-
-	if extra > 8192 {
-		return fmt.Errorf("t.SectorProofs: array too large (%d)", extra)
-	}
-
-	if maj != cbg.MajArray {
-		return fmt.Errorf("expected cbor array")
-	}
-
-	if extra > 0 {
-		t.SectorProofs = make([][]uint8, extra)
-	}
-
-	for i := 0; i < int(extra); i++ {
-		{
-			var maj byte
-			var extra uint64
-			var err error
-			_ = maj
-			_ = extra
-			_ = err
-
-			maj, extra, err = cr.ReadHeader()
-			if err != nil {
-				return err
-			}
-
-			if extra > 2097152 {
-				return fmt.Errorf("t.SectorProofs[i]: byte array too large (%d)", extra)
-			}
-			if maj != cbg.MajByteString {
-				return fmt.Errorf("expected byte array")
-			}
-
-			if extra > 0 {
-				t.SectorProofs[i] = make([]uint8, extra)
-			}
-
-			if _, err := io.ReadFull(cr, t.SectorProofs[i]); err != nil {
-				return err
-			}
-
-		}
-	}
-	// t.AggregateProof ([]uint8) (slice)
-
-	maj, extra, err = cr.ReadHeader()
-	if err != nil {
-		return err
-	}
-
-	if extra > 2097152 {
-		return fmt.Errorf("t.AggregateProof: byte array too large (%d)", extra)
-	}
-	if maj != cbg.MajByteString {
-		return fmt.Errorf("expected byte array")
-	}
-
-	if extra > 0 {
-		t.AggregateProof = make([]uint8, extra)
-	}
-
-	if _, err := io.ReadFull(cr, t.AggregateProof); err != nil {
-		return err
-	}
-
 	// t.AggregateProofType (abi.RegisteredAggregationProof) (int64)
 	{
-
-		b, err := cr.ReadByte()
+		maj, extra, err := cr.ReadHeader()
 		if err != nil {
 			return err
 		}
-		if b != cbg.CborNull[0] {
-			if err := cr.UnreadByte(); err != nil {
-				return err
+		var extraI int64
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
 			}
-			maj, extra, err := cr.ReadHeader()
-			if err != nil {
-				return err
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative overflow")
 			}
-			var extraI int64
-			switch maj {
-			case cbg.MajUnsignedInt:
-				extraI = int64(extra)
-				if extraI < 0 {
-					return fmt.Errorf("int64 positive overflow")
-				}
-			case cbg.MajNegativeInt:
-				extraI = int64(extra)
-				if extraI < 0 {
-					return fmt.Errorf("int64 negative overflow")
-				}
-				extraI = -1 - extraI
-			default:
-				return fmt.Errorf("wrong type for int64 field: %d", maj)
-			}
-
-			t.AggregateProofType = (*abi.RegisteredAggregationProof)(&extraI)
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
 		}
+
+		t.AggregateProofType = abi.RegisteredAggregationProof(extraI)
+	}
+	// t.ProvingDeadline (uint64) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.ProvingDeadline = uint64(extra)
+
 	}
 	// t.RequireActivationSuccess (bool) (bool)
 
