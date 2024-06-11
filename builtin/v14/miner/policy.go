@@ -115,7 +115,7 @@ var ProveCommitNiSectorBatchMaxSize = 256 // PARAM_SPEC
 // a non-interactive PoRep proof. This balances the need to tie the seal to a particular chain with
 // but makes allowance for service providers to offer pre-sealed sectors within a larger window of
 // time.
-var MaxProveCommitNiLookback = abi.ChainEpoch(30*builtin.EpochsInDay) + ChainFinality // PARAM_SPEC
+var MaxProveCommitNiLookback = abi.ChainEpoch(180 * builtin.EpochsInDay) // PARAM_SPEC
 
 // Lookback from the deadline's challenge window opening from which to sample chain randomness for the WindowPoSt challenge seed.
 // This means that deadline windows can be non-overlapping (which make the programming simpler) without requiring a
