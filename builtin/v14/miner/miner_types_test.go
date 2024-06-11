@@ -13,16 +13,21 @@ import (
 // Tests to match with Rust fil_actor_miner::serialization
 
 func TestSerializationSlaimAllocationsParams(t *testing.T) {
-	apt := abi.RegisteredAggregationProof_SnarkPackV2
-
 	testCases := []struct {
 		params ProveCommitSectorsNIParams
 		hex    string
 	}{
 		{
-			params: ProveCommitSectorsNIParams{Sectors: nil, SealProofType: abi.RegisteredSealProof_StackedDrg32GiBV1_1},
-			// [[],8,[],byte[],null,false]
-			hex: "8680088040f6f4",
+			params: ProveCommitSectorsNIParams{
+				Sectors:                  nil,
+				AggregateProof:           nil,
+				SealProofType:            abi.RegisteredSealProof_StackedDrg32GiBV1_1,
+				AggregateProofType:       abi.RegisteredAggregationProof_SnarkPackV2,
+				ProvingDeadline:          2,
+				RequireActivationSuccess: false,
+			},
+			// [[],byte[],8,1,2,false]
+			hex: "868040080102f4",
 		},
 		{
 			params: ProveCommitSectorsNIParams{
@@ -34,14 +39,14 @@ func TestSerializationSlaimAllocationsParams(t *testing.T) {
 					SealRandEpoch: 4,
 					Expiration:    5,
 				}},
-				SealProofType:            abi.RegisteredSealProof_StackedDrg32GiBV1_1_Feat_NiPoRep,
-				SectorProofs:             nil,
+				SealProofType:            abi.RegisteredSealProof_StackedDrg32GiBV1_2_Feat_NiPoRep,
 				AggregateProof:           []byte{0xde, 0xad, 0xbe, 0xef},
-				AggregateProofType:       &apt,
+				AggregateProofType:       abi.RegisteredAggregationProof_SnarkPackV2,
+				ProvingDeadline:          6,
 				RequireActivationSuccess: true,
 			},
-			// [[[1,2,bagboea4seaaqa,3,4,5]],18,[],byte[deadbeef],1,true]
-			hex: "8681860102d82a49000182e20392200100030405128044deadbeef01f5",
+			// [[[1,2,bagboea4seaaqa,3,4,5]],byte[deadbeef],18,1,6,true]
+			hex: "8681860102d82a49000182e2039220010003040544deadbeef120106f5",
 		},
 		{
 			params: ProveCommitSectorsNIParams{
@@ -63,14 +68,14 @@ func TestSerializationSlaimAllocationsParams(t *testing.T) {
 						Expiration:    10,
 					},
 				},
-				SealProofType:            abi.RegisteredSealProof_StackedDrg32GiBV1_1_Feat_NiPoRep,
-				SectorProofs:             [][]byte{[]byte{0xde, 0xad}, []byte{0xbe, 0xef}},
-				AggregateProof:           nil,
-				AggregateProofType:       nil,
+				SealProofType:            abi.RegisteredSealProof_StackedDrg32GiBV1_2_Feat_NiPoRep,
+				AggregateProof:           []byte{0xde, 0xad, 0xbe, 0xef},
+				AggregateProofType:       abi.RegisteredAggregationProof_SnarkPackV2,
+				ProvingDeadline:          11,
 				RequireActivationSuccess: false,
 			},
-			// [[[1,2,bagboea4seaaqa,3,4,5],[6,7,bagboea4seaaqc,8,9,10]],18,[byte[dead],byte[beef]],byte[],null,false]
-			hex: "8682860102d82a49000182e20392200100030405860607d82a49000182e2039220010108090a128242dead42beef40f6f4",
+			// [[[1,2,bagboea4seaaqa,3,4,5],[6,7,bagboea4seaaqc,8,9,10]],byte[deadbeef],18,1,11,false]
+			hex: "8682860102d82a49000182e20392200100030405860607d82a49000182e2039220010108090a44deadbeef12010bf4",
 		},
 	}
 

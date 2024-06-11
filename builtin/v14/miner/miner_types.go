@@ -502,7 +502,7 @@ type SectorNIActivationInfo struct {
 	SealingNumber abi.SectorNumber // Sector number used to generate replica id
 	SealerID      abi.ActorID      // Must be set to ID of receiving actor for now
 	SealedCID     cid.Cid          // CommR
-	SectorNumber  abi.SectorNumber // unique id of sector in actor state
+	SectorNumber  abi.SectorNumber // Unique id of sector in actor state
 	SealRandEpoch abi.ChainEpoch
 	Expiration    abi.ChainEpoch
 }
@@ -510,18 +510,12 @@ type SectorNIActivationInfo struct {
 // ProveCommitSectorsNIParams is the parameters for non-interactive prove committing of sectors
 // via the miner actor method ProveCommitSectorsNI.
 type ProveCommitSectorsNIParams struct {
-	// Information about sealing of each sector.
-	Sectors []SectorNIActivationInfo
-	// Proof type for each seal (must be an NI-PoRep variant)
-	SealProofType abi.RegisteredSealProof
-	// Proofs for each sector, parallel to activation manifests.
-	// Exactly one of sector_proofs or aggregate_proof must be non-empty.
-	SectorProofs [][]byte
-	// Aggregate proof for all sectors.
-	// Exactly one of sector_proofs or aggregate_proof must be non-empty.
-	AggregateProof []byte
-	// Proof type for aggregation, if aggregated
-	AggregateProofType *abi.RegisteredAggregationProof
-	// Whether to abort if any sector activation fails.
-	RequireActivationSuccess bool
+	Sectors                  []SectorNIActivationInfo       // Information about sealing of each sector
+	AggregateProof           []byte                         // Aggregate proof for all sectors
+	SealProofType            abi.RegisteredSealProof        // Proof type for each seal (must be an NI-PoRep variant)
+	AggregateProofType       abi.RegisteredAggregationProof // Proof type for aggregation
+	ProvingDeadline          uint64                         // The Window PoST deadline index at which to schedule the new sectors
+	RequireActivationSuccess bool                           // Whether to abort if any sector activation fails
 }
+
+type ProveCommitSectorsNIReturn = BatchReturn
