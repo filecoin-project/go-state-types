@@ -9550,3 +9550,440 @@ func (t *SectorClaim) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 	return nil
 }
+
+var lengthBufSectorNIActivationInfo = []byte{134}
+
+func (t *SectorNIActivationInfo) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufSectorNIActivationInfo); err != nil {
+		return err
+	}
+
+	// t.SealingNumber (abi.SectorNumber) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.SealingNumber)); err != nil {
+		return err
+	}
+
+	// t.SealerID (abi.ActorID) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.SealerID)); err != nil {
+		return err
+	}
+
+	// t.SealedCID (cid.Cid) (struct)
+
+	if err := cbg.WriteCid(cw, t.SealedCID); err != nil {
+		return xerrors.Errorf("failed to write cid field t.SealedCID: %w", err)
+	}
+
+	// t.SectorNumber (abi.SectorNumber) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.SectorNumber)); err != nil {
+		return err
+	}
+
+	// t.SealRandEpoch (abi.ChainEpoch) (int64)
+	if t.SealRandEpoch >= 0 {
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.SealRandEpoch)); err != nil {
+			return err
+		}
+	} else {
+		if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-t.SealRandEpoch-1)); err != nil {
+			return err
+		}
+	}
+
+	// t.Expiration (abi.ChainEpoch) (int64)
+	if t.Expiration >= 0 {
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Expiration)); err != nil {
+			return err
+		}
+	} else {
+		if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-t.Expiration-1)); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (t *SectorNIActivationInfo) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = SectorNIActivationInfo{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 6 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.SealingNumber (abi.SectorNumber) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.SealingNumber = abi.SectorNumber(extra)
+
+	}
+	// t.SealerID (abi.ActorID) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.SealerID = abi.ActorID(extra)
+
+	}
+	// t.SealedCID (cid.Cid) (struct)
+
+	{
+
+		c, err := cbg.ReadCid(cr)
+		if err != nil {
+			return xerrors.Errorf("failed to read cid field t.SealedCID: %w", err)
+		}
+
+		t.SealedCID = c
+
+	}
+	// t.SectorNumber (abi.SectorNumber) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.SectorNumber = abi.SectorNumber(extra)
+
+	}
+	// t.SealRandEpoch (abi.ChainEpoch) (int64)
+	{
+		maj, extra, err := cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		var extraI int64
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
+			}
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative overflow")
+			}
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
+		}
+
+		t.SealRandEpoch = abi.ChainEpoch(extraI)
+	}
+	// t.Expiration (abi.ChainEpoch) (int64)
+	{
+		maj, extra, err := cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		var extraI int64
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
+			}
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative overflow")
+			}
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
+		}
+
+		t.Expiration = abi.ChainEpoch(extraI)
+	}
+	return nil
+}
+
+var lengthBufProveCommitSectorsNIParams = []byte{134}
+
+func (t *ProveCommitSectorsNIParams) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufProveCommitSectorsNIParams); err != nil {
+		return err
+	}
+
+	// t.Sectors ([]miner.SectorNIActivationInfo) (slice)
+	if len(t.Sectors) > 8192 {
+		return xerrors.Errorf("Slice value in field t.Sectors was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Sectors))); err != nil {
+		return err
+	}
+	for _, v := range t.Sectors {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+
+	}
+
+	// t.AggregateProof ([]uint8) (slice)
+	if len(t.AggregateProof) > 2097152 {
+		return xerrors.Errorf("Byte array in field t.AggregateProof was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajByteString, uint64(len(t.AggregateProof))); err != nil {
+		return err
+	}
+
+	if _, err := cw.Write(t.AggregateProof); err != nil {
+		return err
+	}
+
+	// t.SealProofType (abi.RegisteredSealProof) (int64)
+	if t.SealProofType >= 0 {
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.SealProofType)); err != nil {
+			return err
+		}
+	} else {
+		if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-t.SealProofType-1)); err != nil {
+			return err
+		}
+	}
+
+	// t.AggregateProofType (abi.RegisteredAggregationProof) (int64)
+	if t.AggregateProofType >= 0 {
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.AggregateProofType)); err != nil {
+			return err
+		}
+	} else {
+		if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-t.AggregateProofType-1)); err != nil {
+			return err
+		}
+	}
+
+	// t.ProvingDeadline (uint64) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.ProvingDeadline)); err != nil {
+		return err
+	}
+
+	// t.RequireActivationSuccess (bool) (bool)
+	if err := cbg.WriteBool(w, t.RequireActivationSuccess); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *ProveCommitSectorsNIParams) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = ProveCommitSectorsNIParams{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 6 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Sectors ([]miner.SectorNIActivationInfo) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 8192 {
+		return fmt.Errorf("t.Sectors: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.Sectors = make([]SectorNIActivationInfo, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
+
+			{
+
+				if err := t.Sectors[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Sectors[i]: %w", err)
+				}
+
+			}
+
+		}
+	}
+	// t.AggregateProof ([]uint8) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 2097152 {
+		return fmt.Errorf("t.AggregateProof: byte array too large (%d)", extra)
+	}
+	if maj != cbg.MajByteString {
+		return fmt.Errorf("expected byte array")
+	}
+
+	if extra > 0 {
+		t.AggregateProof = make([]uint8, extra)
+	}
+
+	if _, err := io.ReadFull(cr, t.AggregateProof); err != nil {
+		return err
+	}
+
+	// t.SealProofType (abi.RegisteredSealProof) (int64)
+	{
+		maj, extra, err := cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		var extraI int64
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
+			}
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative overflow")
+			}
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
+		}
+
+		t.SealProofType = abi.RegisteredSealProof(extraI)
+	}
+	// t.AggregateProofType (abi.RegisteredAggregationProof) (int64)
+	{
+		maj, extra, err := cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		var extraI int64
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
+			}
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative overflow")
+			}
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
+		}
+
+		t.AggregateProofType = abi.RegisteredAggregationProof(extraI)
+	}
+	// t.ProvingDeadline (uint64) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.ProvingDeadline = uint64(extra)
+
+	}
+	// t.RequireActivationSuccess (bool) (bool)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajOther {
+		return fmt.Errorf("booleans must be major type 7")
+	}
+	switch extra {
+	case 20:
+		t.RequireActivationSuccess = false
+	case 21:
+		t.RequireActivationSuccess = true
+	default:
+		return fmt.Errorf("booleans are either major type 7, value 20 or 21 (got %d)", extra)
+	}
+	return nil
+}

@@ -107,6 +107,12 @@ var MaxPreCommitRandomnessLookback = builtin.EpochsInDay + ChainFinality // PARA
 // (2) prevents a miner attempting a long fork in the past to insert a pre-commitment after seeing the challenge.
 var PreCommitChallengeDelay = abi.ChainEpoch(150) // PARAM_SPEC
 
+// Maximum number of epochs within which to fetch a valid seal randomness from the chain for
+// a non-interactive PoRep proof. This balances the need to tie the seal to a particular chain with
+// but makes allowance for service providers to offer pre-sealed sectors within a larger window of
+// time.
+var MaxProveCommitNiLookback = abi.ChainEpoch(180 * builtin.EpochsInDay) // PARAM_SPEC
+
 // Lookback from the deadline's challenge window opening from which to sample chain randomness for the WindowPoSt challenge seed.
 // This means that deadline windows can be non-overlapping (which make the programming simpler) without requiring a
 // miner to wait for chain stability during the challenge window.
