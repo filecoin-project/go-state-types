@@ -9,11 +9,36 @@ modules that read chain state directly.
 
 ## Versioning
 
-Blockchain state versioning does not naturally align with common semantic versioning conventions.
+We adopt a policy similar to the [Builtin-Actors repository](https://github.com/filecoin-project/builtin-actors?tab=readme-ov-file#versioning), with a key difference:
 
-Any change in behaviour, including repairing any error that may have affected blockchain evaluation,
-must be released in a major version change. We intend that to be a rare event for the contents of 
-this repository.
+- The minor number in the version correlates with the `ActorVersion` from the Builtin-Actors repository.
+- We generally don't use major versions; these are always set to `0`.
+- We strive for round minor versions to denote the definitive release for a given network upgrade. However, due to the unpredictability of software engineering, further releases may be made by bumping the patch number.
+- Development versions use qualifiers like `-dev` (development) and `-rc` (release candidate).
+
+As an example of application of this policy for Go-State-Types to a v14 builtin-actor version lineage:
+
+- Unstable development versions are referenced by a `-dev` qualifier.
+- Stable development versions are tagged as release candidates: `0.14.0-rc1`, `0.14.0-rc2`, etc.
+- Definitive release: `0.14.0`.
+- Patched releases: `0.14.1`, `0.14.2`.
+- Network upgrade goes live with `0.14.2`.
+- Patched releases can also occur after a network upgrade.
+
+## Release Process
+
+<details>
+  <summary>Notes for cutting a release candidate in Go-State-Types:</summary>
+
+1. Go to [Go-State-Types Releases](https://github.com/filecoin-project/go-state-types/releases).
+2. Click the "Draft a new release" button in the right corner.
+3. In the "Choose a tag" dropdown, enter the desired version and click "Create new tag: vX.XX.X on publish".
+4. Target the master branch.
+5. Set the previous tag to compare against, the last stable release, and click the "Generate release notes" button.
+6. Check the "Set as a pre-release" checkbox.
+7. Click "Publish release" to create the release candidate.
+
+</details>
 
 ## License
 This repository is dual-licensed under Apache 2.0 and MIT terms.
