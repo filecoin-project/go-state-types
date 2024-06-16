@@ -28,7 +28,7 @@ As an example of application of this policy for Go-State-Types to a v14 builtin-
 ## Release Process
 
 <details>
-  <summary>Notes for cutting a release candidate in Go-State-Types:</summary>
+  <summary>Cutting a development or release candidate release:</summary>
 
 1. Go to [Go-State-Types Releases](https://github.com/filecoin-project/go-state-types/releases).
 2. Click the "Draft a new release" button in the right corner.
@@ -36,7 +36,20 @@ As an example of application of this policy for Go-State-Types to a v14 builtin-
 4. Target the master branch.
 5. Set the previous tag to compare against, the last stable release, and click the "Generate release notes" button.
 6. Check the "Set as a pre-release" checkbox.
-7. Click "Publish release" to create the release candidate.
+7. Click "Publish release" to create the development or release candidate release.
+
+</details>
+
+<details>
+  <summary>Cutting a definitive release:</summary>
+
+1. Go to [Go-State-Types Releases](https://github.com/filecoin-project/go-state-types/releases).
+2. Click the "Draft a new release" button in the right corner.
+3. In the "Choose a tag" dropdown, enter the desired version and click "Create new tag: vX.XX.X on publish".
+4. Target the master branch.
+5. Set the previous tag to compare against, the last stable release, and click the "Generate release notes" button.
+6. Ensure the "Set as a pre-release" checkbox is **not** checked.
+7. Click "Publish release" to create the definitive release.
 
 </details>
 
