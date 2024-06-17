@@ -9,8 +9,7 @@ modules that read chain state directly.
 
 ## Versioning
 
-We adopt a policy similar to the [Builtin-Actors repository](https://github.com/filecoin-project/builtin-actors?tab=readme-ov-file#versioning), with a key difference:
-
+We adopt a policy similar to the [Builtin-Actors repository](https://github.com/filecoin-project/builtin-actors?tab=readme-ov-file#versioning), with these key differences:
 - The minor number in the version correlates with the `ActorVersion` from the Builtin-Actors repository.  (Builtin-Actors uses the major version number for this.)
 - We don't use major versions; these are always set to 0. This is because of Go's special handling of versions to avoid the need to change import paths for every single package, including internal ones, which would result in having more than one version of go-state-types in the dependency tree.
 
