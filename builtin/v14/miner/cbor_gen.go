@@ -4986,9 +4986,9 @@ func (t *WithdrawBalanceParams) UnmarshalCBOR(r io.Reader) (err error) {
 	return nil
 }
 
-var lengthBufConfirmSectorProofsParams = []byte{132}
+var lengthBufInternalSectorSetupForPresealParams = []byte{132}
 
-func (t *ConfirmSectorProofsParams) MarshalCBOR(w io.Writer) error {
+func (t *InternalSectorSetupForPresealParams) MarshalCBOR(w io.Writer) error {
 	if t == nil {
 		_, err := w.Write(cbg.CborNull)
 		return err
@@ -4996,7 +4996,7 @@ func (t *ConfirmSectorProofsParams) MarshalCBOR(w io.Writer) error {
 
 	cw := cbg.NewCborWriter(w)
 
-	if _, err := cw.Write(lengthBufConfirmSectorProofsParams); err != nil {
+	if _, err := cw.Write(lengthBufInternalSectorSetupForPresealParams); err != nil {
 		return err
 	}
 
@@ -5033,8 +5033,8 @@ func (t *ConfirmSectorProofsParams) MarshalCBOR(w io.Writer) error {
 	return nil
 }
 
-func (t *ConfirmSectorProofsParams) UnmarshalCBOR(r io.Reader) (err error) {
-	*t = ConfirmSectorProofsParams{}
+func (t *InternalSectorSetupForPresealParams) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = InternalSectorSetupForPresealParams{}
 
 	cr := cbg.NewCborReader(r)
 

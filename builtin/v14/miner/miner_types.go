@@ -347,7 +347,7 @@ type ApplyRewardParams struct {
 	Penalty abi.TokenAmount
 }
 
-type ConfirmSectorProofsParams struct {
+type InternalSectorSetupForPresealParams struct {
 	Sectors                 []abi.SectorNumber
 	RewardSmoothed          smoothing.FilterEstimate
 	RewardBaselinePower     abi.StoragePower

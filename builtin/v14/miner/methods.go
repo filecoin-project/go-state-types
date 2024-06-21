@@ -28,8 +28,8 @@ var Methods = map[abi.MethodNum]builtin.MethodMeta{
 	15: {"ReportConsensusFault", *new(func(*ReportConsensusFaultParams) *abi.EmptyValue)},     // ReportConsensusFault
 	16: {"WithdrawBalance", *new(func(*WithdrawBalanceParams) *abi.TokenAmount)},              // WithdrawBalance
 	builtin.MustGenerateFRCMethodNum("WithdrawBalance"): {"WithdrawBalanceExported", *new(func(*WithdrawBalanceParams) *abi.TokenAmount)}, // WithdrawBalanceExported
-	17: {"ConfirmSectorProofsValid", *new(func(*ConfirmSectorProofsParams) *abi.EmptyValue)}, // ConfirmSectorProofsValid
-	18: {"ChangeMultiaddrs", *new(func(*ChangeMultiaddrsParams) *abi.EmptyValue)},            // ChangeMultiaddrs
+	17: {"InternalSectorSetupForPreseal", *new(func(*InternalSectorSetupForPresealParams) *abi.EmptyValue)}, // InternalSectorSetupForPreseal
+	18: {"ChangeMultiaddrs", *new(func(*ChangeMultiaddrsParams) *abi.EmptyValue)},                           // ChangeMultiaddrs
 	builtin.MustGenerateFRCMethodNum("ChangeMultiaddrs"): {"ChangeMultiaddrsExported", *new(func(*ChangeMultiaddrsParams) *abi.EmptyValue)}, // ChangeMultiaddrsExported
 	19: {"CompactPartitions", *new(func(*CompactPartitionsParams) *abi.EmptyValue)},       // CompactPartitions
 	20: {"CompactSectorNumbers", *new(func(*CompactSectorNumbersParams) *abi.EmptyValue)}, // CompactSectorNumbers

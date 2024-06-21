@@ -181,7 +181,7 @@ func main() {
 		miner.ApplyRewardParams{},
 		miner.ReportConsensusFaultParams{},
 		miner.WithdrawBalanceParams{},
-		miner.ConfirmSectorProofsParams{},
+		miner.InternalSectorSetupForPresealParams{},
 		miner.ChangeMultiaddrsParams{},
 		miner.CompactPartitionsParams{},
 		miner.CompactSectorNumbersParams{},
