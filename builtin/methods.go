@@ -212,7 +212,7 @@ var MethodsMiner = struct {
 	ReportConsensusFault               abi.MethodNum
 	WithdrawBalance                    abi.MethodNum
 	WithdrawBalanceExported            abi.MethodNum
-	ConfirmSectorProofsValid           abi.MethodNum
+	InternalSectorSetupForPreseal      abi.MethodNum
 	ChangeMultiaddrs                   abi.MethodNum
 	ChangeMultiaddrsExported           abi.MethodNum
 	CompactPartitions                  abi.MethodNum
