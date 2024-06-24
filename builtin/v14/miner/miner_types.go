@@ -347,7 +347,7 @@ type ApplyRewardParams struct {
 	Penalty abi.TokenAmount
 }
 
-type ConfirmSectorProofsParams struct {
+type InternalSectorSetupForPresealParams struct {
 	Sectors                 []abi.SectorNumber
 	RewardSmoothed          smoothing.FilterEstimate
 	RewardBaselinePower     abi.StoragePower
@@ -496,3 +496,26 @@ type SectorReturn = []PieceReturn
 
 // PieceReturn represents a result for each piece for the sector that was notified.
 type PieceReturn = bool // Accepted = true
+
+// SectorNIActivationInfo is the information needed to activate a sector with a "zero" replica.
+type SectorNIActivationInfo struct {
+	SealingNumber abi.SectorNumber // Sector number used to generate replica id
+	SealerID      abi.ActorID      // Must be set to ID of receiving actor for now
+	SealedCID     cid.Cid          // CommR
+	SectorNumber  abi.SectorNumber // Unique id of sector in actor state
+	SealRandEpoch abi.ChainEpoch
+	Expiration    abi.ChainEpoch
+}
+
+// ProveCommitSectorsNIParams is the parameters for non-interactive prove committing of sectors
+// via the miner actor method ProveCommitSectorsNI.
+type ProveCommitSectorsNIParams struct {
+	Sectors                  []SectorNIActivationInfo       // Information about sealing of each sector
+	AggregateProof           []byte                         // Aggregate proof for all sectors
+	SealProofType            abi.RegisteredSealProof        // Proof type for each seal (must be an NI-PoRep variant)
+	AggregateProofType       abi.RegisteredAggregationProof // Proof type for aggregation
+	ProvingDeadline          uint64                         // The Window PoST deadline index at which to schedule the new sectors
+	RequireActivationSuccess bool                           // Whether to abort if any sector activation fails
+}
+
+type ProveCommitSectorsNIReturn = BatchReturn

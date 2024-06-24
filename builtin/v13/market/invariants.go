@@ -287,11 +287,11 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 			}
 
 			var dealIDs SectorDealIDs
-			err = sectorMap.ForEach(&dealIDs, func(sectorID string) error {
-				sectorNumber, err := abi.ParseUIntKey(sectorID)
+			err = sectorMap.ForEach(&dealIDs, func(sectorIDBytes string) error {
+				sectorNumber, err := abi.ParseUIntKey(sectorIDBytes)
 				acc.RequireNoError(err, "error sector number from bytes")
 
-				acc.Require(len(dealIDs) > 0, "no deal ids in sector %v", sectorID)
+				acc.Require(len(dealIDs) > 0, "no deal ids in sector %d", sectorNumber)
 
 				dealIDsCopy := make([]abi.DealID, len(dealIDs))
 				copy(dealIDsCopy, dealIDs)

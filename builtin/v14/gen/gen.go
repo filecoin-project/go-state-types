@@ -181,7 +181,7 @@ func main() {
 		miner.ApplyRewardParams{},
 		miner.ReportConsensusFaultParams{},
 		miner.WithdrawBalanceParams{},
-		miner.ConfirmSectorProofsParams{},
+		miner.InternalSectorSetupForPresealParams{},
 		miner.ChangeMultiaddrsParams{},
 		miner.CompactPartitionsParams{},
 		miner.CompactSectorNumbersParams{},
@@ -218,6 +218,8 @@ func main() {
 		miner.ReplicaUpdate2{},
 		miner.ExpirationExtension2{},
 		miner.SectorClaim{},
+		miner.SectorNIActivationInfo{},
+		miner.ProveCommitSectorsNIParams{},
 	); err != nil {
 		panic(err)
 	}
@@ -251,7 +253,8 @@ func main() {
 		verifreg.RemoveDataCapProposal{},
 		verifreg.RmDcProposalID{},
 		verifreg.FailCode{},
-		verifreg.SectorAllocationClaim{},
+		verifreg.SectorAllocationClaims{},
+		verifreg.AllocationClaim{},
 		verifreg.Claim{},
 		verifreg.ClaimTerm{},
 		verifreg.ClaimExtensionRequest{},

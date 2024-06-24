@@ -99,17 +99,21 @@ func (a ClaimId) Key() string {
 }
 
 type ClaimAllocationsParams struct {
-	Sectors      []SectorAllocationClaim
+	Sectors      []SectorAllocationClaims
 	AllOrNothing bool
 }
 
-type SectorAllocationClaim struct {
+type SectorAllocationClaims struct {
+	Sector       abi.SectorNumber
+	SectorExpiry abi.ChainEpoch
+	Claims       []AllocationClaim
+}
+
+type AllocationClaim struct {
 	Client       abi.ActorID
 	AllocationId AllocationId
 	Data         cid.Cid
 	Size         abi.PaddedPieceSize
-	Sector       abi.SectorNumber
-	SectorExpiry abi.ChainEpoch
 }
 
 type ClaimAllocationsReturn struct {

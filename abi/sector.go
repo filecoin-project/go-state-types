@@ -91,6 +91,12 @@ const (
 	RegisteredSealProof_StackedDrg512MiBV1_1_Feat_SyntheticPoRep = RegisteredSealProof(12)
 	RegisteredSealProof_StackedDrg32GiBV1_1_Feat_SyntheticPoRep  = RegisteredSealProof(13)
 	RegisteredSealProof_StackedDrg64GiBV1_1_Feat_SyntheticPoRep  = RegisteredSealProof(14)
+
+	RegisteredSealProof_StackedDrg2KiBV1_2_Feat_NiPoRep   = RegisteredSealProof(15)
+	RegisteredSealProof_StackedDrg8MiBV1_2_Feat_NiPoRep   = RegisteredSealProof(16)
+	RegisteredSealProof_StackedDrg512MiBV1_2_Feat_NiPoRep = RegisteredSealProof(17)
+	RegisteredSealProof_StackedDrg32GiBV1_2_Feat_NiPoRep  = RegisteredSealProof(18)
+	RegisteredSealProof_StackedDrg64GiBV1_2_Feat_NiPoRep  = RegisteredSealProof(19)
 )
 
 var Synthetic = map[RegisteredSealProof]bool{
@@ -99,6 +105,14 @@ var Synthetic = map[RegisteredSealProof]bool{
 	RegisteredSealProof_StackedDrg512MiBV1_1_Feat_SyntheticPoRep: true,
 	RegisteredSealProof_StackedDrg32GiBV1_1_Feat_SyntheticPoRep:  true,
 	RegisteredSealProof_StackedDrg64GiBV1_1_Feat_SyntheticPoRep:  true,
+}
+
+var NonInteractive = map[RegisteredSealProof]bool{
+	RegisteredSealProof_StackedDrg2KiBV1_2_Feat_NiPoRep:   true,
+	RegisteredSealProof_StackedDrg8MiBV1_2_Feat_NiPoRep:   true,
+	RegisteredSealProof_StackedDrg512MiBV1_2_Feat_NiPoRep: true,
+	RegisteredSealProof_StackedDrg32GiBV1_2_Feat_NiPoRep:  true,
+	RegisteredSealProof_StackedDrg64GiBV1_2_Feat_NiPoRep:  true,
 }
 
 type RegisteredPoStProof int64
@@ -284,6 +298,41 @@ var SealProofInfos = map[RegisteredSealProof]*SealProofInfo{
 		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow64GiBV1,
 		UpdateProof:      RegisteredUpdateProof_StackedDrg64GiBV1,
 	},
+	RegisteredSealProof_StackedDrg2KiBV1_2_Feat_NiPoRep: {
+		ProofSize:        14164,
+		SectorSize:       ss2KiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning2KiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow2KiBV1,
+		UpdateProof:      RegisteredUpdateProof_StackedDrg2KiBV1,
+	},
+	RegisteredSealProof_StackedDrg8MiBV1_2_Feat_NiPoRep: {
+		ProofSize:        14164,
+		SectorSize:       ss8MiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning8MiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow8MiBV1,
+		UpdateProof:      RegisteredUpdateProof_StackedDrg8MiBV1,
+	},
+	RegisteredSealProof_StackedDrg512MiBV1_2_Feat_NiPoRep: {
+		ProofSize:        14164,
+		SectorSize:       ss512MiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning512MiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow512MiBV1,
+		UpdateProof:      RegisteredUpdateProof_StackedDrg512MiBV1,
+	},
+	RegisteredSealProof_StackedDrg32GiBV1_2_Feat_NiPoRep: {
+		ProofSize:        23092,
+		SectorSize:       ss32GiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning32GiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow32GiBV1,
+		UpdateProof:      RegisteredUpdateProof_StackedDrg32GiBV1,
+	},
+	RegisteredSealProof_StackedDrg64GiBV1_2_Feat_NiPoRep: {
+		ProofSize:        23092,
+		SectorSize:       ss64GiB,
+		WinningPoStProof: RegisteredPoStProof_StackedDrgWinning64GiBV1,
+		WindowPoStProof:  RegisteredPoStProof_StackedDrgWindow64GiBV1,
+		UpdateProof:      RegisteredUpdateProof_StackedDrg64GiBV1,
+	},
 }
 
 // ProofSize returns the size of seal proofs for the given sector type.
@@ -437,6 +486,16 @@ func (p RegisteredSealProof) ReplicaId(prover ActorID, sector SectorNumber, tick
 	_, _ = s.Write(porepID[:])
 
 	return bytesIntoFr32Safe(s.Sum(nil)), nil
+}
+
+func (p RegisteredSealProof) IsSynthetic() bool {
+	_, ok := Synthetic[p]
+	return ok
+}
+
+func (p RegisteredSealProof) IsNonInteractive() bool {
+	_, ok := NonInteractive[p]
+	return ok
 }
 
 type ProverID [32]byte

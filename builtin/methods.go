@@ -212,7 +212,7 @@ var MethodsMiner = struct {
 	ReportConsensusFault               abi.MethodNum
 	WithdrawBalance                    abi.MethodNum
 	WithdrawBalanceExported            abi.MethodNum
-	ConfirmSectorProofsValid           abi.MethodNum
+	InternalSectorSetupForPreseal      abi.MethodNum
 	ChangeMultiaddrs                   abi.MethodNum
 	ChangeMultiaddrsExported           abi.MethodNum
 	CompactPartitions                  abi.MethodNum
@@ -243,6 +243,7 @@ var MethodsMiner = struct {
 	// MovePartitionsExported             abi.MethodNum
 	ProveCommitSectors3  abi.MethodNum
 	ProveReplicaUpdates3 abi.MethodNum
+	ProveCommitSectorsNI abi.MethodNum
 }{
 	MethodConstructor,
 	2,
@@ -294,6 +295,7 @@ var MethodsMiner = struct {
 	// MovePartitions: 33,
 	34,
 	35,
+	36,
 }
 
 var MethodsVerifiedRegistry = struct {
