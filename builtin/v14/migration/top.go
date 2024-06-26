@@ -125,11 +125,11 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 			// unchanged
 			CallSeqNum: f090OldAct.CallSeqNum,
 			Balance:    f090OldAct.Balance,
-			Address:    f090OldAct.Address,
 
 			// changed
-			Code: newAccountCodeCID,
-			Head: h,
+			Code:    newAccountCodeCID,
+			Head:    h,
+			Address: &f090ID,
 		})
 	}
 	if err := f090Migration(actorsOut); err != nil {
