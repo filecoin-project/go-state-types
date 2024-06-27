@@ -104,12 +104,23 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 			return xerrors.Errorf("failed to construct f090 id addr: %w", err)
 		}
 		f090OldAct, found, err := actorsOut.GetActorV5(f090ID)
+
 		if err != nil {
 			return xerrors.Errorf("failed to get old f090 actor: %w", err)
 		}
+
 		if !found {
 			return xerrors.Errorf("failed to find old f090 actor: %w", err)
 		}
+
+		msigCodeCID, ok := newManifest.Get(manifest.MultisigKey)
+		if !ok {
+			return xerrors.Errorf("invalid manifest missing multisig code cid")
+		}
+		if f090OldAct.Code != msigCodeCID {
+			return nil
+		}
+
 		f090NewSt := account14.State{Address: f090ID} // State points to ID addr
 		h, err := actors.Store.Put(ctx, &f090NewSt)
 		if err != nil {
