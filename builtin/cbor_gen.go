@@ -168,8 +168,8 @@ func (t *ActorV5) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.Address (address.Address) (struct)
-	if err := t.Address.MarshalCBOR(cw); err != nil {
+	// t.DelegatedAddress (address.Address) (struct)
+	if err := t.DelegatedAddress.MarshalCBOR(cw); err != nil {
 		return err
 	}
 	return nil
@@ -245,7 +245,7 @@ func (t *ActorV5) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 
 	}
-	// t.Address (address.Address) (struct)
+	// t.DelegatedAddress (address.Address) (struct)
 
 	{
 
@@ -257,9 +257,9 @@ func (t *ActorV5) UnmarshalCBOR(r io.Reader) (err error) {
 			if err := cr.UnreadByte(); err != nil {
 				return err
 			}
-			t.Address = new(address.Address)
-			if err := t.Address.UnmarshalCBOR(cr); err != nil {
-				return xerrors.Errorf("unmarshaling t.Address pointer: %w", err)
+			t.DelegatedAddress = new(address.Address)
+			if err := t.DelegatedAddress.UnmarshalCBOR(cr); err != nil {
+				return xerrors.Errorf("unmarshaling t.DelegatedAddress pointer: %w", err)
 			}
 		}
 
