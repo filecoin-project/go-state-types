@@ -18,10 +18,10 @@ func CreateEAMActor(m *manifest.Manifest, head cid.Cid) (*builtin.ActorV5, error
 	}
 
 	return &builtin.ActorV5{
-		Code:       eamCode,
-		Head:       head,
-		CallSeqNum: 0,
-		Balance:    abi.NewTokenAmount(0),
-		Address:    nil,
+		Code:             eamCode,
+		Head:             head,
+		CallSeqNum:       0,
+		Balance:          abi.NewTokenAmount(0),
+		DelegatedAddress: nil,
 	}, nil
 }

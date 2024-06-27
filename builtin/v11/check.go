@@ -59,10 +59,10 @@ func CheckStateInvariants(tree *builtin.ActorTree, priorEpoch abi.ChainEpoch, ac
 		}
 		totalFIl = big.Add(totalFIl, actor.Balance)
 
-		if actor.Address != nil {
-			acc.Require(actor.Address.Protocol() == address.Delegated, "actor.Address %v is not a delegated address", *actor.Address)
-			if actor.Address.Protocol() == address.Delegated {
-				delegatedAddrs = append(delegatedAddrs, *actor.Address)
+		if actor.DelegatedAddress != nil {
+			acc.Require(actor.DelegatedAddress.Protocol() == address.Delegated, "actor.Address %v is not a delegated address", *actor.DelegatedAddress)
+			if actor.DelegatedAddress.Protocol() == address.Delegated {
+				delegatedAddrs = append(delegatedAddrs, *actor.DelegatedAddress)
 			}
 		}
 

@@ -75,7 +75,7 @@ func CheckStateInvariants(st *State, tree *builtin.ActorTree, actorCodes map[str
 			actor.Code == actorCodes[manifest.EvmKey] ||
 			actor.Code == actorCodes[manifest.PlaceholderKey]) &&
 			keyAddr.Protocol() != addr.Actor {
-			acc.Require(keyAddr == *actor.Address, "address field in actor state differs from addr available in init actor map: actor=%v, init=%v", *actor.Address, keyAddr)
+			acc.Require(keyAddr == *actor.DelegatedAddress, "address field in actor state differs from addr available in init actor map: actor=%v, init=%v", *actor.DelegatedAddress, keyAddr)
 		}
 
 		return nil

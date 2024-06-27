@@ -37,11 +37,11 @@ func (job *migrationJob) run(ctx context.Context, store cbor.IpldStore) (*migrat
 	return &migrationJobResult{
 		job.Address, // Unchanged
 		builtin.ActorV5{
-			Code:       result.NewCodeCID,
-			Head:       result.NewHead,
-			CallSeqNum: job.ActorV5.CallSeqNum, // Unchanged
-			Balance:    job.ActorV5.Balance,    // Unchanged
-			Address:    job.ActorV5.Address,    // Unchanged
+			Code:             result.NewCodeCID,
+			Head:             result.NewHead,
+			CallSeqNum:       job.ActorV5.CallSeqNum,       // Unchanged
+			Balance:          job.ActorV5.Balance,          // Unchanged
+			DelegatedAddress: job.ActorV5.DelegatedAddress, // Unchanged
 		},
 	}, nil
 }

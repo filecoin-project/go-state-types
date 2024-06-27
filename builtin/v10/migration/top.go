@@ -289,11 +289,11 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 
 	if err := actorsOut.SetActorV5(ethZeroAddrId, &builtin.ActorV5{
-		Code:       ethAccountCID,
-		Head:       emptyObj,
-		CallSeqNum: 0,
-		Balance:    abi.NewTokenAmount(0),
-		Address:    &ethZeroAddr,
+		Code:             ethAccountCID,
+		Head:             emptyObj,
+		CallSeqNum:       0,
+		Balance:          abi.NewTokenAmount(0),
+		DelegatedAddress: &ethZeroAddr,
 	}); err != nil {
 		return cid.Undef, xerrors.Errorf("failed to set ethZeroActor: %w", err)
 	}
@@ -337,11 +337,11 @@ func (job *migrationJob) run(ctx context.Context, store cbor.IpldStore, priorEpo
 	return &migrationJobResult{
 		job.Address, // Unchanged
 		builtin.ActorV5{
-			Code:       result.NewCodeCID,
-			Head:       result.NewHead,
-			CallSeqNum: job.ActorV4.CallSeqNum, // Unchanged
-			Balance:    job.ActorV4.Balance,    // Unchanged
-			Address:    nil,                    // Not assigned to existing actors.
+			Code:             result.NewCodeCID,
+			Head:             result.NewHead,
+			CallSeqNum:       job.ActorV4.CallSeqNum, // Unchanged
+			Balance:          job.ActorV4.Balance,    // Unchanged
+			DelegatedAddress: nil,                    // Not assigned to existing actors.
 		},
 	}, nil
 }
