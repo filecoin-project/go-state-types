@@ -180,7 +180,7 @@ func validateAndComputeDealWeight(proposals *DealArray, dealIDs []abi.DealID, mi
 
 		// Compute deal weight
 		totalDealSpace += uint64(proposal.PieceSize)
-		dealSpaceTime := DealWeight(proposal)
+		dealSpaceTime := DealWeight(proposal, sectorExpiry, sectorActivation)
 		if proposal.VerifiedDeal {
 			totalVerifiedSpaceTime = big.Add(totalVerifiedSpaceTime, dealSpaceTime)
 		} else {

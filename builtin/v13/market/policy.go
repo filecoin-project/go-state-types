@@ -55,8 +55,8 @@ func DealClientCollateralBounds(_ abi.PaddedPieceSize, _ abi.ChainEpoch) (min ab
 }
 
 // Computes the weight for a deal proposal, which is a function of its size and duration.
-func DealWeight(proposal *DealProposal) abi.DealWeight {
-	dealDuration := big.NewInt(int64(proposal.Duration()))
+func DealWeight(proposal *DealProposal, sectorExpiry abi.ChainEpoch, sectorActivation abi.ChainEpoch) abi.DealWeight {
+	dealDuration := big.NewInt(int64(sectorExpiry - sectorActivation))
 	dealSize := big.NewIntUnsigned(uint64(proposal.PieceSize))
 	dealSpaceTime := big.Mul(dealDuration, dealSize)
 	return dealSpaceTime
