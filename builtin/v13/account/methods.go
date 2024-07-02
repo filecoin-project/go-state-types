@@ -9,7 +9,7 @@ import (
 )
 
 var Methods = map[abi.MethodNum]builtin.MethodMeta{
-	1: {"Constructor", *new(func(*address.Address) *abi.EmptyValue)},   // Constructor
-	2: {"PubkeyAddress", *new(func(*abi.EmptyValue) *address.Address)}, // PubkeyAddress
-	builtin.MustGenerateFRCMethodNum("AuthenticateMessage"): {"AuthenticateMessage", *new(func(*AuthenticateMessageParams) *typegen.CborBool)}, // AuthenticateMessage
+	1: builtin.NewMethodMeta("Constructor", *new(func(*address.Address) *abi.EmptyValue)),   // Constructor
+	2: builtin.NewMethodMeta("PubkeyAddress", *new(func(*abi.EmptyValue) *address.Address)), // PubkeyAddress
+	builtin.MustGenerateFRCMethodNum("AuthenticateMessage"): builtin.NewMethodMeta("AuthenticateMessage", *new(func(*AuthenticateMessageParams) *typegen.CborBool)), // AuthenticateMessage
 }

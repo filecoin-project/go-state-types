@@ -6,13 +6,13 @@ import (
 )
 
 var Methods = map[abi.MethodNum]builtin.MethodMeta{
-	1: {"Constructor", *new(func(*ConstructorParams) *abi.EmptyValue)},                                 // Constructor
-	2: {"Propose", *new(func(*ProposeParams) *ProposeReturn)},                                          // Propose
-	3: {"Approve", *new(func(*TxnIDParams) *ApproveReturn)},                                            // Approve
-	4: {"Cancel", *new(func(*TxnIDParams) *abi.EmptyValue)},                                            // Cancel
-	5: {"AddSigner", *new(func(*AddSignerParams) *abi.EmptyValue)},                                     // AddSigner
-	6: {"RemoveSigner", *new(func(*RemoveSignerParams) *abi.EmptyValue)},                               // RemoveSigner
-	7: {"SwapSigner", *new(func(*SwapSignerParams) *abi.EmptyValue)},                                   // SwapSigner
-	8: {"ChangeNumApprovalsThreshold", *new(func(*ChangeNumApprovalsThresholdParams) *abi.EmptyValue)}, // ChangeNumApprovalsThreshold
-	9: {"LockBalance", *new(func(*LockBalanceParams) *abi.EmptyValue)},                                 // LockBalance
+	1: builtin.NewMethodMeta("Constructor", *new(func(*ConstructorParams) *abi.EmptyValue)),                                 // Constructor
+	2: builtin.NewMethodMeta("Propose", *new(func(*ProposeParams) *ProposeReturn)),                                          // Propose
+	3: builtin.NewMethodMeta("Approve", *new(func(*TxnIDParams) *ApproveReturn)),                                            // Approve
+	4: builtin.NewMethodMeta("Cancel", *new(func(*TxnIDParams) *abi.EmptyValue)),                                            // Cancel
+	5: builtin.NewMethodMeta("AddSigner", *new(func(*AddSignerParams) *abi.EmptyValue)),                                     // AddSigner
+	6: builtin.NewMethodMeta("RemoveSigner", *new(func(*RemoveSignerParams) *abi.EmptyValue)),                               // RemoveSigner
+	7: builtin.NewMethodMeta("SwapSigner", *new(func(*SwapSignerParams) *abi.EmptyValue)),                                   // SwapSigner
+	8: builtin.NewMethodMeta("ChangeNumApprovalsThreshold", *new(func(*ChangeNumApprovalsThresholdParams) *abi.EmptyValue)), // ChangeNumApprovalsThreshold
+	9: builtin.NewMethodMeta("LockBalance", *new(func(*LockBalanceParams) *abi.EmptyValue)),                                 // LockBalance
 }
