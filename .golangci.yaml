@@ -1,5 +1,0 @@
-issues:
-  exclude-rules:
-    - path: builtin/v.*/.*/methods.go
-      linters:
-        - govet
