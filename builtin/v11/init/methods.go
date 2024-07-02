@@ -6,8 +6,8 @@ import (
 )
 
 var Methods = map[abi.MethodNum]builtin.MethodMeta{
-	1: {"Constructor", *new(func(*ConstructorParams) *abi.EmptyValue)}, // Constructor
-	2: {"Exec", *new(func(*ExecParams) *ExecReturn)},                   // Exec
+	1: builtin.NewMethodMeta("Constructor", *new(func(*ConstructorParams) *abi.EmptyValue)), // Constructor
+	2: builtin.NewMethodMeta("Exec", *new(func(*ExecParams) *ExecReturn)),                   // Exec
 	// TODO Are we exporting Exec4
-	3: {"Exec4", *new(func(*Exec4Params) *ExecReturn)}, // Exec4
+	3: builtin.NewMethodMeta("Exec4", *new(func(*Exec4Params) *ExecReturn)), // Exec4
 }

@@ -6,6 +6,6 @@ import (
 )
 
 var Methods = map[abi.MethodNum]builtin.MethodMeta{
-	1: {"Constructor", *new(func(*ConstructorParams) *abi.EmptyValue)}, // Constructor
-	2: {"EpochTick", *new(func(*abi.EmptyValue) *abi.EmptyValue)},      // EpochTick
+	1: builtin.NewMethodMeta("Constructor", *new(func(*ConstructorParams) *abi.EmptyValue)), // Constructor
+	2: builtin.NewMethodMeta("EpochTick", *new(func(*abi.EmptyValue) *abi.EmptyValue)),      // EpochTick
 }
