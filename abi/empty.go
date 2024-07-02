@@ -36,4 +36,3 @@ func (v *EmptyValue) UnmarshalCBOR(_ io.Reader) error {
 	// Read zero bytes.
 	return nil
 }
-
