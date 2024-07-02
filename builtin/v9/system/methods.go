@@ -6,5 +6,5 @@ import (
 )
 
 var Methods = map[abi.MethodNum]builtin.MethodMeta{
-	1: {"Constructor", *new(func(*abi.EmptyValue) *abi.EmptyValue)}, // Constructor
+	1: builtin.NewMethodMeta("Constructor", *new(func(*abi.EmptyValue) *abi.EmptyValue)), // Constructor
 }
