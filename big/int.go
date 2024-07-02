@@ -106,7 +106,7 @@ func Sub(a, b Int) Int {
 	return Int{big.NewInt(0).Sub(a.Int, b.Int)}
 }
 
-//  Returns a**e unless e <= 0 (in which case returns 1).
+// Returns a**e unless e <= 0 (in which case returns 1).
 func Exp(a Int, e Int) Int {
 	return Int{big.NewInt(0).Exp(a.Int, e.Int, nil)}
 }
