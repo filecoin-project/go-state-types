@@ -71,7 +71,7 @@ type ModVerifyParams struct {
 	Data []byte
 }
 
-//Specifies which `Lane`s to be merged with what `Nonce` on channelUpdate
+// Specifies which `Lane`s to be merged with what `Nonce` on channelUpdate
 type Merge struct {
 	Lane  uint64
 	Nonce uint64
