@@ -8,6 +8,7 @@ import (
 	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/batch"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v14/power"
 	"github.com/filecoin-project/go-state-types/builtin/v14/util/adt"
@@ -435,18 +436,7 @@ type DataActivationNotification struct {
 }
 
 // ProveCommitSectors3Return represents the return value for the ProveCommit2 function.
-type ProveCommitSectors3Return = BatchReturn
-
-type BatchReturn struct {
-	SuccessCount uint64
-	FailCodes    []FailCode
-}
-
-type FailCode struct {
-	// Idx represents the index of the operation that failed within the batch.
-	Idx  uint64
-	Code xc.ExitCode // todo correct?
-}
+type ProveCommitSectors3Return = batch.BatchReturn
 
 // ProveReplicaUpdates3Params represents the parameters for proving replica updates.
 type ProveReplicaUpdates3Params struct {
@@ -469,7 +459,7 @@ type SectorUpdateManifest struct {
 }
 
 // ProveReplicaUpdates3Return represents the return value for the ProveReplicaUpdates3 function.
-type ProveReplicaUpdates3Return = BatchReturn
+type ProveReplicaUpdates3Return = batch.BatchReturn
 
 // SectorContentChangedParams represents a notification of change committed to sectors.
 type SectorContentChangedParams = []SectorChanges
@@ -518,4 +508,4 @@ type ProveCommitSectorsNIParams struct {
 	RequireActivationSuccess bool                           // Whether to abort if any sector activation fails
 }
 
-type ProveCommitSectorsNIReturn = BatchReturn
+type ProveCommitSectorsNIReturn = batch.BatchReturn

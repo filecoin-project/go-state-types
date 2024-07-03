@@ -1,13 +1,13 @@
 package market
 
 import (
-	"github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/ipfs/go-cid"
 	cbg "github.com/whyrusleeping/cbor-gen"
 
 	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/batch"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin/v14/verifreg"
 )
@@ -142,16 +142,6 @@ type GetDealSectorReturn = abi.SectorNumber
 
 type SettleDealPaymentsParams = bitfield.BitField
 
-type FailCode struct {
-	Index    uint64
-	ExitCode exitcode.ExitCode
-}
-
-type BatchReturn struct {
-	SuccessCount uint64
-	FailCount    []FailCode
-}
-
 type DealSettlementSummary struct {
 	// Incremental amount paid to the provider.
 	Payment abi.TokenAmount
@@ -161,7 +151,7 @@ type DealSettlementSummary struct {
 
 type SettleDealPaymentsReturn struct {
 	// Indicators of success or failure for each deal.
-	Results BatchReturn
+	Results batch.BatchReturn
 	// Results for those deals that successfully settled.
 	Settlements []DealSettlementSummary
 }
