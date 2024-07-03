@@ -24,6 +24,7 @@ gen:
 	$(GO_BIN) run ./gen/gen.go
 	$(GO_BIN) run ./manifest/gen/gen.go
 	$(GO_BIN) run ./proof/gen/gen.go
+	$(GO_BIN) run ./batch/gen/gen.go
 	$(GO_BIN) run ./builtin/v8/gen/gen.go
 	$(GO_BIN) run ./builtin/v9/gen/gen.go
 	$(GO_BIN) run ./builtin/v10/gen/gen.go

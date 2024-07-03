@@ -137,8 +137,6 @@ func main() {
 		market.SectorDataSpec{},
 		market.VerifiedDealInfo{},
 		market.DealSettlementSummary{},
-		market.BatchReturn{},
-		market.FailCode{},
 	); err != nil {
 		panic(err)
 	}
@@ -202,8 +200,6 @@ func main() {
 		miner.PieceActivationManifest{},
 		miner.VerifiedAllocationKey{},
 		miner.DataActivationNotification{},
-		miner.BatchReturn{},
-		miner.FailCode{},
 		miner.ProveReplicaUpdates3Params{},
 		miner.SectorUpdateManifest{},
 		miner.SectorChanges{},
@@ -235,7 +231,6 @@ func main() {
 		verifreg.RemoveDataCapReturn{},
 		verifreg.RemoveExpiredAllocationsParams{},
 		verifreg.RemoveExpiredAllocationsReturn{},
-		verifreg.BatchReturn{},
 		verifreg.ClaimAllocationsParams{},
 		verifreg.ClaimAllocationsReturn{},
 		verifreg.GetClaimsParams{},
@@ -250,7 +245,6 @@ func main() {
 		verifreg.RemoveDataCapRequest{},
 		verifreg.RemoveDataCapProposal{},
 		verifreg.RmDcProposalID{},
-		verifreg.FailCode{},
 		verifreg.SectorAllocationClaims{},
 		verifreg.AllocationClaim{},
 		verifreg.Claim{},
