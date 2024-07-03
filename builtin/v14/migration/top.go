@@ -2,8 +2,10 @@ package migration
 
 import (
 	"context"
+	"time"
 
 	adt14 "github.com/filecoin-project/go-state-types/builtin/v14/util/adt"
+	"github.com/filecoin-project/go-state-types/rt"
 
 	system13 "github.com/filecoin-project/go-state-types/builtin/v13/system"
 	account14 "github.com/filecoin-project/go-state-types/builtin/v14/account"
@@ -22,6 +24,8 @@ import (
 // MigrateStateTree Migrates the filecoin state tree starting from the global state tree and upgrading all actor state.
 // The store must support concurrent writes (even if the configured worker count is 1).
 func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID cid.Cid, actorsRootIn cid.Cid, priorEpoch abi.ChainEpoch, cfg migration.Config, log migration.Logger, cache migration.MigrationCache) (cid.Cid, error) {
+	// time the initial setup
+	start := time.Now()
 	if cfg.MaxWorkers <= 0 {
 		return cid.Undef, xerrors.Errorf("invalid migration config with %d workers", cfg.MaxWorkers)
 	}
@@ -91,11 +95,18 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations)+len(deferredCodeIDs), len(oldManifestData.Entries))
 	}
 
+	duration := time.Since(start)
+	log.Log(rt.WARN, "time to initialize migration: %v", duration)
+
+	start = time.Now()
 	actorsOut, err := migration.RunMigration(ctx, cfg, cache, store, log, actorsIn, migrations)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to run migration: %w", err)
 	}
+	duration = time.Since(start)
+	log.Log(rt.WARN, "time to run migration: %v", duration)
 
+	start = time.Now()
 	// FIP 0085.  f090 multisig => unkeyed account actor
 	// Account state now points to id address requiring upgrade to release funds
 	f090Migration := func(actors *builtin.ActorTree) error {
@@ -146,11 +157,16 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	if err := f090Migration(actorsOut); err != nil {
 		return cid.Undef, err
 	}
+	duration = time.Since(start)
+	log.Log(rt.WARN, "time to run f090 migration: %v", duration)
 
+	start = time.Now()
 	outCid, err := actorsOut.Flush()
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to flush actorsOut: %w", err)
 	}
+	duration = time.Since(start)
+	log.Log(rt.WARN, "time to flush actorsOut: %v", duration)
 
 	return outCid, nil
 }
