@@ -10,11 +10,14 @@ func main() {
 	if err := gen.WriteTupleEncodersToFile("./proof/cbor_gen.go", "proof",
 		// actor manifest
 		proof.PoStProof{},
-		proof.ExtendedSectorInfo{},
-		proof.SealVerifyInfo{},
-		proof.WindowPoStVerifyInfo{},
-		proof.WinningPoStVerifyInfo{},
 		proof.SectorInfo{},
+		proof.ExtendedSectorInfo{},
+		proof.WinningPoStVerifyInfo{},
+		proof.WindowPoStVerifyInfo{},
+		proof.SealVerifyInfo{},
+		proof.AggregateSealVerifyInfo{},
+		proof.AggregateSealVerifyProofAndInfos{},
+		proof.ReplicaUpdateInfo{},
 	); err != nil {
 		panic(err)
 	}
