@@ -78,7 +78,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		if !ok {
 			return cid.Undef, xerrors.Errorf("code cid for %s actor not found in new manifest", oldEntry.Name)
 		}
-		migrations[oldEntry.Code] = migration.CachedMigration(cache, migration.CodeMigrator{OutCodeCID: newCodeCID})
+		migrations[oldEntry.Code] = migration.CodeMigrator{OutCodeCID: newCodeCID}
 	}
 
 	// migrations that migrate both code and state, override entries in `migrations`
