@@ -6,9 +6,9 @@ import (
 
 	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/batch"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/crypto"
-	"github.com/filecoin-project/go-state-types/exitcode"
 )
 
 // RemoveDataCapProposal A verifier who wants to send/agree to a RemoveDataCapRequest should sign a RemoveDataCapProposal and send the signed proposal to the root key holder.
@@ -72,18 +72,8 @@ type RemoveExpiredAllocationsParams struct {
 
 type RemoveExpiredAllocationsReturn struct {
 	Considered       []AllocationId
-	Results          BatchReturn
+	Results          batch.BatchReturn
 	DataCapRecovered DataCap
-}
-
-type BatchReturn struct {
-	SuccessCount uint64
-	FailCodes    []FailCode
-}
-
-type FailCode struct {
-	Idx  uint64
-	Code exitcode.ExitCode
 }
 
 type AllocationId uint64
@@ -117,7 +107,7 @@ type AllocationClaim struct {
 }
 
 type ClaimAllocationsReturn struct {
-	BatchInfo    BatchReturn
+	BatchInfo    batch.BatchReturn
 	ClaimedSpace big.Int
 }
 
@@ -127,7 +117,7 @@ type GetClaimsParams struct {
 }
 
 type GetClaimsReturn struct {
-	BatchInfo BatchReturn
+	BatchInfo batch.BatchReturn
 	Claims    []Claim
 }
 
@@ -177,8 +167,8 @@ type UniversalReceiverParams struct {
 type ReceiverType uint64
 
 type AllocationsResponse struct {
-	AllocationResults BatchReturn
-	ExtensionResults  BatchReturn
+	AllocationResults batch.BatchReturn
+	ExtensionResults  batch.BatchReturn
 	NewAllocations    []AllocationId
 }
 
@@ -192,7 +182,7 @@ type ClaimTerm struct {
 	TermMax  abi.ChainEpoch
 }
 
-type ExtendClaimTermsReturn BatchReturn
+type ExtendClaimTermsReturn batch.BatchReturn
 
 type RemoveExpiredClaimsParams struct {
 	Provider abi.ActorID
@@ -201,7 +191,7 @@ type RemoveExpiredClaimsParams struct {
 
 type RemoveExpiredClaimsReturn struct {
 	Considered []AllocationId
-	Results    BatchReturn
+	Results    batch.BatchReturn
 }
 
 type AllocationRequest struct {
