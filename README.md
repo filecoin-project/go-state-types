@@ -29,31 +29,21 @@ As an example of application of this policy for Go-State-Types to a v14 builtin-
 
 ## Release Process
 
-<details>
-  <summary>Cutting a development or release candidate release:</summary>
+The repository contains a version.json file in the root directory:
 
-1. Go to [Go-State-Types Releases](https://github.com/filecoin-project/go-state-types/releases).
-2. Click the "Draft a new release" button in the right corner.
-3. In the "Choose a tag" dropdown, enter the desired version and click "Create new tag: vX.XX.X on publish".
-4. Target the master branch.
-5. Set the previous tag to compare against, the last stable release, and click the "Generate release notes" button.
-6. Check the "Set as a pre-release" checkbox.
-7. Click "Publish release" to create the development or release candidate release.
+```json
+{
+  "version": "v0.4.2"
+}
+```
 
-</details>
+This version file defines the currently released version.
 
-<details>
-  <summary>Cutting a definitive release:</summary>
+To cut a new release, open a Pull Request that bumps the version number and have it reviewed by your teammates.
 
-1. Go to [Go-State-Types Releases](https://github.com/filecoin-project/go-state-types/releases).
-2. Click the "Draft a new release" button in the right corner.
-3. In the "Choose a tag" dropdown, enter the desired version and click "Create new tag: vX.XX.X on publish".
-4. Target the master branch.
-5. Set the previous tag to compare against, the last stable release, and click the "Generate release notes" button.
-6. Ensure the "Set as a pre-release" checkbox is **not** checked.
-7. Click "Publish release" to create the definitive release.
+The release check workflow will create a draft GitHub Release (if it was not initiated by a PR from a fork) and post a link to it along with other useful information (the output of gorelease, gocompat, and a diff of the go.mod files(s)).
 
-</details>
+The releaser workflow runs when the PR is merged into the default branch. This workflow either publishes the draft GitHub Release created by the release check workflow or creates a published GitHub Release if it doesn't exist yet. This, in turn, creates a new Git tag and pushes it to the repository.
 
 ## License
 This repository is dual-licensed under Apache 2.0 and MIT terms.

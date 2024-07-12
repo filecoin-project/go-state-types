@@ -7,20 +7,20 @@ import (
 )
 
 var Methods = map[abi.MethodNum]builtin.MethodMeta{
-	1:                                        {"Constructor", *new(func(*address.Address) *abi.EmptyValue)}, // Constructor
-	builtin.MustGenerateFRCMethodNum("Mint"): {"MintExported", *new(func(*MintParams) *MintReturn)},         // MintExported
-	builtin.MustGenerateFRCMethodNum("Destroy"):           {"DestroyExported", *new(func(*DestroyParams) *BurnReturn)},                          // DestroyExported
-	builtin.MustGenerateFRCMethodNum("Name"):              {"NameExported", *new(func(*abi.EmptyValue) *abi.CborString)},                        // NameExported
-	builtin.MustGenerateFRCMethodNum("Symbol"):            {"SymbolExported", *new(func(*abi.EmptyValue) *abi.CborString)},                      // SymbolExported
-	builtin.MustGenerateFRCMethodNum("TotalSupply"):       {"TotalSupplyExported", *new(func(*abi.EmptyValue) *abi.TokenAmount)},                // TotalSupplyExported
-	builtin.MustGenerateFRCMethodNum("Balance"):           {"BalanceExported", *new(func(*address.Address) *abi.TokenAmount)},                   // BalanceExported
-	builtin.MustGenerateFRCMethodNum("Transfer"):          {"TransferExported", *new(func(*TransferParams) *TransferReturn)},                    // TransferExported
-	builtin.MustGenerateFRCMethodNum("TransferFrom"):      {"TransferFromExported", *new(func(*TransferFromParams) *TransferFromReturn)},        // TransferFromExported
-	builtin.MustGenerateFRCMethodNum("IncreaseAllowance"): {"IncreaseAllowanceExported", *new(func(*IncreaseAllowanceParams) *abi.TokenAmount)}, // IncreaseAllowanceExported
-	builtin.MustGenerateFRCMethodNum("DecreaseAllowance"): {"DecreaseAllowanceExported", *new(func(*DecreaseAllowanceParams) *abi.TokenAmount)}, // DecreaseAllowanceExported
-	builtin.MustGenerateFRCMethodNum("RevokeAllowance"):   {"RevokeAllowanceExported", *new(func(*RevokeAllowanceParams) *abi.TokenAmount)},     // RevokeAllowanceExported
-	builtin.MustGenerateFRCMethodNum("Burn"):              {"BurnExported", *new(func(*BurnParams) *BurnReturn)},                                // BurnExported
-	builtin.MustGenerateFRCMethodNum("BurnFrom"):          {"BurnFromExported", *new(func(*BurnFromParams) *BurnFromReturn)},                    // BurnFromExported
-	builtin.MustGenerateFRCMethodNum("Allowance"):         {"AllowanceExported", *new(func(*GetAllowanceParams) *abi.TokenAmount)},              // AllowanceExported
-	builtin.MustGenerateFRCMethodNum("Granularity"):       {"GranularityExported", *new(func(value *abi.EmptyValue) *GranularityReturn)},        // GranularityExported
+	1:                                        builtin.NewMethodMeta("Constructor", *new(func(*address.Address) *abi.EmptyValue)), // Constructor
+	builtin.MustGenerateFRCMethodNum("Mint"): builtin.NewMethodMeta("MintExported", *new(func(*MintParams) *MintReturn)),         // MintExported
+	builtin.MustGenerateFRCMethodNum("Destroy"):           builtin.NewMethodMeta("DestroyExported", *new(func(*DestroyParams) *BurnReturn)),                          // DestroyExported
+	builtin.MustGenerateFRCMethodNum("Name"):              builtin.NewMethodMeta("NameExported", *new(func(*abi.EmptyValue) *abi.CborString)),                        // NameExported
+	builtin.MustGenerateFRCMethodNum("Symbol"):            builtin.NewMethodMeta("SymbolExported", *new(func(*abi.EmptyValue) *abi.CborString)),                      // SymbolExported
+	builtin.MustGenerateFRCMethodNum("TotalSupply"):       builtin.NewMethodMeta("TotalSupplyExported", *new(func(*abi.EmptyValue) *abi.TokenAmount)),                // TotalSupplyExported
+	builtin.MustGenerateFRCMethodNum("Balance"):           builtin.NewMethodMeta("BalanceExported", *new(func(*address.Address) *abi.TokenAmount)),                   // BalanceExported
+	builtin.MustGenerateFRCMethodNum("Transfer"):          builtin.NewMethodMeta("TransferExported", *new(func(*TransferParams) *TransferReturn)),                    // TransferExported
+	builtin.MustGenerateFRCMethodNum("TransferFrom"):      builtin.NewMethodMeta("TransferFromExported", *new(func(*TransferFromParams) *TransferFromReturn)),        // TransferFromExported
+	builtin.MustGenerateFRCMethodNum("IncreaseAllowance"): builtin.NewMethodMeta("IncreaseAllowanceExported", *new(func(*IncreaseAllowanceParams) *abi.TokenAmount)), // IncreaseAllowanceExported
+	builtin.MustGenerateFRCMethodNum("DecreaseAllowance"): builtin.NewMethodMeta("DecreaseAllowanceExported", *new(func(*DecreaseAllowanceParams) *abi.TokenAmount)), // DecreaseAllowanceExported
+	builtin.MustGenerateFRCMethodNum("RevokeAllowance"):   builtin.NewMethodMeta("RevokeAllowanceExported", *new(func(*RevokeAllowanceParams) *abi.TokenAmount)),     // RevokeAllowanceExported
+	builtin.MustGenerateFRCMethodNum("Burn"):              builtin.NewMethodMeta("BurnExported", *new(func(*BurnParams) *BurnReturn)),                                // BurnExported
+	builtin.MustGenerateFRCMethodNum("BurnFrom"):          builtin.NewMethodMeta("BurnFromExported", *new(func(*BurnFromParams) *BurnFromReturn)),                    // BurnFromExported
+	builtin.MustGenerateFRCMethodNum("Allowance"):         builtin.NewMethodMeta("AllowanceExported", *new(func(*GetAllowanceParams) *abi.TokenAmount)),              // AllowanceExported
+	builtin.MustGenerateFRCMethodNum("Granularity"):       builtin.NewMethodMeta("GranularityExported", *new(func(value *abi.EmptyValue) *GranularityReturn)),        // GranularityExported
 }
