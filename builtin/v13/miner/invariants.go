@@ -1,7 +1,7 @@
 package miner
 
 import (
-	"golang.org/x/xerrors"
+	"errors"
 
 	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-bitfield"
@@ -59,7 +59,7 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount) (
 	} else {
 		allocatedSectorsMap, err = allocatedSectors.AllMap(1 << 30)
 		// if it's too big to expand, we'll fall back on the bitfield directly
-		if err != nil && !xerrors.Is(err, bitfield.ErrBitFieldTooMany) {
+		if err != nil && !errors.Is(err, bitfield.ErrBitFieldTooMany) {
 			acc.Addf("error expanding allocated sector bitfield: %v", err)
 			allocatedSectorsMap = nil
 		}
