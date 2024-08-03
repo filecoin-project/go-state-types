@@ -29,7 +29,7 @@ import (
 // Within this code, Go errors are not expected, but are often converted to messages so that execution
 // can continue to find more errors rather than fail with no insight.
 // Only errors thar are particularly troublesome to recover from should propagate as Go errors.
-func CheckStateInvariants(tree *builtin.ActorTree, priorEpoch abi.ChainEpoch, actorCodes map[string]cid.Cid) (*builtin.MessageAccumulator, error) {
+func CheckStateInvariants(tree builtin.ActorTree, priorEpoch abi.ChainEpoch, actorCodes map[string]cid.Cid) (*builtin.MessageAccumulator, error) {
 	acc := &builtin.MessageAccumulator{}
 	totalFIl := big.Zero()
 	var initSummary *init_.StateSummary
@@ -69,7 +69,7 @@ func CheckStateInvariants(tree *builtin.ActorTree, priorEpoch abi.ChainEpoch, ac
 
 		case actorCodes[manifest.InitKey]:
 			var st init_.State
-			if err := tree.Store.Get(tree.Store.Context(), actor.Head, &st); err != nil {
+			if err := tree.GetStore().Get(tree.GetStore().Context(), actor.Head, &st); err != nil {
 				fmt.Println("init invariant error = ", err)
 				return err
 			}
@@ -78,15 +78,15 @@ func CheckStateInvariants(tree *builtin.ActorTree, priorEpoch abi.ChainEpoch, ac
 			initSummary = summary
 		case actorCodes[manifest.CronKey]:
 			var st cron.State
-			if err := tree.Store.Get(tree.Store.Context(), actor.Head, &st); err != nil {
+			if err := tree.GetStore().Get(tree.GetStore().Context(), actor.Head, &st); err != nil {
 				return err
 			}
-			summary, msgs := cron.CheckStateInvariants(&st, tree.Store)
+			summary, msgs := cron.CheckStateInvariants(&st, tree.GetStore())
 			acc.WithPrefix("cron: ").AddAll(msgs)
 			cronSummary = summary
 		case actorCodes[manifest.AccountKey]:
 			var st account.State
-			if err := tree.Store.Get(tree.Store.Context(), actor.Head, &st); err != nil {
+			if err := tree.GetStore().Get(tree.GetStore().Context(), actor.Head, &st); err != nil {
 				return err
 			}
 			summary, msgs := account.CheckStateInvariants(&st, key)
@@ -94,74 +94,74 @@ func CheckStateInvariants(tree *builtin.ActorTree, priorEpoch abi.ChainEpoch, ac
 			accountSummaries = append(accountSummaries, summary)
 		case actorCodes[manifest.PowerKey]:
 			var st power.State
-			if err := tree.Store.Get(tree.Store.Context(), actor.Head, &st); err != nil {
+			if err := tree.GetStore().Get(tree.GetStore().Context(), actor.Head, &st); err != nil {
 				return err
 			}
-			summary, msgs := power.CheckStateInvariants(&st, tree.Store)
+			summary, msgs := power.CheckStateInvariants(&st, tree.GetStore())
 			acc.WithPrefix("power: ").AddAll(msgs)
 			powerSummary = summary
 		case actorCodes[manifest.MinerKey]:
 			var st miner.State
-			if err := tree.Store.Get(tree.Store.Context(), actor.Head, &st); err != nil {
+			if err := tree.GetStore().Get(tree.GetStore().Context(), actor.Head, &st); err != nil {
 				return err
 			}
-			summary, msgs := miner.CheckStateInvariants(&st, tree.Store, actor.Balance)
+			summary, msgs := miner.CheckStateInvariants(&st, tree.GetStore(), actor.Balance)
 			acc.WithPrefix("miner: ").AddAll(msgs)
 			minerSummaries[key] = summary
 		case actorCodes[manifest.MarketKey]:
 			var st market.State
-			if err := tree.Store.Get(tree.Store.Context(), actor.Head, &st); err != nil {
+			if err := tree.GetStore().Get(tree.GetStore().Context(), actor.Head, &st); err != nil {
 				return err
 			}
-			summary, msgs := market.CheckStateInvariants(&st, tree.Store, actor.Balance, priorEpoch)
+			summary, msgs := market.CheckStateInvariants(&st, tree.GetStore(), actor.Balance, priorEpoch)
 			acc.WithPrefix("market: ").AddAll(msgs)
 			marketSummary = summary
 		case actorCodes[manifest.PaychKey]:
 			var st paych.State
-			if err := tree.Store.Get(tree.Store.Context(), actor.Head, &st); err != nil {
+			if err := tree.GetStore().Get(tree.GetStore().Context(), actor.Head, &st); err != nil {
 				return err
 			}
-			summary, msgs := paych.CheckStateInvariants(&st, tree.Store, actor.Balance)
+			summary, msgs := paych.CheckStateInvariants(&st, tree.GetStore(), actor.Balance)
 			acc.WithPrefix("paych: ").AddAll(msgs)
 			paychSummaries = append(paychSummaries, summary)
 		case actorCodes[manifest.MultisigKey]:
 			var st multisig.State
-			if err := tree.Store.Get(tree.Store.Context(), actor.Head, &st); err != nil {
+			if err := tree.GetStore().Get(tree.GetStore().Context(), actor.Head, &st); err != nil {
 				return err
 			}
-			summary, msgs := multisig.CheckStateInvariants(&st, tree.Store)
+			summary, msgs := multisig.CheckStateInvariants(&st, tree.GetStore())
 			acc.WithPrefix("multisig: ").AddAll(msgs)
 			multisigSummaries = append(multisigSummaries, summary)
 		case actorCodes[manifest.RewardKey]:
 			var st reward.State
-			if err := tree.Store.Get(tree.Store.Context(), actor.Head, &st); err != nil {
+			if err := tree.GetStore().Get(tree.GetStore().Context(), actor.Head, &st); err != nil {
 				return err
 			}
-			summary, msgs := reward.CheckStateInvariants(&st, tree.Store, priorEpoch, actor.Balance)
+			summary, msgs := reward.CheckStateInvariants(&st, tree.GetStore(), priorEpoch, actor.Balance)
 			acc.WithPrefix("reward: ").AddAll(msgs)
 			rewardSummary = summary
 		case actorCodes[manifest.VerifregKey]:
 			var st verifreg.State
-			if err := tree.Store.Get(tree.Store.Context(), actor.Head, &st); err != nil {
+			if err := tree.GetStore().Get(tree.GetStore().Context(), actor.Head, &st); err != nil {
 				return err
 			}
-			summary, msgs := verifreg.CheckStateInvariants(&st, tree.Store, priorEpoch)
+			summary, msgs := verifreg.CheckStateInvariants(&st, tree.GetStore(), priorEpoch)
 			acc.WithPrefix("verifreg: ").AddAll(msgs)
 			verifregSummary = summary
 		case actorCodes[manifest.DatacapKey]:
 			var st datacap.State
-			if err := tree.Store.Get(tree.Store.Context(), actor.Head, &st); err != nil {
+			if err := tree.GetStore().Get(tree.GetStore().Context(), actor.Head, &st); err != nil {
 				return err
 			}
-			summary, msgs := datacap.CheckStateInvariants(&st, tree.Store)
+			summary, msgs := datacap.CheckStateInvariants(&st, tree.GetStore())
 			acc.WithPrefix("datacap: ").AddAll(msgs)
 			datacapSummary = summary
 		case actorCodes[manifest.EvmKey]:
 			var st evm.State
-			if err := tree.Store.Get(tree.Store.Context(), actor.Head, &st); err != nil {
+			if err := tree.GetStore().Get(tree.GetStore().Context(), actor.Head, &st); err != nil {
 				return err
 			}
-			msgs := evm.CheckStateInvariants(&st, tree.Store)
+			msgs := evm.CheckStateInvariants(&st, tree.GetStore())
 			acc.WithPrefix("evm: ").AddAll(msgs)
 		case actorCodes[manifest.PlaceholderKey]:
 			acc.Require(actor.Head == emptyObjectCid, "Placeholder actor head %v unequal to emptyObjectCid %v", actor.Head, emptyObjectCid)

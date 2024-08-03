@@ -98,7 +98,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 	// FIP 0085.  f090 multisig => unkeyed account actor
 	// Account state now points to id address requiring upgrade to release funds
-	f090Migration := func(actors *builtin.ActorTree) error {
+	f090Migration := func(actors builtin.ActorTree) error {
 		f090ID, err := address.NewIDAddress(90)
 		if err != nil {
 			return xerrors.Errorf("failed to construct f090 id addr: %w", err)
@@ -122,7 +122,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		}
 
 		f090NewSt := account14.State{Address: f090ID} // State points to ID addr
-		h, err := actors.Store.Put(ctx, &f090NewSt)
+		h, err := actors.GetStore().Put(ctx, &f090NewSt)
 		if err != nil {
 			return xerrors.Errorf("failed to write new f090 state: %w", err)
 		}
