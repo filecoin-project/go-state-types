@@ -31,6 +31,7 @@ const (
 	Version21                 // Watermelon
 	Version22                 // Dragon
 	Version23                 // Waffle
+	Version24                 // TBD
 
 	// VersionMax is the maximum version number
 	VersionMax = Version(math.MaxUint32)
