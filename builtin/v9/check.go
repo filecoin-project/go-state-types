@@ -30,7 +30,7 @@ import (
 // Within this code, Go errors are not expected, but are often converted to messages so that execution
 // can continue to find more errors rather than fail with no insight.
 // Only errors thar are particularly troublesome to recover from should propagate as Go errors.
-func CheckStateInvariants(tree builtin.ActorTree, priorEpoch abi.ChainEpoch, actorCodes map[string]cid.Cid) (*builtin.MessageAccumulator, error) {
+func CheckStateInvariants(tree builtin.LegacyActorTree, priorEpoch abi.ChainEpoch, actorCodes map[string]cid.Cid) (*builtin.MessageAccumulator, error) {
 	acc := &builtin.MessageAccumulator{}
 	totalFIl := big.Zero()
 	var initSummary *init_.StateSummary

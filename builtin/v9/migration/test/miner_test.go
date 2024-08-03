@@ -32,7 +32,7 @@ func TestMinerMigration(t *testing.T) {
 
 	startRoot := makeInputTree(ctx, t, adtStore)
 
-	oldStateTree, err := builtin.LoadTree(adtStore, startRoot)
+	oldStateTree, err := builtin.LoadLegacyTree(adtStore, startRoot)
 	require.NoError(t, err)
 
 	oldSystemActor, found, err := oldStateTree.GetActorV4(builtin.SystemActorAddr)
@@ -237,7 +237,7 @@ func TestMinerMigration(t *testing.T) {
 
 	// check that the actor states were correctly updated
 
-	newStateTree, err := builtin.LoadTree(adtStore, cacheRoot)
+	newStateTree, err := builtin.LoadLegacyTree(adtStore, cacheRoot)
 	require.NoError(t, err)
 
 	// miner 1 is just empty precommits
@@ -324,7 +324,7 @@ func TestFip0029MinerMigration(t *testing.T) {
 
 	startRoot := makeInputTree(ctx, t, adtStore)
 
-	oldStateTree, err := builtin.LoadTree(adtStore, startRoot)
+	oldStateTree, err := builtin.LoadLegacyTree(adtStore, startRoot)
 	require.NoError(t, err)
 
 	oldSystemActor, found, err := oldStateTree.GetActorV4(builtin.SystemActorAddr)
@@ -386,7 +386,7 @@ func TestFip0029MinerMigration(t *testing.T) {
 
 	// check that the actor states were correctly updated
 
-	newStateTree, err := builtin.LoadTree(adtStore, cacheRoot)
+	newStateTree, err := builtin.LoadLegacyTree(adtStore, cacheRoot)
 	require.NoError(t, err)
 
 	newMinerActor, ok, err := newStateTree.GetActorV4(addr)

@@ -67,7 +67,7 @@ func makeTestManifest(t *testing.T, store adt.Store, prefix string) (cid.Cid, ci
 }
 
 func makeInputTree(ctx context.Context, t *testing.T, store adt.Store) cid.Cid {
-	tree, err := builtin.NewTree(store)
+	tree, err := builtin.NewLegacyTree(store)
 	require.NoError(t, err, "failed to create empty actors tree")
 
 	manifestCid, manifestDataCid := makeTestManifest(t, store, "fil/8/")
@@ -139,7 +139,7 @@ func makeInputTree(ctx context.Context, t *testing.T, store adt.Store) cid.Cid {
 	return root
 }
 
-func initializeActor(ctx context.Context, t testing.TB, tree builtin.ActorTree, store adt.Store, state cbor.Marshaler, code cid.Cid, a address.Address, balance abi.TokenAmount) {
+func initializeActor(ctx context.Context, t testing.TB, tree builtin.LegacyActorTree, store adt.Store, state cbor.Marshaler, code cid.Cid, a address.Address, balance abi.TokenAmount) {
 	stateCID, err := store.Put(ctx, state)
 	require.NoError(t, err)
 	actor := &builtin.ActorV4{

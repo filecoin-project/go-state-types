@@ -26,7 +26,7 @@ func TestMigration(t *testing.T) {
 
 	startRoot := makeInputTree(ctx, t, adtStore)
 
-	oldStateTree, err := builtin.LoadTree(adtStore, startRoot)
+	oldStateTree, err := builtin.LoadLegacyTree(adtStore, startRoot)
 	require.NoError(t, err)
 
 	oldSystemActor, found, err := oldStateTree.GetActorV4(builtin.SystemActorAddr)
@@ -60,7 +60,7 @@ func TestMigration(t *testing.T) {
 
 	// check that the system actor state was correctly updated
 
-	newStateTree, err := builtin.LoadTree(adtStore, cacheRoot)
+	newStateTree, err := builtin.LoadLegacyTree(adtStore, cacheRoot)
 	require.NoError(t, err)
 
 	newSystemActor, found, err := newStateTree.GetActorV4(builtin.SystemActorAddr)
