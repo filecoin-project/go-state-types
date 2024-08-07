@@ -6,7 +6,7 @@ import (
 
 	"github.com/filecoin-project/go-state-types/test_util"
 
-	commp "github.com/filecoin-project/go-commp-utils/nonffi"
+	commp "github.com/filecoin-project/go-commp-utils/v2"
 	market8 "github.com/filecoin-project/go-state-types/builtin/v8/market"
 
 	"github.com/filecoin-project/go-address"
@@ -289,7 +289,7 @@ func TestMinerMigration(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.NotNil(t, pc.Info.UnsealedCid)
-	expectedCid, err := commp.GenerateUnsealedCID(abi.RegisteredSealProof_StackedDrg32GiBV1_1, []abi.PieceInfo{{PieceCID: deal0.PieceCID, Size: deal0.PieceSize}})
+	expectedCid, _, err := commp.PieceAggregateCommP(abi.RegisteredSealProof_StackedDrg32GiBV1_1, []abi.PieceInfo{{PieceCID: deal0.PieceCID, Size: deal0.PieceSize}})
 	require.NoError(t, err)
 
 	require.Equal(t, expectedCid, *pc.Info.UnsealedCid)
@@ -298,7 +298,7 @@ func TestMinerMigration(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.NotNil(t, pc.Info.UnsealedCid)
-	expectedCid, err = commp.GenerateUnsealedCID(abi.RegisteredSealProof_StackedDrg32GiBV1_1, []abi.PieceInfo{
+	expectedCid, _, err = commp.PieceAggregateCommP(abi.RegisteredSealProof_StackedDrg32GiBV1_1, []abi.PieceInfo{
 		{PieceCID: deal1.PieceCID, Size: deal1.PieceSize},
 		{PieceCID: deal2.PieceCID, Size: deal2.PieceSize}})
 	require.NoError(t, err)
