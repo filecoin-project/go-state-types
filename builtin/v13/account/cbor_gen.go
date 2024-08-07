@@ -36,6 +36,7 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 	if err := t.Address.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -63,14 +64,12 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Address (address.Address) (struct)
-
 	{
-
 		if err := t.Address.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Address: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -141,7 +140,6 @@ func (t *AuthenticateMessageParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Signature ([]uint8) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -163,7 +161,6 @@ func (t *AuthenticateMessageParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Message ([]uint8) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err

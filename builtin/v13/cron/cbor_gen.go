@@ -45,8 +45,8 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
-
 	}
+
 	return nil
 }
 
@@ -74,7 +74,6 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Entries ([]cron.Entry) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -102,15 +101,13 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				if err := t.Entries[i].UnmarshalCBOR(cr); err != nil {
 					return xerrors.Errorf("unmarshaling t.Entries[i]: %w", err)
 				}
-
 			}
-
 		}
 	}
+
 	return nil
 }
 
@@ -134,7 +131,6 @@ func (t *Entry) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.MethodNum (abi.MethodNum) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.MethodNum)); err != nil {
 		return err
 	}
@@ -166,18 +162,14 @@ func (t *Entry) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Receiver (address.Address) (struct)
-
 	{
-
 		if err := t.Receiver.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Receiver: %w", err)
 		}
-
 	}
+
 	// t.MethodNum (abi.MethodNum) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -186,7 +178,7 @@ func (t *Entry) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.MethodNum = abi.MethodNum(extra)
-
 	}
+
 	return nil
 }

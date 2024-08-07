@@ -42,6 +42,7 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 	if err := t.Token.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -69,23 +70,19 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Governor (address.Address) (struct)
-
 	{
-
 		if err := t.Governor.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Governor: %w", err)
 		}
-
 	}
+
 	// t.Token (datacap.TokenState) (struct)
-
 	{
-
 		if err := t.Token.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Token: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -109,19 +106,14 @@ func (t *TokenState) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Balances (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.Balances); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Balances: %w", err)
 	}
-
 	// t.Allowances (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.Allowances); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Allowances: %w", err)
 	}
-
 	// t.HamtBitWidth (uint64) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.HamtBitWidth)); err != nil {
 		return err
 	}
@@ -153,42 +145,34 @@ func (t *TokenState) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Supply (big.Int) (struct)
-
 	{
-
 		if err := t.Supply.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Supply: %w", err)
 		}
-
 	}
+
 	// t.Balances (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Balances: %w", err)
 		}
 
 		t.Balances = c
-
 	}
+
 	// t.Allowances (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Allowances: %w", err)
 		}
 
 		t.Allowances = c
-
 	}
+
 	// t.HamtBitWidth (uint64) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -197,8 +181,8 @@ func (t *TokenState) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.HamtBitWidth = uint64(extra)
-
 	}
+
 	return nil
 }
 
@@ -238,8 +222,8 @@ func (t *MintParams) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
-
 	}
+
 	return nil
 }
 
@@ -267,25 +251,20 @@ func (t *MintParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.To (address.Address) (struct)
-
 	{
-
 		if err := t.To.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.To: %w", err)
 		}
-
 	}
+
 	// t.Amount (big.Int) (struct)
-
 	{
-
 		if err := t.Amount.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Amount: %w", err)
 		}
-
 	}
-	// t.Operators ([]address.Address) (slice)
 
+	// t.Operators ([]address.Address) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -313,15 +292,13 @@ func (t *MintParams) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				if err := t.Operators[i].UnmarshalCBOR(cr); err != nil {
 					return xerrors.Errorf("unmarshaling t.Operators[i]: %w", err)
 				}
-
 			}
-
 		}
 	}
+
 	return nil
 }
 
@@ -389,25 +366,20 @@ func (t *MintReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Balance (big.Int) (struct)
-
 	{
-
 		if err := t.Balance.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Balance: %w", err)
 		}
-
 	}
+
 	// t.Supply (big.Int) (struct)
-
 	{
-
 		if err := t.Supply.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Supply: %w", err)
 		}
-
 	}
-	// t.RecipientData ([]uint8) (slice)
 
+	// t.RecipientData ([]uint8) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -454,6 +426,7 @@ func (t *DestroyParams) MarshalCBOR(w io.Writer) error {
 	if err := t.Amount.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -481,23 +454,19 @@ func (t *DestroyParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Owner (address.Address) (struct)
-
 	{
-
 		if err := t.Owner.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Owner: %w", err)
 		}
-
 	}
+
 	// t.Amount (big.Int) (struct)
-
 	{
-
 		if err := t.Amount.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Amount: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -565,25 +534,20 @@ func (t *TransferParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.To (address.Address) (struct)
-
 	{
-
 		if err := t.To.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.To: %w", err)
 		}
-
 	}
+
 	// t.Amount (big.Int) (struct)
-
 	{
-
 		if err := t.Amount.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Amount: %w", err)
 		}
-
 	}
-	// t.OperatorData ([]uint8) (slice)
 
+	// t.OperatorData ([]uint8) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -671,25 +635,20 @@ func (t *TransferReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.FromBalance (big.Int) (struct)
-
 	{
-
 		if err := t.FromBalance.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.FromBalance: %w", err)
 		}
-
 	}
+
 	// t.ToBalance (big.Int) (struct)
-
 	{
-
 		if err := t.ToBalance.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.ToBalance: %w", err)
 		}
-
 	}
-	// t.RecipientData ([]uint8) (slice)
 
+	// t.RecipientData ([]uint8) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -782,34 +741,27 @@ func (t *TransferFromParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.From (address.Address) (struct)
-
 	{
-
 		if err := t.From.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.From: %w", err)
 		}
-
 	}
+
 	// t.To (address.Address) (struct)
-
 	{
-
 		if err := t.To.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.To: %w", err)
 		}
-
 	}
+
 	// t.Amount (big.Int) (struct)
-
 	{
-
 		if err := t.Amount.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Amount: %w", err)
 		}
-
 	}
-	// t.OperatorData ([]uint8) (slice)
 
+	// t.OperatorData ([]uint8) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -902,34 +854,27 @@ func (t *TransferFromReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.FromBalance (big.Int) (struct)
-
 	{
-
 		if err := t.FromBalance.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.FromBalance: %w", err)
 		}
-
 	}
+
 	// t.ToBalance (big.Int) (struct)
-
 	{
-
 		if err := t.ToBalance.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.ToBalance: %w", err)
 		}
-
 	}
+
 	// t.Allowance (big.Int) (struct)
-
 	{
-
 		if err := t.Allowance.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Allowance: %w", err)
 		}
-
 	}
-	// t.RecipientData ([]uint8) (slice)
 
+	// t.RecipientData ([]uint8) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -976,6 +921,7 @@ func (t *IncreaseAllowanceParams) MarshalCBOR(w io.Writer) error {
 	if err := t.Increase.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1003,23 +949,19 @@ func (t *IncreaseAllowanceParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Operator (address.Address) (struct)
-
 	{
-
 		if err := t.Operator.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Operator: %w", err)
 		}
-
 	}
+
 	// t.Increase (big.Int) (struct)
-
 	{
-
 		if err := t.Increase.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Increase: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -1046,6 +988,7 @@ func (t *DecreaseAllowanceParams) MarshalCBOR(w io.Writer) error {
 	if err := t.Decrease.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1073,23 +1016,19 @@ func (t *DecreaseAllowanceParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Operator (address.Address) (struct)
-
 	{
-
 		if err := t.Operator.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Operator: %w", err)
 		}
-
 	}
+
 	// t.Decrease (big.Int) (struct)
-
 	{
-
 		if err := t.Decrease.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Decrease: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -1111,6 +1050,7 @@ func (t *RevokeAllowanceParams) MarshalCBOR(w io.Writer) error {
 	if err := t.Operator.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1138,14 +1078,12 @@ func (t *RevokeAllowanceParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Operator (address.Address) (struct)
-
 	{
-
 		if err := t.Operator.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Operator: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -1172,6 +1110,7 @@ func (t *GetAllowanceParams) MarshalCBOR(w io.Writer) error {
 	if err := t.Operator.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1199,23 +1138,19 @@ func (t *GetAllowanceParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Owner (address.Address) (struct)
-
 	{
-
 		if err := t.Owner.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Owner: %w", err)
 		}
-
 	}
+
 	// t.Operator (address.Address) (struct)
-
 	{
-
 		if err := t.Operator.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Operator: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -1237,6 +1172,7 @@ func (t *BurnParams) MarshalCBOR(w io.Writer) error {
 	if err := t.Amount.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1264,14 +1200,12 @@ func (t *BurnParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Amount (big.Int) (struct)
-
 	{
-
 		if err := t.Amount.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Amount: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -1293,6 +1227,7 @@ func (t *BurnReturn) MarshalCBOR(w io.Writer) error {
 	if err := t.Balance.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1320,14 +1255,12 @@ func (t *BurnReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Balance (big.Int) (struct)
-
 	{
-
 		if err := t.Balance.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Balance: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -1354,6 +1287,7 @@ func (t *BurnFromParams) MarshalCBOR(w io.Writer) error {
 	if err := t.Amount.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1381,23 +1315,19 @@ func (t *BurnFromParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Owner (address.Address) (struct)
-
 	{
-
 		if err := t.Owner.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Owner: %w", err)
 		}
-
 	}
+
 	// t.Amount (big.Int) (struct)
-
 	{
-
 		if err := t.Amount.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Amount: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -1424,6 +1354,7 @@ func (t *BurnFromReturn) MarshalCBOR(w io.Writer) error {
 	if err := t.Allowance.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1451,22 +1382,18 @@ func (t *BurnFromReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Balance (big.Int) (struct)
-
 	{
-
 		if err := t.Balance.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Balance: %w", err)
 		}
-
 	}
+
 	// t.Allowance (big.Int) (struct)
-
 	{
-
 		if err := t.Allowance.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Allowance: %w", err)
 		}
-
 	}
+
 	return nil
 }

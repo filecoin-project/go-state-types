@@ -99,6 +99,7 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 	if err := t.BaselineTotal.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -126,23 +127,19 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.CumsumBaseline (big.Int) (struct)
-
 	{
-
 		if err := t.CumsumBaseline.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.CumsumBaseline: %w", err)
 		}
-
 	}
+
 	// t.CumsumRealized (big.Int) (struct)
-
 	{
-
 		if err := t.CumsumRealized.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.CumsumRealized: %w", err)
 		}
-
 	}
+
 	// t.EffectiveNetworkTime (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -168,42 +165,35 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.EffectiveNetworkTime = abi.ChainEpoch(extraI)
 	}
+
 	// t.EffectiveBaselinePower (big.Int) (struct)
-
 	{
-
 		if err := t.EffectiveBaselinePower.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.EffectiveBaselinePower: %w", err)
 		}
-
 	}
+
 	// t.ThisEpochReward (big.Int) (struct)
-
 	{
-
 		if err := t.ThisEpochReward.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.ThisEpochReward: %w", err)
 		}
-
 	}
+
 	// t.ThisEpochRewardSmoothed (smoothing.FilterEstimate) (struct)
-
 	{
-
 		if err := t.ThisEpochRewardSmoothed.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.ThisEpochRewardSmoothed: %w", err)
 		}
-
 	}
+
 	// t.ThisEpochBaselinePower (big.Int) (struct)
-
 	{
-
 		if err := t.ThisEpochBaselinePower.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.ThisEpochBaselinePower: %w", err)
 		}
-
 	}
+
 	// t.Epoch (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -229,33 +219,28 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.Epoch = abi.ChainEpoch(extraI)
 	}
+
 	// t.TotalStoragePowerReward (big.Int) (struct)
-
 	{
-
 		if err := t.TotalStoragePowerReward.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.TotalStoragePowerReward: %w", err)
 		}
-
 	}
+
 	// t.SimpleTotal (big.Int) (struct)
-
 	{
-
 		if err := t.SimpleTotal.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.SimpleTotal: %w", err)
 		}
-
 	}
+
 	// t.BaselineTotal (big.Int) (struct)
-
 	{
-
 		if err := t.BaselineTotal.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.BaselineTotal: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -282,6 +267,7 @@ func (t *ThisEpochRewardReturn) MarshalCBOR(w io.Writer) error {
 	if err := t.ThisEpochBaselinePower.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -309,23 +295,19 @@ func (t *ThisEpochRewardReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.ThisEpochRewardSmoothed (smoothing.FilterEstimate) (struct)
-
 	{
-
 		if err := t.ThisEpochRewardSmoothed.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.ThisEpochRewardSmoothed: %w", err)
 		}
-
 	}
+
 	// t.ThisEpochBaselinePower (big.Int) (struct)
-
 	{
-
 		if err := t.ThisEpochBaselinePower.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.ThisEpochBaselinePower: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -396,32 +378,26 @@ func (t *AwardBlockRewardParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Miner (address.Address) (struct)
-
 	{
-
 		if err := t.Miner.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Miner: %w", err)
 		}
-
 	}
+
 	// t.Penalty (big.Int) (struct)
-
 	{
-
 		if err := t.Penalty.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Penalty: %w", err)
 		}
-
 	}
+
 	// t.GasReward (big.Int) (struct)
-
 	{
-
 		if err := t.GasReward.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.GasReward: %w", err)
 		}
-
 	}
+
 	// t.WinCount (int64) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -447,5 +423,6 @@ func (t *AwardBlockRewardParams) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.WinCount = int64(extraI)
 	}
+
 	return nil
 }

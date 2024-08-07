@@ -33,17 +33,14 @@ func (t *Manifest) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Version (uint64) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Version)); err != nil {
 		return err
 	}
 
 	// t.Data (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.Data); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Data: %w", err)
 	}
-
 	return nil
 }
 
@@ -71,9 +68,7 @@ func (t *Manifest) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Version (uint64) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -82,20 +77,18 @@ func (t *Manifest) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Version = uint64(extra)
-
 	}
+
 	// t.Data (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Data: %w", err)
 		}
 
 		t.Data = c
-
 	}
+
 	return nil
 }
 
@@ -117,7 +110,6 @@ func (t *ManifestEntry) MarshalCBOR(w io.Writer) error {
 	if len(t.Name) > 8192 {
 		return xerrors.Errorf("Value in field t.Name was too long")
 	}
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Name))); err != nil {
 		return err
 	}
@@ -126,11 +118,9 @@ func (t *ManifestEntry) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Code (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.Code); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Code: %w", err)
 	}
-
 	return nil
 }
 
@@ -158,7 +148,6 @@ func (t *ManifestEntry) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Name (string) (string)
-
 	{
 		sval, err := cbg.ReadStringWithMax(cr, 8192)
 		if err != nil {
@@ -167,17 +156,16 @@ func (t *ManifestEntry) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.Name = string(sval)
 	}
+
 	// t.Code (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Code: %w", err)
 		}
 
 		t.Code = c
-
 	}
+
 	return nil
 }
