@@ -33,11 +33,9 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.BuiltinActors (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.BuiltinActors); err != nil {
 		return xerrors.Errorf("failed to write cid field t.BuiltinActors: %w", err)
 	}
-
 	return nil
 }
 
@@ -65,16 +63,14 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.BuiltinActors (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.BuiltinActors: %w", err)
 		}
 
 		t.BuiltinActors = c
-
 	}
+
 	return nil
 }

@@ -33,17 +33,14 @@ func (t *PieceInfo) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Size (abi.PaddedPieceSize) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Size)); err != nil {
 		return err
 	}
 
 	// t.PieceCID (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.PieceCID); err != nil {
 		return xerrors.Errorf("failed to write cid field t.PieceCID: %w", err)
 	}
-
 	return nil
 }
 
@@ -71,9 +68,7 @@ func (t *PieceInfo) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Size (abi.PaddedPieceSize) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -82,20 +77,18 @@ func (t *PieceInfo) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Size = PaddedPieceSize(extra)
-
 	}
+
 	// t.PieceCID (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.PieceCID: %w", err)
 		}
 
 		t.PieceCID = c
-
 	}
+
 	return nil
 }
 
@@ -114,13 +107,11 @@ func (t *SectorID) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Miner (abi.ActorID) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Miner)); err != nil {
 		return err
 	}
 
 	// t.Number (abi.SectorNumber) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Number)); err != nil {
 		return err
 	}
@@ -152,9 +143,7 @@ func (t *SectorID) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Miner (abi.ActorID) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -163,12 +152,10 @@ func (t *SectorID) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Miner = ActorID(extra)
-
 	}
+
 	// t.Number (abi.SectorNumber) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -177,8 +164,8 @@ func (t *SectorID) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Number = SectorNumber(extra)
-
 	}
+
 	return nil
 }
 
@@ -205,6 +192,7 @@ func (t *AddrPairKey) MarshalCBOR(w io.Writer) error {
 	if err := t.Second.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -232,22 +220,18 @@ func (t *AddrPairKey) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.First (address.Address) (struct)
-
 	{
-
 		if err := t.First.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.First: %w", err)
 		}
-
 	}
+
 	// t.Second (address.Address) (struct)
-
 	{
-
 		if err := t.Second.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Second: %w", err)
 		}
-
 	}
+
 	return nil
 }

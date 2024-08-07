@@ -34,47 +34,34 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Proposals (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.Proposals); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Proposals: %w", err)
 	}
-
 	// t.States (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.States); err != nil {
 		return xerrors.Errorf("failed to write cid field t.States: %w", err)
 	}
-
 	// t.PendingProposals (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.PendingProposals); err != nil {
 		return xerrors.Errorf("failed to write cid field t.PendingProposals: %w", err)
 	}
-
 	// t.EscrowTable (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.EscrowTable); err != nil {
 		return xerrors.Errorf("failed to write cid field t.EscrowTable: %w", err)
 	}
-
 	// t.LockedTable (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.LockedTable); err != nil {
 		return xerrors.Errorf("failed to write cid field t.LockedTable: %w", err)
 	}
-
 	// t.NextID (abi.DealID) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.NextID)); err != nil {
 		return err
 	}
 
 	// t.DealOpsByEpoch (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.DealOpsByEpoch); err != nil {
 		return xerrors.Errorf("failed to write cid field t.DealOpsByEpoch: %w", err)
 	}
-
 	// t.LastCron (abi.ChainEpoch) (int64)
 	if t.LastCron >= 0 {
 		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.LastCron)); err != nil {
@@ -100,6 +87,7 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 	if err := t.TotalClientStorageFee.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -127,69 +115,57 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Proposals (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Proposals: %w", err)
 		}
 
 		t.Proposals = c
-
 	}
+
 	// t.States (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.States: %w", err)
 		}
 
 		t.States = c
-
 	}
+
 	// t.PendingProposals (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.PendingProposals: %w", err)
 		}
 
 		t.PendingProposals = c
-
 	}
+
 	// t.EscrowTable (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.EscrowTable: %w", err)
 		}
 
 		t.EscrowTable = c
-
 	}
+
 	// t.LockedTable (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.LockedTable: %w", err)
 		}
 
 		t.LockedTable = c
-
 	}
+
 	// t.NextID (abi.DealID) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -198,20 +174,18 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.NextID = abi.DealID(extra)
-
 	}
+
 	// t.DealOpsByEpoch (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.DealOpsByEpoch: %w", err)
 		}
 
 		t.DealOpsByEpoch = c
-
 	}
+
 	// t.LastCron (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -237,33 +211,28 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.LastCron = abi.ChainEpoch(extraI)
 	}
+
 	// t.TotalClientLockedCollateral (big.Int) (struct)
-
 	{
-
 		if err := t.TotalClientLockedCollateral.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.TotalClientLockedCollateral: %w", err)
 		}
-
 	}
+
 	// t.TotalProviderLockedCollateral (big.Int) (struct)
-
 	{
-
 		if err := t.TotalProviderLockedCollateral.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.TotalProviderLockedCollateral: %w", err)
 		}
-
 	}
+
 	// t.TotalClientStorageFee (big.Int) (struct)
-
 	{
-
 		if err := t.TotalClientStorageFee.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.TotalClientStorageFee: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -365,6 +334,7 @@ func (t *DealState) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.SectorStartEpoch = abi.ChainEpoch(extraI)
 	}
+
 	// t.LastUpdatedEpoch (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -390,6 +360,7 @@ func (t *DealState) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.LastUpdatedEpoch = abi.ChainEpoch(extraI)
 	}
+
 	// t.SlashEpoch (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -415,6 +386,7 @@ func (t *DealState) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.SlashEpoch = abi.ChainEpoch(extraI)
 	}
+
 	return nil
 }
 
@@ -441,6 +413,7 @@ func (t *WithdrawBalanceParams) MarshalCBOR(w io.Writer) error {
 	if err := t.Amount.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -468,23 +441,19 @@ func (t *WithdrawBalanceParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.ProviderOrClientAddress (address.Address) (struct)
-
 	{
-
 		if err := t.ProviderOrClientAddress.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.ProviderOrClientAddress: %w", err)
 		}
-
 	}
+
 	// t.Amount (big.Int) (struct)
-
 	{
-
 		if err := t.Amount.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Amount: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -514,8 +483,8 @@ func (t *PublishStorageDealsParams) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
-
 	}
+
 	return nil
 }
 
@@ -543,7 +512,6 @@ func (t *PublishStorageDealsParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Deals ([]market.ClientDealProposal) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -571,15 +539,13 @@ func (t *PublishStorageDealsParams) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				if err := t.Deals[i].UnmarshalCBOR(cr); err != nil {
 					return xerrors.Errorf("unmarshaling t.Deals[i]: %w", err)
 				}
-
 			}
-
 		}
 	}
+
 	return nil
 }
 
@@ -606,17 +572,16 @@ func (t *PublishStorageDealsReturn) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.IDs {
-
 		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
 		}
-
 	}
 
 	// t.ValidDeals (bitfield.BitField) (struct)
 	if err := t.ValidDeals.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -644,7 +609,6 @@ func (t *PublishStorageDealsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.IDs ([]abi.DealID) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -672,7 +636,6 @@ func (t *PublishStorageDealsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				maj, extra, err = cr.ReadHeader()
 				if err != nil {
 					return err
@@ -681,20 +644,17 @@ func (t *PublishStorageDealsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 					return fmt.Errorf("wrong type for uint64 field")
 				}
 				t.IDs[i] = abi.DealID(extra)
-
 			}
-
 		}
 	}
+
 	// t.ValidDeals (bitfield.BitField) (struct)
-
 	{
-
 		if err := t.ValidDeals.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.ValidDeals: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -721,11 +681,9 @@ func (t *ActivateDealsParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.DealIDs {
-
 		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
 		}
-
 	}
 
 	// t.SectorExpiry (abi.ChainEpoch) (int64)
@@ -766,7 +724,6 @@ func (t *ActivateDealsParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.DealIDs ([]abi.DealID) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -794,7 +751,6 @@ func (t *ActivateDealsParams) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				maj, extra, err = cr.ReadHeader()
 				if err != nil {
 					return err
@@ -803,11 +759,10 @@ func (t *ActivateDealsParams) UnmarshalCBOR(r io.Reader) (err error) {
 					return fmt.Errorf("wrong type for uint64 field")
 				}
 				t.DealIDs[i] = abi.DealID(extra)
-
 			}
-
 		}
 	}
+
 	// t.SectorExpiry (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -833,6 +788,7 @@ func (t *ActivateDealsParams) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.SectorExpiry = abi.ChainEpoch(extraI)
 	}
+
 	return nil
 }
 
@@ -862,8 +818,8 @@ func (t *VerifyDealsForActivationParams) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
-
 	}
+
 	return nil
 }
 
@@ -891,7 +847,6 @@ func (t *VerifyDealsForActivationParams) UnmarshalCBOR(r io.Reader) (err error) 
 	}
 
 	// t.Sectors ([]market.SectorDeals) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -919,15 +874,13 @@ func (t *VerifyDealsForActivationParams) UnmarshalCBOR(r io.Reader) (err error) 
 			_ = err
 
 			{
-
 				if err := t.Sectors[i].UnmarshalCBOR(cr); err != nil {
 					return xerrors.Errorf("unmarshaling t.Sectors[i]: %w", err)
 				}
-
 			}
-
 		}
 	}
+
 	return nil
 }
 
@@ -957,8 +910,8 @@ func (t *VerifyDealsForActivationReturn) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
-
 	}
+
 	return nil
 }
 
@@ -986,7 +939,6 @@ func (t *VerifyDealsForActivationReturn) UnmarshalCBOR(r io.Reader) (err error) 
 	}
 
 	// t.Sectors ([]market.SectorWeights) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -1014,15 +966,13 @@ func (t *VerifyDealsForActivationReturn) UnmarshalCBOR(r io.Reader) (err error) 
 			_ = err
 
 			{
-
 				if err := t.Sectors[i].UnmarshalCBOR(cr); err != nil {
 					return xerrors.Errorf("unmarshaling t.Sectors[i]: %w", err)
 				}
-
 			}
-
 		}
 	}
+
 	return nil
 }
 
@@ -1052,8 +1002,8 @@ func (t *ComputeDataCommitmentParams) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
-
 	}
+
 	return nil
 }
 
@@ -1081,7 +1031,6 @@ func (t *ComputeDataCommitmentParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Inputs ([]*market.SectorDataSpec) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -1109,7 +1058,6 @@ func (t *ComputeDataCommitmentParams) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				b, err := cr.ReadByte()
 				if err != nil {
 					return err
@@ -1123,11 +1071,10 @@ func (t *ComputeDataCommitmentParams) UnmarshalCBOR(r io.Reader) (err error) {
 						return xerrors.Errorf("unmarshaling t.Inputs[i] pointer: %w", err)
 					}
 				}
-
 			}
-
 		}
 	}
+
 	return nil
 }
 
@@ -1157,8 +1104,8 @@ func (t *ComputeDataCommitmentReturn) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
-
 	}
+
 	return nil
 }
 
@@ -1186,7 +1133,6 @@ func (t *ComputeDataCommitmentReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.CommDs ([]typegen.CborCid) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -1214,15 +1160,13 @@ func (t *ComputeDataCommitmentReturn) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				if err := t.CommDs[i].UnmarshalCBOR(cr); err != nil {
 					return xerrors.Errorf("unmarshaling t.CommDs[i]: %w", err)
 				}
-
 			}
-
 		}
 	}
+
 	return nil
 }
 
@@ -1260,12 +1204,11 @@ func (t *OnMinerSectorsTerminateParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.DealIDs {
-
 		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
 		}
-
 	}
+
 	return nil
 }
 
@@ -1317,8 +1260,8 @@ func (t *OnMinerSectorsTerminateParams) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.Epoch = abi.ChainEpoch(extraI)
 	}
-	// t.DealIDs ([]abi.DealID) (slice)
 
+	// t.DealIDs ([]abi.DealID) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -1346,7 +1289,6 @@ func (t *OnMinerSectorsTerminateParams) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				maj, extra, err = cr.ReadHeader()
 				if err != nil {
 					return err
@@ -1355,11 +1297,10 @@ func (t *OnMinerSectorsTerminateParams) UnmarshalCBOR(r io.Reader) (err error) {
 					return fmt.Errorf("wrong type for uint64 field")
 				}
 				t.DealIDs[i] = abi.DealID(extra)
-
 			}
-
 		}
 	}
+
 	return nil
 }
 
@@ -1378,13 +1319,10 @@ func (t *DealProposal) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.PieceCID (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.PieceCID); err != nil {
 		return xerrors.Errorf("failed to write cid field t.PieceCID: %w", err)
 	}
-
 	// t.PieceSize (abi.PaddedPieceSize) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.PieceSize)); err != nil {
 		return err
 	}
@@ -1445,6 +1383,7 @@ func (t *DealProposal) MarshalCBOR(w io.Writer) error {
 	if err := t.ClientCollateral.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1472,21 +1411,17 @@ func (t *DealProposal) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.PieceCID (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.PieceCID: %w", err)
 		}
 
 		t.PieceCID = c
-
 	}
+
 	// t.PieceSize (abi.PaddedPieceSize) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -1495,10 +1430,9 @@ func (t *DealProposal) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.PieceSize = abi.PaddedPieceSize(extra)
-
 	}
-	// t.VerifiedDeal (bool) (bool)
 
+	// t.VerifiedDeal (bool) (bool)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -1514,33 +1448,28 @@ func (t *DealProposal) UnmarshalCBOR(r io.Reader) (err error) {
 	default:
 		return fmt.Errorf("booleans are either major type 7, value 20 or 21 (got %d)", extra)
 	}
+
 	// t.Client (address.Address) (struct)
-
 	{
-
 		if err := t.Client.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Client: %w", err)
 		}
-
 	}
+
 	// t.Provider (address.Address) (struct)
-
 	{
-
 		if err := t.Provider.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Provider: %w", err)
 		}
-
 	}
+
 	// t.Label (market.DealLabel) (struct)
-
 	{
-
 		if err := t.Label.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Label: %w", err)
 		}
-
 	}
+
 	// t.StartEpoch (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -1566,6 +1495,7 @@ func (t *DealProposal) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.StartEpoch = abi.ChainEpoch(extraI)
 	}
+
 	// t.EndEpoch (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -1591,33 +1521,28 @@ func (t *DealProposal) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.EndEpoch = abi.ChainEpoch(extraI)
 	}
+
 	// t.StoragePricePerEpoch (big.Int) (struct)
-
 	{
-
 		if err := t.StoragePricePerEpoch.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.StoragePricePerEpoch: %w", err)
 		}
-
 	}
+
 	// t.ProviderCollateral (big.Int) (struct)
-
 	{
-
 		if err := t.ProviderCollateral.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.ProviderCollateral: %w", err)
 		}
-
 	}
+
 	// t.ClientCollateral (big.Int) (struct)
-
 	{
-
 		if err := t.ClientCollateral.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.ClientCollateral: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -1644,6 +1569,7 @@ func (t *ClientDealProposal) MarshalCBOR(w io.Writer) error {
 	if err := t.ClientSignature.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1671,23 +1597,19 @@ func (t *ClientDealProposal) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Proposal (market.DealProposal) (struct)
-
 	{
-
 		if err := t.Proposal.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Proposal: %w", err)
 		}
-
 	}
+
 	// t.ClientSignature (crypto.Signature) (struct)
-
 	{
-
 		if err := t.ClientSignature.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.ClientSignature: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -1725,12 +1647,11 @@ func (t *SectorDeals) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.DealIDs {
-
 		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
 		}
-
 	}
+
 	return nil
 }
 
@@ -1782,8 +1703,8 @@ func (t *SectorDeals) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.SectorExpiry = abi.ChainEpoch(extraI)
 	}
-	// t.DealIDs ([]abi.DealID) (slice)
 
+	// t.DealIDs ([]abi.DealID) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -1811,7 +1732,6 @@ func (t *SectorDeals) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				maj, extra, err = cr.ReadHeader()
 				if err != nil {
 					return err
@@ -1820,11 +1740,10 @@ func (t *SectorDeals) UnmarshalCBOR(r io.Reader) (err error) {
 					return fmt.Errorf("wrong type for uint64 field")
 				}
 				t.DealIDs[i] = abi.DealID(extra)
-
 			}
-
 		}
 	}
+
 	return nil
 }
 
@@ -1843,7 +1762,6 @@ func (t *SectorWeights) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.DealSpace (uint64) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.DealSpace)); err != nil {
 		return err
 	}
@@ -1857,6 +1775,7 @@ func (t *SectorWeights) MarshalCBOR(w io.Writer) error {
 	if err := t.VerifiedDealWeight.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1884,9 +1803,7 @@ func (t *SectorWeights) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.DealSpace (uint64) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -1895,26 +1812,22 @@ func (t *SectorWeights) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.DealSpace = uint64(extra)
-
 	}
+
 	// t.DealWeight (big.Int) (struct)
-
 	{
-
 		if err := t.DealWeight.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.DealWeight: %w", err)
 		}
-
 	}
+
 	// t.VerifiedDealWeight (big.Int) (struct)
-
 	{
-
 		if err := t.VerifiedDealWeight.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.VerifiedDealWeight: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -1941,11 +1854,9 @@ func (t *SectorDataSpec) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.DealIDs {
-
 		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
 		}
-
 	}
 
 	// t.SectorType (abi.RegisteredSealProof) (int64)
@@ -1986,7 +1897,6 @@ func (t *SectorDataSpec) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.DealIDs ([]abi.DealID) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -2014,7 +1924,6 @@ func (t *SectorDataSpec) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				maj, extra, err = cr.ReadHeader()
 				if err != nil {
 					return err
@@ -2023,11 +1932,10 @@ func (t *SectorDataSpec) UnmarshalCBOR(r io.Reader) (err error) {
 					return fmt.Errorf("wrong type for uint64 field")
 				}
 				t.DealIDs[i] = abi.DealID(extra)
-
 			}
-
 		}
 	}
+
 	// t.SectorType (abi.RegisteredSealProof) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -2053,5 +1961,6 @@ func (t *SectorDataSpec) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.SectorType = abi.RegisteredSealProof(extraI)
 	}
+
 	return nil
 }

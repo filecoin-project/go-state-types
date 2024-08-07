@@ -38,23 +38,17 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Verifiers (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.Verifiers); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Verifiers: %w", err)
 	}
-
 	// t.VerifiedClients (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.VerifiedClients); err != nil {
 		return xerrors.Errorf("failed to write cid field t.VerifiedClients: %w", err)
 	}
-
 	// t.RemoveDataCapProposalIDs (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.RemoveDataCapProposalIDs); err != nil {
 		return xerrors.Errorf("failed to write cid field t.RemoveDataCapProposalIDs: %w", err)
 	}
-
 	return nil
 }
 
@@ -82,50 +76,42 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.RootKey (address.Address) (struct)
-
 	{
-
 		if err := t.RootKey.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.RootKey: %w", err)
 		}
-
 	}
+
 	// t.Verifiers (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Verifiers: %w", err)
 		}
 
 		t.Verifiers = c
-
 	}
+
 	// t.VerifiedClients (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.VerifiedClients: %w", err)
 		}
 
 		t.VerifiedClients = c
-
 	}
+
 	// t.RemoveDataCapProposalIDs (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.RemoveDataCapProposalIDs: %w", err)
 		}
 
 		t.RemoveDataCapProposalIDs = c
-
 	}
+
 	return nil
 }
 
@@ -152,6 +138,7 @@ func (t *AddVerifierParams) MarshalCBOR(w io.Writer) error {
 	if err := t.Allowance.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -179,23 +166,19 @@ func (t *AddVerifierParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Address (address.Address) (struct)
-
 	{
-
 		if err := t.Address.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Address: %w", err)
 		}
-
 	}
+
 	// t.Allowance (big.Int) (struct)
-
 	{
-
 		if err := t.Allowance.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Allowance: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -222,6 +205,7 @@ func (t *AddVerifiedClientParams) MarshalCBOR(w io.Writer) error {
 	if err := t.Allowance.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -249,23 +233,19 @@ func (t *AddVerifiedClientParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Address (address.Address) (struct)
-
 	{
-
 		if err := t.Address.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Address: %w", err)
 		}
-
 	}
+
 	// t.Allowance (big.Int) (struct)
-
 	{
-
 		if err := t.Allowance.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Allowance: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -292,6 +272,7 @@ func (t *UseBytesParams) MarshalCBOR(w io.Writer) error {
 	if err := t.DealSize.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -319,23 +300,19 @@ func (t *UseBytesParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Address (address.Address) (struct)
-
 	{
-
 		if err := t.Address.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Address: %w", err)
 		}
-
 	}
+
 	// t.DealSize (big.Int) (struct)
-
 	{
-
 		if err := t.DealSize.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.DealSize: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -362,6 +339,7 @@ func (t *RestoreBytesParams) MarshalCBOR(w io.Writer) error {
 	if err := t.DealSize.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -389,23 +367,19 @@ func (t *RestoreBytesParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Address (address.Address) (struct)
-
 	{
-
 		if err := t.Address.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Address: %w", err)
 		}
-
 	}
+
 	// t.DealSize (big.Int) (struct)
-
 	{
-
 		if err := t.DealSize.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.DealSize: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -442,6 +416,7 @@ func (t *RemoveDataCapParams) MarshalCBOR(w io.Writer) error {
 	if err := t.VerifierRequest2.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -469,41 +444,33 @@ func (t *RemoveDataCapParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.VerifiedClientToRemove (address.Address) (struct)
-
 	{
-
 		if err := t.VerifiedClientToRemove.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.VerifiedClientToRemove: %w", err)
 		}
-
 	}
+
 	// t.DataCapAmountToRemove (big.Int) (struct)
-
 	{
-
 		if err := t.DataCapAmountToRemove.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.DataCapAmountToRemove: %w", err)
 		}
-
 	}
+
 	// t.VerifierRequest1 (verifreg.RemoveDataCapRequest) (struct)
-
 	{
-
 		if err := t.VerifierRequest1.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.VerifierRequest1: %w", err)
 		}
-
 	}
+
 	// t.VerifierRequest2 (verifreg.RemoveDataCapRequest) (struct)
-
 	{
-
 		if err := t.VerifierRequest2.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.VerifierRequest2: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -530,6 +497,7 @@ func (t *RemoveDataCapReturn) MarshalCBOR(w io.Writer) error {
 	if err := t.DataCapRemoved.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -557,23 +525,19 @@ func (t *RemoveDataCapReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.VerifiedClient (address.Address) (struct)
-
 	{
-
 		if err := t.VerifiedClient.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.VerifiedClient: %w", err)
 		}
-
 	}
+
 	// t.DataCapRemoved (big.Int) (struct)
-
 	{
-
 		if err := t.DataCapRemoved.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.DataCapRemoved: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -600,6 +564,7 @@ func (t *RemoveDataCapRequest) MarshalCBOR(w io.Writer) error {
 	if err := t.VerifierSignature.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -627,23 +592,19 @@ func (t *RemoveDataCapRequest) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Verifier (address.Address) (struct)
-
 	{
-
 		if err := t.Verifier.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Verifier: %w", err)
 		}
-
 	}
+
 	// t.VerifierSignature (crypto.Signature) (struct)
-
 	{
-
 		if err := t.VerifierSignature.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.VerifierSignature: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -672,7 +633,6 @@ func (t *RemoveDataCapProposal) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.RemovalProposalID (uint64) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.RemovalProposalID)); err != nil {
 		return err
 	}
@@ -704,27 +664,21 @@ func (t *RemoveDataCapProposal) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.VerifiedClient (address.Address) (struct)
-
 	{
-
 		if err := t.VerifiedClient.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.VerifiedClient: %w", err)
 		}
-
 	}
+
 	// t.DataCapAmount (big.Int) (struct)
-
 	{
-
 		if err := t.DataCapAmount.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.DataCapAmount: %w", err)
 		}
-
 	}
+
 	// t.RemovalProposalID (uint64) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -733,7 +687,7 @@ func (t *RemoveDataCapProposal) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.RemovalProposalID = uint64(extra)
-
 	}
+
 	return nil
 }

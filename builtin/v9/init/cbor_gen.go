@@ -34,13 +34,10 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.AddressMap (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.AddressMap); err != nil {
 		return xerrors.Errorf("failed to write cid field t.AddressMap: %w", err)
 	}
-
 	// t.NextID (abi.ActorID) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.NextID)); err != nil {
 		return err
 	}
@@ -49,13 +46,13 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 	if len(t.NetworkName) > 8192 {
 		return xerrors.Errorf("Value in field t.NetworkName was too long")
 	}
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.NetworkName))); err != nil {
 		return err
 	}
 	if _, err := cw.WriteString(string(t.NetworkName)); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -83,21 +80,17 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.AddressMap (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.AddressMap: %w", err)
 		}
 
 		t.AddressMap = c
-
 	}
+
 	// t.NextID (abi.ActorID) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -106,10 +99,9 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.NextID = abi.ActorID(extra)
-
 	}
-	// t.NetworkName (string) (string)
 
+	// t.NetworkName (string) (string)
 	{
 		sval, err := cbg.ReadStringWithMax(cr, 8192)
 		if err != nil {
@@ -118,6 +110,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.NetworkName = string(sval)
 	}
+
 	return nil
 }
 
@@ -139,13 +132,13 @@ func (t *ConstructorParams) MarshalCBOR(w io.Writer) error {
 	if len(t.NetworkName) > 8192 {
 		return xerrors.Errorf("Value in field t.NetworkName was too long")
 	}
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.NetworkName))); err != nil {
 		return err
 	}
 	if _, err := cw.WriteString(string(t.NetworkName)); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -173,7 +166,6 @@ func (t *ConstructorParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.NetworkName (string) (string)
-
 	{
 		sval, err := cbg.ReadStringWithMax(cr, 8192)
 		if err != nil {
@@ -182,6 +174,7 @@ func (t *ConstructorParams) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.NetworkName = string(sval)
 	}
+
 	return nil
 }
 
@@ -200,11 +193,9 @@ func (t *ExecParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.CodeCID (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.CodeCID); err != nil {
 		return xerrors.Errorf("failed to write cid field t.CodeCID: %w", err)
 	}
-
 	// t.ConstructorParams ([]uint8) (slice)
 	if len(t.ConstructorParams) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.ConstructorParams was too long")
@@ -245,19 +236,16 @@ func (t *ExecParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.CodeCID (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.CodeCID: %w", err)
 		}
 
 		t.CodeCID = c
-
 	}
-	// t.ConstructorParams ([]uint8) (slice)
 
+	// t.ConstructorParams ([]uint8) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -304,6 +292,7 @@ func (t *ExecReturn) MarshalCBOR(w io.Writer) error {
 	if err := t.RobustAddress.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -331,22 +320,18 @@ func (t *ExecReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.IDAddress (address.Address) (struct)
-
 	{
-
 		if err := t.IDAddress.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.IDAddress: %w", err)
 		}
-
 	}
+
 	// t.RobustAddress (address.Address) (struct)
-
 	{
-
 		if err := t.RobustAddress.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.RobustAddress: %w", err)
 		}
-
 	}
+
 	return nil
 }

@@ -41,6 +41,7 @@ func (t *FilterEstimate) MarshalCBOR(w io.Writer) error {
 	if err := t.VelocityEstimate.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -68,22 +69,18 @@ func (t *FilterEstimate) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.PositionEstimate (big.Int) (struct)
-
 	{
-
 		if err := t.PositionEstimate.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.PositionEstimate: %w", err)
 		}
-
 	}
+
 	// t.VelocityEstimate (big.Int) (struct)
-
 	{
-
 		if err := t.VelocityEstimate.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.VelocityEstimate: %w", err)
 		}
-
 	}
+
 	return nil
 }

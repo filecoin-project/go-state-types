@@ -108,8 +108,8 @@ func (t *PoStProof) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.PoStProof = abi.RegisteredPoStProof(extraI)
 	}
-	// t.ProofBytes ([]uint8) (slice)
 
+	// t.ProofBytes ([]uint8) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -159,17 +159,14 @@ func (t *SectorInfo) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.SectorNumber (abi.SectorNumber) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.SectorNumber)); err != nil {
 		return err
 	}
 
 	// t.SealedCID (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.SealedCID); err != nil {
 		return xerrors.Errorf("failed to write cid field t.SealedCID: %w", err)
 	}
-
 	return nil
 }
 
@@ -221,10 +218,9 @@ func (t *SectorInfo) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.SealProof = abi.RegisteredSealProof(extraI)
 	}
+
 	// t.SectorNumber (abi.SectorNumber) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -233,20 +229,18 @@ func (t *SectorInfo) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.SectorNumber = abi.SectorNumber(extra)
-
 	}
+
 	// t.SealedCID (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.SealedCID: %w", err)
 		}
 
 		t.SealedCID = c
-
 	}
+
 	return nil
 }
 
@@ -276,13 +270,11 @@ func (t *ExtendedSectorInfo) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.SectorNumber (abi.SectorNumber) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.SectorNumber)); err != nil {
 		return err
 	}
 
 	// t.SectorKey (cid.Cid) (struct)
-
 	if t.SectorKey == nil {
 		if _, err := cw.Write(cbg.CborNull); err != nil {
 			return err
@@ -294,11 +286,9 @@ func (t *ExtendedSectorInfo) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.SealedCID (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.SealedCID); err != nil {
 		return xerrors.Errorf("failed to write cid field t.SealedCID: %w", err)
 	}
-
 	return nil
 }
 
@@ -350,10 +340,9 @@ func (t *ExtendedSectorInfo) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.SealProof = abi.RegisteredSealProof(extraI)
 	}
+
 	// t.SectorNumber (abi.SectorNumber) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -362,12 +351,10 @@ func (t *ExtendedSectorInfo) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.SectorNumber = abi.SectorNumber(extra)
-
 	}
+
 	// t.SectorKey (cid.Cid) (struct)
-
 	{
-
 		b, err := cr.ReadByte()
 		if err != nil {
 			return err
@@ -384,20 +371,18 @@ func (t *ExtendedSectorInfo) UnmarshalCBOR(r io.Reader) (err error) {
 
 			t.SectorKey = &c
 		}
-
 	}
+
 	// t.SealedCID (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.SealedCID: %w", err)
 		}
 
 		t.SealedCID = c
-
 	}
+
 	return nil
 }
 
@@ -440,7 +425,6 @@ func (t *WinningPoStVerifyInfo) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
-
 	}
 
 	// t.ChallengedSectors ([]proof.SectorInfo) (slice)
@@ -455,11 +439,9 @@ func (t *WinningPoStVerifyInfo) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
-
 	}
 
 	// t.Prover (abi.ActorID) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Prover)); err != nil {
 		return err
 	}
@@ -491,7 +473,6 @@ func (t *WinningPoStVerifyInfo) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Randomness (abi.PoStRandomness) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -513,7 +494,6 @@ func (t *WinningPoStVerifyInfo) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Proofs ([]proof.PoStProof) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -541,17 +521,14 @@ func (t *WinningPoStVerifyInfo) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				if err := t.Proofs[i].UnmarshalCBOR(cr); err != nil {
 					return xerrors.Errorf("unmarshaling t.Proofs[i]: %w", err)
 				}
-
 			}
-
 		}
 	}
-	// t.ChallengedSectors ([]proof.SectorInfo) (slice)
 
+	// t.ChallengedSectors ([]proof.SectorInfo) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -579,19 +556,15 @@ func (t *WinningPoStVerifyInfo) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				if err := t.ChallengedSectors[i].UnmarshalCBOR(cr); err != nil {
 					return xerrors.Errorf("unmarshaling t.ChallengedSectors[i]: %w", err)
 				}
-
 			}
-
 		}
 	}
+
 	// t.Prover (abi.ActorID) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -600,8 +573,8 @@ func (t *WinningPoStVerifyInfo) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Prover = abi.ActorID(extra)
-
 	}
+
 	return nil
 }
 
@@ -644,7 +617,6 @@ func (t *WindowPoStVerifyInfo) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
-
 	}
 
 	// t.ChallengedSectors ([]proof.SectorInfo) (slice)
@@ -659,11 +631,9 @@ func (t *WindowPoStVerifyInfo) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
-
 	}
 
 	// t.Prover (abi.ActorID) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Prover)); err != nil {
 		return err
 	}
@@ -695,7 +665,6 @@ func (t *WindowPoStVerifyInfo) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Randomness (abi.PoStRandomness) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -717,7 +686,6 @@ func (t *WindowPoStVerifyInfo) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Proofs ([]proof.PoStProof) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -745,17 +713,14 @@ func (t *WindowPoStVerifyInfo) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				if err := t.Proofs[i].UnmarshalCBOR(cr); err != nil {
 					return xerrors.Errorf("unmarshaling t.Proofs[i]: %w", err)
 				}
-
 			}
-
 		}
 	}
-	// t.ChallengedSectors ([]proof.SectorInfo) (slice)
 
+	// t.ChallengedSectors ([]proof.SectorInfo) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -783,19 +748,15 @@ func (t *WindowPoStVerifyInfo) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				if err := t.ChallengedSectors[i].UnmarshalCBOR(cr); err != nil {
 					return xerrors.Errorf("unmarshaling t.ChallengedSectors[i]: %w", err)
 				}
-
 			}
-
 		}
 	}
+
 	// t.Prover (abi.ActorID) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -804,8 +765,8 @@ func (t *WindowPoStVerifyInfo) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Prover = abi.ActorID(extra)
-
 	}
+
 	return nil
 }
 
@@ -848,11 +809,9 @@ func (t *SealVerifyInfo) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.DealIDs {
-
 		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
 		}
-
 	}
 
 	// t.Randomness (abi.SealRandomness) (slice)
@@ -895,17 +854,13 @@ func (t *SealVerifyInfo) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.SealedCID (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.SealedCID); err != nil {
 		return xerrors.Errorf("failed to write cid field t.SealedCID: %w", err)
 	}
-
 	// t.UnsealedCID (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.UnsealedCID); err != nil {
 		return xerrors.Errorf("failed to write cid field t.UnsealedCID: %w", err)
 	}
-
 	return nil
 }
 
@@ -957,17 +912,15 @@ func (t *SealVerifyInfo) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.SealProof = abi.RegisteredSealProof(extraI)
 	}
+
 	// t.SectorID (abi.SectorID) (struct)
-
 	{
-
 		if err := t.SectorID.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.SectorID: %w", err)
 		}
-
 	}
-	// t.DealIDs ([]abi.DealID) (slice)
 
+	// t.DealIDs ([]abi.DealID) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -995,7 +948,6 @@ func (t *SealVerifyInfo) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				maj, extra, err = cr.ReadHeader()
 				if err != nil {
 					return err
@@ -1004,13 +956,11 @@ func (t *SealVerifyInfo) UnmarshalCBOR(r io.Reader) (err error) {
 					return fmt.Errorf("wrong type for uint64 field")
 				}
 				t.DealIDs[i] = abi.DealID(extra)
-
 			}
-
 		}
 	}
-	// t.Randomness (abi.SealRandomness) (slice)
 
+	// t.Randomness (abi.SealRandomness) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -1032,7 +982,6 @@ func (t *SealVerifyInfo) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.InteractiveRandomness (abi.InteractiveSealRandomness) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -1054,7 +1003,6 @@ func (t *SealVerifyInfo) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Proof ([]uint8) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -1076,29 +1024,25 @@ func (t *SealVerifyInfo) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.SealedCID (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.SealedCID: %w", err)
 		}
 
 		t.SealedCID = c
-
 	}
+
 	// t.UnsealedCID (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.UnsealedCID: %w", err)
 		}
 
 		t.UnsealedCID = c
-
 	}
+
 	return nil
 }
 
@@ -1117,7 +1061,6 @@ func (t *AggregateSealVerifyInfo) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Number (abi.SectorNumber) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Number)); err != nil {
 		return err
 	}
@@ -1149,17 +1092,13 @@ func (t *AggregateSealVerifyInfo) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.SealedCID (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.SealedCID); err != nil {
 		return xerrors.Errorf("failed to write cid field t.SealedCID: %w", err)
 	}
-
 	// t.UnsealedCID (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.UnsealedCID); err != nil {
 		return xerrors.Errorf("failed to write cid field t.UnsealedCID: %w", err)
 	}
-
 	return nil
 }
 
@@ -1187,9 +1126,7 @@ func (t *AggregateSealVerifyInfo) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Number (abi.SectorNumber) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -1198,10 +1135,9 @@ func (t *AggregateSealVerifyInfo) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Number = abi.SectorNumber(extra)
-
 	}
-	// t.Randomness (abi.SealRandomness) (slice)
 
+	// t.Randomness (abi.SealRandomness) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -1223,7 +1159,6 @@ func (t *AggregateSealVerifyInfo) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.InteractiveRandomness (abi.InteractiveSealRandomness) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -1245,29 +1180,25 @@ func (t *AggregateSealVerifyInfo) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.SealedCID (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.SealedCID: %w", err)
 		}
 
 		t.SealedCID = c
-
 	}
+
 	// t.UnsealedCID (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.UnsealedCID: %w", err)
 		}
 
 		t.UnsealedCID = c
-
 	}
+
 	return nil
 }
 
@@ -1286,7 +1217,6 @@ func (t *AggregateSealVerifyProofAndInfos) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Miner (abi.ActorID) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Miner)); err != nil {
 		return err
 	}
@@ -1338,8 +1268,8 @@ func (t *AggregateSealVerifyProofAndInfos) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
-
 	}
+
 	return nil
 }
 
@@ -1367,9 +1297,7 @@ func (t *AggregateSealVerifyProofAndInfos) UnmarshalCBOR(r io.Reader) (err error
 	}
 
 	// t.Miner (abi.ActorID) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -1378,8 +1306,8 @@ func (t *AggregateSealVerifyProofAndInfos) UnmarshalCBOR(r io.Reader) (err error
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Miner = abi.ActorID(extra)
-
 	}
+
 	// t.SealProof (abi.RegisteredSealProof) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -1405,6 +1333,7 @@ func (t *AggregateSealVerifyProofAndInfos) UnmarshalCBOR(r io.Reader) (err error
 
 		t.SealProof = abi.RegisteredSealProof(extraI)
 	}
+
 	// t.AggregateProof (abi.RegisteredAggregationProof) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -1430,8 +1359,8 @@ func (t *AggregateSealVerifyProofAndInfos) UnmarshalCBOR(r io.Reader) (err error
 
 		t.AggregateProof = abi.RegisteredAggregationProof(extraI)
 	}
-	// t.Proof ([]uint8) (slice)
 
+	// t.Proof ([]uint8) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -1453,7 +1382,6 @@ func (t *AggregateSealVerifyProofAndInfos) UnmarshalCBOR(r io.Reader) (err error
 	}
 
 	// t.Infos ([]proof.AggregateSealVerifyInfo) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -1481,15 +1409,13 @@ func (t *AggregateSealVerifyProofAndInfos) UnmarshalCBOR(r io.Reader) (err error
 			_ = err
 
 			{
-
 				if err := t.Infos[i].UnmarshalCBOR(cr); err != nil {
 					return xerrors.Errorf("unmarshaling t.Infos[i]: %w", err)
 				}
-
 			}
-
 		}
 	}
+
 	return nil
 }
 
@@ -1519,23 +1445,17 @@ func (t *ReplicaUpdateInfo) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.OldSealedSectorCID (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.OldSealedSectorCID); err != nil {
 		return xerrors.Errorf("failed to write cid field t.OldSealedSectorCID: %w", err)
 	}
-
 	// t.NewSealedSectorCID (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.NewSealedSectorCID); err != nil {
 		return xerrors.Errorf("failed to write cid field t.NewSealedSectorCID: %w", err)
 	}
-
 	// t.NewUnsealedSectorCID (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.NewUnsealedSectorCID); err != nil {
 		return xerrors.Errorf("failed to write cid field t.NewUnsealedSectorCID: %w", err)
 	}
-
 	// t.Proof ([]uint8) (slice)
 	if len(t.Proof) > 2097152 {
 		return xerrors.Errorf("Byte array in field t.Proof was too long")
@@ -1600,44 +1520,38 @@ func (t *ReplicaUpdateInfo) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.UpdateProofType = abi.RegisteredUpdateProof(extraI)
 	}
+
 	// t.OldSealedSectorCID (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.OldSealedSectorCID: %w", err)
 		}
 
 		t.OldSealedSectorCID = c
-
 	}
+
 	// t.NewSealedSectorCID (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.NewSealedSectorCID: %w", err)
 		}
 
 		t.NewSealedSectorCID = c
-
 	}
+
 	// t.NewUnsealedSectorCID (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.NewUnsealedSectorCID: %w", err)
 		}
 
 		t.NewUnsealedSectorCID = c
-
 	}
-	// t.Proof ([]uint8) (slice)
 
+	// t.Proof ([]uint8) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err

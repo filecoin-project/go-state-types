@@ -34,19 +34,14 @@ func (t *ActorV4) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Code (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.Code); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Code: %w", err)
 	}
-
 	// t.Head (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.Head); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Head: %w", err)
 	}
-
 	// t.CallSeqNum (uint64) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.CallSeqNum)); err != nil {
 		return err
 	}
@@ -55,6 +50,7 @@ func (t *ActorV4) MarshalCBOR(w io.Writer) error {
 	if err := t.Balance.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -82,33 +78,27 @@ func (t *ActorV4) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Code (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Code: %w", err)
 		}
 
 		t.Code = c
-
 	}
+
 	// t.Head (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Head: %w", err)
 		}
 
 		t.Head = c
-
 	}
+
 	// t.CallSeqNum (uint64) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -117,17 +107,15 @@ func (t *ActorV4) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.CallSeqNum = uint64(extra)
-
 	}
+
 	// t.Balance (big.Int) (struct)
-
 	{
-
 		if err := t.Balance.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Balance: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -146,19 +134,14 @@ func (t *ActorV5) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Code (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.Code); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Code: %w", err)
 	}
-
 	// t.Head (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.Head); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Head: %w", err)
 	}
-
 	// t.CallSeqNum (uint64) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.CallSeqNum)); err != nil {
 		return err
 	}
@@ -172,6 +155,7 @@ func (t *ActorV5) MarshalCBOR(w io.Writer) error {
 	if err := t.DelegatedAddress.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -199,33 +183,27 @@ func (t *ActorV5) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Code (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Code: %w", err)
 		}
 
 		t.Code = c
-
 	}
+
 	// t.Head (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Head: %w", err)
 		}
 
 		t.Head = c
-
 	}
+
 	// t.CallSeqNum (uint64) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -234,21 +212,17 @@ func (t *ActorV5) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.CallSeqNum = uint64(extra)
-
 	}
+
 	// t.Balance (big.Int) (struct)
-
 	{
-
 		if err := t.Balance.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Balance: %w", err)
 		}
-
 	}
+
 	// t.DelegatedAddress (address.Address) (struct)
-
 	{
-
 		b, err := cr.ReadByte()
 		if err != nil {
 			return err
@@ -262,7 +236,7 @@ func (t *ActorV5) UnmarshalCBOR(r io.Reader) (err error) {
 				return xerrors.Errorf("unmarshaling t.DelegatedAddress pointer: %w", err)
 			}
 		}
-
 	}
+
 	return nil
 }

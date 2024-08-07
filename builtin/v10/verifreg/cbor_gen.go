@@ -40,35 +40,26 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Verifiers (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.Verifiers); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Verifiers: %w", err)
 	}
-
 	// t.RemoveDataCapProposalIDs (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.RemoveDataCapProposalIDs); err != nil {
 		return xerrors.Errorf("failed to write cid field t.RemoveDataCapProposalIDs: %w", err)
 	}
-
 	// t.Allocations (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.Allocations); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Allocations: %w", err)
 	}
-
 	// t.NextAllocationId (verifreg.AllocationId) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.NextAllocationId)); err != nil {
 		return err
 	}
 
 	// t.Claims (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.Claims); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Claims: %w", err)
 	}
-
 	return nil
 }
 
@@ -96,54 +87,44 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.RootKey (address.Address) (struct)
-
 	{
-
 		if err := t.RootKey.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.RootKey: %w", err)
 		}
-
 	}
+
 	// t.Verifiers (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Verifiers: %w", err)
 		}
 
 		t.Verifiers = c
-
 	}
+
 	// t.RemoveDataCapProposalIDs (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.RemoveDataCapProposalIDs: %w", err)
 		}
 
 		t.RemoveDataCapProposalIDs = c
-
 	}
+
 	// t.Allocations (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Allocations: %w", err)
 		}
 
 		t.Allocations = c
-
 	}
+
 	// t.NextAllocationId (verifreg.AllocationId) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -152,20 +133,18 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.NextAllocationId = AllocationId(extra)
-
 	}
+
 	// t.Claims (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Claims: %w", err)
 		}
 
 		t.Claims = c
-
 	}
+
 	return nil
 }
 
@@ -192,6 +171,7 @@ func (t *AddVerifierParams) MarshalCBOR(w io.Writer) error {
 	if err := t.Allowance.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -219,23 +199,19 @@ func (t *AddVerifierParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Address (address.Address) (struct)
-
 	{
-
 		if err := t.Address.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Address: %w", err)
 		}
-
 	}
+
 	// t.Allowance (big.Int) (struct)
-
 	{
-
 		if err := t.Allowance.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Allowance: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -262,6 +238,7 @@ func (t *AddVerifiedClientParams) MarshalCBOR(w io.Writer) error {
 	if err := t.Allowance.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -289,23 +266,19 @@ func (t *AddVerifiedClientParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Address (address.Address) (struct)
-
 	{
-
 		if err := t.Address.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Address: %w", err)
 		}
-
 	}
+
 	// t.Allowance (big.Int) (struct)
-
 	{
-
 		if err := t.Allowance.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Allowance: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -332,6 +305,7 @@ func (t *UseBytesParams) MarshalCBOR(w io.Writer) error {
 	if err := t.DealSize.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -359,23 +333,19 @@ func (t *UseBytesParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Address (address.Address) (struct)
-
 	{
-
 		if err := t.Address.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Address: %w", err)
 		}
-
 	}
+
 	// t.DealSize (big.Int) (struct)
-
 	{
-
 		if err := t.DealSize.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.DealSize: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -402,6 +372,7 @@ func (t *RestoreBytesParams) MarshalCBOR(w io.Writer) error {
 	if err := t.DealSize.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -429,23 +400,19 @@ func (t *RestoreBytesParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Address (address.Address) (struct)
-
 	{
-
 		if err := t.Address.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Address: %w", err)
 		}
-
 	}
+
 	// t.DealSize (big.Int) (struct)
-
 	{
-
 		if err := t.DealSize.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.DealSize: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -482,6 +449,7 @@ func (t *RemoveDataCapParams) MarshalCBOR(w io.Writer) error {
 	if err := t.VerifierRequest2.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -509,41 +477,33 @@ func (t *RemoveDataCapParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.VerifiedClientToRemove (address.Address) (struct)
-
 	{
-
 		if err := t.VerifiedClientToRemove.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.VerifiedClientToRemove: %w", err)
 		}
-
 	}
+
 	// t.DataCapAmountToRemove (big.Int) (struct)
-
 	{
-
 		if err := t.DataCapAmountToRemove.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.DataCapAmountToRemove: %w", err)
 		}
-
 	}
+
 	// t.VerifierRequest1 (verifreg.RemoveDataCapRequest) (struct)
-
 	{
-
 		if err := t.VerifierRequest1.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.VerifierRequest1: %w", err)
 		}
-
 	}
+
 	// t.VerifierRequest2 (verifreg.RemoveDataCapRequest) (struct)
-
 	{
-
 		if err := t.VerifierRequest2.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.VerifierRequest2: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -570,6 +530,7 @@ func (t *RemoveDataCapReturn) MarshalCBOR(w io.Writer) error {
 	if err := t.DataCapRemoved.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -597,23 +558,19 @@ func (t *RemoveDataCapReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.VerifiedClient (address.Address) (struct)
-
 	{
-
 		if err := t.VerifiedClient.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.VerifiedClient: %w", err)
 		}
-
 	}
+
 	// t.DataCapRemoved (big.Int) (struct)
-
 	{
-
 		if err := t.DataCapRemoved.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.DataCapRemoved: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -632,7 +589,6 @@ func (t *RemoveExpiredAllocationsParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Client (abi.ActorID) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Client)); err != nil {
 		return err
 	}
@@ -646,12 +602,11 @@ func (t *RemoveExpiredAllocationsParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.AllocationIds {
-
 		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
 		}
-
 	}
+
 	return nil
 }
 
@@ -679,9 +634,7 @@ func (t *RemoveExpiredAllocationsParams) UnmarshalCBOR(r io.Reader) (err error) 
 	}
 
 	// t.Client (abi.ActorID) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -690,10 +643,9 @@ func (t *RemoveExpiredAllocationsParams) UnmarshalCBOR(r io.Reader) (err error) 
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Client = abi.ActorID(extra)
-
 	}
-	// t.AllocationIds ([]verifreg.AllocationId) (slice)
 
+	// t.AllocationIds ([]verifreg.AllocationId) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -721,7 +673,6 @@ func (t *RemoveExpiredAllocationsParams) UnmarshalCBOR(r io.Reader) (err error) 
 			_ = err
 
 			{
-
 				maj, extra, err = cr.ReadHeader()
 				if err != nil {
 					return err
@@ -730,11 +681,10 @@ func (t *RemoveExpiredAllocationsParams) UnmarshalCBOR(r io.Reader) (err error) 
 					return fmt.Errorf("wrong type for uint64 field")
 				}
 				t.AllocationIds[i] = AllocationId(extra)
-
 			}
-
 		}
 	}
+
 	return nil
 }
 
@@ -761,11 +711,9 @@ func (t *RemoveExpiredAllocationsReturn) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.Considered {
-
 		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
 		}
-
 	}
 
 	// t.Results (verifreg.BatchReturn) (struct)
@@ -777,6 +725,7 @@ func (t *RemoveExpiredAllocationsReturn) MarshalCBOR(w io.Writer) error {
 	if err := t.DataCapRecovered.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -804,7 +753,6 @@ func (t *RemoveExpiredAllocationsReturn) UnmarshalCBOR(r io.Reader) (err error) 
 	}
 
 	// t.Considered ([]verifreg.AllocationId) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -832,7 +780,6 @@ func (t *RemoveExpiredAllocationsReturn) UnmarshalCBOR(r io.Reader) (err error) 
 			_ = err
 
 			{
-
 				maj, extra, err = cr.ReadHeader()
 				if err != nil {
 					return err
@@ -841,29 +788,24 @@ func (t *RemoveExpiredAllocationsReturn) UnmarshalCBOR(r io.Reader) (err error) 
 					return fmt.Errorf("wrong type for uint64 field")
 				}
 				t.Considered[i] = AllocationId(extra)
-
 			}
-
 		}
 	}
+
 	// t.Results (verifreg.BatchReturn) (struct)
-
 	{
-
 		if err := t.Results.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Results: %w", err)
 		}
-
 	}
+
 	// t.DataCapRecovered (big.Int) (struct)
-
 	{
-
 		if err := t.DataCapRecovered.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.DataCapRecovered: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -882,7 +824,6 @@ func (t *BatchReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.SuccessCount (uint64) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.SuccessCount)); err != nil {
 		return err
 	}
@@ -899,8 +840,8 @@ func (t *BatchReturn) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
-
 	}
+
 	return nil
 }
 
@@ -928,9 +869,7 @@ func (t *BatchReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.SuccessCount (uint64) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -939,10 +878,9 @@ func (t *BatchReturn) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.SuccessCount = uint64(extra)
-
 	}
-	// t.FailCodes ([]verifreg.FailCode) (slice)
 
+	// t.FailCodes ([]verifreg.FailCode) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -970,15 +908,13 @@ func (t *BatchReturn) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				if err := t.FailCodes[i].UnmarshalCBOR(cr); err != nil {
 					return xerrors.Errorf("unmarshaling t.FailCodes[i]: %w", err)
 				}
-
 			}
-
 		}
 	}
+
 	return nil
 }
 
@@ -1008,13 +944,13 @@ func (t *ClaimAllocationsParams) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
-
 	}
 
 	// t.AllOrNothing (bool) (bool)
 	if err := cbg.WriteBool(w, t.AllOrNothing); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1042,7 +978,6 @@ func (t *ClaimAllocationsParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Sectors ([]verifreg.SectorAllocationClaim) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -1070,17 +1005,14 @@ func (t *ClaimAllocationsParams) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				if err := t.Sectors[i].UnmarshalCBOR(cr); err != nil {
 					return xerrors.Errorf("unmarshaling t.Sectors[i]: %w", err)
 				}
-
 			}
-
 		}
 	}
-	// t.AllOrNothing (bool) (bool)
 
+	// t.AllOrNothing (bool) (bool)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -1096,6 +1028,7 @@ func (t *ClaimAllocationsParams) UnmarshalCBOR(r io.Reader) (err error) {
 	default:
 		return fmt.Errorf("booleans are either major type 7, value 20 or 21 (got %d)", extra)
 	}
+
 	return nil
 }
 
@@ -1122,6 +1055,7 @@ func (t *ClaimAllocationsReturn) MarshalCBOR(w io.Writer) error {
 	if err := t.ClaimedSpace.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1149,23 +1083,19 @@ func (t *ClaimAllocationsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.BatchInfo (verifreg.BatchReturn) (struct)
-
 	{
-
 		if err := t.BatchInfo.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.BatchInfo: %w", err)
 		}
-
 	}
+
 	// t.ClaimedSpace (big.Int) (struct)
-
 	{
-
 		if err := t.ClaimedSpace.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.ClaimedSpace: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -1184,7 +1114,6 @@ func (t *GetClaimsParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Provider (abi.ActorID) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Provider)); err != nil {
 		return err
 	}
@@ -1198,12 +1127,11 @@ func (t *GetClaimsParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.ClaimIds {
-
 		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
 		}
-
 	}
+
 	return nil
 }
 
@@ -1231,9 +1159,7 @@ func (t *GetClaimsParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Provider (abi.ActorID) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -1242,10 +1168,9 @@ func (t *GetClaimsParams) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Provider = abi.ActorID(extra)
-
 	}
-	// t.ClaimIds ([]verifreg.ClaimId) (slice)
 
+	// t.ClaimIds ([]verifreg.ClaimId) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -1273,7 +1198,6 @@ func (t *GetClaimsParams) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				maj, extra, err = cr.ReadHeader()
 				if err != nil {
 					return err
@@ -1282,11 +1206,10 @@ func (t *GetClaimsParams) UnmarshalCBOR(r io.Reader) (err error) {
 					return fmt.Errorf("wrong type for uint64 field")
 				}
 				t.ClaimIds[i] = ClaimId(extra)
-
 			}
-
 		}
 	}
+
 	return nil
 }
 
@@ -1321,8 +1244,8 @@ func (t *GetClaimsReturn) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
-
 	}
+
 	return nil
 }
 
@@ -1350,16 +1273,13 @@ func (t *GetClaimsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.BatchInfo (verifreg.BatchReturn) (struct)
-
 	{
-
 		if err := t.BatchInfo.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.BatchInfo: %w", err)
 		}
-
 	}
-	// t.Claims ([]verifreg.Claim) (slice)
 
+	// t.Claims ([]verifreg.Claim) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -1387,15 +1307,13 @@ func (t *GetClaimsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				if err := t.Claims[i].UnmarshalCBOR(cr); err != nil {
 					return xerrors.Errorf("unmarshaling t.Claims[i]: %w", err)
 				}
-
 			}
-
 		}
 	}
+
 	return nil
 }
 
@@ -1414,7 +1332,6 @@ func (t *UniversalReceiverParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Type_ (verifreg.ReceiverType) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Type_)); err != nil {
 		return err
 	}
@@ -1459,9 +1376,7 @@ func (t *UniversalReceiverParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Type_ (verifreg.ReceiverType) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -1470,10 +1385,9 @@ func (t *UniversalReceiverParams) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Type_ = ReceiverType(extra)
-
 	}
-	// t.Payload ([]uint8) (slice)
 
+	// t.Payload ([]uint8) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -1530,12 +1444,11 @@ func (t *AllocationsResponse) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.NewAllocations {
-
 		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
 		}
-
 	}
+
 	return nil
 }
 
@@ -1563,25 +1476,20 @@ func (t *AllocationsResponse) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.AllocationResults (verifreg.BatchReturn) (struct)
-
 	{
-
 		if err := t.AllocationResults.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.AllocationResults: %w", err)
 		}
-
 	}
+
 	// t.ExtensionResults (verifreg.BatchReturn) (struct)
-
 	{
-
 		if err := t.ExtensionResults.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.ExtensionResults: %w", err)
 		}
-
 	}
-	// t.NewAllocations ([]verifreg.AllocationId) (slice)
 
+	// t.NewAllocations ([]verifreg.AllocationId) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -1609,7 +1517,6 @@ func (t *AllocationsResponse) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				maj, extra, err = cr.ReadHeader()
 				if err != nil {
 					return err
@@ -1618,11 +1525,10 @@ func (t *AllocationsResponse) UnmarshalCBOR(r io.Reader) (err error) {
 					return fmt.Errorf("wrong type for uint64 field")
 				}
 				t.NewAllocations[i] = AllocationId(extra)
-
 			}
-
 		}
 	}
+
 	return nil
 }
 
@@ -1652,8 +1558,8 @@ func (t *ExtendClaimTermsParams) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
-
 	}
+
 	return nil
 }
 
@@ -1681,7 +1587,6 @@ func (t *ExtendClaimTermsParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Terms ([]verifreg.ClaimTerm) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -1709,15 +1614,13 @@ func (t *ExtendClaimTermsParams) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				if err := t.Terms[i].UnmarshalCBOR(cr); err != nil {
 					return xerrors.Errorf("unmarshaling t.Terms[i]: %w", err)
 				}
-
 			}
-
 		}
 	}
+
 	return nil
 }
 
@@ -1736,7 +1639,6 @@ func (t *ExtendClaimTermsReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.SuccessCount (uint64) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.SuccessCount)); err != nil {
 		return err
 	}
@@ -1753,8 +1655,8 @@ func (t *ExtendClaimTermsReturn) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
-
 	}
+
 	return nil
 }
 
@@ -1782,9 +1684,7 @@ func (t *ExtendClaimTermsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.SuccessCount (uint64) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -1793,10 +1693,9 @@ func (t *ExtendClaimTermsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.SuccessCount = uint64(extra)
-
 	}
-	// t.FailCodes ([]verifreg.FailCode) (slice)
 
+	// t.FailCodes ([]verifreg.FailCode) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -1824,15 +1723,13 @@ func (t *ExtendClaimTermsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				if err := t.FailCodes[i].UnmarshalCBOR(cr); err != nil {
 					return xerrors.Errorf("unmarshaling t.FailCodes[i]: %w", err)
 				}
-
 			}
-
 		}
 	}
+
 	return nil
 }
 
@@ -1851,7 +1748,6 @@ func (t *RemoveExpiredClaimsParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Provider (abi.ActorID) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Provider)); err != nil {
 		return err
 	}
@@ -1865,12 +1761,11 @@ func (t *RemoveExpiredClaimsParams) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.ClaimIds {
-
 		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
 		}
-
 	}
+
 	return nil
 }
 
@@ -1898,9 +1793,7 @@ func (t *RemoveExpiredClaimsParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Provider (abi.ActorID) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -1909,10 +1802,9 @@ func (t *RemoveExpiredClaimsParams) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Provider = abi.ActorID(extra)
-
 	}
-	// t.ClaimIds ([]verifreg.ClaimId) (slice)
 
+	// t.ClaimIds ([]verifreg.ClaimId) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -1940,7 +1832,6 @@ func (t *RemoveExpiredClaimsParams) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				maj, extra, err = cr.ReadHeader()
 				if err != nil {
 					return err
@@ -1949,11 +1840,10 @@ func (t *RemoveExpiredClaimsParams) UnmarshalCBOR(r io.Reader) (err error) {
 					return fmt.Errorf("wrong type for uint64 field")
 				}
 				t.ClaimIds[i] = ClaimId(extra)
-
 			}
-
 		}
 	}
+
 	return nil
 }
 
@@ -1980,17 +1870,16 @@ func (t *RemoveExpiredClaimsReturn) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	for _, v := range t.Considered {
-
 		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
 		}
-
 	}
 
 	// t.Results (verifreg.BatchReturn) (struct)
 	if err := t.Results.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -2018,7 +1907,6 @@ func (t *RemoveExpiredClaimsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Considered ([]verifreg.AllocationId) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -2046,7 +1934,6 @@ func (t *RemoveExpiredClaimsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				maj, extra, err = cr.ReadHeader()
 				if err != nil {
 					return err
@@ -2055,20 +1942,17 @@ func (t *RemoveExpiredClaimsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 					return fmt.Errorf("wrong type for uint64 field")
 				}
 				t.Considered[i] = AllocationId(extra)
-
 			}
-
 		}
 	}
+
 	// t.Results (verifreg.BatchReturn) (struct)
-
 	{
-
 		if err := t.Results.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Results: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -2095,6 +1979,7 @@ func (t *RemoveDataCapRequest) MarshalCBOR(w io.Writer) error {
 	if err := t.VerifierSignature.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -2122,23 +2007,19 @@ func (t *RemoveDataCapRequest) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Verifier (address.Address) (struct)
-
 	{
-
 		if err := t.Verifier.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.Verifier: %w", err)
 		}
-
 	}
+
 	// t.VerifierSignature (crypto.Signature) (struct)
-
 	{
-
 		if err := t.VerifierSignature.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.VerifierSignature: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -2170,6 +2051,7 @@ func (t *RemoveDataCapProposal) MarshalCBOR(w io.Writer) error {
 	if err := t.RemovalProposalID.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -2197,32 +2079,26 @@ func (t *RemoveDataCapProposal) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.VerifiedClient (address.Address) (struct)
-
 	{
-
 		if err := t.VerifiedClient.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.VerifiedClient: %w", err)
 		}
-
 	}
+
 	// t.DataCapAmount (big.Int) (struct)
-
 	{
-
 		if err := t.DataCapAmount.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.DataCapAmount: %w", err)
 		}
-
 	}
+
 	// t.RemovalProposalID (verifreg.RmDcProposalID) (struct)
-
 	{
-
 		if err := t.RemovalProposalID.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.RemovalProposalID: %w", err)
 		}
-
 	}
+
 	return nil
 }
 
@@ -2241,7 +2117,6 @@ func (t *RmDcProposalID) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ProposalID (uint64) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.ProposalID)); err != nil {
 		return err
 	}
@@ -2273,9 +2148,7 @@ func (t *RmDcProposalID) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.ProposalID (uint64) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -2284,8 +2157,8 @@ func (t *RmDcProposalID) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.ProposalID = uint64(extra)
-
 	}
+
 	return nil
 }
 
@@ -2304,7 +2177,6 @@ func (t *FailCode) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Idx (uint64) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Idx)); err != nil {
 		return err
 	}
@@ -2347,9 +2219,7 @@ func (t *FailCode) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Idx (uint64) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -2358,8 +2228,8 @@ func (t *FailCode) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Idx = uint64(extra)
-
 	}
+
 	// t.Code (exitcode.ExitCode) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -2385,6 +2255,7 @@ func (t *FailCode) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.Code = exitcode.ExitCode(extraI)
 	}
+
 	return nil
 }
 
@@ -2403,31 +2274,25 @@ func (t *SectorAllocationClaim) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Client (abi.ActorID) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Client)); err != nil {
 		return err
 	}
 
 	// t.AllocationId (verifreg.AllocationId) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.AllocationId)); err != nil {
 		return err
 	}
 
 	// t.Data (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.Data); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Data: %w", err)
 	}
-
 	// t.Size (abi.PaddedPieceSize) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Size)); err != nil {
 		return err
 	}
 
 	// t.Sector (abi.SectorNumber) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Sector)); err != nil {
 		return err
 	}
@@ -2470,9 +2335,7 @@ func (t *SectorAllocationClaim) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Client (abi.ActorID) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -2481,12 +2344,10 @@ func (t *SectorAllocationClaim) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Client = abi.ActorID(extra)
-
 	}
+
 	// t.AllocationId (verifreg.AllocationId) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -2495,24 +2356,20 @@ func (t *SectorAllocationClaim) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.AllocationId = AllocationId(extra)
-
 	}
+
 	// t.Data (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Data: %w", err)
 		}
 
 		t.Data = c
-
 	}
+
 	// t.Size (abi.PaddedPieceSize) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -2521,12 +2378,10 @@ func (t *SectorAllocationClaim) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Size = abi.PaddedPieceSize(extra)
-
 	}
+
 	// t.Sector (abi.SectorNumber) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -2535,8 +2390,8 @@ func (t *SectorAllocationClaim) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Sector = abi.SectorNumber(extra)
-
 	}
+
 	// t.SectorExpiry (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -2562,6 +2417,7 @@ func (t *SectorAllocationClaim) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.SectorExpiry = abi.ChainEpoch(extraI)
 	}
+
 	return nil
 }
 
@@ -2580,25 +2436,20 @@ func (t *Claim) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Provider (abi.ActorID) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Provider)); err != nil {
 		return err
 	}
 
 	// t.Client (abi.ActorID) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Client)); err != nil {
 		return err
 	}
 
 	// t.Data (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.Data); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Data: %w", err)
 	}
-
 	// t.Size (abi.PaddedPieceSize) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Size)); err != nil {
 		return err
 	}
@@ -2637,7 +2488,6 @@ func (t *Claim) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Sector (abi.SectorNumber) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Sector)); err != nil {
 		return err
 	}
@@ -2669,9 +2519,7 @@ func (t *Claim) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Provider (abi.ActorID) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -2680,12 +2528,10 @@ func (t *Claim) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Provider = abi.ActorID(extra)
-
 	}
+
 	// t.Client (abi.ActorID) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -2694,24 +2540,20 @@ func (t *Claim) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Client = abi.ActorID(extra)
-
 	}
+
 	// t.Data (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Data: %w", err)
 		}
 
 		t.Data = c
-
 	}
+
 	// t.Size (abi.PaddedPieceSize) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -2720,8 +2562,8 @@ func (t *Claim) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Size = abi.PaddedPieceSize(extra)
-
 	}
+
 	// t.TermMin (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -2747,6 +2589,7 @@ func (t *Claim) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.TermMin = abi.ChainEpoch(extraI)
 	}
+
 	// t.TermMax (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -2772,6 +2615,7 @@ func (t *Claim) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.TermMax = abi.ChainEpoch(extraI)
 	}
+
 	// t.TermStart (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -2797,10 +2641,9 @@ func (t *Claim) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.TermStart = abi.ChainEpoch(extraI)
 	}
+
 	// t.Sector (abi.SectorNumber) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -2809,8 +2652,8 @@ func (t *Claim) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Sector = abi.SectorNumber(extra)
-
 	}
+
 	return nil
 }
 
@@ -2829,13 +2672,11 @@ func (t *ClaimTerm) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Provider (abi.ActorID) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Provider)); err != nil {
 		return err
 	}
 
 	// t.ClaimId (verifreg.ClaimId) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.ClaimId)); err != nil {
 		return err
 	}
@@ -2878,9 +2719,7 @@ func (t *ClaimTerm) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Provider (abi.ActorID) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -2889,12 +2728,10 @@ func (t *ClaimTerm) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Provider = abi.ActorID(extra)
-
 	}
+
 	// t.ClaimId (verifreg.ClaimId) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -2903,8 +2740,8 @@ func (t *ClaimTerm) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.ClaimId = ClaimId(extra)
-
 	}
+
 	// t.TermMax (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -2930,6 +2767,7 @@ func (t *ClaimTerm) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.TermMax = abi.ChainEpoch(extraI)
 	}
+
 	return nil
 }
 
@@ -2948,13 +2786,11 @@ func (t *ClaimExtensionRequest) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Provider (abi.ActorID) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Provider)); err != nil {
 		return err
 	}
 
 	// t.Claim (verifreg.ClaimId) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Claim)); err != nil {
 		return err
 	}
@@ -2997,9 +2833,7 @@ func (t *ClaimExtensionRequest) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Provider (abi.ActorID) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -3008,12 +2842,10 @@ func (t *ClaimExtensionRequest) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Provider = abi.ActorID(extra)
-
 	}
+
 	// t.Claim (verifreg.ClaimId) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -3022,8 +2854,8 @@ func (t *ClaimExtensionRequest) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Claim = ClaimId(extra)
-
 	}
+
 	// t.TermMax (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -3049,6 +2881,7 @@ func (t *ClaimExtensionRequest) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.TermMax = abi.ChainEpoch(extraI)
 	}
+
 	return nil
 }
 
@@ -3067,25 +2900,20 @@ func (t *Allocation) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Client (abi.ActorID) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Client)); err != nil {
 		return err
 	}
 
 	// t.Provider (abi.ActorID) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Provider)); err != nil {
 		return err
 	}
 
 	// t.Data (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.Data); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Data: %w", err)
 	}
-
 	// t.Size (abi.PaddedPieceSize) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Size)); err != nil {
 		return err
 	}
@@ -3150,9 +2978,7 @@ func (t *Allocation) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Client (abi.ActorID) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -3161,12 +2987,10 @@ func (t *Allocation) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Client = abi.ActorID(extra)
-
 	}
+
 	// t.Provider (abi.ActorID) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -3175,24 +2999,20 @@ func (t *Allocation) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Provider = abi.ActorID(extra)
-
 	}
+
 	// t.Data (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Data: %w", err)
 		}
 
 		t.Data = c
-
 	}
+
 	// t.Size (abi.PaddedPieceSize) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -3201,8 +3021,8 @@ func (t *Allocation) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Size = abi.PaddedPieceSize(extra)
-
 	}
+
 	// t.TermMin (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -3228,6 +3048,7 @@ func (t *Allocation) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.TermMin = abi.ChainEpoch(extraI)
 	}
+
 	// t.TermMax (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -3253,6 +3074,7 @@ func (t *Allocation) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.TermMax = abi.ChainEpoch(extraI)
 	}
+
 	// t.Expiration (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -3278,6 +3100,7 @@ func (t *Allocation) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.Expiration = abi.ChainEpoch(extraI)
 	}
+
 	return nil
 }
 
@@ -3296,19 +3119,15 @@ func (t *AllocationRequest) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Provider (abi.ActorID) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Provider)); err != nil {
 		return err
 	}
 
 	// t.Data (cid.Cid) (struct)
-
 	if err := cbg.WriteCid(cw, t.Data); err != nil {
 		return xerrors.Errorf("failed to write cid field t.Data: %w", err)
 	}
-
 	// t.Size (abi.PaddedPieceSize) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Size)); err != nil {
 		return err
 	}
@@ -3373,9 +3192,7 @@ func (t *AllocationRequest) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Provider (abi.ActorID) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -3384,24 +3201,20 @@ func (t *AllocationRequest) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Provider = abi.ActorID(extra)
-
 	}
+
 	// t.Data (cid.Cid) (struct)
-
 	{
-
 		c, err := cbg.ReadCid(cr)
 		if err != nil {
 			return xerrors.Errorf("failed to read cid field t.Data: %w", err)
 		}
 
 		t.Data = c
-
 	}
+
 	// t.Size (abi.PaddedPieceSize) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -3410,8 +3223,8 @@ func (t *AllocationRequest) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Size = abi.PaddedPieceSize(extra)
-
 	}
+
 	// t.TermMin (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -3437,6 +3250,7 @@ func (t *AllocationRequest) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.TermMin = abi.ChainEpoch(extraI)
 	}
+
 	// t.TermMax (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -3462,6 +3276,7 @@ func (t *AllocationRequest) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.TermMax = abi.ChainEpoch(extraI)
 	}
+
 	// t.Expiration (abi.ChainEpoch) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()
@@ -3487,6 +3302,7 @@ func (t *AllocationRequest) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.Expiration = abi.ChainEpoch(extraI)
 	}
+
 	return nil
 }
 
@@ -3516,7 +3332,6 @@ func (t *AllocationRequests) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
-
 	}
 
 	// t.Extensions ([]verifreg.ClaimExtensionRequest) (slice)
@@ -3531,8 +3346,8 @@ func (t *AllocationRequests) MarshalCBOR(w io.Writer) error {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
-
 	}
+
 	return nil
 }
 
@@ -3560,7 +3375,6 @@ func (t *AllocationRequests) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Allocations ([]verifreg.AllocationRequest) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -3588,17 +3402,14 @@ func (t *AllocationRequests) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				if err := t.Allocations[i].UnmarshalCBOR(cr); err != nil {
 					return xerrors.Errorf("unmarshaling t.Allocations[i]: %w", err)
 				}
-
 			}
-
 		}
 	}
-	// t.Extensions ([]verifreg.ClaimExtensionRequest) (slice)
 
+	// t.Extensions ([]verifreg.ClaimExtensionRequest) (slice)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -3626,14 +3437,12 @@ func (t *AllocationRequests) UnmarshalCBOR(r io.Reader) (err error) {
 			_ = err
 
 			{
-
 				if err := t.Extensions[i].UnmarshalCBOR(cr); err != nil {
 					return xerrors.Errorf("unmarshaling t.Extensions[i]: %w", err)
 				}
-
 			}
-
 		}
 	}
+
 	return nil
 }

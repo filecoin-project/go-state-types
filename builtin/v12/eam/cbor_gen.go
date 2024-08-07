@@ -47,7 +47,6 @@ func (t *CreateParams) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.Nonce (uint64) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Nonce)); err != nil {
 		return err
 	}
@@ -79,7 +78,6 @@ func (t *CreateParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Initcode ([]uint8) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -101,9 +99,7 @@ func (t *CreateParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Nonce (uint64) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -112,8 +108,8 @@ func (t *CreateParams) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.Nonce = uint64(extra)
-
 	}
+
 	return nil
 }
 
@@ -132,7 +128,6 @@ func (t *CreateReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ActorID (uint64) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.ActorID)); err != nil {
 		return err
 	}
@@ -154,6 +149,7 @@ func (t *CreateReturn) MarshalCBOR(w io.Writer) error {
 	if _, err := cw.Write(t.EthAddress[:]); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -181,9 +177,7 @@ func (t *CreateReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.ActorID (uint64) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -192,12 +186,10 @@ func (t *CreateReturn) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.ActorID = uint64(extra)
-
 	}
+
 	// t.RobustAddress (address.Address) (struct)
-
 	{
-
 		b, err := cr.ReadByte()
 		if err != nil {
 			return err
@@ -211,10 +203,9 @@ func (t *CreateReturn) UnmarshalCBOR(r io.Reader) (err error) {
 				return xerrors.Errorf("unmarshaling t.RobustAddress pointer: %w", err)
 			}
 		}
-
 	}
-	// t.EthAddress ([20]uint8) (array)
 
+	// t.EthAddress ([20]uint8) (array)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -234,6 +225,7 @@ func (t *CreateReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	if _, err := io.ReadFull(cr, t.EthAddress[:]); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -276,6 +268,7 @@ func (t *Create2Params) MarshalCBOR(w io.Writer) error {
 	if _, err := cw.Write(t.Salt[:]); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -303,7 +296,6 @@ func (t *Create2Params) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Initcode ([]uint8) (slice)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -325,7 +317,6 @@ func (t *Create2Params) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.Salt ([32]uint8) (array)
-
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -345,6 +336,7 @@ func (t *Create2Params) UnmarshalCBOR(r io.Reader) (err error) {
 	if _, err := io.ReadFull(cr, t.Salt[:]); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -363,7 +355,6 @@ func (t *Create2Return) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ActorID (uint64) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.ActorID)); err != nil {
 		return err
 	}
@@ -385,6 +376,7 @@ func (t *Create2Return) MarshalCBOR(w io.Writer) error {
 	if _, err := cw.Write(t.EthAddress[:]); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -412,9 +404,7 @@ func (t *Create2Return) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.ActorID (uint64) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -423,12 +413,10 @@ func (t *Create2Return) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.ActorID = uint64(extra)
-
 	}
+
 	// t.RobustAddress (address.Address) (struct)
-
 	{
-
 		b, err := cr.ReadByte()
 		if err != nil {
 			return err
@@ -442,10 +430,9 @@ func (t *Create2Return) UnmarshalCBOR(r io.Reader) (err error) {
 				return xerrors.Errorf("unmarshaling t.RobustAddress pointer: %w", err)
 			}
 		}
-
 	}
-	// t.EthAddress ([20]uint8) (array)
 
+	// t.EthAddress ([20]uint8) (array)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -465,6 +452,7 @@ func (t *Create2Return) UnmarshalCBOR(r io.Reader) (err error) {
 	if _, err := io.ReadFull(cr, t.EthAddress[:]); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -483,7 +471,6 @@ func (t *CreateExternalReturn) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ActorID (uint64) (uint64)
-
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.ActorID)); err != nil {
 		return err
 	}
@@ -505,6 +492,7 @@ func (t *CreateExternalReturn) MarshalCBOR(w io.Writer) error {
 	if _, err := cw.Write(t.EthAddress[:]); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -532,9 +520,7 @@ func (t *CreateExternalReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.ActorID (uint64) (uint64)
-
 	{
-
 		maj, extra, err = cr.ReadHeader()
 		if err != nil {
 			return err
@@ -543,12 +529,10 @@ func (t *CreateExternalReturn) UnmarshalCBOR(r io.Reader) (err error) {
 			return fmt.Errorf("wrong type for uint64 field")
 		}
 		t.ActorID = uint64(extra)
-
 	}
+
 	// t.RobustAddress (address.Address) (struct)
-
 	{
-
 		b, err := cr.ReadByte()
 		if err != nil {
 			return err
@@ -562,10 +546,9 @@ func (t *CreateExternalReturn) UnmarshalCBOR(r io.Reader) (err error) {
 				return xerrors.Errorf("unmarshaling t.RobustAddress pointer: %w", err)
 			}
 		}
-
 	}
-	// t.EthAddress ([20]uint8) (array)
 
+	// t.EthAddress ([20]uint8) (array)
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
 		return err
@@ -585,5 +568,6 @@ func (t *CreateExternalReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	if _, err := io.ReadFull(cr, t.EthAddress[:]); err != nil {
 		return err
 	}
+
 	return nil
 }
