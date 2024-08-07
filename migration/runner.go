@@ -16,7 +16,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
-func RunMigration(ctx context.Context, cfg Config, cache MigrationCache, store cbor.IpldStore, log Logger, actorsIn *builtin.ActorTree, migrations map[cid.Cid]ActorMigration) (*builtin.ActorTree, error) {
+func RunMigration(ctx context.Context, cfg Config, cache MigrationCache, store cbor.IpldStore, log Logger, actorsIn builtin.ActorTree, migrations map[cid.Cid]ActorMigration) (builtin.ActorTree, error) {
 	startTime := time.Now()
 
 	deferred := map[address.Address]struct{}{}

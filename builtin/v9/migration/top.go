@@ -101,11 +101,11 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 
 	// Load input and output state trees
-	actorsIn, err := builtin.LoadTree(adtStore, actorsRootIn)
+	actorsIn, err := builtin.LoadLegacyTree(adtStore, actorsRootIn)
 	if err != nil {
 		return cid.Undef, err
 	}
-	actorsOut, err := builtin.NewTree(adtStore)
+	actorsOut, err := builtin.NewLegacyTree(adtStore)
 	if err != nil {
 		return cid.Undef, err
 	}

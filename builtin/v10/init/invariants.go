@@ -17,9 +17,9 @@ type StateSummary struct {
 }
 
 // Checks internal invariants of init state.
-func CheckStateInvariants(st *State, tree *builtin.ActorTree, actorCodes map[string]cid.Cid) (*StateSummary, *builtin.MessageAccumulator) {
+func CheckStateInvariants(st *State, tree builtin.ActorTree, actorCodes map[string]cid.Cid) (*StateSummary, *builtin.MessageAccumulator) {
 	acc := &builtin.MessageAccumulator{}
-	store := tree.Store
+	store := tree.GetStore()
 
 	acc.Require(len(st.NetworkName) > 0, "network name is empty")
 	acc.Require(st.NextID >= builtin.FirstNonSingletonActorId, "next id %d is too low", st.NextID)
