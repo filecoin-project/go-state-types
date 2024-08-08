@@ -11,7 +11,7 @@ import (
 	"github.com/filecoin-project/go-amt-ipld/v4"
 	"golang.org/x/xerrors"
 
-	commp "github.com/filecoin-project/go-commp-utils/nonffi"
+	commp "github.com/filecoin-project/go-commp-utils/v2"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v8/market"
 	miner8 "github.com/filecoin-project/go-state-types/builtin/v8/miner"
@@ -214,7 +214,7 @@ func (m minerMigrator) migratePrecommits(ctx context.Context, wrappedStore adt8.
 		}
 
 		if len(pieces) != 0 {
-			commd, err := commp.GenerateUnsealedCID(info.Info.SealProof, pieces)
+			commd, _, err := commp.PieceAggregateCommP(info.Info.SealProof, pieces)
 			if err != nil {
 				return xerrors.Errorf("failed to generate unsealed CID: %w", err)
 			}
