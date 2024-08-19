@@ -51,6 +51,7 @@ var TotalFilecoin = big.Mul(big.NewIntUnsigned(2_000_000_000), TokenPrecision)
 var QualityBaseMultiplier = big.NewInt(10)
 
 // Quality multiplier for unverified deals in a sector
+// DEPRECATED: This is no longer used, but is kept here for reference.
 var DealWeightMultiplier = big.NewInt(10)
 
 // Quality multiplier for verified deals in a sector

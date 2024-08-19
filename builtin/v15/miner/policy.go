@@ -141,30 +141,24 @@ const MinSectorExpiration = 180 * builtin.EpochsInDay // PARAM_SPEC
 // the associated seal proof's maximum lifetime.
 const MaxSectorExpirationExtension = 1278 * builtin.EpochsInDay // PARAM_SPEC
 
-// DealWeight and VerifiedDealWeight are spacetime occupied by regular deals and verified deals in a sector.
-// Sum of DealWeight and VerifiedDealWeight should be less than or equal to total SpaceTime of a sector.
-// Sectors full of VerifiedDeals will have a SectorQuality of VerifiedDealWeightMultiplier/QualityBaseMultiplier.
-// Sectors full of Deals will have a SectorQuality of DealWeightMultiplier/QualityBaseMultiplier.
-// Sectors with neither will have a SectorQuality of QualityBaseMultiplier/QualityBaseMultiplier.
-// SectorQuality of a sector is a weighted average of multipliers based on their proportions.
-func QualityForWeight(size abi.SectorSize, duration abi.ChainEpoch, dealWeight, verifiedWeight abi.DealWeight) abi.SectorQuality {
+// QualityForWeight calculates the quality of a sector with the given size, duration, and verified weight.
+// VerifiedDealWeight is spacetime occupied by verified pieces in a sector.
+// VerifiedDealWeight should be less than or equal to total SpaceTime of a sector.
+// Sectors full of VerifiedDeals will have a BigInt of VerifiedDealWeightMultiplier/QualityBaseMultiplier.
+// Sectors without VerifiedDeals will have a BigInt of QualityBaseMultiplier/QualityBaseMultiplier.
+// BigInt of a sector is a weighted average of multipliers based on their proportions.
+func QualityForWeight(size abi.SectorSize, duration abi.ChainEpoch, verifiedWeight abi.DealWeight) abi.SectorQuality {
 	// sectorSpaceTime = size * duration
 	sectorSpaceTime := big.Mul(big.NewIntUnsigned(uint64(size)), big.NewInt(int64(duration)))
-	// totalDealSpaceTime = dealWeight + verifiedWeight
-	totalDealSpaceTime := big.Add(dealWeight, verifiedWeight)
-
-	// Base - all size * duration of non-deals
-	// weightedBaseSpaceTime = (sectorSpaceTime - totalDealSpaceTime) * QualityBaseMultiplier
-	weightedBaseSpaceTime := big.Mul(big.Sub(sectorSpaceTime, totalDealSpaceTime), builtin.QualityBaseMultiplier)
-	// Deal - all deal size * deal duration * 10
-	// weightedDealSpaceTime = dealWeight * DealWeightMultiplier
-	weightedDealSpaceTime := big.Mul(dealWeight, builtin.DealWeightMultiplier)
+	// Base - all size * duration of non-verified deals
+	// weightedBaseSpaceTime = (sectorSpaceTime - verifiedWeight) * QualityBaseMultiplier
+	weightedBaseSpaceTime := big.Mul(big.Sub(sectorSpaceTime, verifiedWeight), builtin.QualityBaseMultiplier)
 	// Verified - all verified deal size * verified deal duration * 100
 	// weightedVerifiedSpaceTime = verifiedWeight * VerifiedDealWeightMultiplier
 	weightedVerifiedSpaceTime := big.Mul(verifiedWeight, builtin.VerifiedDealWeightMultiplier)
 	// Sum - sum of all spacetime
-	// weightedSumSpaceTime = weightedBaseSpaceTime + weightedDealSpaceTime + weightedVerifiedSpaceTime
-	weightedSumSpaceTime := big.Sum(weightedBaseSpaceTime, weightedDealSpaceTime, weightedVerifiedSpaceTime)
+	// weightedSumSpaceTime = weightedBaseSpaceTime + weightedVerifiedSpaceTime
+	weightedSumSpaceTime := big.Sum(weightedBaseSpaceTime, weightedVerifiedSpaceTime)
 	// scaledUpWeightedSumSpaceTime = weightedSumSpaceTime * 2^20
 	scaledUpWeightedSumSpaceTime := big.Lsh(weightedSumSpaceTime, builtin.SectorQualityPrecision)
 
@@ -173,15 +167,15 @@ func QualityForWeight(size abi.SectorSize, duration abi.ChainEpoch, dealWeight, 
 }
 
 // The power for a sector size, committed duration, and weight.
-func QAPowerForWeight(size abi.SectorSize, duration abi.ChainEpoch, dealWeight, verifiedWeight abi.DealWeight) abi.StoragePower {
-	quality := QualityForWeight(size, duration, dealWeight, verifiedWeight)
+func QAPowerForWeight(size abi.SectorSize, duration abi.ChainEpoch, verifiedWeight abi.DealWeight) abi.StoragePower {
+	quality := QualityForWeight(size, duration, verifiedWeight)
 	return big.Rsh(big.Mul(big.NewIntUnsigned(uint64(size)), quality), builtin.SectorQualityPrecision)
 }
 
 // The quality-adjusted power for a sector.
 func QAPowerForSector(size abi.SectorSize, sector *SectorOnChainInfo) abi.StoragePower {
 	duration := sector.Expiration - sector.PowerBaseEpoch
-	return QAPowerForWeight(size, duration, sector.DealWeight, sector.VerifiedDealWeight)
+	return QAPowerForWeight(size, duration, sector.VerifiedDealWeight)
 }
 
 const MaxAggregatedSectors = 819
