@@ -10,9 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Tests to match with Rust fil_actor_miner::serialization
-
-func TestSerializationSlaimAllocationsParams(t *testing.T) {
+// Test to match with Rust fil_actor_miner::serialization
+func TestSerializationProveCommitSectorsNIParams(t *testing.T) {
 	testCases := []struct {
 		params ProveCommitSectorsNIParams
 		hex    string

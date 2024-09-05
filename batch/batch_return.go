@@ -1,6 +1,10 @@
 package batch
 
-import "github.com/filecoin-project/go-state-types/exitcode"
+import (
+	"errors"
+
+	"github.com/filecoin-project/go-state-types/exitcode"
+)
 
 type BatchReturn struct {
 	SuccessCount uint64
@@ -38,11 +42,37 @@ func (b BatchReturn) Codes() []exitcode.ExitCode {
 	return codes
 }
 
-func (b BatchReturn) CodeAt(n uint64) exitcode.ExitCode {
+func (b BatchReturn) CodeAt(n uint64) (exitcode.ExitCode, error) {
+	if n >= uint64(b.Size()) {
+		return exitcode.Ok, errors.New("index out of bounds")
+	}
 	for _, fc := range b.FailCodes {
 		if fc.Idx == n {
-			return fc.Code
+			return fc.Code, nil
+		}
+		if fc.Idx > n {
+			return exitcode.Ok, nil
 		}
 	}
-	return exitcode.Ok
+	return exitcode.Ok, nil
+}
+
+func (b BatchReturn) Validate() error {
+	size := uint64(b.Size())
+	var gaps uint64
+	for i, fc := range b.FailCodes {
+		if fc.Idx >= size {
+			// will also catch the case where the gaps aren't accounted for in total size
+			return errors.New("index out of bounds")
+		}
+		if i > 0 {
+			if fc.Idx <= b.FailCodes[i-1].Idx {
+				return errors.New("fail codes are not in strictly increasing order")
+			}
+			gaps += fc.Idx - b.FailCodes[i-1].Idx - 1
+		} else {
+			gaps += fc.Idx
+		}
+	}
+	return nil
 }
