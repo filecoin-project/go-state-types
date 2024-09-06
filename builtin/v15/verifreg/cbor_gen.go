@@ -9,7 +9,7 @@ import (
 	"sort"
 
 	abi "github.com/filecoin-project/go-state-types/abi"
-	exitcode "github.com/filecoin-project/go-state-types/exitcode"
+	batch "github.com/filecoin-project/go-state-types/batch"
 	cid "github.com/ipfs/go-cid"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	xerrors "golang.org/x/xerrors"
@@ -768,7 +768,7 @@ func (t *RemoveExpiredAllocationsReturn) MarshalCBOR(w io.Writer) error {
 
 	}
 
-	// t.Results (verifreg.BatchReturn) (struct)
+	// t.Results (batch.BatchReturn) (struct)
 	if err := t.Results.MarshalCBOR(cw); err != nil {
 		return err
 	}
@@ -846,7 +846,7 @@ func (t *RemoveExpiredAllocationsReturn) UnmarshalCBOR(r io.Reader) (err error) 
 
 		}
 	}
-	// t.Results (verifreg.BatchReturn) (struct)
+	// t.Results (batch.BatchReturn) (struct)
 
 	{
 
@@ -863,121 +863,6 @@ func (t *RemoveExpiredAllocationsReturn) UnmarshalCBOR(r io.Reader) (err error) 
 			return xerrors.Errorf("unmarshaling t.DataCapRecovered: %w", err)
 		}
 
-	}
-	return nil
-}
-
-var lengthBufBatchReturn = []byte{130}
-
-func (t *BatchReturn) MarshalCBOR(w io.Writer) error {
-	if t == nil {
-		_, err := w.Write(cbg.CborNull)
-		return err
-	}
-
-	cw := cbg.NewCborWriter(w)
-
-	if _, err := cw.Write(lengthBufBatchReturn); err != nil {
-		return err
-	}
-
-	// t.SuccessCount (uint64) (uint64)
-
-	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.SuccessCount)); err != nil {
-		return err
-	}
-
-	// t.FailCodes ([]verifreg.FailCode) (slice)
-	if len(t.FailCodes) > 8192 {
-		return xerrors.Errorf("Slice value in field t.FailCodes was too long")
-	}
-
-	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.FailCodes))); err != nil {
-		return err
-	}
-	for _, v := range t.FailCodes {
-		if err := v.MarshalCBOR(cw); err != nil {
-			return err
-		}
-
-	}
-	return nil
-}
-
-func (t *BatchReturn) UnmarshalCBOR(r io.Reader) (err error) {
-	*t = BatchReturn{}
-
-	cr := cbg.NewCborReader(r)
-
-	maj, extra, err := cr.ReadHeader()
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-	}()
-
-	if maj != cbg.MajArray {
-		return fmt.Errorf("cbor input should be of type array")
-	}
-
-	if extra != 2 {
-		return fmt.Errorf("cbor input had wrong number of fields")
-	}
-
-	// t.SuccessCount (uint64) (uint64)
-
-	{
-
-		maj, extra, err = cr.ReadHeader()
-		if err != nil {
-			return err
-		}
-		if maj != cbg.MajUnsignedInt {
-			return fmt.Errorf("wrong type for uint64 field")
-		}
-		t.SuccessCount = uint64(extra)
-
-	}
-	// t.FailCodes ([]verifreg.FailCode) (slice)
-
-	maj, extra, err = cr.ReadHeader()
-	if err != nil {
-		return err
-	}
-
-	if extra > 8192 {
-		return fmt.Errorf("t.FailCodes: array too large (%d)", extra)
-	}
-
-	if maj != cbg.MajArray {
-		return fmt.Errorf("expected cbor array")
-	}
-
-	if extra > 0 {
-		t.FailCodes = make([]FailCode, extra)
-	}
-
-	for i := 0; i < int(extra); i++ {
-		{
-			var maj byte
-			var extra uint64
-			var err error
-			_ = maj
-			_ = extra
-			_ = err
-
-			{
-
-				if err := t.FailCodes[i].UnmarshalCBOR(cr); err != nil {
-					return xerrors.Errorf("unmarshaling t.FailCodes[i]: %w", err)
-				}
-
-			}
-
-		}
 	}
 	return nil
 }
@@ -1113,7 +998,7 @@ func (t *ClaimAllocationsReturn) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.BatchInfo (verifreg.BatchReturn) (struct)
+	// t.BatchInfo (batch.BatchReturn) (struct)
 	if err := t.BatchInfo.MarshalCBOR(cw); err != nil {
 		return err
 	}
@@ -1148,7 +1033,7 @@ func (t *ClaimAllocationsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	// t.BatchInfo (verifreg.BatchReturn) (struct)
+	// t.BatchInfo (batch.BatchReturn) (struct)
 
 	{
 
@@ -1304,7 +1189,7 @@ func (t *GetClaimsReturn) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.BatchInfo (verifreg.BatchReturn) (struct)
+	// t.BatchInfo (batch.BatchReturn) (struct)
 	if err := t.BatchInfo.MarshalCBOR(cw); err != nil {
 		return err
 	}
@@ -1349,7 +1234,7 @@ func (t *GetClaimsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	// t.BatchInfo (verifreg.BatchReturn) (struct)
+	// t.BatchInfo (batch.BatchReturn) (struct)
 
 	{
 
@@ -1511,12 +1396,12 @@ func (t *AllocationsResponse) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.AllocationResults (verifreg.BatchReturn) (struct)
+	// t.AllocationResults (batch.BatchReturn) (struct)
 	if err := t.AllocationResults.MarshalCBOR(cw); err != nil {
 		return err
 	}
 
-	// t.ExtensionResults (verifreg.BatchReturn) (struct)
+	// t.ExtensionResults (batch.BatchReturn) (struct)
 	if err := t.ExtensionResults.MarshalCBOR(cw); err != nil {
 		return err
 	}
@@ -1562,7 +1447,7 @@ func (t *AllocationsResponse) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	// t.AllocationResults (verifreg.BatchReturn) (struct)
+	// t.AllocationResults (batch.BatchReturn) (struct)
 
 	{
 
@@ -1571,7 +1456,7 @@ func (t *AllocationsResponse) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 
 	}
-	// t.ExtensionResults (verifreg.BatchReturn) (struct)
+	// t.ExtensionResults (batch.BatchReturn) (struct)
 
 	{
 
@@ -1741,7 +1626,7 @@ func (t *ExtendClaimTermsReturn) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.FailCodes ([]verifreg.FailCode) (slice)
+	// t.FailCodes ([]batch.FailCode) (slice)
 	if len(t.FailCodes) > 8192 {
 		return xerrors.Errorf("Slice value in field t.FailCodes was too long")
 	}
@@ -1795,7 +1680,7 @@ func (t *ExtendClaimTermsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		t.SuccessCount = uint64(extra)
 
 	}
-	// t.FailCodes ([]verifreg.FailCode) (slice)
+	// t.FailCodes ([]batch.FailCode) (slice)
 
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
@@ -1811,7 +1696,7 @@ func (t *ExtendClaimTermsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	if extra > 0 {
-		t.FailCodes = make([]FailCode, extra)
+		t.FailCodes = make([]batch.FailCode, extra)
 	}
 
 	for i := 0; i < int(extra); i++ {
@@ -1987,7 +1872,7 @@ func (t *RemoveExpiredClaimsReturn) MarshalCBOR(w io.Writer) error {
 
 	}
 
-	// t.Results (verifreg.BatchReturn) (struct)
+	// t.Results (batch.BatchReturn) (struct)
 	if err := t.Results.MarshalCBOR(cw); err != nil {
 		return err
 	}
@@ -2060,7 +1945,7 @@ func (t *RemoveExpiredClaimsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 
 		}
 	}
-	// t.Results (verifreg.BatchReturn) (struct)
+	// t.Results (batch.BatchReturn) (struct)
 
 	{
 
@@ -2285,105 +2170,6 @@ func (t *RmDcProposalID) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 		t.ProposalID = uint64(extra)
 
-	}
-	return nil
-}
-
-var lengthBufFailCode = []byte{130}
-
-func (t *FailCode) MarshalCBOR(w io.Writer) error {
-	if t == nil {
-		_, err := w.Write(cbg.CborNull)
-		return err
-	}
-
-	cw := cbg.NewCborWriter(w)
-
-	if _, err := cw.Write(lengthBufFailCode); err != nil {
-		return err
-	}
-
-	// t.Idx (uint64) (uint64)
-
-	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Idx)); err != nil {
-		return err
-	}
-
-	// t.Code (exitcode.ExitCode) (int64)
-	if t.Code >= 0 {
-		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Code)); err != nil {
-			return err
-		}
-	} else {
-		if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-t.Code-1)); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (t *FailCode) UnmarshalCBOR(r io.Reader) (err error) {
-	*t = FailCode{}
-
-	cr := cbg.NewCborReader(r)
-
-	maj, extra, err := cr.ReadHeader()
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-	}()
-
-	if maj != cbg.MajArray {
-		return fmt.Errorf("cbor input should be of type array")
-	}
-
-	if extra != 2 {
-		return fmt.Errorf("cbor input had wrong number of fields")
-	}
-
-	// t.Idx (uint64) (uint64)
-
-	{
-
-		maj, extra, err = cr.ReadHeader()
-		if err != nil {
-			return err
-		}
-		if maj != cbg.MajUnsignedInt {
-			return fmt.Errorf("wrong type for uint64 field")
-		}
-		t.Idx = uint64(extra)
-
-	}
-	// t.Code (exitcode.ExitCode) (int64)
-	{
-		maj, extra, err := cr.ReadHeader()
-		if err != nil {
-			return err
-		}
-		var extraI int64
-		switch maj {
-		case cbg.MajUnsignedInt:
-			extraI = int64(extra)
-			if extraI < 0 {
-				return fmt.Errorf("int64 positive overflow")
-			}
-		case cbg.MajNegativeInt:
-			extraI = int64(extra)
-			if extraI < 0 {
-				return fmt.Errorf("int64 negative overflow")
-			}
-			extraI = -1 - extraI
-		default:
-			return fmt.Errorf("wrong type for int64 field: %d", maj)
-		}
-
-		t.Code = exitcode.ExitCode(extraI)
 	}
 	return nil
 }
