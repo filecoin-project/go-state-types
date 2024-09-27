@@ -1094,7 +1094,7 @@ func (t *CreateMinerReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	return nil
 }
 
-var lengthBufCurrentTotalPowerReturn = []byte{132}
+var lengthBufCurrentTotalPowerReturn = []byte{134}
 
 func (t *CurrentTotalPowerReturn) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -1127,6 +1127,24 @@ func (t *CurrentTotalPowerReturn) MarshalCBOR(w io.Writer) error {
 	if err := t.QualityAdjPowerSmoothed.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
+	// t.RampStartEpoch (int64) (int64)
+	if t.RampStartEpoch >= 0 {
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.RampStartEpoch)); err != nil {
+			return err
+		}
+	} else {
+		if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-t.RampStartEpoch-1)); err != nil {
+			return err
+		}
+	}
+
+	// t.RampDurationEpochs (uint64) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.RampDurationEpochs)); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -1149,7 +1167,7 @@ func (t *CurrentTotalPowerReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 4 {
+	if extra != 6 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
@@ -1187,6 +1205,45 @@ func (t *CurrentTotalPowerReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		if err := t.QualityAdjPowerSmoothed.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.QualityAdjPowerSmoothed: %w", err)
 		}
+
+	}
+	// t.RampStartEpoch (int64) (int64)
+	{
+		maj, extra, err := cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		var extraI int64
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
+			}
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative overflow")
+			}
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
+		}
+
+		t.RampStartEpoch = int64(extraI)
+	}
+	// t.RampDurationEpochs (uint64) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.RampDurationEpochs = uint64(extra)
 
 	}
 	return nil

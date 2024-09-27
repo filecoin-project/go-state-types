@@ -47,6 +47,8 @@ type CurrentTotalPowerReturn struct {
 	QualityAdjPower         abi.StoragePower
 	PledgeCollateral        abi.TokenAmount
 	QualityAdjPowerSmoothed smoothing.FilterEstimate
+	RampStartEpoch          int64
+	RampDurationEpochs      uint64
 }
 
 type NetworkRawPowerReturn = abi.StoragePower
