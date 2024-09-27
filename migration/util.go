@@ -87,6 +87,10 @@ type Config struct {
 	ProgressLogPeriod time.Duration
 	// The epoch at which the upgrade will run.
 	UpgradeEpoch abi.ChainEpoch
+
+	// FIP-0081 constants for the power actor state for pledge calculations.
+	PowerRampStartEpoch     int64  // Epoch at which the new pledge calculation starts.
+	PowerRampDurationEpochs uint64 // Number of epochs over which the new pledge calculation is ramped up.
 }
 
 type Logger interface {
