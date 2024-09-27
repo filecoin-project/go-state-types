@@ -61,6 +61,15 @@ type State struct {
 	// Number of miners having proven the minimum consensus power.
 	MinerAboveMinPowerCount int64
 
+	// FIP0081 changed pledge calculations, moving from ruleset A to ruleset B.
+	// This change is spread over several epochs to avoid sharp jumps in pledge
+	// amounts. At `RampStartEpoch`, we use the old ruleset. At
+	// `RampStartEpoch + RampDurationEpochs`, we use 70% old rules + 30%
+	// new rules. See FIP0081 for more details.
+	RampStartEpoch int64
+	// Number of epochs over which the new pledge calculation is ramped up.
+	RampDurationEpochs uint64
+
 	// A queue of events to be triggered by cron, indexed by epoch.
 	CronEventQueue cid.Cid // Multimap, (HAMT[ChainEpoch]AMT[CronEvent])
 
@@ -99,6 +108,8 @@ func ConstructState(store adt.Store) (*State, error) {
 		Claims:                    emptyClaimsMapCid,
 		MinerCount:                0,
 		MinerAboveMinPowerCount:   0,
+		RampStartEpoch:            0,
+		RampDurationEpochs:        0,
 	}, nil
 }
 

@@ -24,6 +24,16 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("invalid migration config with %d workers", cfg.MaxWorkers)
 	}
 
+	if cfg.PowerRampStartEpoch == 0 {
+		return cid.Undef, xerrors.Errorf("PowerRampStartEpoch must be set")
+	}
+	if cfg.PowerRampStartEpoch < 0 {
+		return cid.Undef, xerrors.Errorf("PowerRampStartEpoch must be non-negative")
+	}
+	if cfg.PowerRampDurationEpochs == 0 {
+		return cid.Undef, xerrors.Errorf("PowerRampDurationEpochs must be set")
+	}
+
 	adtStore := adt15.WrapStore(ctx, store)
 
 	// Load input and output state trees
@@ -67,7 +77,13 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	// Set of prior version code CIDs for actors to defer during iteration, for explicit migration afterwards.
 	deferredCodeIDs := make(map[cid.Cid]struct{})
 
+	power14Cid := cid.Undef
+
 	for _, oldEntry := range oldManifestData.Entries {
+		if oldEntry.Name == manifest.PowerKey {
+			power14Cid = oldEntry.Code
+		}
+
 		newCodeCID, ok := newManifest.Get(oldEntry.Name)
 		if !ok {
 			return cid.Undef, xerrors.Errorf("code cid for %s actor not found in new manifest", oldEntry.Name)
@@ -85,6 +101,21 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 
 	migrations[systemActor.Code] = systemActorMigrator{OutCodeCID: newSystemCodeCID, ManifestData: newManifest.Data}
+
+	// The Power Actor
+	if power14Cid == cid.Undef {
+		return cid.Undef, xerrors.Errorf("code cid for power actor not found in old manifest")
+	}
+	power15Cid, ok := newManifest.Get(manifest.PowerKey)
+	if !ok {
+		return cid.Undef, xerrors.Errorf("code cid for power actor not found in new manifest")
+	}
+
+	pm, err := newPowerMigrator(cfg.PowerRampStartEpoch, cfg.PowerRampDurationEpochs, power15Cid)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to create miner migrator: %w", err)
+	}
+	migrations[power14Cid] = migration.CachedMigration(cache, *pm)
 
 	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations)+len(deferredCodeIDs), len(oldManifestData.Entries))
