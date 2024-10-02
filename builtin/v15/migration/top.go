@@ -17,21 +17,37 @@ import (
 	"golang.org/x/xerrors"
 )
 
-// MigrateStateTree Migrates the filecoin state tree starting from the global state tree and upgrading all actor state.
+// MigrateStateTree migrates the Filecoin state tree starting from the global state tree and upgrading all actor states.
 // The store must support concurrent writes (even if the configured worker count is 1).
-func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID cid.Cid, actorsRootIn cid.Cid, priorEpoch abi.ChainEpoch, cfg migration.Config, log migration.Logger, cache migration.MigrationCache) (cid.Cid, error) {
+//
+// FIP-0081 constants for the power actor state for pledge calculations that apply only to this migration:
+//
+// - powerRampStartEpoch: Epoch at which the new pledge calculation starts.
+// - powerRampDurationEpochs: Number of epochs over which the new pledge calculation is ramped up.
+func MigrateStateTree(
+	ctx context.Context,
+	store cbor.IpldStore,
+	newManifestCID cid.Cid,
+	actorsRootIn cid.Cid,
+	priorEpoch abi.ChainEpoch,
+	powerRampStartEpoch int64,
+	powerRampDurationEpochs uint64,
+	cfg migration.Config,
+	log migration.Logger,
+	cache migration.MigrationCache,
+) (cid.Cid, error) {
 	if cfg.MaxWorkers <= 0 {
 		return cid.Undef, xerrors.Errorf("invalid migration config with %d workers", cfg.MaxWorkers)
 	}
 
-	if cfg.PowerRampStartEpoch == 0 {
-		return cid.Undef, xerrors.Errorf("PowerRampStartEpoch must be set")
+	if powerRampStartEpoch == 0 {
+		return cid.Undef, xerrors.Errorf("powerRampStartEpoch must be non-zero")
 	}
-	if cfg.PowerRampStartEpoch < 0 {
-		return cid.Undef, xerrors.Errorf("PowerRampStartEpoch must be non-negative")
+	if powerRampStartEpoch < 0 {
+		return cid.Undef, xerrors.Errorf("powerRampStartEpoch must be non-negative")
 	}
-	if cfg.PowerRampDurationEpochs == 0 {
-		return cid.Undef, xerrors.Errorf("PowerRampDurationEpochs must be set")
+	if powerRampDurationEpochs == 0 {
+		return cid.Undef, xerrors.Errorf("powerRampDurationEpochs must be non-zero")
 	}
 
 	adtStore := adt15.WrapStore(ctx, store)
@@ -88,7 +104,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		if !ok {
 			return cid.Undef, xerrors.Errorf("code cid for %s actor not found in new manifest", oldEntry.Name)
 		}
-		migrations[oldEntry.Code] = migration.CachedMigration(cache, migration.CodeMigrator{OutCodeCID: newCodeCID})
+		migrations[oldEntry.Code] = migration.CodeMigrator{OutCodeCID: newCodeCID}
 	}
 
 	// migrations that migrate both code and state, override entries in `migrations`
@@ -111,11 +127,11 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("code cid for power actor not found in new manifest")
 	}
 
-	pm, err := newPowerMigrator(cfg.PowerRampStartEpoch, cfg.PowerRampDurationEpochs, power15Cid)
+	pm, err := newPowerMigrator(powerRampStartEpoch, powerRampDurationEpochs, power15Cid)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to create miner migrator: %w", err)
 	}
-	migrations[power14Cid] = migration.CachedMigration(cache, *pm)
+	migrations[power14Cid] = *pm
 
 	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations)+len(deferredCodeIDs), len(oldManifestData.Entries))
