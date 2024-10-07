@@ -12,7 +12,7 @@ require (
 	github.com/filecoin-project/go-hamt-ipld/v3 v3.4.0
 	github.com/ipfs/go-block-format v0.2.0
 	github.com/ipfs/go-cid v0.4.1
-	github.com/ipfs/go-ipld-cbor v0.1.0
+	github.com/ipfs/go-ipld-cbor v0.2.0
 	github.com/ipld/go-ipld-prime v0.21.0
 	github.com/minio/sha256-simd v1.0.1
 	github.com/multiformats/go-multibase v0.2.0
