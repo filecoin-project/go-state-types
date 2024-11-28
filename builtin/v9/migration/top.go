@@ -395,13 +395,14 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 			for {
 				select {
 				case <-time.After(cfg.ProgressLogPeriod):
-					jobsNow := jobCount // Snapshot values to avoid incorrect-looking arithmetic if they change.
-					doneNow := doneCount
-					pendingNow := jobsNow - doneNow
+					jobsNow := atomic.LoadUint32(&jobCount) // Snapshot values to avoid incorrect-looking arithmetic if they change.
+					doneNow := atomic.LoadUint32(&doneCount)
 					elapsed := time.Since(startTime)
 					rate := float64(doneNow) / elapsed.Seconds()
-					log.Log(rt.INFO, "%d jobs created, %d done, %d pending after %v (%.0f/s)",
-						jobsNow, doneNow, pendingNow, elapsed, rate)
+					percentComplete := float64(doneNow) / float64(jobsNow) * 100
+
+					log.Log(rt.INFO, "Performing migration: %d of %d jobs complete (%.1f%%, %.0f/s)",
+						doneNow, jobsNow, percentComplete, rate)
 				case <-workersFinished:
 					return
 				case <-ctx.Done():
