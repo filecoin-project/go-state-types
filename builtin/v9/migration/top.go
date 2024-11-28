@@ -395,8 +395,8 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 			for {
 				select {
 				case <-time.After(cfg.ProgressLogPeriod):
-					jobsNow := atomic.LoadUint32(&jobCount) // Snapshot values to avoid incorrect-looking arithmetic if they change.
-					doneNow := atomic.LoadUint32(&doneCount)
+					jobsNow := jobCount // Snapshot values to avoid incorrect-looking arithmetic if they change.
+					doneNow := doneCount
 					elapsed := time.Since(startTime)
 					rate := float64(doneNow) / elapsed.Seconds()
 					percentComplete := float64(doneNow) / float64(jobsNow) * 100
