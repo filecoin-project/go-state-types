@@ -2,6 +2,7 @@ package migration
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -106,13 +107,17 @@ func RunMigration(ctx context.Context, cfg Config, cache MigrationCache, store c
 			for {
 				select {
 				case <-time.After(cfg.ProgressLogPeriod):
-					jobsNow := jobCount // Snapshot values to avoid incorrect-looking arithmetic if they change.
-					doneNow := doneCount
-					pendingNow := jobsNow - doneNow
+					jobsNow := atomic.LoadUint32(&jobCount)
+					doneNow := atomic.LoadUint32(&doneCount)
 					elapsed := time.Since(startTime)
 					rate := float64(doneNow) / elapsed.Seconds()
-					log.Log(rt.INFO, "%d jobs created, %d done, %d pending after %v (%.0f/s)",
-						jobsNow, doneNow, pendingNow, elapsed, rate)
+
+					jobsStr := fmt.Sprintf("%d", jobsNow)
+					doneStr := fmt.Sprintf("%d", doneNow)
+					rateStr := fmt.Sprintf("%.0f", rate)
+
+					log.Log(rt.INFO, "Performing migration: %s of %s jobs processed (%s/s) [%v elapsed]",
+						doneStr, jobsStr, rateStr, elapsed.Round(time.Second))
 				case <-workersFinished:
 					return
 				case <-ctx.Done():
