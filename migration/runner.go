@@ -2,7 +2,6 @@ package migration
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -112,12 +111,8 @@ func RunMigration(ctx context.Context, cfg Config, cache MigrationCache, store c
 					elapsed := time.Since(startTime)
 					rate := float64(doneNow) / elapsed.Seconds()
 
-					jobsStr := fmt.Sprintf("%d", jobsNow)
-					doneStr := fmt.Sprintf("%d", doneNow)
-					rateStr := fmt.Sprintf("%.0f", rate)
-
-					log.Log(rt.INFO, "Performing migration: %s of %s jobs processed (%s/s) [%v elapsed]",
-						doneStr, jobsStr, rateStr, elapsed.Round(time.Second))
+					log.Log(rt.INFO, "Performing migration: %d of %d jobs processed (%.0f/s) [%v elapsed]",
+						doneNow, jobsNow, rate, elapsed.Round(time.Second))
 				case <-workersFinished:
 					return
 				case <-ctx.Done():
