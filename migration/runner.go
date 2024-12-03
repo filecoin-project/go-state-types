@@ -110,7 +110,7 @@ func RunMigration(ctx context.Context, cfg Config, cache MigrationCache, store c
 					rate := float64(doneNow) / elapsed.Seconds()
 
 					log.Log(rt.INFO, "Performing migration: %d of %d jobs processed (%.0f/s) [%v elapsed]",
-						doneNow, jobsNow, rate, elapsed.Round(100*time.Millisecond))
+						doneNow, jobsNow, rate, elapsed.Round(time.Second))
 				case <-workersFinished:
 					return
 				case <-ctx.Done():
