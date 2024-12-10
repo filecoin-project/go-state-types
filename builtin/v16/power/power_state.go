@@ -147,24 +147,7 @@ func (st *State) MinerNominalPowerMeetsConsensusMinimum(s adt.Store, miner addr.
 		return false, xerrors.Errorf("no claim for actor %w", miner)
 	}
 
-	minerNominalPower := claim.RawBytePower
-	minerMinPower, err := builtin.ConsensusMinerMinPower(claim.WindowPoStProofType)
-	if err != nil {
-		return false, xerrors.Errorf("could not get miner min power from proof type: %w", err)
-	}
-
-	// if miner is larger than min power requirement, we're set
-	if minerNominalPower.GreaterThanEqual(minerMinPower) {
-		return true, nil
-	}
-
-	// otherwise, if ConsensusMinerMinMiners miners meet min power requirement, return false
-	if st.MinerAboveMinPowerCount >= ConsensusMinerMinMiners {
-		return false, nil
-	}
-
-	// If fewer than ConsensusMinerMinMiners over threshold miner can win a block with non-zero power
-	return minerNominalPower.GreaterThan(abi.NewStoragePower(0)), nil
+	return st.ClaimMeetsConsensusMinimums(claim)
 }
 
 func (st *State) GetClaim(s adt.Store, a addr.Address) (*Claim, bool, error) {
@@ -185,4 +168,25 @@ func getClaim(claims *adt.Map, a addr.Address) (*Claim, bool, error) {
 		return nil, false, nil
 	}
 	return &out, true, nil
+}
+
+func (st *State) ClaimMeetsConsensusMinimums(claim *Claim) (bool, error) {
+	minerNominalPower := claim.RawBytePower
+	minerMinPower, err := builtin.ConsensusMinerMinPower(claim.WindowPoStProofType)
+	if err != nil {
+		return false, xerrors.Errorf("could not get miner min power from proof type: %w", err)
+	}
+
+	// if miner is larger than min power requirement, we're set
+	if minerNominalPower.GreaterThanEqual(minerMinPower) {
+		return true, nil
+	}
+
+	// otherwise, if ConsensusMinerMinMiners miners meet min power requirement, return false
+	if st.MinerAboveMinPowerCount >= ConsensusMinerMinMiners {
+		return false, nil
+	}
+
+	// If fewer than ConsensusMinerMinMiners over threshold miner can win a block with non-zero power
+	return minerNominalPower.GreaterThan(abi.NewStoragePower(0)), nil
 }
