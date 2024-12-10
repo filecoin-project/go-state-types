@@ -129,24 +129,8 @@ type CronEvent struct {
 	CallbackPayload []byte
 }
 
-// MinerNominalPowerMeetsConsensusMinimum is used to validate Election PoSt
-// winners outside the chain state. If the miner has over a threshold of power
-// the miner meets the minimum.  If the network is a below a threshold of
-// miners and has power > zero the miner meets the minimum.
-func (st *State) MinerNominalPowerMeetsConsensusMinimum(s adt.Store, miner addr.Address) (bool, error) { //nolint:deadcode,unused
-	claims, err := adt.AsMap(s, st.Claims, builtin.DefaultHamtBitwidth)
-	if err != nil {
-		return false, xerrors.Errorf("failed to load claims: %w", err)
-	}
-
-	claim, ok, err := getClaim(claims, miner)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, xerrors.Errorf("no claim for actor %w", miner)
-	}
-
+// ClaimMeetsConsensusMinimums checks if given claim meets the minimums set by the network for mining.
+func (st *State) ClaimMeetsConsensusMinimums(claim *Claim) (bool, error) {
 	minerNominalPower := claim.RawBytePower
 	minerMinPower, err := builtin.ConsensusMinerMinPower(claim.WindowPoStProofType)
 	if err != nil {
@@ -165,6 +149,27 @@ func (st *State) MinerNominalPowerMeetsConsensusMinimum(s adt.Store, miner addr.
 
 	// If fewer than ConsensusMinerMinMiners over threshold miner can win a block with non-zero power
 	return minerNominalPower.GreaterThan(abi.NewStoragePower(0)), nil
+}
+
+// MinerNominalPowerMeetsConsensusMinimum is used to validate Election PoSt
+// winners outside the chain state. If the miner has over a threshold of power
+// the miner meets the minimum.  If the network is a below a threshold of
+// miners and has power > zero the miner meets the minimum.
+func (st *State) MinerNominalPowerMeetsConsensusMinimum(s adt.Store, miner addr.Address) (bool, error) { //nolint:deadcode,unused
+	claims, err := adt.AsMap(s, st.Claims, builtin.DefaultHamtBitwidth)
+	if err != nil {
+		return false, xerrors.Errorf("failed to load claims: %w", err)
+	}
+
+	claim, ok, err := getClaim(claims, miner)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, xerrors.Errorf("no claim for actor %w", miner)
+	}
+
+	return st.ClaimMeetsConsensusMinimums(claim)
 }
 
 func (st *State) GetClaim(s adt.Store, a addr.Address) (*Claim, bool, error) {
