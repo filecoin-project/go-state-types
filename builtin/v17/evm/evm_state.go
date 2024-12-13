@@ -28,8 +28,8 @@ type State struct {
 	Bytecode      cid.Cid
 	BytecodeHash  [32]byte
 	ContractState cid.Cid
-	Nonce         uint64
 	TransientData *TransientData
+	Nonce         uint64
 	Tombstone     *Tombstone
 }
 
