@@ -70,14 +70,26 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 
 	// t.PreCommittedSectors (cid.Cid) (struct)
 
-	if err := cbg.WriteCid(cw, t.PreCommittedSectors); err != nil {
-		return xerrors.Errorf("failed to write cid field t.PreCommittedSectors: %w", err)
+	if t.PreCommittedSectors == nil {
+		if _, err := cw.Write(cbg.CborNull); err != nil {
+			return err
+		}
+	} else {
+		if err := cbg.WriteCid(cw, *t.PreCommittedSectors); err != nil {
+			return xerrors.Errorf("failed to write cid field t.PreCommittedSectors: %w", err)
+		}
 	}
 
 	// t.PreCommittedSectorsCleanUp (cid.Cid) (struct)
 
-	if err := cbg.WriteCid(cw, t.PreCommittedSectorsCleanUp); err != nil {
-		return xerrors.Errorf("failed to write cid field t.PreCommittedSectorsCleanUp: %w", err)
+	if t.PreCommittedSectorsCleanUp == nil {
+		if _, err := cw.Write(cbg.CborNull); err != nil {
+			return err
+		}
+	} else {
+		if err := cbg.WriteCid(cw, *t.PreCommittedSectorsCleanUp); err != nil {
+			return xerrors.Errorf("failed to write cid field t.PreCommittedSectorsCleanUp: %w", err)
+		}
 	}
 
 	// t.AllocatedSectors (cid.Cid) (struct)
@@ -214,24 +226,44 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 
 	{
 
-		c, err := cbg.ReadCid(cr)
+		b, err := cr.ReadByte()
 		if err != nil {
-			return xerrors.Errorf("failed to read cid field t.PreCommittedSectors: %w", err)
+			return err
 		}
+		if b != cbg.CborNull[0] {
+			if err := cr.UnreadByte(); err != nil {
+				return err
+			}
 
-		t.PreCommittedSectors = c
+			c, err := cbg.ReadCid(cr)
+			if err != nil {
+				return xerrors.Errorf("failed to read cid field t.PreCommittedSectors: %w", err)
+			}
+
+			t.PreCommittedSectors = &c
+		}
 
 	}
 	// t.PreCommittedSectorsCleanUp (cid.Cid) (struct)
 
 	{
 
-		c, err := cbg.ReadCid(cr)
+		b, err := cr.ReadByte()
 		if err != nil {
-			return xerrors.Errorf("failed to read cid field t.PreCommittedSectorsCleanUp: %w", err)
+			return err
 		}
+		if b != cbg.CborNull[0] {
+			if err := cr.UnreadByte(); err != nil {
+				return err
+			}
 
-		t.PreCommittedSectorsCleanUp = c
+			c, err := cbg.ReadCid(cr)
+			if err != nil {
+				return xerrors.Errorf("failed to read cid field t.PreCommittedSectorsCleanUp: %w", err)
+			}
+
+			t.PreCommittedSectorsCleanUp = &c
+		}
 
 	}
 	// t.AllocatedSectors (cid.Cid) (struct)

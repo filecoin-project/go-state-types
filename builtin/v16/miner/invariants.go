@@ -778,54 +778,58 @@ func CheckPreCommits(st *State, store adt.Store, allocatedSectorsMap map[uint64]
 
 	// invert pre-commit clean up queue into a lookup by sector number
 	cleanUpEpochs := make(map[uint64]abi.ChainEpoch)
-	if cleanUpQ, err := util.LoadBitfieldQueue(store, st.PreCommittedSectorsCleanUp, st.QuantSpecEveryDeadline(), PrecommitCleanUpAmtBitwidth); err != nil {
-		acc.Addf("error loading pre-commit clean up queue: %v", err)
-	} else {
-		err = cleanUpQ.ForEach(func(epoch abi.ChainEpoch, bf bitfield.BitField) error {
-			quantized := quant.QuantizeUp(epoch)
-			acc.Require(quantized == epoch, "precommit expiration %d is not quantized", epoch)
-			if err = bf.ForEach(func(secNum uint64) error {
-				cleanUpEpochs[secNum] = epoch
+	if st.PreCommittedSectorsCleanUp != nil {
+		if cleanUpQ, err := util.LoadBitfieldQueue(store, *st.PreCommittedSectorsCleanUp, st.QuantSpecEveryDeadline(), PrecommitCleanUpAmtBitwidth); err != nil {
+			acc.Addf("error loading pre-commit clean up queue: %v", err)
+		} else {
+			err = cleanUpQ.ForEach(func(epoch abi.ChainEpoch, bf bitfield.BitField) error {
+				quantized := quant.QuantizeUp(epoch)
+				acc.Require(quantized == epoch, "precommit expiration %d is not quantized", epoch)
+				if err = bf.ForEach(func(secNum uint64) error {
+					cleanUpEpochs[secNum] = epoch
+					return nil
+				}); err != nil {
+					acc.Addf("error iteration pre-commit expiration bitfield: %v", err)
+				}
 				return nil
-			}); err != nil {
-				acc.Addf("error iteration pre-commit expiration bitfield: %v", err)
-			}
-			return nil
-		})
-		acc.RequireNoError(err, "error iterating pre-commit clean up queue")
+			})
+			acc.RequireNoError(err, "error iterating pre-commit clean up queue")
+		}
 	}
 
 	precommitTotal := big.Zero()
-	if precommitted, err := adt.AsMap(store, st.PreCommittedSectors, builtin.DefaultHamtBitwidth); err != nil {
-		acc.Addf("error loading precommitted sectors: %v", err)
-	} else {
-		var precommit SectorPreCommitOnChainInfo
-		err = precommitted.ForEach(&precommit, func(key string) error {
-			secNum, err := abi.ParseUIntKey(key)
-			if err != nil {
-				acc.Addf("error parsing pre-commit key as uint: %v", err)
-				return nil
-			}
-
-			allocated := false
-			if allocatedSectorsMap != nil {
-				allocated = allocatedSectorsMap[secNum]
-			} else {
-				allocated, err = allocatedSectorsBf.IsSet(secNum)
+	if st.PreCommittedSectors != nil {
+		if precommitted, err := adt.AsMap(store, *st.PreCommittedSectors, builtin.DefaultHamtBitwidth); err != nil {
+			acc.Addf("error loading precommitted sectors: %v", err)
+		} else {
+			var precommit SectorPreCommitOnChainInfo
+			err = precommitted.ForEach(&precommit, func(key string) error {
+				secNum, err := abi.ParseUIntKey(key)
 				if err != nil {
-					acc.Addf("error checking allocated sectors: %v", err)
+					acc.Addf("error parsing pre-commit key as uint: %v", err)
 					return nil
 				}
-			}
-			acc.Require(allocated, "pre-committed sector number has not been allocated %d", secNum)
 
-			_, found := cleanUpEpochs[secNum]
-			acc.Require(found, "no clean up epoch for pre-commit at %d", precommit.PreCommitEpoch)
+				allocated := false
+				if allocatedSectorsMap != nil {
+					allocated = allocatedSectorsMap[secNum]
+				} else {
+					allocated, err = allocatedSectorsBf.IsSet(secNum)
+					if err != nil {
+						acc.Addf("error checking allocated sectors: %v", err)
+						return nil
+					}
+				}
+				acc.Require(allocated, "pre-committed sector number has not been allocated %d", secNum)
 
-			precommitTotal = big.Add(precommitTotal, precommit.PreCommitDeposit)
-			return nil
-		})
-		acc.RequireNoError(err, "error iterating pre-committed sectors")
+				_, found := cleanUpEpochs[secNum]
+				acc.Require(found, "no clean up epoch for pre-commit at %d", precommit.PreCommitEpoch)
+
+				precommitTotal = big.Add(precommitTotal, precommit.PreCommitDeposit)
+				return nil
+			})
+			acc.RequireNoError(err, "error iterating pre-committed sectors")
+		}
 	}
 
 	acc.Require(st.PreCommitDeposits.Equals(precommitTotal),
