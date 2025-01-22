@@ -47,7 +47,7 @@ type State struct {
 	//
 	// Sectors are removed from this AMT when the partition to which the
 	// sector belongs is compacted.
-	Sectors cid.Cid // Array, AMT[SectorNumber]SectorOnChainInfo (sparse)
+	Sectors cid.Cid // Array, AMT[SectorNumber]*SectorOnChainInfo (sparse)
 
 	// DEPRECATED. This field will change names and no longer be updated every proving period in a future upgrade
 	// The first epoch in this miner's current proving period. This is the first epoch in which a PoSt for a

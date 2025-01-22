@@ -317,6 +317,13 @@ func (sa Sectors) Get(sectorNumber abi.SectorNumber) (info *SectorOnChainInfo, f
 	return &res, true, nil
 }
 
+func (sa Sectors) ForEach(cb func(abi.SectorNumber, *SectorOnChainInfo) error) error {
+	var sector SectorOnChainInfo
+	return sa.Array.ForEach(&sector, func(i int64) error {
+		return cb(abi.SectorNumber(i), &sector)
+	})
+}
+
 // VestingFunds represents the vesting table state for the miner.
 // It is a slice of (VestingEpoch, VestingAmount).
 // The slice will always be sorted by the VestingEpoch.
