@@ -9,6 +9,16 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v16/util/adt"
 )
 
+type TransientDataLifespan struct {
+	Origin abi.ActorID
+	Nonce  uint64
+}
+
+type TransientData struct {
+	TransientDataState    cid.Cid
+	TransientDataLifespan TransientDataLifespan
+}
+
 type Tombstone struct {
 	Origin abi.ActorID
 	Nonce  uint64
@@ -18,6 +28,7 @@ type State struct {
 	Bytecode      cid.Cid
 	BytecodeHash  [32]byte
 	ContractState cid.Cid
+	TransientData *TransientData
 	Nonce         uint64
 	Tombstone     *Tombstone
 }
