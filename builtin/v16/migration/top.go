@@ -90,6 +90,20 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations)+len(deferredCodeIDs), len(oldManifestData.Entries))
 	}
 
+	// The Evm Actor
+
+	newEvmCodeCID, ok := newManifest.Get(manifest.EvmKey)
+	if !ok {
+		return cid.Undef, xerrors.Errorf("code cid for system actor not found in new manifest")
+	}
+
+	migrations[systemActor.Code] = evmMigrator{OutCodeCID: newEvmCodeCID}
+
+	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
+		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations)+len(deferredCodeIDs), len(oldManifestData.Entries))
+	}
+
+	//finalize migration
 	actorsOut, err := migration.RunMigration(ctx, cfg, cache, store, log, actorsIn, migrations)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to run migration: %w", err)
