@@ -8,7 +8,7 @@ import (
 	cbor "github.com/ipfs/go-ipld-cbor"
 	xerrors "golang.org/x/xerrors"
 
-	evm15 "github.com/filecoin-project/go-state-types/builtin/v16/evm"
+	evm15 "github.com/filecoin-project/go-state-types/builtin/v15/evm"
 	evm16 "github.com/filecoin-project/go-state-types/builtin/v16/evm"
 )
 
@@ -20,6 +20,16 @@ type evmMigrator struct {
 
 func (m evmMigrator) MigratedCodeCID() cid.Cid {
 	return m.OutCodeCID
+}
+
+func convertTombstone(t *evm15.Tombstone) *evm16.Tombstone {
+	if t == nil {
+		return nil
+	}
+	return &evm16.Tombstone{
+		Origin: t.Origin,
+		Nonce:  t.Nonce,
+	}
 }
 
 func (m evmMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, in migration.ActorMigrationInput) (*migration.ActorMigrationResult, error) {
@@ -36,7 +46,7 @@ func (m evmMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, in 
 		ContractState: inState.ContractState,
 		Nonce:         inState.Nonce,
 		TransientData: nil, // Add empty TransientData as nil
-		Tombstone:     inState.Tombstone,
+		Tombstone:     convertTombstone(inState.Tombstone),
 	}
 
 	// Store the new state.
