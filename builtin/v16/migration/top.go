@@ -3,9 +3,10 @@ package migration
 import (
 	"context"
 
-	adt16 "github.com/filecoin-project/go-state-types/builtin/v16/util/adt"
+	"github.com/filecoin-project/go-state-types/builtin/v16/util/adt"
 
 	system15 "github.com/filecoin-project/go-state-types/builtin/v13/system"
+	miner16 "github.com/filecoin-project/go-state-types/builtin/v16/miner"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
@@ -24,7 +25,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.Errorf("invalid migration config with %d workers", cfg.MaxWorkers)
 	}
 
-	adtStore := adt16.WrapStore(ctx, store)
+	adtStore := adt.WrapStore(ctx, store)
 
 	// Load input and output state trees
 	actorsIn, err := builtin.LoadTree(adtStore, actorsRootIn)
@@ -67,14 +68,22 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	// Set of prior version code CIDs for actors to defer during iteration, for explicit migration afterwards.
 	deferredCodeIDs := make(map[cid.Cid]struct{})
 
+	miner15Cid := cid.Undef
+
 	for _, oldEntry := range oldManifestData.Entries {
 		newCodeCID, ok := newManifest.Get(oldEntry.Name)
 		if !ok {
 			return cid.Undef, xerrors.Errorf("code cid for %s actor not found in new manifest", oldEntry.Name)
 		}
+		if oldEntry.Name == manifest.MinerKey {
+			miner15Cid = oldEntry.Code
+		}
 		migrations[oldEntry.Code] = migration.CachedMigration(cache, migration.CodeMigrator{OutCodeCID: newCodeCID})
 	}
 
+	if miner15Cid == cid.Undef {
+		return cid.Undef, xerrors.Errorf("could not find miner actor in old manifest")
+	}
 	// migrations that migrate both code and state, override entries in `migrations`
 
 	// The System Actor
@@ -89,6 +98,35 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations)+len(deferredCodeIDs), len(oldManifestData.Entries))
 	}
+
+	var emptyPreCommittedSectorsHamtCid cid.Cid
+	if hamt, err := adt.MakeEmptyMap(adtStore, builtin.DefaultHamtBitwidth); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to create empty precommit clean up amount array: %w", err)
+	} else {
+		if emptyPreCommittedSectorsHamtCid, err = hamt.Root(); err != nil {
+			return cid.Undef, xerrors.Errorf("failed to get root of empty precommit clean up amount array: %w", err)
+		}
+	}
+	var emptyPrecommitCleanUpAmtCid cid.Cid
+	if amt, err := adt.MakeEmptyArray(adtStore, miner16.PrecommitCleanUpAmtBitwidth); err != nil {
+		return cid.Undef, xerrors.Errorf("failed to create empty precommit clean up amount array: %w", err)
+	} else {
+		if emptyPrecommitCleanUpAmtCid, err = amt.Root(); err != nil {
+			return cid.Undef, xerrors.Errorf("failed to get root of empty precommit clean up amount array: %w", err)
+		}
+	}
+
+	miner16Cid, ok := newManifest.Get(manifest.MinerKey)
+	if !ok {
+		return cid.Undef, xerrors.Errorf("code cid for miner actor not found in new manifest")
+	}
+
+	minerMig, err := newMinerMigrator(ctx, store, miner16Cid, emptyPreCommittedSectorsHamtCid, emptyPrecommitCleanUpAmtCid)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to create miner migrator: %w", err)
+	}
+
+	migrations[miner15Cid] = migration.CachedMigration(cache, minerMig)
 
 	actorsOut, err := migration.RunMigration(ctx, cfg, cache, store, log, actorsIn, migrations)
 	if err != nil {

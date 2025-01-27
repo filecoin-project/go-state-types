@@ -35,10 +35,10 @@ type State struct {
 	InitialPledge abi.TokenAmount // Sum of initial pledge requirements of all active sectors
 
 	// Sectors that have been pre-committed but not yet proven.
-	PreCommittedSectors cid.Cid // Map, HAMT[SectorNumber]SectorPreCommitOnChainInfo
+	PreCommittedSectors *cid.Cid // Map, HAMT[SectorNumber]SectorPreCommitOnChainInfo
 
 	// PreCommittedSectorsCleanUp maintains the state required to cleanup expired PreCommittedSectors.
-	PreCommittedSectorsCleanUp cid.Cid // BitFieldQueue (AMT[Epoch]*BitField)
+	PreCommittedSectorsCleanUp *cid.Cid // BitFieldQueue (AMT[Epoch]*BitField)
 
 	// Allocated sector IDs. Sector IDs can never be reused once allocated.
 	AllocatedSectors cid.Cid // BitField
@@ -217,7 +217,11 @@ func (st *State) QuantSpecForDeadline(dlIdx uint64) builtin.QuantSpec {
 }
 
 func (st *State) GetPrecommittedSector(store adt.Store, sectorNo abi.SectorNumber) (*SectorPreCommitOnChainInfo, bool, error) {
-	precommitted, err := adt.AsMap(store, st.PreCommittedSectors, builtin.DefaultHamtBitwidth)
+	if st.PreCommittedSectors == nil {
+		return nil, false, nil
+	}
+
+	precommitted, err := adt.AsMap(store, *st.PreCommittedSectors, builtin.DefaultHamtBitwidth)
 	if err != nil {
 		return nil, false, err
 	}
