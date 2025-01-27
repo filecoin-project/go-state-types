@@ -272,31 +272,32 @@ func LoadExpirationQueue(store adt.Store, root cid.Cid, quant builtin.QuantSpec,
 	}
 	return ExpirationQueue{arr, quant}, nil
 }
+
 func LoadSectors(store adt.Store, root cid.Cid) (Sectors, error) {
 	sectorsArr, err := adt.AsArray(store, root, SectorsAmtBitwidth)
 	if err != nil {
 		return Sectors{}, err
 	}
-	return Sectors{sectorsArr}, nil
+	return Sectors{sectorsArr, store}, nil
 }
 
 // Sectors is a helper type for accessing/modifying a miner's sectors. It's safe
 // to pass this object around as needed.
 type Sectors struct {
 	*adt.Array
+	adt.Store
 }
 
 func (sa Sectors) Load(sectorNos bitfield.BitField) ([]*SectorOnChainInfo, error) {
 	var sectorInfos []*SectorOnChainInfo
 	if err := sectorNos.ForEach(func(i uint64) error {
-		var sectorOnChain SectorOnChainInfo
-		found, err := sa.Array.Get(i, &sectorOnChain)
-		if err != nil {
+		if si, found, err := sa.Get(abi.SectorNumber(i)); err != nil {
 			return xc.ErrIllegalState.Wrapf("failed to load sector %v: %w", abi.SectorNumber(i), err)
 		} else if !found {
 			return xc.ErrNotFound.Wrapf("can't find sector %d", i)
+		} else {
+			sectorInfos = append(sectorInfos, si)
 		}
-		sectorInfos = append(sectorInfos, &sectorOnChain)
 		return nil
 	}); err != nil {
 		// Keep the underlying error code, unless the error was from
@@ -308,13 +309,37 @@ func (sa Sectors) Load(sectorNos bitfield.BitField) ([]*SectorOnChainInfo, error
 }
 
 func (sa Sectors) Get(sectorNumber abi.SectorNumber) (info *SectorOnChainInfo, found bool, err error) {
-	var res SectorOnChainInfo
-	if found, err := sa.Array.Get(uint64(sectorNumber), &res); err != nil {
-		return nil, false, xerrors.Errorf("failed to get sector %d: %w", sectorNumber, err)
+	var c cbg.CborCid
+	if found, err := sa.Array.Get(uint64(sectorNumber), &c); err != nil {
+		return nil, false, xerrors.Errorf("failed to get sector link %d: %w", sectorNumber, err)
 	} else if !found {
 		return nil, false, nil
 	}
+	var res SectorOnChainInfo
+	if err := sa.Store.Get(sa.Store.Context(), cid.Cid(c), &res); err != nil {
+		return nil, false, xerrors.Errorf("failed to load sector %d: %w", sectorNumber, err)
+	}
 	return &res, true, nil
+}
+
+func (sa Sectors) ForEach(cb func(abi.SectorNumber, *SectorOnChainInfo) error) error {
+	var c cbg.CborCid
+	return sa.Array.ForEach(&c, func(i int64) error {
+		var info SectorOnChainInfo
+		if err := sa.Store.Get(sa.Store.Context(), cid.Cid(c), &info); err != nil {
+			return err
+		}
+		return cb(abi.SectorNumber(i), &info)
+	})
+}
+
+func (sa Sectors) Set(sectorNumber abi.SectorNumber, info *SectorOnChainInfo) error {
+	c, err := sa.Store.Put(sa.Store.Context(), info)
+	if err != nil {
+		return xerrors.Errorf("failed to store sector info: %w", err)
+	}
+	cb := cbg.CborCid(c)
+	return sa.Array.Set(uint64(sectorNumber), &cb)
 }
 
 // VestingFunds represents the vesting table state for the miner.
