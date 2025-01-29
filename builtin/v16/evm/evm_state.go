@@ -9,9 +9,10 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v16/util/adt"
 )
 
+// TransientDataLifespan is a structure representing the transient data lifespan.
 type TransientDataLifespan struct {
-	Origin abi.ActorID
-	Nonce  uint64
+	Origin abi.ActorID // The origin actor ID associated with the transient data.
+	Nonce  uint64 // A unique nonce identifying the transaction.
 }
 
 type TransientData struct {
