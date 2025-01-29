@@ -102,7 +102,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 	newEvmCodeCID, ok := newManifest.Get(manifest.EvmKey)
 	if !ok {
-		return cid.Undef, xerrors.Errorf("code cid for system actor not found in new manifest")
+		return cid.Undef, xerrors.Errorf("code cid for evm actor not found in new manifest")
 	}
 
 	migrations[evm15Cid] = migration.CachedMigration(cache, evmMigrator{newEvmCodeCID})
