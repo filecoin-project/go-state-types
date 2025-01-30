@@ -305,6 +305,8 @@ func main() {
 	if err := gen.WriteTupleEncodersToFile("./builtin/v16/evm/cbor_gen.go", "evm",
 		// actor state
 		evm.Tombstone{},
+		evm.TransientDataLifespan{},
+		evm.TransientData{},
 		evm.State{},
 		// method params and returns
 		evm.ConstructorParams{},

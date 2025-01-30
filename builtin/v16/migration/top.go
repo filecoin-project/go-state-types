@@ -67,12 +67,20 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	// Set of prior version code CIDs for actors to defer during iteration, for explicit migration afterwards.
 	deferredCodeIDs := make(map[cid.Cid]struct{})
 
+	evm15Cid := cid.Undef
+
 	for _, oldEntry := range oldManifestData.Entries {
+		if oldEntry.Name == manifest.EvmKey {
+			evm15Cid = oldEntry.Code
+		}
 		newCodeCID, ok := newManifest.Get(oldEntry.Name)
 		if !ok {
 			return cid.Undef, xerrors.Errorf("code cid for %s actor not found in new manifest", oldEntry.Name)
 		}
 		migrations[oldEntry.Code] = migration.CachedMigration(cache, migration.CodeMigrator{OutCodeCID: newCodeCID})
+	}
+	if !evm15Cid.Defined() {
+		return cid.Undef, xerrors.New("didn't find evm actor in old manifest")
 	}
 
 	// migrations that migrate both code and state, override entries in `migrations`
@@ -86,10 +94,20 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 	migrations[systemActor.Code] = systemActorMigrator{OutCodeCID: newSystemCodeCID, ManifestData: newManifest.Data}
 
+	// The Evm Actor
+
+	newEvmCodeCID, ok := newManifest.Get(manifest.EvmKey)
+	if !ok {
+		return cid.Undef, xerrors.Errorf("code cid for evm actor not found in new manifest")
+	}
+
+	migrations[evm15Cid] = migration.CachedMigration(cache, evmMigrator{newEvmCodeCID})
+
 	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations)+len(deferredCodeIDs), len(oldManifestData.Entries))
 	}
 
+	//finalize migration
 	actorsOut, err := migration.RunMigration(ctx, cfg, cache, store, log, actorsIn, migrations)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to run migration: %w", err)

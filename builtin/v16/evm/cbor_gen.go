@@ -102,7 +102,164 @@ func (t *Tombstone) UnmarshalCBOR(r io.Reader) (err error) {
 	return nil
 }
 
-var lengthBufState = []byte{133}
+var lengthBufTransientDataLifespan = []byte{130}
+
+func (t *TransientDataLifespan) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufTransientDataLifespan); err != nil {
+		return err
+	}
+
+	// t.Origin (abi.ActorID) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Origin)); err != nil {
+		return err
+	}
+
+	// t.Nonce (uint64) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Nonce)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *TransientDataLifespan) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = TransientDataLifespan{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Origin (abi.ActorID) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.Origin = abi.ActorID(extra)
+
+	}
+	// t.Nonce (uint64) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.Nonce = uint64(extra)
+
+	}
+	return nil
+}
+
+var lengthBufTransientData = []byte{130}
+
+func (t *TransientData) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufTransientData); err != nil {
+		return err
+	}
+
+	// t.TransientDataState (cid.Cid) (struct)
+
+	if err := cbg.WriteCid(cw, t.TransientDataState); err != nil {
+		return xerrors.Errorf("failed to write cid field t.TransientDataState: %w", err)
+	}
+
+	// t.TransientDataLifespan (evm.TransientDataLifespan) (struct)
+	if err := t.TransientDataLifespan.MarshalCBOR(cw); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *TransientData) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = TransientData{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.TransientDataState (cid.Cid) (struct)
+
+	{
+
+		c, err := cbg.ReadCid(cr)
+		if err != nil {
+			return xerrors.Errorf("failed to read cid field t.TransientDataState: %w", err)
+		}
+
+		t.TransientDataState = c
+
+	}
+	// t.TransientDataLifespan (evm.TransientDataLifespan) (struct)
+
+	{
+
+		if err := t.TransientDataLifespan.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.TransientDataLifespan: %w", err)
+		}
+
+	}
+	return nil
+}
+
+var lengthBufState = []byte{134}
 
 func (t *State) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -141,6 +298,11 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 		return xerrors.Errorf("failed to write cid field t.ContractState: %w", err)
 	}
 
+	// t.TransientData (evm.TransientData) (struct)
+	if err := t.TransientData.MarshalCBOR(cw); err != nil {
+		return err
+	}
+
 	// t.Nonce (uint64) (uint64)
 
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Nonce)); err != nil {
@@ -173,7 +335,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 5 {
+	if extra != 6 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
@@ -220,6 +382,25 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 
 		t.ContractState = c
+
+	}
+	// t.TransientData (evm.TransientData) (struct)
+
+	{
+
+		b, err := cr.ReadByte()
+		if err != nil {
+			return err
+		}
+		if b != cbg.CborNull[0] {
+			if err := cr.UnreadByte(); err != nil {
+				return err
+			}
+			t.TransientData = new(TransientData)
+			if err := t.TransientData.UnmarshalCBOR(cr); err != nil {
+				return xerrors.Errorf("unmarshaling t.TransientData pointer: %w", err)
+			}
+		}
 
 	}
 	// t.Nonce (uint64) (uint64)
