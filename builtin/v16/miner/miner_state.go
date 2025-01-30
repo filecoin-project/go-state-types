@@ -181,7 +181,7 @@ type SectorOnChainInfo struct {
 	ReplacedDayReward     abi.TokenAmount        // Day reward of this sector before its power was most recently updated
 	SectorKeyCID          *cid.Cid               // The original SealedSectorCID, only gets set on the first ReplicaUpdate
 	Flags                 SectorOnChainInfoFlags // Additional flags
-	ProvingPeriodFee      *abi.TokenAmount       // The fee to be burned during each PoSt submission, not present for sectors before nv25
+	ProvingPeriodFee      abi.TokenAmount        // The fee to be burned during each PoSt submission, not present for sectors before nv25
 }
 
 func (st *State) GetInfo(store adt.Store) (*MinerInfo, error) {

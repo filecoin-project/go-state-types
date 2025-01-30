@@ -2023,16 +2023,10 @@ func (t *SectorOnChainInfo) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.ProvingPeriodFee (big.Int) (struct)
-	// Nullable, not present for old SectorOnChainInfo objects, always present for new or updated ones
+	// Not present for old SectorOnChainInfo objects, always present for new or updated ones
 
-	if t.ProvingPeriodFee == nil {
-		if _, err := cw.Write(cbg.CborNull); err != nil {
-			return err
-		}
-	} else {
-		if err := t.ProvingPeriodFee.MarshalCBOR(cw); err != nil {
-			return err
-		}
+	if err := t.ProvingPeriodFee.MarshalCBOR(cw); err != nil {
+		return err
 	}
 
 	return nil
@@ -2322,16 +2316,14 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	// t.ProvingPeriodFee (big.Int) (struct)
-	// Nullable, not present for old SectorOnChainInfo objects, always present for new or updated ones
+	// Not present for old SectorOnChainInfo objects, always present for new or updated ones
 
 	if fieldCount == 16 { // new format
-		t.ProvingPeriodFee = new(big.Int)
 		if err := t.ProvingPeriodFee.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.ProvingPeriodFee: %w", err)
 		}
 	} else {
-		ppf := big.Zero()
-		t.ProvingPeriodFee = &ppf
+		t.ProvingPeriodFee = big.Zero()
 	}
 
 	return nil
