@@ -94,10 +94,6 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 	migrations[systemActor.Code] = systemActorMigrator{OutCodeCID: newSystemCodeCID, ManifestData: newManifest.Data}
 
-	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
-		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations)+len(deferredCodeIDs), len(oldManifestData.Entries))
-	}
-
 	// The Evm Actor
 
 	newEvmCodeCID, ok := newManifest.Get(manifest.EvmKey)
