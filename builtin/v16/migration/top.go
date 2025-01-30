@@ -80,7 +80,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		migrations[oldEntry.Code] = migration.CachedMigration(cache, migration.CodeMigrator{OutCodeCID: newCodeCID})
 	}
 	if !evm15Cid.Defined() {
-		return cid.Undef, xerrors.New("didn't find miner actor in old manifest")
+		return cid.Undef, xerrors.New("didn't find evm actor in old manifest")
 	}
 
 	// migrations that migrate both code and state, override entries in `migrations`
