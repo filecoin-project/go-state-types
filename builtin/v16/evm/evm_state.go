@@ -15,9 +15,10 @@ type TransientDataLifespan struct {
 	Nonce  uint64 // A unique nonce identifying the transaction.
 }
 
+// TransientData is a structure representing Transient Data
 type TransientData struct {
-	TransientDataState    cid.Cid
-	TransientDataLifespan TransientDataLifespan
+	TransientDataState    cid.Cid // The contract transient data state dictionary. Transient Data State is a map of U256 -> U256 values. KAMT<U256, U256>
+	TransientDataLifespan TransientDataLifespan // The data representing the transient data lifespan
 }
 
 type Tombstone struct {
