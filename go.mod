@@ -1,7 +1,6 @@
 module github.com/filecoin-project/go-state-types
 
 go 1.23
-
 retract v0.12.7 // wrongfully skipped a patch version, use v0.12.6 or v0.12.8&^
 
 require (
@@ -20,7 +19,7 @@ require (
 	github.com/multiformats/go-varint v0.0.7
 	github.com/stretchr/testify v1.10.0
 	github.com/whyrusleeping/cbor-gen v0.2.0
-	golang.org/x/crypto v0.33.0
+	golang.org/x/crypto v0.34.0
 	golang.org/x/sync v0.11.0
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da
 )
