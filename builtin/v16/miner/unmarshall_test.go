@@ -10,8 +10,8 @@ import (
 	"github.com/filecoin-project/go-state-types/big"
 )
 
-func TestCborVestingFunds(t *testing.T) {
-	var vf = VestingFunds{
+func TestCborVestingFundsTail(t *testing.T) {
+	var vf = VestingFundsTail{
 		Funds: []VestingFund{
 			{
 				Epoch:  1,
@@ -27,12 +27,12 @@ func TestCborVestingFunds(t *testing.T) {
 	err := vf.MarshalCBOR(buf)
 	require.NoError(t, err)
 
-	// Value taken from builtin-actors test.
-	b := []byte{129, 130, 130, 1, 66, 0, 3, 130, 2, 66, 0, 4}
+	// This encodes as a bare CBOR list (no wrapping struct).
+	b := []byte{130, 130, 1, 66, 0, 3, 130, 2, 66, 0, 4}
 
 	require.Equal(t, b, buf.Bytes())
 
-	var vf2 VestingFunds
+	var vf2 VestingFundsTail
 	err = vf2.UnmarshalCBOR(bytes.NewReader(b))
 	require.NoError(t, err)
 	require.Equal(t, abi.ChainEpoch(1), vf2.Funds[0].Epoch)
