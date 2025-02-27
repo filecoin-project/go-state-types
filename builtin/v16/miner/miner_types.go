@@ -318,23 +318,23 @@ func (sa Sectors) Get(sectorNumber abi.SectorNumber) (info *SectorOnChainInfo, f
 }
 
 // VestingFunds represents the vesting table state for the miner.
-// It is a slice of (VestingEpoch, VestingAmount).
-// The slice will always be sorted by the VestingEpoch.
 type VestingFunds struct {
-	Funds []VestingFund
+	// The next batch of vesting funds.
+	Head VestingFund
+	// The rest of the vesting funds.
+	Tail cid.Cid // VestingFundsTail
+}
+
+// VestingFundTail represents the tail of a vesting funds table in the miner. It's an array of
+// (VestingEpoch, VestingAmount) tuples. The slice will always be sorted by the VestingEpoch.
+type VestingFundsTail struct {
+	Funds []VestingFund `cborgen:"transparent"`
 }
 
 // VestingFund represents miner funds that will vest at the given epoch.
 type VestingFund struct {
 	Epoch  abi.ChainEpoch
 	Amount abi.TokenAmount
-}
-
-// ConstructVestingFunds constructs empty VestingFunds state.
-func ConstructVestingFunds() *VestingFunds {
-	v := new(VestingFunds)
-	v.Funds = nil
-	return v
 }
 
 type DeferredCronEventParams struct {
