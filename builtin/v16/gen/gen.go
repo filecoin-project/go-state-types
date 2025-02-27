@@ -154,6 +154,7 @@ func main() {
 		miner.SectorPreCommitInfo{},
 		miner.SectorOnChainInfo{},
 		miner.WorkerKeyChange{},
+		miner.VestingFundsTail{},
 		miner.VestingFunds{},
 		miner.VestingFund{},
 		miner.WindowedPoSt{},

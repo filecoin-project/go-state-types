@@ -28,7 +28,7 @@ type State struct {
 	PreCommitDeposits abi.TokenAmount // Total funds locked as PreCommitDeposits
 	LockedFunds       abi.TokenAmount // Total rewards and added funds locked in vesting table
 
-	VestingFunds cid.Cid // VestingFunds (Vesting Funds schedule for the miner).
+	VestingFunds *VestingFunds // Vesting Funds schedule for the miner.
 
 	FeeDebt abi.TokenAmount // Absolute value of debt this miner owes from unpaid fees
 
@@ -266,13 +266,17 @@ func (st *State) SaveDeadlines(store adt.Store, deadlines *Deadlines) error {
 }
 
 // LoadVestingFunds loads the vesting funds table from the store
-func (st *State) LoadVestingFunds(store adt.Store) (*VestingFunds, error) {
-	var funds VestingFunds
-	if err := store.Get(store.Context(), st.VestingFunds, &funds); err != nil {
+func (st *State) LoadVestingFunds(store adt.Store) ([]VestingFund, error) {
+	if st.VestingFunds == nil {
+		return nil, nil
+	}
+
+	var tail VestingFundsTail
+	if err := store.Get(store.Context(), st.VestingFunds.Tail, &tail); err != nil {
 		return nil, xerrors.Errorf("failed to load vesting funds (%s): %w", st.VestingFunds, err)
 	}
 
-	return &funds, nil
+	return append([]VestingFund{st.VestingFunds.Head}, tail.Funds...), nil
 }
 
 // CheckVestedFunds returns the amount of vested funds that have vested before the provided epoch.
@@ -284,8 +288,8 @@ func (st *State) CheckVestedFunds(store adt.Store, currEpoch abi.ChainEpoch) (ab
 
 	amountVested := abi.NewTokenAmount(0)
 
-	for i := range vestingFunds.Funds {
-		vf := vestingFunds.Funds[i]
+	for i := range vestingFunds {
+		vf := vestingFunds[i]
 		epoch := vf.Epoch
 		amount := vf.Amount
 
