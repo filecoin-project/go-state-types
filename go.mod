@@ -19,7 +19,7 @@ require (
 	github.com/multiformats/go-multihash v0.2.3
 	github.com/multiformats/go-varint v0.0.7
 	github.com/stretchr/testify v1.10.0
-	github.com/whyrusleeping/cbor-gen v0.2.0
+	github.com/whyrusleeping/cbor-gen v0.3.0
 	golang.org/x/crypto v0.35.0
 	golang.org/x/sync v0.11.0
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da
