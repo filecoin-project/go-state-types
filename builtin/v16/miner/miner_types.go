@@ -252,6 +252,13 @@ type ExpirationSet struct {
 	OnTimePledge  abi.TokenAmount   // Pledge total for the on-time sectors
 	ActivePower   PowerPair         // Power that is currently active (not faulty)
 	FaultyPower   PowerPair         // Power that is currently faulty
+	// Adjustment to the daily fee recorded for the deadline associated with this expiration set
+	// to account for expiring sectors.
+	//
+	// This field is OPTIONAL, meaning that it may present as a nil BigInt (not a nil pointer).
+	// If FeeDeduction.Nil() then it should be treated the same as if it were zero (but cannot be
+	// used in place of a zero value).
+	FeeDeduction abi.TokenAmount `cborgen:"optional"`
 }
 
 // A queue of expiration sets by epoch, representing the on-time or early termination epoch for a collection of sectors.
