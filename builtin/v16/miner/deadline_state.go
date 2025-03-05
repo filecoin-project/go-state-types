@@ -5,6 +5,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/filecoin-project/go-bitfield"
+	abi "github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin/v16/util/adt"
 	xc "github.com/filecoin-project/go-state-types/exitcode"
@@ -76,6 +77,14 @@ type Deadline struct {
 	// These proofs may be disputed via DisputeWindowedPoSt. Successfully
 	// disputed window PoSts are removed from the snapshot.
 	OptimisticPoStSubmissionsSnapshot cid.Cid
+
+	// Memoized sum of all non-terminated power in partitions, including active, faulty, and
+	// unproven. Used to cap the daily fee as a proportion of expected block reward.
+	LivePower PowerPair
+
+	// Memoized sum of daily fee payable to the network for the active sectors
+	// in this deadline.
+	DailyFee abi.TokenAmount
 }
 
 type WindowedPoSt struct {

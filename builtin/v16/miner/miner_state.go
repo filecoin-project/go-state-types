@@ -169,7 +169,7 @@ type SectorOnChainInfo struct {
 	SectorNumber          abi.SectorNumber
 	SealProof             abi.RegisteredSealProof // The seal proof type implies the PoSt proof/s
 	SealedCID             cid.Cid                 // CommR
-	DealIDs               []abi.DealID
+	DeprecatedDealIDs     []abi.DealID
 	Activation            abi.ChainEpoch         // Epoch during which the sector proof was accepted
 	Expiration            abi.ChainEpoch         // Epoch during which the sector expires
 	DealWeight            abi.DealWeight         // Integral of active deals over sector lifetime
@@ -181,6 +181,19 @@ type SectorOnChainInfo struct {
 	ReplacedDayReward     abi.TokenAmount        // Day reward of this sector before its power was most recently updated
 	SectorKeyCID          *cid.Cid               // The original SealedSectorCID, only gets set on the first ReplicaUpdate
 	Flags                 SectorOnChainInfoFlags // Additional flags
+	// The total fee payable per day for this sector. The value of this field is set at the time of
+	// sector activation, extension and whenever a sector's QAP is changed. This fee is payable for
+	// the lifetime of the sector and is aggregated in the deadline's `daily_fee` field.
+	//
+	// This field is not included in the serialised form of the struct prior to the activation of
+	// FIP-0100, and is added as the 16th element of the array after that point only for new sectors
+	// or sectors that are updated after that point. For old sectors, the value of this field will
+	// always be zero.
+	//
+	// This field is OPTIONAL, meaning that it may present as a nil BigInt (not a nil pointer).
+	// If FeeDeduction.Nil() then it should be treated the same as if it were zero (but cannot be
+	// used in place of a zero value).
+	DailyFee abi.TokenAmount `cborgen:"optional"`
 }
 
 func (st *State) GetInfo(store adt.Store) (*MinerInfo, error) {

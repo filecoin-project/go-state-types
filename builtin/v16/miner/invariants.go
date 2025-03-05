@@ -97,7 +97,7 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount) (
 			acc.Require(allocated,
 				"on chain sector's sector number has not been allocated %d", sno)
 
-			for _, dealID := range sector.DealIDs {
+			for _, dealID := range sector.DeprecatedDealIDs {
 				minerSummary.Deals[dealID] = DealSummary{
 					SectorStart:      sector.Activation,
 					SectorExpiration: sector.Expiration,
