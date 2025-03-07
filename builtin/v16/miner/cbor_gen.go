@@ -52,10 +52,9 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.VestingFunds (cid.Cid) (struct)
-
-	if err := cbg.WriteCid(cw, t.VestingFunds); err != nil {
-		return xerrors.Errorf("failed to write cid field t.VestingFunds: %w", err)
+	// t.VestingFunds (miner.VestingFunds) (struct)
+	if err := t.VestingFunds.MarshalCBOR(cw); err != nil {
+		return err
 	}
 
 	// t.FeeDebt (big.Int) (struct)
@@ -180,16 +179,23 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 
 	}
-	// t.VestingFunds (cid.Cid) (struct)
+	// t.VestingFunds (miner.VestingFunds) (struct)
 
 	{
 
-		c, err := cbg.ReadCid(cr)
+		b, err := cr.ReadByte()
 		if err != nil {
-			return xerrors.Errorf("failed to read cid field t.VestingFunds: %w", err)
+			return err
 		}
-
-		t.VestingFunds = c
+		if b != cbg.CborNull[0] {
+			if err := cr.UnreadByte(); err != nil {
+				return err
+			}
+			t.VestingFunds = new(VestingFunds)
+			if err := t.VestingFunds.UnmarshalCBOR(cr); err != nil {
+				return xerrors.Errorf("unmarshaling t.VestingFunds pointer: %w", err)
+			}
+		}
 
 	}
 	// t.FeeDebt (big.Int) (struct)
@@ -880,7 +886,7 @@ func (t *Deadlines) UnmarshalCBOR(r io.Reader) (err error) {
 	return nil
 }
 
-var lengthBufDeadline = []byte{139}
+var lengthBufDeadline = []byte{141}
 
 func (t *Deadline) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -957,6 +963,15 @@ func (t *Deadline) MarshalCBOR(w io.Writer) error {
 		return xerrors.Errorf("failed to write cid field t.OptimisticPoStSubmissionsSnapshot: %w", err)
 	}
 
+	// t.LivePower (miner.PowerPair) (struct)
+	if err := t.LivePower.MarshalCBOR(cw); err != nil {
+		return err
+	}
+
+	// t.DailyFee (big.Int) (struct)
+	if err := t.DailyFee.MarshalCBOR(cw); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -979,7 +994,7 @@ func (t *Deadline) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 11 {
+	if extra != 13 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
@@ -1108,6 +1123,24 @@ func (t *Deadline) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 
 		t.OptimisticPoStSubmissionsSnapshot = c
+
+	}
+	// t.LivePower (miner.PowerPair) (struct)
+
+	{
+
+		if err := t.LivePower.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.LivePower: %w", err)
+		}
+
+	}
+	// t.DailyFee (big.Int) (struct)
+
+	{
+
+		if err := t.DailyFee.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.DailyFee: %w", err)
+		}
 
 	}
 	return nil
@@ -1317,7 +1350,7 @@ func (t *Partition) UnmarshalCBOR(r io.Reader) (err error) {
 	return nil
 }
 
-var lengthBufExpirationSet = []byte{133}
+var lengthBufExpirationSet = []byte{134}
 
 func (t *ExpirationSet) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -1355,6 +1388,11 @@ func (t *ExpirationSet) MarshalCBOR(w io.Writer) error {
 	if err := t.FaultyPower.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
+	// t.FeeDeduction (big.Int) (struct)
+	if err := t.FeeDeduction.MarshalCBOR(cw); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -1377,9 +1415,15 @@ func (t *ExpirationSet) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 5 {
-		return fmt.Errorf("cbor input had wrong number of fields")
+	if extra > 6 {
+		return fmt.Errorf("cbor input has too many fields %d > 6", extra)
 	}
+
+	if extra < 5 {
+		return fmt.Errorf("cbor input has too few fields %d < 5", extra)
+	}
+
+	fieldCount := extra
 
 	// t.OnTimeSectors (bitfield.BitField) (struct)
 
@@ -1423,6 +1467,18 @@ func (t *ExpirationSet) UnmarshalCBOR(r io.Reader) (err error) {
 
 		if err := t.FaultyPower.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.FaultyPower: %w", err)
+		}
+
+	}
+	// t.FeeDeduction (big.Int) (struct)
+	if fieldCount < 6 {
+		return nil
+	}
+
+	{
+
+		if err := t.FeeDeduction.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.FeeDeduction: %w", err)
 		}
 
 	}
@@ -1888,7 +1944,7 @@ func (t *SectorPreCommitInfo) UnmarshalCBOR(r io.Reader) (err error) {
 	return nil
 }
 
-var lengthBufSectorOnChainInfo = []byte{143}
+var lengthBufSectorOnChainInfo = []byte{144}
 
 func (t *SectorOnChainInfo) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -1925,15 +1981,15 @@ func (t *SectorOnChainInfo) MarshalCBOR(w io.Writer) error {
 		return xerrors.Errorf("failed to write cid field t.SealedCID: %w", err)
 	}
 
-	// t.DealIDs ([]abi.DealID) (slice)
-	if len(t.DealIDs) > 8192 {
-		return xerrors.Errorf("Slice value in field t.DealIDs was too long")
+	// t.DeprecatedDealIDs ([]abi.DealID) (slice)
+	if len(t.DeprecatedDealIDs) > 8192 {
+		return xerrors.Errorf("Slice value in field t.DeprecatedDealIDs was too long")
 	}
 
-	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.DealIDs))); err != nil {
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.DeprecatedDealIDs))); err != nil {
 		return err
 	}
-	for _, v := range t.DealIDs {
+	for _, v := range t.DeprecatedDealIDs {
 
 		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
 			return err
@@ -2022,6 +2078,10 @@ func (t *SectorOnChainInfo) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
+	// t.DailyFee (big.Int) (struct)
+	if err := t.DailyFee.MarshalCBOR(cw); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -2044,9 +2104,15 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 15 {
-		return fmt.Errorf("cbor input had wrong number of fields")
+	if extra > 16 {
+		return fmt.Errorf("cbor input has too many fields %d > 16", extra)
 	}
+
+	if extra < 15 {
+		return fmt.Errorf("cbor input has too few fields %d < 15", extra)
+	}
+
+	fieldCount := extra
 
 	// t.SectorNumber (abi.SectorNumber) (uint64)
 
@@ -2099,7 +2165,7 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) (err error) {
 		t.SealedCID = c
 
 	}
-	// t.DealIDs ([]abi.DealID) (slice)
+	// t.DeprecatedDealIDs ([]abi.DealID) (slice)
 
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
@@ -2107,7 +2173,7 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	if extra > 8192 {
-		return fmt.Errorf("t.DealIDs: array too large (%d)", extra)
+		return fmt.Errorf("t.DeprecatedDealIDs: array too large (%d)", extra)
 	}
 
 	if maj != cbg.MajArray {
@@ -2115,7 +2181,7 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	if extra > 0 {
-		t.DealIDs = make([]abi.DealID, extra)
+		t.DeprecatedDealIDs = make([]abi.DealID, extra)
 	}
 
 	for i := 0; i < int(extra); i++ {
@@ -2136,7 +2202,7 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) (err error) {
 				if maj != cbg.MajUnsignedInt {
 					return fmt.Errorf("wrong type for uint64 field")
 				}
-				t.DealIDs[i] = abi.DealID(extra)
+				t.DeprecatedDealIDs[i] = abi.DealID(extra)
 
 			}
 
@@ -2307,6 +2373,18 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) (err error) {
 		t.Flags = SectorOnChainInfoFlags(extra)
 
 	}
+	// t.DailyFee (big.Int) (struct)
+	if fieldCount < 16 {
+		return nil
+	}
+
+	{
+
+		if err := t.DailyFee.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.DailyFee: %w", err)
+		}
+
+	}
 	return nil
 }
 
@@ -2403,19 +2481,8 @@ func (t *WorkerKeyChange) UnmarshalCBOR(r io.Reader) (err error) {
 	return nil
 }
 
-var lengthBufVestingFunds = []byte{129}
-
-func (t *VestingFunds) MarshalCBOR(w io.Writer) error {
-	if t == nil {
-		_, err := w.Write(cbg.CborNull)
-		return err
-	}
-
+func (t *VestingFundsTail) MarshalCBOR(w io.Writer) error {
 	cw := cbg.NewCborWriter(w)
-
-	if _, err := cw.Write(lengthBufVestingFunds); err != nil {
-		return err
-	}
 
 	// t.Funds ([]miner.VestingFund) (slice)
 	if len(t.Funds) > 8192 {
@@ -2434,29 +2501,14 @@ func (t *VestingFunds) MarshalCBOR(w io.Writer) error {
 	return nil
 }
 
-func (t *VestingFunds) UnmarshalCBOR(r io.Reader) (err error) {
-	*t = VestingFunds{}
+func (t *VestingFundsTail) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = VestingFundsTail{}
 
 	cr := cbg.NewCborReader(r)
-
-	maj, extra, err := cr.ReadHeader()
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if err == io.EOF {
-			err = io.ErrUnexpectedEOF
-		}
-	}()
-
-	if maj != cbg.MajArray {
-		return fmt.Errorf("cbor input should be of type array")
-	}
-
-	if extra != 1 {
-		return fmt.Errorf("cbor input had wrong number of fields")
-	}
-
+	var maj byte
+	var extra uint64
+	_ = maj
+	_ = extra
 	// t.Funds ([]miner.VestingFund) (slice)
 
 	maj, extra, err = cr.ReadHeader()
@@ -2494,6 +2546,81 @@ func (t *VestingFunds) UnmarshalCBOR(r io.Reader) (err error) {
 			}
 
 		}
+	}
+	return nil
+}
+
+var lengthBufVestingFunds = []byte{130}
+
+func (t *VestingFunds) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufVestingFunds); err != nil {
+		return err
+	}
+
+	// t.Head (miner.VestingFund) (struct)
+	if err := t.Head.MarshalCBOR(cw); err != nil {
+		return err
+	}
+
+	// t.Tail (cid.Cid) (struct)
+
+	if err := cbg.WriteCid(cw, t.Tail); err != nil {
+		return xerrors.Errorf("failed to write cid field t.Tail: %w", err)
+	}
+
+	return nil
+}
+
+func (t *VestingFunds) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = VestingFunds{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Head (miner.VestingFund) (struct)
+
+	{
+
+		if err := t.Head.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.Head: %w", err)
+		}
+
+	}
+	// t.Tail (cid.Cid) (struct)
+
+	{
+
+		c, err := cbg.ReadCid(cr)
+		if err != nil {
+			return xerrors.Errorf("failed to read cid field t.Tail: %w", err)
+		}
+
+		t.Tail = c
+
 	}
 	return nil
 }

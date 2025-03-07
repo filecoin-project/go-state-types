@@ -750,7 +750,7 @@ func CheckMinerBalances(st *State, store adt.Store, balance abi.TokenAmount, acc
 		acc.Addf("error loading vesting funds: %v", err)
 	} else {
 		quant := st.QuantSpecEveryDeadline()
-		for _, entry := range funds.Funds {
+		for _, entry := range funds {
 			acc.Require(entry.Amount.GreaterThan(big.Zero()), "non-positive amount in miner vesting table entry %v", entry)
 			vestingSum = big.Add(vestingSum, entry.Amount)
 

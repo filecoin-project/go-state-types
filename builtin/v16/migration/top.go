@@ -68,10 +68,14 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	deferredCodeIDs := make(map[cid.Cid]struct{})
 
 	evm15Cid := cid.Undef
+	miner15Cid := cid.Undef
 
 	for _, oldEntry := range oldManifestData.Entries {
 		if oldEntry.Name == manifest.EvmKey {
 			evm15Cid = oldEntry.Code
+		}
+		if oldEntry.Name == manifest.MinerKey {
+			miner15Cid = oldEntry.Code
 		}
 		newCodeCID, ok := newManifest.Get(oldEntry.Name)
 		if !ok {
@@ -102,6 +106,15 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 
 	migrations[evm15Cid] = migration.CachedMigration(cache, evmMigrator{newEvmCodeCID})
+
+	// The Miner Actor
+
+	newMinerCodeCID, ok := newManifest.Get(manifest.MinerKey)
+	if !ok {
+		return cid.Undef, xerrors.Errorf("code cid for miner actor not found in new manifest")
+	}
+
+	migrations[miner15Cid] = migration.CachedMigration(cache, &minerMigrator{newMinerCodeCID})
 
 	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations)+len(deferredCodeIDs), len(oldManifestData.Entries))

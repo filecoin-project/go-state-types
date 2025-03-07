@@ -239,13 +239,13 @@ func (st *State) SaveDeadlines(store adt.Store, deadlines *Deadlines) error {
 }
 
 // LoadVestingFunds loads the vesting funds table from the store
-func (st *State) LoadVestingFunds(store adt.Store) (*VestingFunds, error) {
+func (st *State) LoadVestingFunds(store adt.Store) ([]VestingFund, error) {
 	var funds VestingFunds
 	if err := store.Get(store.Context(), st.VestingFunds, &funds); err != nil {
 		return nil, xerrors.Errorf("failed to load vesting funds (%s): %w", st.VestingFunds, err)
 	}
 
-	return &funds, nil
+	return funds.Funds, nil
 }
 
 // CheckVestedFunds returns the amount of vested funds that have vested before the provided epoch.
@@ -257,8 +257,8 @@ func (st *State) CheckVestedFunds(store adt.Store, currEpoch abi.ChainEpoch) (ab
 
 	amountVested := abi.NewTokenAmount(0)
 
-	for i := range vestingFunds.Funds {
-		vf := vestingFunds.Funds[i]
+	for i := range vestingFunds {
+		vf := vestingFunds[i]
 		epoch := vf.Epoch
 		amount := vf.Amount
 
