@@ -179,6 +179,7 @@ func CheckDeadlineStateInvariants(deadline *Deadline, store adt.Store, quant bui
 	allLivePower := NewPowerPairZero()
 	allActivePower := NewPowerPairZero()
 	allFaultyPower := NewPowerPairZero()
+	allDailyFee := big.Zero()
 
 	// Check partitions.
 	partitionsWithExpirations := map[abi.ChainEpoch][]uint64{}
@@ -220,6 +221,7 @@ func CheckDeadlineStateInvariants(deadline *Deadline, store adt.Store, quant bui
 		allLivePower = allLivePower.Add(summary.LivePower)
 		allActivePower = allActivePower.Add(summary.ActivePower)
 		allFaultyPower = allFaultyPower.Add(summary.FaultyPower)
+		allDailyFee = big.Add(allDailyFee, summary.DailyFee)
 		return nil
 	})
 	acc.RequireNoError(err, "error iterating partitions")
@@ -318,6 +320,8 @@ func CheckDeadlineStateInvariants(deadline *Deadline, store adt.Store, quant bui
 	}
 
 	acc.Require(deadline.FaultyPower.Equals(allFaultyPower), "deadline faulty power %v != partitions total %v", deadline.FaultyPower, allFaultyPower)
+	acc.Require(deadline.LivePower.Equals(allLivePower), "deadline live power %v != partitions total %v", deadline.LivePower, allLivePower)
+	acc.Require(deadline.DailyFee.Equals(allDailyFee), "deadline daily fee %v != partitions total %v", deadline.DailyFee, allDailyFee)
 
 	{
 		// Validate partition expiration queue contains an entry for each partition and epoch with an expiration.
@@ -373,6 +377,7 @@ type PartitionStateSummary struct {
 	ActivePower           PowerPair
 	FaultyPower           PowerPair
 	RecoveringPower       PowerPair
+	DailyFee              abi.TokenAmount
 	ExpirationEpochs      []abi.ChainEpoch // Epochs at which some sector is scheduled to expire.
 	EarlyTerminationCount int
 }
@@ -490,11 +495,13 @@ func CheckPartitionStateInvariants(
 
 	// Validate the expiration queue.
 	var expirationEpochs []abi.ChainEpoch
+	feeDeduction := big.Zero()
 	if expQ, err := LoadExpirationQueue(store, partition.ExpirationsEpochs, quant, PartitionExpirationAmtBitwidth); err != nil {
 		acc.Addf("error loading expiration queue: %v", err)
 	} else if liveSectors != nil {
 		qsummary := CheckExpirationQueue(expQ, liveSectors, partition.Faults, quant, sectorSize, acc)
 		expirationEpochs = qsummary.ExpirationEpochs
+		feeDeduction = qsummary.FeeDeduction
 
 		// Check the queue is compatible with partition fields
 		if qSectors, err := bitfield.MergeBitFields(qsummary.OnTimeSectors, qsummary.EarlySectors); err != nil {
@@ -525,6 +532,7 @@ func CheckPartitionStateInvariants(
 		RecoveringPower:       partition.RecoveringPower,
 		ExpirationEpochs:      expirationEpochs,
 		EarlyTerminationCount: earlyTerminationCount,
+		DailyFee:              feeDeduction,
 	}
 }
 
@@ -534,6 +542,7 @@ type ExpirationQueueStateSummary struct {
 	ActivePower      PowerPair
 	FaultyPower      PowerPair
 	OnTimePledge     abi.TokenAmount
+	FeeDeduction     abi.TokenAmount
 	ExpirationEpochs []abi.ChainEpoch
 }
 
@@ -553,6 +562,7 @@ func CheckExpirationQueue(expQ ExpirationQueue, liveSectors map[abi.SectorNumber
 	allActivePower := NewPowerPairZero()
 	allFaultyPower := NewPowerPairZero()
 	allOnTimePledge := big.Zero()
+	allFeeDeduction := big.Zero()
 	firstQueueEpoch := abi.ChainEpoch(-1)
 	var exp ExpirationSet
 	err = expQ.ForEach(&exp, func(e int64) error {
@@ -563,6 +573,7 @@ func CheckExpirationQueue(expQ ExpirationQueue, liveSectors map[abi.SectorNumber
 		}
 		expirationEpochs = append(expirationEpochs, epoch)
 
+		dailyFee := big.Zero()
 		onTimeSectorsPledge := big.Zero()
 		err := exp.OnTimeSectors.ForEach(func(n uint64) error {
 			sno := abi.SectorNumber(n)
@@ -579,6 +590,7 @@ func CheckExpirationQueue(expQ ExpirationQueue, liveSectors map[abi.SectorNumber
 					epoch, sector.SectorNumber, firstQueueEpoch, target)
 
 				onTimeSectorsPledge = big.Add(onTimeSectorsPledge, sector.InitialPledge)
+				dailyFee = big.Add(dailyFee, sector.DailyFee)
 			} else {
 				acc.Addf("on-time expiration sector %d isn't live", n)
 			}
@@ -600,6 +612,7 @@ func CheckExpirationQueue(expQ ExpirationQueue, liveSectors map[abi.SectorNumber
 				target := quant.QuantizeUp(sector.Expiration)
 				acc.Require(epoch < target, "invalid early expiration %d for sector %d, expected < %d",
 					epoch, sector.SectorNumber, target)
+				dailyFee = big.Add(dailyFee, sector.DailyFee)
 			} else {
 				acc.Addf("on-time expiration sector %d isn't live", n)
 			}
@@ -649,12 +662,14 @@ func CheckExpirationQueue(expQ ExpirationQueue, liveSectors map[abi.SectorNumber
 		}
 
 		acc.Require(exp.OnTimePledge.Equals(onTimeSectorsPledge), "on time pledge recorded %v doesn't match computed %v", exp.OnTimePledge, onTimeSectorsPledge)
+		acc.Require(exp.FeeDeduction.Equals(dailyFee), "daily fee recorded %v doesn't match computed %v", exp.FeeDeduction, dailyFee)
 
 		allOnTime = append(allOnTime, exp.OnTimeSectors)
 		allEarly = append(allEarly, exp.EarlySectors)
 		allActivePower = allActivePower.Add(exp.ActivePower)
 		allFaultyPower = allFaultyPower.Add(exp.FaultyPower)
 		allOnTimePledge = big.Add(allOnTimePledge, exp.OnTimePledge)
+		allFeeDeduction = big.Add(allFeeDeduction, exp.FeeDeduction)
 		return nil
 	})
 	acc.RequireNoError(err, "error iterating expiration queue")
@@ -675,6 +690,7 @@ func CheckExpirationQueue(expQ ExpirationQueue, liveSectors map[abi.SectorNumber
 		ActivePower:      allActivePower,
 		FaultyPower:      allFaultyPower,
 		OnTimePledge:     allOnTimePledge,
+		FeeDeduction:     allFeeDeduction,
 		ExpirationEpochs: expirationEpochs,
 	}
 }
