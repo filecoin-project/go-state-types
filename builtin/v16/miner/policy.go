@@ -141,6 +141,26 @@ const MinSectorExpiration = 180 * builtin.EpochsInDay // PARAM_SPEC
 // the associated seal proof's maximum lifetime.
 const MaxSectorExpirationExtension = 1278 * builtin.EpochsInDay // PARAM_SPEC
 
+// Numerator of the fraction of circulating supply that will be used to calculate
+// the daily fee for new sectors.
+const DailyFeeCirculatingSupplyQAPMultiplierNum = 21536
+
+// Denominator of the fraction of circulating supply that will be used to calculate
+// the daily fee for new sectors.
+var DailyFeeCirculatingSupplyQAPMultiplierDenom = (func() big.Int {
+	bi, err := big.FromString("100000000000000000000000000000")
+	if err != nil {
+		panic(err)
+	}
+	return bi
+})()
+
+// Denominator for the fraction of estimated daily block reward for the sector(s)
+// attracting a fee, to be used as a cap for the fees when payable.
+// No numerator is provided as the fee is calculated as a fraction of the estimated
+// daily block reward.
+const DailyFeeBlockRewardCapDenom = 2
+
 // QualityForWeight calculates the quality of a sector with the given size, duration, and verified weight.
 // VerifiedDealWeight is spacetime occupied by verified pieces in a sector.
 // VerifiedDealWeight should be less than or equal to total SpaceTime of a sector.
@@ -195,4 +215,12 @@ func QAPowerMax(size abi.SectorSize) abi.StoragePower {
 	return big.Div(
 		big.Mul(big.NewInt(int64(size)), builtin.VerifiedDealWeightMultiplier),
 		builtin.QualityBaseMultiplier)
+}
+
+// DailyProofFee calculates the daily fee for a sector's quality-adjusted power based on the current
+// circulating supply.
+func DailyProofFee(circulatingSupply abi.TokenAmount, qaPower abi.StoragePower) abi.TokenAmount {
+	numerator := big.NewInt(DailyFeeCirculatingSupplyQAPMultiplierNum)
+	result := big.Mul(big.Mul(numerator, qaPower), circulatingSupply)
+	return big.Div(result, DailyFeeCirculatingSupplyQAPMultiplierDenom)
 }
