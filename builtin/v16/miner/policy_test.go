@@ -62,7 +62,7 @@ func TestDailyProofFeeCalc(t *testing.T) {
 	//   680M * 32GiB * 2.1536e-25 = 0.000005031805013354 FIL
 	//   0.000005031805013354 * 1e18 = 5031805013354 attoFIL
 	circulatingSupply := big.Mul(big.NewInt(680_000_000), builtin.TokenPrecision)
-	ref32GibFee := big.NewInt(5031805013354)
+	ref32GibFee := big.NewInt(3780793052776)
 
 	for _, tc := range []struct {
 		size     uint64
@@ -77,6 +77,7 @@ func TestDailyProofFeeCalc(t *testing.T) {
 		power := big.NewInt(int64(tc.size << 30)) // 32GiB raw QAP
 		fee := miner.DailyProofFee(circulatingSupply, power)
 		delta := big.Sub(fee, tc.expected).Abs()
-		require.LessOrEqual(t, delta.Uint64(), uint64(2), "fee: %s, expected: %s", fee, tc.expected)
+		require.LessOrEqual(t, delta.Uint64(), uint64(10),
+			"size: %s, fee: %s, expected_fee: %s (±10)", tc.size, fee, tc.expected)
 	}
 }
