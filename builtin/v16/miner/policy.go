@@ -143,12 +143,17 @@ const MaxSectorExpirationExtension = 1278 * builtin.EpochsInDay // PARAM_SPEC
 
 // Numerator of the fraction of circulating supply that will be used to calculate
 // the daily fee for new sectors.
-const DailyFeeCirculatingSupplyQAPMultiplierNum = 21536
+//
+//	5.56e-15 / 32GiB = 5.56e-15 / (32 * 2^30) = 5.56e-15 / 34,359,738,368 ≈ 1.61817e-25
+//
+// (i.e. slightly rounded for simplicity and a more direct multiplication).
+// We implement this as 161817e-30.
+const DailyFeeCirculatingSupplyQAPMultiplierNum = 161817
 
 // Denominator of the fraction of circulating supply that will be used to calculate
 // the daily fee for new sectors.
 var DailyFeeCirculatingSupplyQAPMultiplierDenom = (func() big.Int {
-	bi, err := big.FromString("100000000000000000000000000000")
+	bi, err := big.FromString("1000000000000000000000000000000") // 10^30
 	if err != nil {
 		panic(err)
 	}
