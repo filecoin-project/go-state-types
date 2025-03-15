@@ -27,7 +27,7 @@ const CronQueueHamtBitwidth = 6
 const CronQueueAmtBitwidth = 6
 
 // Bitwidth of ProofValidationBatch AMT determined empirically from mutation
-// pattersn and projections of mainnet data.
+// patterns and projections of mainnet data.
 const ProofValidationBatchAmtBitwidth = 4
 
 // The number of miners that must meet the consensus minimum miner power before that minimum power is enforced
