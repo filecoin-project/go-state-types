@@ -42,7 +42,7 @@ func PositiveFromUnsignedBytes(b []byte) Int {
 }
 
 // MustFromString convers dec string into big integer and panics if conversion
-// is not sucessful.
+// is not successful.
 func MustFromString(s string) Int {
 	v, err := FromString(s)
 	if err != nil {
