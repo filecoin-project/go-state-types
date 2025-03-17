@@ -115,15 +115,15 @@ func TestSectorOnChainInfo(t *testing.T) {
 				DealWeight:            zero,
 				VerifiedDealWeight:    zero,
 				InitialPledge:         zero,
-				ExpectedDayReward:     zero,
-				ExpectedStoragePledge: zero,
-				ReplacedDayReward:     zero,
+				ExpectedDayReward:     nil,
+				ExpectedStoragePledge: nil,
+				ReplacedDayReward:     nil,
 				DailyFee:              zero,
 			},
-			// [0,-1,{"/":"baeaaaaa"},[],0,0,[],[],[],[],[],0,[],null,0,[]]
-			readHex: "900020d82a45000100000080000040404040400040f60040",
+			// [0,-1,{"/":"baeaaaaa"},[],0,0,[],[],[],null,null,0,null,null,0,[]]
+			readHex: "900020d82a450001000000800000404040f6f600f6f60040",
 			// same on write as read
-			writeHex: "900020d82a45000100000080000040404040400040f60040",
+			writeHex: "900020d82a450001000000800000404040f6f600f6f60040",
 		},
 		{
 			sector: SectorOnChainInfo{
@@ -136,18 +136,18 @@ func TestSectorOnChainInfo(t *testing.T) {
 				DealWeight:            big.NewInt(4),
 				VerifiedDealWeight:    big.NewInt(5),
 				InitialPledge:         filWhole(6),
-				ExpectedDayReward:     filWhole(7),
-				ExpectedStoragePledge: filWhole(8),
+				ExpectedDayReward:     nil,
+				ExpectedStoragePledge: nil,
 				PowerBaseEpoch:        9,
-				ReplacedDayReward:     filWhole(10),
+				ReplacedDayReward:     nil,
 				SectorKeyCID:          nil,
 				Flags:                 0,
 				DailyFee:              filWhole(11),
 			},
-			// '[1,8,{"/":"bagboea4seaaqa"},[],2,3,[AAQ],[AAU],[AFNESDXsWAAA],[AGEk/umTvAAA],[AG8FtZ07IAAA],9,[AIrHIwSJ6AAA],null,0,[AJin2bgxTAAA]]'
-			readHex: "900108d82a49000182e20392200100800203420004420005490053444835ec58000049006124fee993bc000049006f05b59d3b2000000949008ac7230489e80000f600490098a7d9b8314c0000",
+			// '[1,8,{"/":"bagboea4seaaqa"},[],2,3,[AAQ],[AAU],[AFNESDXsWAAA],null,null,9,null,null,0,[AJin2bgxTAAA]]'
+			readHex: "900108d82a49000182e20392200100800203420004420005490053444835ec580000f6f609f6f600490098a7d9b8314c0000",
 			// same on write as read
-			writeHex: "900108d82a49000182e20392200100800203420004420005490053444835ec58000049006124fee993bc000049006f05b59d3b2000000949008ac7230489e80000f600490098a7d9b8314c0000",
+			writeHex: "900108d82a49000182e20392200100800203420004420005490053444835ec580000f6f609f6f600490098a7d9b8314c0000",
 		},
 		{
 			sector: SectorOnChainInfo{
@@ -160,18 +160,18 @@ func TestSectorOnChainInfo(t *testing.T) {
 				DealWeight:            big.NewInt(4),
 				VerifiedDealWeight:    big.NewInt(5),
 				InitialPledge:         filWhole(6),
-				ExpectedDayReward:     filWhole(7),
-				ExpectedStoragePledge: filWhole(8),
+				ExpectedDayReward:     nil,
+				ExpectedStoragePledge: nil,
 				PowerBaseEpoch:        9,
-				ReplacedDayReward:     filWhole(10),
+				ReplacedDayReward:     nil,
 				SectorKeyCID:          &sectorKey,
 				Flags:                 SIMPLE_QA_POWER,
 				DailyFee:              filWhole(11),
 			},
-			// [1,8,{"/":"bagboea4seaaqa"},[],2,3,[AAQ],[AAU],[AFNESDXsWAAA],[AGEk/umTvAAA],[AG8FtZ07IAAA],9,[AIrHIwSJ6AAA],{"/":"baga6ea4seaaqc"},1,[AJin2bgxTAAA]]
-			readHex: "900108d82a49000182e20392200100800203420004420005490053444835ec58000049006124fee993bc000049006f05b59d3b2000000949008ac7230489e80000d82a49000181e2039220010101490098a7d9b8314c0000",
+			// [1,8,{"/":"bagboea4seaaqa"},[],2,3,[AAQ],[AAU],[AFNESDXsWAAA],null,null,9,null,{"/":"baga6ea4seaaqc"},1,[AJin2bgxTAAA]]
+			readHex: "900108d82a49000182e20392200100800203420004420005490053444835ec580000f6f609f6d82a49000181e2039220010101490098a7d9b8314c0000",
 			// same on write as read
-			writeHex: "900108d82a49000182e20392200100800203420004420005490053444835ec58000049006124fee993bc000049006f05b59d3b2000000949008ac7230489e80000d82a49000181e2039220010101490098a7d9b8314c0000",
+			writeHex: "900108d82a49000182e20392200100800203420004420005490053444835ec580000f6f609f6d82a49000181e2039220010101490098a7d9b8314c0000",
 		},
 		{
 			// old format stored on chain but materialised as the new format with a default value at the end
@@ -185,19 +185,19 @@ func TestSectorOnChainInfo(t *testing.T) {
 				DealWeight:            big.NewInt(4),
 				VerifiedDealWeight:    big.NewInt(5),
 				InitialPledge:         filWhole(6),
-				ExpectedDayReward:     filWhole(7),
-				ExpectedStoragePledge: filWhole(8),
+				ExpectedDayReward:     nil,
+				ExpectedStoragePledge: nil,
 				PowerBaseEpoch:        9,
-				ReplacedDayReward:     filWhole(10),
+				ReplacedDayReward:     nil,
 				SectorKeyCID:          nil,
 				Flags:                 SIMPLE_QA_POWER,
 				DailyFee:              big.Int{}, // default, not present in the binary
 			},
-			// [1,9,{"/":"bagboea4seaaqa"},[],2,3,[AAQ],[AAU],[AFNESDXsWAAA],[AGEk/umTvAAA],[AG8FtZ07IAAA],9,[AIrHIwSJ6AAA],null,1]
-			readHex: "8f0109d82a49000182e20392200100800203420004420005490053444835ec58000049006124fee993bc000049006f05b59d3b2000000949008ac7230489e80000f601",
+			// [1,9,{"/":"bagboea4seaaqa"},[],2,3,[AAQ],[AAU],[AFNESDXsWAAA],null,null,9,null,null,1]
+			readHex: "8f0109d82a49000182e20392200100800203420004420005490053444835ec580000f6f609f6f601",
 			// extra field at the end on write, zero BigInt (bytes) for daily_fee
-			// [1,9,{"/":"bagboea4seaaqa"},[],2,3,[AAQ],[AAU],[AFNESDXsWAAA],[AGEk/umTvAAA],[AG8FtZ07IAAA],9,[AIrHIwSJ6AAA],null,1,[]]
-			writeHex: "900109d82a49000182e20392200100800203420004420005490053444835ec58000049006124fee993bc000049006f05b59d3b2000000949008ac7230489e80000f60140",
+			// [1,9,{"/":"bagboea4seaaqa"},[],2,3,[AAQ],[AAU],[AFNESDXsWAAA],null,null,9,null,null,1,[]]
+			writeHex: "900109d82a49000182e20392200100800203420004420005490053444835ec580000f6f609f6f60140",
 		},
 	}
 

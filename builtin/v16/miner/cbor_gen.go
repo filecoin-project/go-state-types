@@ -10,6 +10,7 @@ import (
 
 	address "github.com/filecoin-project/go-address"
 	abi "github.com/filecoin-project/go-state-types/abi"
+	big "github.com/filecoin-project/go-state-types/big"
 	verifreg "github.com/filecoin-project/go-state-types/builtin/v16/verifreg"
 	proof "github.com/filecoin-project/go-state-types/proof"
 	cid "github.com/ipfs/go-cid"
@@ -2289,8 +2290,18 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) (err error) {
 
 	{
 
-		if err := t.ExpectedDayReward.UnmarshalCBOR(cr); err != nil {
-			return xerrors.Errorf("unmarshaling t.ExpectedDayReward: %w", err)
+		b, err := cr.ReadByte()
+		if err != nil {
+			return err
+		}
+		if b != cbg.CborNull[0] {
+			if err := cr.UnreadByte(); err != nil {
+				return err
+			}
+			t.ExpectedDayReward = new(big.Int)
+			if err := t.ExpectedDayReward.UnmarshalCBOR(cr); err != nil {
+				return xerrors.Errorf("unmarshaling t.ExpectedDayReward pointer: %w", err)
+			}
 		}
 
 	}
@@ -2298,8 +2309,18 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) (err error) {
 
 	{
 
-		if err := t.ExpectedStoragePledge.UnmarshalCBOR(cr); err != nil {
-			return xerrors.Errorf("unmarshaling t.ExpectedStoragePledge: %w", err)
+		b, err := cr.ReadByte()
+		if err != nil {
+			return err
+		}
+		if b != cbg.CborNull[0] {
+			if err := cr.UnreadByte(); err != nil {
+				return err
+			}
+			t.ExpectedStoragePledge = new(big.Int)
+			if err := t.ExpectedStoragePledge.UnmarshalCBOR(cr); err != nil {
+				return xerrors.Errorf("unmarshaling t.ExpectedStoragePledge pointer: %w", err)
+			}
 		}
 
 	}
@@ -2332,8 +2353,18 @@ func (t *SectorOnChainInfo) UnmarshalCBOR(r io.Reader) (err error) {
 
 	{
 
-		if err := t.ReplacedDayReward.UnmarshalCBOR(cr); err != nil {
-			return xerrors.Errorf("unmarshaling t.ReplacedDayReward: %w", err)
+		b, err := cr.ReadByte()
+		if err != nil {
+			return err
+		}
+		if b != cbg.CborNull[0] {
+			if err := cr.UnreadByte(); err != nil {
+				return err
+			}
+			t.ReplacedDayReward = new(big.Int)
+			if err := t.ReplacedDayReward.UnmarshalCBOR(cr); err != nil {
+				return xerrors.Errorf("unmarshaling t.ReplacedDayReward pointer: %w", err)
+			}
 		}
 
 	}

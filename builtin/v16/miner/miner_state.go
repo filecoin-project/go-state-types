@@ -175,10 +175,10 @@ type SectorOnChainInfo struct {
 	DealWeight            abi.DealWeight         // Integral of active deals over sector lifetime
 	VerifiedDealWeight    abi.DealWeight         // Integral of active verified deals over sector lifetime
 	InitialPledge         abi.TokenAmount        // Pledge collected to commit this sector
-	ExpectedDayReward     abi.TokenAmount        // Expected one day projection of reward for sector computed at activation time
-	ExpectedStoragePledge abi.TokenAmount        // Expected twenty day projection of reward for sector computed at activation time
+	ExpectedDayReward     *abi.TokenAmount       // Expected one day projection of reward for sector computed at activation time
+	ExpectedStoragePledge *abi.TokenAmount       // Expected twenty day projection of reward for sector computed at activation time
 	PowerBaseEpoch        abi.ChainEpoch         // Epoch at which this sector's power was most recently updated
-	ReplacedDayReward     abi.TokenAmount        // Day reward of this sector before its power was most recently updated
+	ReplacedDayReward     *abi.TokenAmount       // Day reward of this sector before its power was most recently updated
 	SectorKeyCID          *cid.Cid               // The original SealedSectorCID, only gets set on the first ReplicaUpdate
 	Flags                 SectorOnChainInfoFlags // Additional flags
 	// The total fee payable per day for this sector. The value of this field is set at the time of
