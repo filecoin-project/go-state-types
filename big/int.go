@@ -285,6 +285,11 @@ func (bi *Int) UnmarshalBinary(buf []byte) error {
 }
 
 func (bi *Int) MarshalCBOR(w io.Writer) error {
+	if bi == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
 	if bi.Int == nil {
 		zero := Zero()
 		return zero.MarshalCBOR(w)
