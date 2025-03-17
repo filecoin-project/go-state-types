@@ -5,7 +5,7 @@ import "math/big"
 // note: all coefficients for which Polyval is used would need to be updated if this precision changes
 const Precision128 = 128
 
-// polyval evaluates a polynomial given by coefficients `p` in Q.128 format
+// Polyval evaluates a polynomial given by coefficients `p` in Q.128 format
 // at point `x` in Q.128 format. Output is in Q.128.
 // Coefficients should be ordered from the highest order coefficient to the lowest.
 func Polyval(p []*big.Int, x *big.Int) *big.Int {
