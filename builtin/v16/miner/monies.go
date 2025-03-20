@@ -10,12 +10,12 @@ import (
 
 // Projection period of expected sector block reward for deposit required to pre-commit a sector.
 // This deposit is lost if the pre-commitment is not timely followed up by a commitment proof.
-var PreCommitDepositFactor = 20 // PARAM_SPEC
+var PreCommitDepositFactor = 20
 var PreCommitDepositProjectionPeriod = abi.ChainEpoch(PreCommitDepositFactor) * builtin.EpochsInDay
 
 // Projection period of expected sector block rewards for storage pledge required to commit a sector.
 // This pledge is lost if a sector is terminated before its full committed lifetime.
-var InitialPledgeFactor = 20 // PARAM_SPEC
+var InitialPledgeFactor = 20
 var InitialPledgeProjectionPeriod = abi.ChainEpoch(InitialPledgeFactor) * builtin.EpochsInDay
 
 // Cap on initial pledge requirement for sectors.
@@ -26,7 +26,7 @@ var InitialPledgeMaxPerByte = big.Div(big.NewInt(1e18), big.NewInt(32<<30))
 // Multiplier of share of circulating money supply for consensus pledge required to commit a sector.
 // This pledge is lost if a sector is terminated before its full committed lifetime.
 var InitialPledgeLockTarget = builtin.BigFrac{
-	Numerator:   big.NewInt(3), // PARAM_SPEC
+	Numerator:   big.NewInt(3),
 	Denominator: big.NewInt(10),
 }
 
@@ -133,25 +133,60 @@ func InitialPledgeForPower(
 	return big.Min(nominalPledge, pledgeCap)
 }
 
-var EstimatedSingleProveCommitGasUsage = big.NewInt(49299973) // PARAM_SPEC
-var EstimatedSinglePreCommitGasUsage = big.NewInt(16433324)   // PARAM_SPEC
-var BatchDiscount = builtin.BigFrac{                          // PARAM_SPEC
-	Numerator:   big.NewInt(1),
-	Denominator: big.NewInt(20),
-}
-var BatchBalancer = big.Mul(big.NewInt(5), builtin.OneNanoFIL) // PARAM_SPEC
+// Maximum number of lifetime days penalized when a sector is terminated.
+const TerminationLifetimeCap abi.ChainEpoch = 140
 
-func AggregateProveCommitNetworkFee(aggregateSize int, baseFee abi.TokenAmount) abi.TokenAmount {
-	return aggregateNetworkFee(aggregateSize, EstimatedSingleProveCommitGasUsage, baseFee)
+// Used to compute termination fees in the base case by multiplying against initial pledge.
+var TermFeePledgeMultiple = builtin.BigFrac{
+	Numerator:   big.NewInt(85),
+	Denominator: big.NewInt(1000),
 }
 
-func AggregatePreCommitNetworkFee(aggregateSize int, baseFee abi.TokenAmount) abi.TokenAmount {
-	return aggregateNetworkFee(aggregateSize, EstimatedSinglePreCommitGasUsage, baseFee)
+// Used to ensure the termination fee for young sectors is not arbitrarily low.
+var TermFeeMinPledgeMultiple = builtin.BigFrac{
+	Numerator:   big.NewInt(2),
+	Denominator: big.NewInt(100),
 }
 
-func aggregateNetworkFee(aggregateSize int, gasUsage big.Int, baseFee abi.TokenAmount) abi.TokenAmount {
-	effectiveGasFee := big.Max(baseFee, BatchBalancer)
-	networkFeeNum := big.Product(effectiveGasFee, gasUsage, big.NewInt(int64(aggregateSize)), BatchDiscount.Numerator)
-	networkFee := big.Div(networkFeeNum, BatchDiscount.Denominator)
-	return networkFee
+// Used to compute termination fees when the termination fee of a sector is less than the fault fee for the same sector.
+var TermFeeMaxFaultFeeMultiple = builtin.BigFrac{
+	Numerator:   big.NewInt(105),
+	Denominator: big.NewInt(100),
+}
+
+const ContinuedFaultFactorNum = 351
+const ContinuedFaultFactorDenom = 100
+const ContinuedFaultProjectionPeriod abi.ChainEpoch = (builtin.EpochsInDay * ContinuedFaultFactorNum) / ContinuedFaultFactorDenom
+
+// PledgePenaltyForContinuedFault calculates the penalty for a sector continuing faulty for another
+// proving period.
+// It is a projection of the expected reward earned by the sector. Also known as "FF(t)"
+func PledgePenaltyForContinuedFault(rewardEstimate smoothing.FilterEstimate, networkQaPowerEstimate smoothing.FilterEstimate, qaSectorPower abi.StoragePower) abi.TokenAmount {
+	return ExpectedRewardForPower(rewardEstimate, networkQaPowerEstimate, qaSectorPower, ContinuedFaultProjectionPeriod)
+}
+
+// PledgePenaltyForTermination Calculates termination fee for a given sector. Normally, it's
+// calculated as a fixed percentage of the initial pledge. However, there are some special cases
+// outlined in [FIP-0098](https://github.com/filecoin-project/FIPs/blob/master/FIPS/fip-0098.md).
+func PledgePenaltyForTermination(
+	initialPledge abi.TokenAmount,
+	sectorAge abi.ChainEpoch,
+	faultFee abi.TokenAmount,
+) abi.TokenAmount {
+	// Use the Percentage of the initial pledge strategy to determine the termination fee.
+	simpleTerminationFee :=
+		big.Div(big.Mul(initialPledge, TermFeePledgeMultiple.Numerator), TermFeePledgeMultiple.Denominator)
+
+	durationTerminationFee :=
+		big.Div(big.Mul(big.NewInt(int64(sectorAge)), simpleTerminationFee), big.NewInt(int64(TerminationLifetimeCap*builtin.EpochsInDay)))
+
+	// Apply the age adjustment for young sectors to arrive at the base termination fee.
+	baseTerminationFee := big.Min(simpleTerminationFee, durationTerminationFee)
+
+	// Calculate the minimum allowed fee (a lower bound on the termination fee) by comparing the absolute minimum termination fee value against the fault fee. Whatever result is Larger sets the lower bound for the termination fee.
+	minimumFeeAbs := big.Div(big.Mul(initialPledge, TermFeeMinPledgeMultiple.Numerator), TermFeeMinPledgeMultiple.Denominator)
+	minimumFeeFf := big.Div(big.Mul(faultFee, TermFeeMaxFaultFeeMultiple.Numerator), TermFeeMaxFaultFeeMultiple.Denominator)
+	minimumFee := big.Max(minimumFeeAbs, minimumFeeFf)
+
+	return big.Max(baseTerminationFee, minimumFee)
 }

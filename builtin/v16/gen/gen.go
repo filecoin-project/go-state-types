@@ -105,6 +105,7 @@ func main() {
 		power.MinerRawPowerReturn{},
 		// other types
 		power.CronEvent{},
+		power.MinerPowerReturn{},
 	); err != nil {
 		panic(err)
 	}
@@ -217,6 +218,7 @@ func main() {
 		miner.SectorClaim{},
 		miner.SectorNIActivationInfo{},
 		miner.ProveCommitSectorsNIParams{},
+		miner.MaxTerminationFeeParams{},
 	); err != nil {
 		panic(err)
 	}

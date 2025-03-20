@@ -516,3 +516,12 @@ type ProveCommitSectorsNIParams struct {
 }
 
 type ProveCommitSectorsNIReturn = batch.BatchReturn
+
+type MaxTerminationFeeParams struct {
+	Power         abi.StoragePower
+	InitialPledge abi.TokenAmount
+}
+
+type MaxTerminationFeeReturn = abi.TokenAmount
+
+type InitialPledgeReturn = abi.TokenAmount

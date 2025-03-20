@@ -9930,3 +9930,73 @@ func (t *ProveCommitSectorsNIParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 	return nil
 }
+
+var lengthBufMaxTerminationFeeParams = []byte{130}
+
+func (t *MaxTerminationFeeParams) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufMaxTerminationFeeParams); err != nil {
+		return err
+	}
+
+	// t.Power (big.Int) (struct)
+	if err := t.Power.MarshalCBOR(cw); err != nil {
+		return err
+	}
+
+	// t.InitialPledge (big.Int) (struct)
+	if err := t.InitialPledge.MarshalCBOR(cw); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *MaxTerminationFeeParams) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = MaxTerminationFeeParams{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Power (big.Int) (struct)
+
+	{
+
+		if err := t.Power.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.Power: %w", err)
+		}
+
+	}
+	// t.InitialPledge (big.Int) (struct)
+
+	{
+
+		if err := t.InitialPledge.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.InitialPledge: %w", err)
+		}
+
+	}
+	return nil
+}

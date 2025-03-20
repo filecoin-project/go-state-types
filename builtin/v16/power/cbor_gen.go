@@ -1588,3 +1588,73 @@ func (t *CronEvent) UnmarshalCBOR(r io.Reader) (err error) {
 
 	return nil
 }
+
+var lengthBufMinerPowerReturn = []byte{130}
+
+func (t *MinerPowerReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufMinerPowerReturn); err != nil {
+		return err
+	}
+
+	// t.RawBytePower (big.Int) (struct)
+	if err := t.RawBytePower.MarshalCBOR(cw); err != nil {
+		return err
+	}
+
+	// t.QualityAdjPower (big.Int) (struct)
+	if err := t.QualityAdjPower.MarshalCBOR(cw); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *MinerPowerReturn) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = MinerPowerReturn{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.RawBytePower (big.Int) (struct)
+
+	{
+
+		if err := t.RawBytePower.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.RawBytePower: %w", err)
+		}
+
+	}
+	// t.QualityAdjPower (big.Int) (struct)
+
+	{
+
+		if err := t.QualityAdjPower.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.QualityAdjPower: %w", err)
+		}
+
+	}
+	return nil
+}
