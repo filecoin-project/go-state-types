@@ -63,3 +63,10 @@ type MinerRawPowerReturn struct {
 type MinerCountReturn = cbg.CborInt
 
 type MinerConsensusCountReturn = cbg.CborInt
+
+type MinerPowerParams = cbg.CborInt // abi.ActorID
+
+type MinerPowerReturn struct {
+	RawBytePower    abi.StoragePower
+	QualityAdjPower abi.StoragePower
+}

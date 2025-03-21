@@ -175,6 +175,7 @@ var MethodsPower = struct {
 	CurrentTotalPowerMinerRawPowerExported       abi.MethodNum
 	CurrentTotalPowerMinerCountExported          abi.MethodNum
 	CurrentTotalPowerMinerConsensusCountExported abi.MethodNum
+	MinerPowerExported                           abi.MethodNum
 }{
 	MethodConstructor,
 	2,
@@ -190,6 +191,7 @@ var MethodsPower = struct {
 	MustGenerateFRCMethodNum("MinerRawPower"),
 	MustGenerateFRCMethodNum("MinerCount"),
 	MustGenerateFRCMethodNum("MinerConsensusCount"),
+	MustGenerateFRCMethodNum("MinerPower"),
 }
 
 var MethodsMiner = struct {
@@ -241,9 +243,11 @@ var MethodsMiner = struct {
 	GetPeerIDExported                  abi.MethodNum
 	GetMultiaddrsExported              abi.MethodNum
 	// MovePartitionsExported             abi.MethodNum
-	ProveCommitSectors3  abi.MethodNum
-	ProveReplicaUpdates3 abi.MethodNum
-	ProveCommitSectorsNI abi.MethodNum
+	ProveCommitSectors3       abi.MethodNum
+	ProveReplicaUpdates3      abi.MethodNum
+	ProveCommitSectorsNI      abi.MethodNum
+	MaxTerminationFeeExported abi.MethodNum
+	InitialPledgeExported     abi.MethodNum
 }{
 	MethodConstructor,
 	2,
@@ -296,6 +300,8 @@ var MethodsMiner = struct {
 	34,
 	35,
 	36,
+	MustGenerateFRCMethodNum("MaxTerminationFee"),
+	MustGenerateFRCMethodNum("InitialPledge"),
 }
 
 var MethodsVerifiedRegistry = struct {
