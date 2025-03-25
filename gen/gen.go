@@ -13,6 +13,7 @@ func main() {
 		abi.PieceInfo{},
 		abi.SectorID{},
 		abi.AddrPairKey{},
+		abi.DealIDList{},
 	); err != nil {
 		panic(err)
 	}
