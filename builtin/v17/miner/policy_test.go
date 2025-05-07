@@ -7,7 +7,7 @@ import (
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin"
 	v14miner "github.com/filecoin-project/go-state-types/builtin/v14/miner"
-	"github.com/filecoin-project/go-state-types/builtin/v16/miner"
+	"github.com/filecoin-project/go-state-types/builtin/v17/miner"
 	"github.com/stretchr/testify/require"
 )
 

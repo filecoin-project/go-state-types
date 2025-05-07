@@ -9,7 +9,7 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/batch"
 	"github.com/filecoin-project/go-state-types/big"
-	"github.com/filecoin-project/go-state-types/builtin/v16/verifreg"
+	"github.com/filecoin-project/go-state-types/builtin/v17/verifreg"
 )
 
 type SectorDealIDs []abi.DealID

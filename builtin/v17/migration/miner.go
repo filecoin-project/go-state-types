@@ -9,8 +9,8 @@ import (
 
 	"github.com/filecoin-project/go-state-types/abi"
 	miner15 "github.com/filecoin-project/go-state-types/builtin/v15/miner"
-	miner16 "github.com/filecoin-project/go-state-types/builtin/v16/miner"
-	adt16 "github.com/filecoin-project/go-state-types/builtin/v16/util/adt"
+	miner16 "github.com/filecoin-project/go-state-types/builtin/v17/miner"
+	adt16 "github.com/filecoin-project/go-state-types/builtin/v17/util/adt"
 	"github.com/filecoin-project/go-state-types/migration"
 )
 

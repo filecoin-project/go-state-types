@@ -3,7 +3,7 @@ package migration
 import (
 	"context"
 
-	adt16 "github.com/filecoin-project/go-state-types/builtin/v16/util/adt"
+	adt16 "github.com/filecoin-project/go-state-types/builtin/v17/util/adt"
 
 	system15 "github.com/filecoin-project/go-state-types/builtin/v13/system"
 

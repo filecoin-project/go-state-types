@@ -9,7 +9,7 @@ import (
 	xerrors "golang.org/x/xerrors"
 
 	evm15 "github.com/filecoin-project/go-state-types/builtin/v15/evm"
-	evm16 "github.com/filecoin-project/go-state-types/builtin/v16/evm"
+	evm16 "github.com/filecoin-project/go-state-types/builtin/v17/evm"
 )
 
 // evmMigrator performs the migration for the EVM contract state,

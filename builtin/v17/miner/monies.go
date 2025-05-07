@@ -4,8 +4,8 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin"
-	"github.com/filecoin-project/go-state-types/builtin/v16/util/math"
-	"github.com/filecoin-project/go-state-types/builtin/v16/util/smoothing"
+	"github.com/filecoin-project/go-state-types/builtin/v17/util/math"
+	"github.com/filecoin-project/go-state-types/builtin/v17/util/smoothing"
 )
 
 // Projection period of expected sector block reward for deposit required to pre-commit a sector.

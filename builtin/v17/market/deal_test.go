@@ -11,7 +11,7 @@ import (
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/big"
-	"github.com/filecoin-project/go-state-types/builtin/v16/market"
+	"github.com/filecoin-project/go-state-types/builtin/v17/market"
 )
 
 func TestDealLabel(t *testing.T) {

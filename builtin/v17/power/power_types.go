@@ -5,7 +5,7 @@ import (
 
 	addr "github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/go-state-types/builtin/v16/util/smoothing"
+	"github.com/filecoin-project/go-state-types/builtin/v17/util/smoothing"
 )
 
 // Storage miner actor constructor params are defined here so the power actor can send them to the init actor
