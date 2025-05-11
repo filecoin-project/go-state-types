@@ -11,7 +11,10 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v16/util/adt"
 	"github.com/filecoin-project/go-state-types/builtin/v16/util/smoothing"
+	logging "github.com/ipfs/go-log/v2"
 )
+
+var log = logging.Logger("power")
 
 // genesis power in bytes = 750,000 GiB
 var InitialQAPowerEstimatePosition = big.Mul(big.NewInt(750_000), big.NewInt(1<<30))
@@ -184,6 +187,7 @@ func (st *State) CollectPowerTable(s adt.Store, cacheInOut *builtin.MapReduceCac
 	}
 	cache, ok := (*cacheInOut).(powerMapReduceCache)
 	if !ok {
+		log.Errorf("creating new cache!!!!!")
 		mapper := func(k string, claim Claim) ([]builtin.OwnedClaim, error) {
 			minerMinPower, err := builtin.ConsensusMinerMinPower(claim.WindowPoStProofType)
 			if err != nil {
@@ -220,6 +224,8 @@ func (st *State) CollectPowerTable(s adt.Store, cacheInOut *builtin.MapReduceCac
 			cmr: cmr,
 		}
 		(*cacheInOut) = cache
+	} else {
+		log.Errorf("using existing cache!!!!!")
 	}
 	root, err := hamt.LoadNode(s.Context(), s, st.Claims, hamt.UseTreeBitWidth(builtin.DefaultHamtBitwidth))
 	if err != nil {
