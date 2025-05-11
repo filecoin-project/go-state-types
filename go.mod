@@ -1,6 +1,6 @@
 module github.com/filecoin-project/go-state-types
 
-go 1.23.8
+go 1.23.0
 
 toolchain go1.24.2
 
