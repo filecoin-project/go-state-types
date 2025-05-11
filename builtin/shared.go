@@ -31,3 +31,5 @@ func MakeEmptyState() (cid.Cid, error) {
 
 	return emptyObject, nil
 }
+
+type MapReduceCache any
