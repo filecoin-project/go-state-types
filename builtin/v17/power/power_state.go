@@ -5,6 +5,7 @@ import (
 	"golang.org/x/xerrors"
 
 	addr "github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-hamt-ipld/v3"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin"
@@ -149,6 +150,85 @@ func (st *State) ClaimMeetsConsensusMinimums(claim *Claim) (bool, error) {
 
 	// If fewer than ConsensusMinerMinMiners over threshold miner can win a block with non-zero power
 	return minerNominalPower.GreaterThan(abi.NewStoragePower(0)), nil
+}
+
+type powerMapReduceCache struct {
+	cmr *hamt.CachedMapReduce[Claim, *Claim, []builtin.OwnedClaim]
+}
+
+func (st *State) CollectEligibleClaims(s adt.Store, cacheInOut *builtin.MapReduceCache) ([]builtin.OwnedClaim, error) {
+	if st.MinerAboveMinPowerCount < ConsensusMinerMinMiners {
+		// simple collect all claims,
+		var res []builtin.OwnedClaim
+		claims, err := adt.AsMap(s, st.Claims, builtin.DefaultHamtBitwidth)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to load claims: %w", err)
+		}
+		var out Claim
+		claims.ForEach(&out, func(k string) error {
+			if !out.RawBytePower.GreaterThan(abi.NewStoragePower(0)) {
+				return nil
+			}
+			addr, err := addr.NewFromBytes([]byte(k))
+			if err != nil {
+				return xerrors.Errorf("parsing address from bytes: %w", err)
+			}
+			res = append(res, builtin.OwnedClaim{
+				Address:         addr,
+				RawBytePower:    out.RawBytePower,
+				QualityAdjPower: out.QualityAdjPower,
+			})
+			return nil
+		})
+		return res, nil
+	}
+	cache, ok := (*cacheInOut).(powerMapReduceCache)
+	if !ok {
+		mapper := func(k string, claim Claim) ([]builtin.OwnedClaim, error) {
+			minerMinPower, err := builtin.ConsensusMinerMinPower(claim.WindowPoStProofType)
+			if err != nil {
+				return nil, xerrors.Errorf("could not get miner min power from proof type: %w", err)
+			}
+			if !claim.RawBytePower.GreaterThanEqual(minerMinPower) {
+				return nil, nil
+			}
+			addr, err := addr.NewFromBytes([]byte(k))
+			if err != nil {
+				return nil, err
+			}
+			return []builtin.OwnedClaim{
+				{
+					Address:         addr,
+					RawBytePower:    claim.RawBytePower,
+					QualityAdjPower: claim.QualityAdjPower,
+				},
+			}, nil
+		}
+		reducer := func(in [][]builtin.OwnedClaim) ([]builtin.OwnedClaim, error) {
+			var out []builtin.OwnedClaim
+			for _, v := range in {
+				out = append(out, v...)
+			}
+			return out, nil
+		}
+		cmr, err := hamt.NewCachedMapReduce[Claim, *Claim, []builtin.OwnedClaim](mapper, reducer, 2000)
+		if err != nil {
+			return nil, err
+		}
+
+		cache = powerMapReduceCache{
+			cmr: cmr,
+		}
+		(*cacheInOut) = cache
+	}
+
+	claims, err := cache.cmr.MapReduce(s.Context(), s, st.Claims,
+		hamt.UseTreeBitWidth(builtin.DefaultHamtBitwidth))
+	if err != nil {
+		return nil, xerrors.Errorf("failed to map reduce claims: %w", err)
+	}
+
+	return claims, nil
 }
 
 // MinerNominalPowerMeetsConsensusMinimum is used to validate Election PoSt

@@ -2,6 +2,8 @@ module github.com/filecoin-project/go-state-types
 
 go 1.23.0
 
+toolchain go1.24.2
+
 retract v0.12.7 // wrongfully skipped a patch version, use v0.12.6 or v0.12.8&^
 
 require (
@@ -44,3 +46,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/blake3 v1.3.0 // indirect
 )
+
+replace github.com/filecoin-project/go-hamt-ipld/v3 => ../go-hamt-ipld
