@@ -165,7 +165,7 @@ func (st *State) CollectEligibleClaims(s adt.Store, cacheInOut *builtin.MapReduc
 			return nil, xerrors.Errorf("failed to load claims: %w", err)
 		}
 		var out Claim
-		claims.ForEach(&out, func(k string) error {
+		err = claims.ForEach(&out, func(k string) error {
 			if !out.RawBytePower.GreaterThan(abi.NewStoragePower(0)) {
 				return nil
 			}
@@ -180,7 +180,7 @@ func (st *State) CollectEligibleClaims(s adt.Store, cacheInOut *builtin.MapReduc
 			})
 			return nil
 		})
-		return res, nil
+		return res, err
 	}
 	cache, ok := (*cacheInOut).(powerMapReduceCache)
 	if !ok {
@@ -211,6 +211,7 @@ func (st *State) CollectEligibleClaims(s adt.Store, cacheInOut *builtin.MapReduc
 			}
 			return out, nil
 		}
+		// cache size of 2000 is arbitrary, but seems to work well mith 600k claims with room for it to grow
 		cmr, err := hamt.NewCachedMapReduce[Claim, *Claim, []builtin.OwnedClaim](mapper, reducer, 2000)
 		if err != nil {
 			return nil, err
