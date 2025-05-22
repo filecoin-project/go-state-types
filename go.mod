@@ -11,7 +11,7 @@ require (
 	github.com/filecoin-project/go-amt-ipld/v4 v4.4.0
 	github.com/filecoin-project/go-bitfield v0.2.4
 	github.com/filecoin-project/go-commp-utils/v2 v2.1.0
-	github.com/filecoin-project/go-hamt-ipld/v3 v3.4.0
+	github.com/filecoin-project/go-hamt-ipld/v3 v3.4.1
 	github.com/ipfs/go-block-format v0.2.0
 	github.com/ipfs/go-cid v0.5.0
 	github.com/ipfs/go-ipld-cbor v0.2.0
@@ -46,5 +46,3 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/blake3 v1.3.0 // indirect
 )
-
-replace github.com/filecoin-project/go-hamt-ipld/v3 => ../go-hamt-ipld
