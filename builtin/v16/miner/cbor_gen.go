@@ -8184,7 +8184,7 @@ func (t *PieceReturn) MarshalCBOR(w io.Writer) error {
 	cw := cbg.NewCborWriter(w)
 
 	// t.Accepted (bool) (bool)
-	if err := cbg.WriteBool(w, t.Accepted); err != nil {
+	if err := cbg.WriteBool(cw, t.Accepted); err != nil {
 		return err
 	}
 	return nil
