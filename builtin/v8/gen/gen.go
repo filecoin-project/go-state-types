@@ -48,6 +48,7 @@ func main() {
 		cron.State{},
 		cron.Entry{},
 		// method params and returns
+		cron.ConstructorParams{},
 	); err != nil {
 		panic(err)
 	}

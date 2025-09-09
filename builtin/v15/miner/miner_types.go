@@ -462,7 +462,9 @@ type SectorUpdateManifest struct {
 type ProveReplicaUpdates3Return = batch.BatchReturn
 
 // SectorContentChangedParams represents a notification of change committed to sectors.
-type SectorContentChangedParams = []SectorChanges
+type SectorContentChangedParams struct {
+	Changes []SectorChanges `cborgen:"transparent"`
+}
 
 // SectorChanges describes changes to one sector's content.
 type SectorChanges struct {
@@ -479,13 +481,19 @@ type PieceChange struct {
 }
 
 // SectorContentChangedReturn represents the return value for the SectorContentChanged function.
-type SectorContentChangedReturn = []SectorReturn
+type SectorContentChangedReturn struct {
+	Changes []SectorReturn `cborgen:"transparent"`
+}
 
 // SectorReturn represents a result for each sector that was notified.
-type SectorReturn = []PieceReturn
+type SectorReturn struct {
+	Pieces []PieceReturn `cborgen:"transparent"`
+}
 
 // PieceReturn represents a result for each piece for the sector that was notified.
-type PieceReturn = bool // Accepted = true
+type PieceReturn struct {
+	Accepted bool `cborgen:"transparent"`
+}
 
 // SectorNIActivationInfo is the information needed to activate a sector with a "zero" replica.
 type SectorNIActivationInfo struct {

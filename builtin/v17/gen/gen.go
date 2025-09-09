@@ -42,6 +42,7 @@ func main() {
 		cron.State{},
 		cron.Entry{},
 		// method params and returns
+		cron.ConstructorParams{},
 	); err != nil {
 		panic(err)
 	}
@@ -163,7 +164,6 @@ func main() {
 		miner.BeneficiaryTerm{},
 		miner.PendingBeneficiaryChange{},
 		// method params and returns
-
 		miner.GetControlAddressesReturn{},
 		miner.ChangeWorkerAddressParams{},
 		miner.ChangePeerIDParams{},
@@ -206,6 +206,10 @@ func main() {
 		miner.SectorUpdateManifest{},
 		miner.SectorChanges{},
 		miner.PieceChange{},
+		miner.SectorContentChangedParams{},
+		miner.PieceReturn{},
+		miner.SectorReturn{},
+		miner.SectorContentChangedReturn{},
 		// other types
 		miner.FaultDeclaration{},
 		miner.RecoveryDeclaration{},
