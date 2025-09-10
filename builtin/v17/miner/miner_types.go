@@ -1,6 +1,9 @@
 package miner
 
 import (
+	"fmt"
+	"io"
+
 	cid "github.com/ipfs/go-cid"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	"golang.org/x/xerrors"
@@ -469,7 +472,7 @@ type SectorUpdateManifest struct {
 type ProveReplicaUpdates3Return = batch.BatchReturn
 
 // SectorContentChangedParams represents a notification of change committed to sectors.
-type SectorContentChangedParams = []SectorChanges
+type SectorContentChangedParams []SectorChanges
 
 // SectorChanges describes changes to one sector's content.
 type SectorChanges struct {
@@ -525,3 +528,64 @@ type MaxTerminationFeeParams struct {
 type MaxTerminationFeeReturn = abi.TokenAmount
 
 type InitialPledgeReturn = abi.TokenAmount
+
+// MarshalCBOR implements cbor.Marshaler for SectorContentChangedParams
+func (sccp SectorContentChangedParams) MarshalCBOR(w io.Writer) error {
+	if sccp == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(sccp))); err != nil {
+		return err
+	}
+
+	for _, v := range sccp {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// UnmarshalCBOR implements cbor.Unmarshaler for SectorContentChangedParams
+func (sccp *SectorContentChangedParams) UnmarshalCBOR(r io.Reader) (err error) {
+	*sccp = SectorContentChangedParams{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("SectorContentChangedParams: array too large (%d)", extra)
+	}
+
+	if extra > 0 {
+		*sccp = make(SectorContentChangedParams, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		{
+			if err := (*sccp)[i].UnmarshalCBOR(cr); err != nil {
+				return xerrors.Errorf("unmarshaling SectorContentChangedParams[%d]: %w", i, err)
+			}
+		}
+	}
+
+	return nil
+}
