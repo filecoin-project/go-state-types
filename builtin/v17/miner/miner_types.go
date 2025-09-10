@@ -472,7 +472,9 @@ type SectorUpdateManifest struct {
 type ProveReplicaUpdates3Return = batch.BatchReturn
 
 // SectorContentChangedParams represents a notification of change committed to sectors.
-type SectorContentChangedParams []SectorChanges
+type SectorContentChangedParams struct {
+	Changes []SectorChanges
+}
 
 // SectorChanges describes changes to one sector's content.
 type SectorChanges struct {
@@ -531,18 +533,18 @@ type InitialPledgeReturn = abi.TokenAmount
 
 // MarshalCBOR implements cbor.Marshaler for SectorContentChangedParams
 func (sccp SectorContentChangedParams) MarshalCBOR(w io.Writer) error {
-	if sccp == nil {
+	if sccp.Changes == nil {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
 
 	cw := cbg.NewCborWriter(w)
 
-	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(sccp))); err != nil {
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(sccp.Changes))); err != nil {
 		return err
 	}
 
-	for _, v := range sccp {
+	for _, v := range sccp.Changes {
 		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
@@ -576,12 +578,12 @@ func (sccp *SectorContentChangedParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	if extra > 0 {
-		*sccp = make(SectorContentChangedParams, extra)
+		sccp.Changes = make([]SectorChanges, extra)
 	}
 
 	for i := 0; i < int(extra); i++ {
 		{
-			if err := (*sccp)[i].UnmarshalCBOR(cr); err != nil {
+			if err := sccp.Changes[i].UnmarshalCBOR(cr); err != nil {
 				return xerrors.Errorf("unmarshaling SectorContentChangedParams[%d]: %w", i, err)
 			}
 		}
