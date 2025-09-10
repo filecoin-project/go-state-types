@@ -1,6 +1,9 @@
 package miner
 
 import (
+	"fmt"
+	"io"
+
 	cid "github.com/ipfs/go-cid"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	"golang.org/x/xerrors"
@@ -469,7 +472,7 @@ type SectorUpdateManifest struct {
 type ProveReplicaUpdates3Return = batch.BatchReturn
 
 // SectorContentChangedParams represents a notification of change committed to sectors.
-type SectorContentChangedParams = []SectorChanges
+type SectorContentChangedParams []SectorChanges
 
 // SectorChanges describes changes to one sector's content.
 type SectorChanges struct {
@@ -487,6 +490,57 @@ type PieceChange struct {
 
 // SectorContentChangedReturn represents the return value for the SectorContentChanged function.
 type SectorContentChangedReturn = []SectorReturn
+
+// MarshalCBOR implements CBOR marshalling for SectorContentChangedParams
+func (t SectorContentChangedParams) MarshalCBOR(w io.Writer) error {
+	if len(t) > cbg.MaxLength {
+		return xerrors.Errorf("slice value in field t was too long")
+	}
+
+	if err := cbg.WriteMajorTypeHeader(w, cbg.MajArray, uint64(len(t))); err != nil {
+		return err
+	}
+
+	for _, v := range t {
+		if err := v.MarshalCBOR(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// UnmarshalCBOR implements CBOR unmarshalling for SectorContentChangedParams
+func (t *SectorContentChangedParams) UnmarshalCBOR(r io.Reader) error {
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("t: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		*t = make([]SectorChanges, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		var v SectorChanges
+		if err := v.UnmarshalCBOR(cr); err != nil {
+			return err
+		}
+
+		(*t)[i] = v
+	}
+
+	return nil
+}
 
 // SectorReturn represents a result for each sector that was notified.
 type SectorReturn = []PieceReturn
