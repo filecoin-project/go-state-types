@@ -204,6 +204,7 @@ func main() {
 		miner.DataActivationNotification{},
 		miner.ProveReplicaUpdates3Params{},
 		miner.SectorUpdateManifest{},
+		miner.SectorContentChangedParams{},
 		miner.SectorChanges{},
 		miner.PieceChange{},
 		// other types
