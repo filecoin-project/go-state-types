@@ -462,7 +462,7 @@ type SectorUpdateManifest struct {
 type ProveReplicaUpdates3Return = batch.BatchReturn
 
 // SectorContentChangedParams represents a notification of change committed to sectors.
-type SectorContentChangedParams = []SectorChanges
+type SectorContentChangedParams []SectorChanges
 
 // SectorChanges describes changes to one sector's content.
 type SectorChanges struct {

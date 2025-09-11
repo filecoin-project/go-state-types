@@ -7686,6 +7686,75 @@ func (t *SectorUpdateManifest) UnmarshalCBOR(r io.Reader) (err error) {
 	return nil
 }
 
+func (t *SectorContentChangedParams) MarshalCBOR(w io.Writer) error {
+	cw := cbg.NewCborWriter(w)
+
+	// (*t) (miner.SectorContentChangedParams) (slice)
+	if len((*t)) > 8192 {
+		return xerrors.Errorf("Slice value in field (*t) was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len((*t)))); err != nil {
+		return err
+	}
+	for _, v := range *t {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+
+	}
+	return nil
+}
+
+func (t *SectorContentChangedParams) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = SectorContentChangedParams{}
+
+	cr := cbg.NewCborReader(r)
+	var maj byte
+	var extra uint64
+	_ = maj
+	_ = extra
+	// (*t) (miner.SectorContentChangedParams) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 8192 {
+		return fmt.Errorf("(*t): array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		(*t) = make([]SectorChanges, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
+
+			{
+
+				if err := (*t)[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling (*t)[i]: %w", err)
+				}
+
+			}
+
+		}
+	}
+	return nil
+}
+
 var lengthBufSectorChanges = []byte{131}
 
 func (t *SectorChanges) MarshalCBOR(w io.Writer) error {
