@@ -17,7 +17,7 @@ require (
 	github.com/minio/sha256-simd v1.0.1
 	github.com/multiformats/go-multibase v0.2.0
 	github.com/multiformats/go-multihash v0.2.3
-	github.com/multiformats/go-varint v0.0.7
+	github.com/multiformats/go-varint v0.1.0
 	github.com/stretchr/testify v1.11.1
 	github.com/whyrusleeping/cbor-gen v0.3.1
 	golang.org/x/crypto v0.42.0
