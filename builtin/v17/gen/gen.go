@@ -119,7 +119,7 @@ func main() {
 		market.WithdrawBalanceParams{},
 		market.PublishStorageDealsParams{},
 		market.PublishStorageDealsReturn{},
-		market.ActivateDealsParams{},
+		market.BatchActivateDealsParams{},
 		market.ActivateDealsResult{},
 		market.VerifyDealsForActivationParams{},
 		market.VerifyDealsForActivationReturn{},
