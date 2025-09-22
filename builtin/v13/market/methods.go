@@ -16,7 +16,7 @@ var Methods = map[abi.MethodNum]builtin.MethodMeta{
 	4: builtin.NewMethodMeta("PublishStorageDeals", *new(func(*PublishStorageDealsParams) *PublishStorageDealsReturn)), // PublishStorageDeals
 	builtin.MustGenerateFRCMethodNum("PublishStorageDeals"): builtin.NewMethodMeta("PublishStorageDealsExported", *new(func(*PublishStorageDealsParams) *PublishStorageDealsReturn)), // PublishStorageDealsExported
 	5: builtin.NewMethodMeta("VerifyDealsForActivation", *new(func(*VerifyDealsForActivationParams) *VerifyDealsForActivationReturn)), // VerifyDealsForActivation
-	6: builtin.NewMethodMeta("BatchActivateDeals", *new(func(*BatchActivateDealsParams) *abi.EmptyValue)),                                       // BatchActivateDeals
+	6: builtin.NewMethodMeta("BatchActivateDeals", *new(func(*BatchActivateDealsParams) *abi.EmptyValue)),                             // BatchActivateDeals
 	7: builtin.NewMethodMeta("OnMinerSectorsTerminate", *new(func(*OnMinerSectorsTerminateParams) *abi.EmptyValue)),                   // OnMinerSectorsTerminate
 	8: builtin.NewMethodMeta("ComputeDataCommitment", nil),                                                                            // deprecated
 	9: builtin.NewMethodMeta("CronTick", *new(func(*abi.EmptyValue) *abi.EmptyValue)),                                                 // CronTick
