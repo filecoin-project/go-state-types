@@ -738,9 +738,9 @@ func (t *PublishStorageDealsReturn) UnmarshalCBOR(r io.Reader) (err error) {
 	return nil
 }
 
-var lengthBufActivateDealsParams = []byte{130}
+var lengthBufBatchActivateDealsParams = []byte{130}
 
-func (t *ActivateDealsParams) MarshalCBOR(w io.Writer) error {
+func (t *BatchActivateDealsParams) MarshalCBOR(w io.Writer) error {
 	if t == nil {
 		_, err := w.Write(cbg.CborNull)
 		return err
@@ -748,42 +748,34 @@ func (t *ActivateDealsParams) MarshalCBOR(w io.Writer) error {
 
 	cw := cbg.NewCborWriter(w)
 
-	if _, err := cw.Write(lengthBufActivateDealsParams); err != nil {
+	if _, err := cw.Write(lengthBufBatchActivateDealsParams); err != nil {
 		return err
 	}
 
-	// t.DealIDs ([]abi.DealID) (slice)
-	if len(t.DealIDs) > 8192 {
-		return xerrors.Errorf("Slice value in field t.DealIDs was too long")
+	// t.Sectors ([]market.SectorDeals) (slice)
+	if len(t.Sectors) > 8192 {
+		return xerrors.Errorf("Slice value in field t.Sectors was too long")
 	}
 
-	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.DealIDs))); err != nil {
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Sectors))); err != nil {
 		return err
 	}
-	for _, v := range t.DealIDs {
-
-		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(v)); err != nil {
+	for _, v := range t.Sectors {
+		if err := v.MarshalCBOR(cw); err != nil {
 			return err
 		}
 
 	}
 
-	// t.SectorExpiry (abi.ChainEpoch) (int64)
-	if t.SectorExpiry >= 0 {
-		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.SectorExpiry)); err != nil {
-			return err
-		}
-	} else {
-		if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-t.SectorExpiry-1)); err != nil {
-			return err
-		}
+	// t.ComputeCid (bool) (bool)
+	if err := cbg.WriteBool(w, t.ComputeCid); err != nil {
+		return err
 	}
-
 	return nil
 }
 
-func (t *ActivateDealsParams) UnmarshalCBOR(r io.Reader) (err error) {
-	*t = ActivateDealsParams{}
+func (t *BatchActivateDealsParams) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = BatchActivateDealsParams{}
 
 	cr := cbg.NewCborReader(r)
 
@@ -805,7 +797,7 @@ func (t *ActivateDealsParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
-	// t.DealIDs ([]abi.DealID) (slice)
+	// t.Sectors ([]market.SectorDeals) (slice)
 
 	maj, extra, err = cr.ReadHeader()
 	if err != nil {
@@ -813,7 +805,7 @@ func (t *ActivateDealsParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	if extra > 8192 {
-		return fmt.Errorf("t.DealIDs: array too large (%d)", extra)
+		return fmt.Errorf("t.Sectors: array too large (%d)", extra)
 	}
 
 	if maj != cbg.MajArray {
@@ -821,7 +813,7 @@ func (t *ActivateDealsParams) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	if extra > 0 {
-		t.DealIDs = make([]abi.DealID, extra)
+		t.Sectors = make([]SectorDeals, extra)
 	}
 
 	for i := 0; i < int(extra); i++ {
@@ -835,43 +827,30 @@ func (t *ActivateDealsParams) UnmarshalCBOR(r io.Reader) (err error) {
 
 			{
 
-				maj, extra, err = cr.ReadHeader()
-				if err != nil {
-					return err
+				if err := t.Sectors[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Sectors[i]: %w", err)
 				}
-				if maj != cbg.MajUnsignedInt {
-					return fmt.Errorf("wrong type for uint64 field")
-				}
-				t.DealIDs[i] = abi.DealID(extra)
 
 			}
 
 		}
 	}
-	// t.SectorExpiry (abi.ChainEpoch) (int64)
-	{
-		maj, extra, err := cr.ReadHeader()
-		if err != nil {
-			return err
-		}
-		var extraI int64
-		switch maj {
-		case cbg.MajUnsignedInt:
-			extraI = int64(extra)
-			if extraI < 0 {
-				return fmt.Errorf("int64 positive overflow")
-			}
-		case cbg.MajNegativeInt:
-			extraI = int64(extra)
-			if extraI < 0 {
-				return fmt.Errorf("int64 negative overflow")
-			}
-			extraI = -1 - extraI
-		default:
-			return fmt.Errorf("wrong type for int64 field: %d", maj)
-		}
+	// t.ComputeCid (bool) (bool)
 
-		t.SectorExpiry = abi.ChainEpoch(extraI)
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajOther {
+		return fmt.Errorf("booleans must be major type 7")
+	}
+	switch extra {
+	case 20:
+		t.ComputeCid = false
+	case 21:
+		t.ComputeCid = true
+	default:
+		return fmt.Errorf("booleans are either major type 7, value 20 or 21 (got %d)", extra)
 	}
 	return nil
 }
@@ -2041,7 +2020,7 @@ func (t *ClientDealProposal) UnmarshalCBOR(r io.Reader) (err error) {
 	return nil
 }
 
-var lengthBufSectorDeals = []byte{131}
+var lengthBufSectorDeals = []byte{132}
 
 func (t *SectorDeals) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -2052,6 +2031,12 @@ func (t *SectorDeals) MarshalCBOR(w io.Writer) error {
 	cw := cbg.NewCborWriter(w)
 
 	if _, err := cw.Write(lengthBufSectorDeals); err != nil {
+		return err
+	}
+
+	// t.SectorNumber (abi.SectorNumber) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.SectorNumber)); err != nil {
 		return err
 	}
 
@@ -2114,10 +2099,24 @@ func (t *SectorDeals) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 3 {
+	if extra != 4 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
+	// t.SectorNumber (abi.SectorNumber) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.SectorNumber = abi.SectorNumber(extra)
+
+	}
 	// t.SectorType (abi.RegisteredSealProof) (int64)
 	{
 		maj, extra, err := cr.ReadHeader()

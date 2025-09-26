@@ -32,6 +32,7 @@ type VerifyDealsForActivationParams struct {
 }
 
 type SectorDeals struct {
+	SectorNumber abi.SectorNumber
 	SectorType   abi.RegisteredSealProof
 	SectorExpiry abi.ChainEpoch
 	DealIDs      []abi.DealID
@@ -42,9 +43,9 @@ type VerifyDealsForActivationReturn struct {
 	UnsealedCIDs []*cid.Cid
 }
 
-type ActivateDealsParams struct {
-	DealIDs      []abi.DealID
-	SectorExpiry abi.ChainEpoch
+type BatchActivateDealsParams struct {
+	Sectors    []SectorDeals
+	ComputeCid bool
 }
 
 type ActivateDealsResult struct {
