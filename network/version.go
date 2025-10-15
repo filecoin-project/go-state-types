@@ -34,7 +34,8 @@ const (
 	Version24                 // TukTuk
 	Version25                 // Teep
 	Version26                 // Tock
-	Version27                 // TBD
+	Version27                 // GoldenWeek
+	Version28                 // TBD
 
 	// VersionMax is the maximum version number
 	VersionMax = Version(math.MaxUint32)
