@@ -5,7 +5,7 @@ import (
 
 	adt14 "github.com/filecoin-project/go-state-types/builtin/v14/util/adt"
 
-	system13 "github.com/filecoin-project/go-state-types/builtin/v13/system"
+	system17 "github.com/filecoin-project/go-state-types/builtin/v17/system"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
@@ -42,7 +42,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		return cid.Undef, xerrors.New("didn't find system actor")
 	}
 
-	var systemState system13.State
+	var systemState system17.State
 	if err := store.Get(ctx, systemActor.Head, &systemState); err != nil {
 		return cid.Undef, xerrors.Errorf("failed to get system actor state: %w", err)
 	}
