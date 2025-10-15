@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/filecoin-project/go-state-types/big"
-	"github.com/filecoin-project/go-state-types/builtin/v17/util/math"
+	"github.com/filecoin-project/go-state-types/builtin/v18/util/math"
 )
 
 func TestNaturalLog(t *testing.T) {

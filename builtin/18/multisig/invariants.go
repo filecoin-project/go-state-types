@@ -6,7 +6,7 @@ import (
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/builtin"
-	"github.com/filecoin-project/go-state-types/builtin/v17/util/adt"
+	"github.com/filecoin-project/go-state-types/builtin/v18/util/adt"
 )
 
 type StateSummary struct {

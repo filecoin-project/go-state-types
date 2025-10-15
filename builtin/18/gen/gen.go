@@ -3,32 +3,32 @@ package main
 import (
 	gen "github.com/whyrusleeping/cbor-gen"
 
-	"github.com/filecoin-project/go-state-types/builtin/v17/account"
-	"github.com/filecoin-project/go-state-types/builtin/v17/cron"
-	"github.com/filecoin-project/go-state-types/builtin/v17/datacap"
-	"github.com/filecoin-project/go-state-types/builtin/v17/eam"
-	"github.com/filecoin-project/go-state-types/builtin/v17/evm"
-	init_ "github.com/filecoin-project/go-state-types/builtin/v17/init"
-	"github.com/filecoin-project/go-state-types/builtin/v17/market"
-	"github.com/filecoin-project/go-state-types/builtin/v17/miner"
-	"github.com/filecoin-project/go-state-types/builtin/v17/multisig"
-	"github.com/filecoin-project/go-state-types/builtin/v17/paych"
-	"github.com/filecoin-project/go-state-types/builtin/v17/power"
-	"github.com/filecoin-project/go-state-types/builtin/v17/reward"
-	"github.com/filecoin-project/go-state-types/builtin/v17/system"
-	"github.com/filecoin-project/go-state-types/builtin/v17/util/smoothing"
-	"github.com/filecoin-project/go-state-types/builtin/v17/verifreg"
+	"github.com/filecoin-project/go-state-types/builtin/v18/account"
+	"github.com/filecoin-project/go-state-types/builtin/v18/cron"
+	"github.com/filecoin-project/go-state-types/builtin/v18/datacap"
+	"github.com/filecoin-project/go-state-types/builtin/v18/eam"
+	"github.com/filecoin-project/go-state-types/builtin/v18/evm"
+	init_ "github.com/filecoin-project/go-state-types/builtin/v18/init"
+	"github.com/filecoin-project/go-state-types/builtin/v18/market"
+	"github.com/filecoin-project/go-state-types/builtin/v18/miner"
+	"github.com/filecoin-project/go-state-types/builtin/v18/multisig"
+	"github.com/filecoin-project/go-state-types/builtin/v18/paych"
+	"github.com/filecoin-project/go-state-types/builtin/v18/power"
+	"github.com/filecoin-project/go-state-types/builtin/v18/reward"
+	"github.com/filecoin-project/go-state-types/builtin/v18/system"
+	"github.com/filecoin-project/go-state-types/builtin/v18/util/smoothing"
+	"github.com/filecoin-project/go-state-types/builtin/v18/verifreg"
 )
 
 func main() {
-	if err := gen.WriteTupleEncodersToFile("./builtin/v17/system/cbor_gen.go", "system",
+	if err := gen.WriteTupleEncodersToFile("./builtin/v18/system/cbor_gen.go", "system",
 		// actor state
 		system.State{},
 	); err != nil {
 		panic(err)
 	}
 
-	if err := gen.WriteTupleEncodersToFile("./builtin/v17/account/cbor_gen.go", "account",
+	if err := gen.WriteTupleEncodersToFile("./builtin/v18/account/cbor_gen.go", "account",
 		// actor state
 		account.State{},
 		// method params and returns
@@ -37,7 +37,7 @@ func main() {
 		panic(err)
 	}
 
-	if err := gen.WriteTupleEncodersToFile("./builtin/v17/cron/cbor_gen.go", "cron",
+	if err := gen.WriteTupleEncodersToFile("./builtin/v18/cron/cbor_gen.go", "cron",
 		// actor state
 		cron.State{},
 		cron.Entry{},
@@ -46,7 +46,7 @@ func main() {
 		panic(err)
 	}
 
-	if err := gen.WriteTupleEncodersToFile("./builtin/v17/reward/cbor_gen.go", "reward",
+	if err := gen.WriteTupleEncodersToFile("./builtin/v18/reward/cbor_gen.go", "reward",
 		// actor state
 		reward.State{},
 		// method params and returns
@@ -56,7 +56,7 @@ func main() {
 		panic(err)
 	}
 
-	if err := gen.WriteTupleEncodersToFile("./builtin/v17/multisig/cbor_gen.go", "multisig",
+	if err := gen.WriteTupleEncodersToFile("./builtin/v18/multisig/cbor_gen.go", "multisig",
 		// actor state
 		multisig.State{},
 		multisig.Transaction{},
@@ -76,7 +76,7 @@ func main() {
 		panic(err)
 	}
 
-	if err := gen.WriteTupleEncodersToFile("./builtin/v17/paych/cbor_gen.go", "paych",
+	if err := gen.WriteTupleEncodersToFile("./builtin/v18/paych/cbor_gen.go", "paych",
 		// actor state
 		paych.State{},
 		paych.LaneState{},
@@ -91,7 +91,7 @@ func main() {
 		panic(err)
 	}
 
-	if err := gen.WriteTupleEncodersToFile("./builtin/v17/power/cbor_gen.go", "power",
+	if err := gen.WriteTupleEncodersToFile("./builtin/v18/power/cbor_gen.go", "power",
 		// actors state
 		power.State{},
 		power.Claim{},
@@ -110,7 +110,7 @@ func main() {
 		panic(err)
 	}
 
-	if err := gen.WriteTupleEncodersToFile("./builtin/v17/market/cbor_gen.go", "market",
+	if err := gen.WriteTupleEncodersToFile("./builtin/v18/market/cbor_gen.go", "market",
 		// actor state
 		market.State{},
 		market.DealState{},
@@ -142,7 +142,7 @@ func main() {
 		panic(err)
 	}
 
-	if err := gen.WriteTupleEncodersToFile("./builtin/v17/miner/cbor_gen.go", "miner",
+	if err := gen.WriteTupleEncodersToFile("./builtin/v18/miner/cbor_gen.go", "miner",
 		// actor state
 		miner.State{},
 		miner.MinerInfo{},
@@ -224,7 +224,7 @@ func main() {
 		panic(err)
 	}
 
-	if err := gen.WriteTupleEncodersToFile("./builtin/v17/verifreg/cbor_gen.go", "verifreg",
+	if err := gen.WriteTupleEncodersToFile("./builtin/v18/verifreg/cbor_gen.go", "verifreg",
 		// actor state
 		verifreg.State{},
 
@@ -263,7 +263,7 @@ func main() {
 		panic(err)
 	}
 
-	if err := gen.WriteTupleEncodersToFile("./builtin/v17/datacap/cbor_gen.go", "datacap",
+	if err := gen.WriteTupleEncodersToFile("./builtin/v18/datacap/cbor_gen.go", "datacap",
 		// actor state
 		datacap.State{},
 		datacap.TokenState{},
@@ -288,13 +288,13 @@ func main() {
 		panic(err)
 	}
 
-	if err := gen.WriteTupleEncodersToFile("./builtin/v17/util/smoothing/cbor_gen.go", "smoothing",
+	if err := gen.WriteTupleEncodersToFile("./builtin/v18/util/smoothing/cbor_gen.go", "smoothing",
 		smoothing.FilterEstimate{},
 	); err != nil {
 		panic(err)
 	}
 
-	if err := gen.WriteTupleEncodersToFile("./builtin/v17/init/cbor_gen.go", "init",
+	if err := gen.WriteTupleEncodersToFile("./builtin/v18/init/cbor_gen.go", "init",
 		// actor state
 		init_.State{},
 		// method params and returns
@@ -306,7 +306,7 @@ func main() {
 		panic(err)
 	}
 
-	if err := gen.WriteTupleEncodersToFile("./builtin/v17/evm/cbor_gen.go", "evm",
+	if err := gen.WriteTupleEncodersToFile("./builtin/v18/evm/cbor_gen.go", "evm",
 		// actor state
 		evm.Tombstone{},
 		evm.TransientDataLifespan{},
@@ -320,7 +320,7 @@ func main() {
 		panic(err)
 	}
 
-	if err := gen.WriteTupleEncodersToFile("./builtin/v17/eam/cbor_gen.go", "eam",
+	if err := gen.WriteTupleEncodersToFile("./builtin/v18/eam/cbor_gen.go", "eam",
 		// method params and returns
 		eam.CreateParams{},
 		eam.CreateReturn{},

@@ -3,7 +3,7 @@ package reward
 import (
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
-	"github.com/filecoin-project/go-state-types/builtin/v17/util/smoothing"
+	"github.com/filecoin-project/go-state-types/builtin/v18/util/smoothing"
 )
 
 // A quantity of space * time (in byte-epochs) representing power committed to the network for some duration.

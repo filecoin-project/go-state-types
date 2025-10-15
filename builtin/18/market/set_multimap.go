@@ -6,7 +6,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/go-state-types/builtin/v17/util/adt"
+	"github.com/filecoin-project/go-state-types/builtin/v18/util/adt"
 )
 
 type SetMultimap struct {

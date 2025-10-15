@@ -6,7 +6,7 @@ import (
 	"github.com/ipfs/go-cid"
 	"golang.org/x/xerrors"
 
-	"github.com/filecoin-project/go-state-types/builtin/v17/util/adt"
+	"github.com/filecoin-project/go-state-types/builtin/v18/util/adt"
 	"github.com/filecoin-project/go-state-types/manifest"
 )
 
