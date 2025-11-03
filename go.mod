@@ -11,7 +11,7 @@ require (
 	github.com/filecoin-project/go-commp-utils/v2 v2.1.0
 	github.com/filecoin-project/go-hamt-ipld/v3 v3.4.1
 	github.com/ipfs/go-block-format v0.2.3
-	github.com/ipfs/go-cid v0.5.0
+	github.com/ipfs/go-cid v0.6.0
 	github.com/ipfs/go-ipld-cbor v0.2.1
 	github.com/ipld/go-ipld-prime v0.21.0
 	github.com/minio/sha256-simd v1.0.1
