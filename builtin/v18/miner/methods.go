@@ -50,8 +50,11 @@ var Methods = map[abi.MethodNum]builtin.MethodMeta{
 	30: builtin.NewMethodMeta("ChangeBeneficiary", *new(func(*ChangeBeneficiaryParams) *abi.EmptyValue)),          // ChangeBeneficiary
 	builtin.MustGenerateFRCMethodNum("ChangeBeneficiary"): builtin.NewMethodMeta("ChangeBeneficiaryExported", *new(func(*ChangeBeneficiaryParams) *abi.EmptyValue)), // ChangeBeneficiaryExported
 	31: builtin.NewMethodMeta("GetBeneficiary", *new(func(*abi.EmptyValue) *GetBeneficiaryReturn)), // GetBeneficiary
+	builtin.MustGenerateFRCMethodNum("GetBeneficiary"):       builtin.NewMethodMeta("GetBeneficiaryExported", *new(func(*abi.EmptyValue) *GetBeneficiaryReturn)),                                // GetBeneficiaryExported
 	// NB: the name of this method must not change across actor/network versions
 	32: builtin.NewMethodMeta("ExtendSectorExpiration2", *new(func(*ExtendSectorExpiration2Params) *abi.EmptyValue)), // ExtendSectorExpiration2
+	builtin.MustGenerateFRCMethodNum("MaxTerminationFee"):    builtin.NewMethodMeta("MaxTerminationFeeExported", *new(func(*MaxTerminationFeeParams) *MaxTerminationFeeReturn)),                  // MaxTerminationFeeExported
+	builtin.MustGenerateFRCMethodNum("InitialPledge"):        builtin.NewMethodMeta("InitialPledgeExported", *new(func(*abi.EmptyValue) *InitialPledgeReturn)),                                  // InitialPledgeExported
 	builtin.MustGenerateFRCMethodNum("GetOwner"):             builtin.NewMethodMeta("GetOwnerExported", *new(func(*abi.EmptyValue) *GetOwnerReturn)),                                            // GetOwnerExported
 	builtin.MustGenerateFRCMethodNum("IsControllingAddress"): builtin.NewMethodMeta("IsControllingAddressExported", *new(func(params *IsControllingAddressParams) *IsControllingAddressReturn)), // IsControllingAddressExported
 	builtin.MustGenerateFRCMethodNum("GetSectorSize"):        builtin.NewMethodMeta("GetSectorSizeExported", *new(func(*abi.EmptyValue) *GetSectorSizeReturn)),                                  // GetSectorSizeExported
