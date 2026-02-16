@@ -10,6 +10,7 @@ require (
 	github.com/filecoin-project/go-bitfield v0.2.4
 	github.com/filecoin-project/go-commp-utils/v2 v2.1.0
 	github.com/filecoin-project/go-hamt-ipld/v3 v3.4.1
+	github.com/filecoin-project/go-keccak v0.1.0
 	github.com/ipfs/go-block-format v0.2.3
 	github.com/ipfs/go-cid v0.6.0
 	github.com/ipfs/go-ipld-cbor v0.2.1

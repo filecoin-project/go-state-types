@@ -19,6 +19,8 @@ github.com/filecoin-project/go-fil-commp-hashhash v0.2.0 h1:HYIUugzjq78YvV3vC6rL
 github.com/filecoin-project/go-fil-commp-hashhash v0.2.0/go.mod h1:VH3fAFOru4yyWar4626IoS5+VGE8SfZiBODJLUigEo4=
 github.com/filecoin-project/go-hamt-ipld/v3 v3.4.1 h1:wl+ZHruCcE9LvwU7blpwWn35XOcRS6+IBg75G7ZzxzY=
 github.com/filecoin-project/go-hamt-ipld/v3 v3.4.1/go.mod h1:AqjryNfkxffpnqsa5mwnJHlazhVqF6W2nilu+VYKIq8=
+github.com/filecoin-project/go-keccak v0.1.0 h1:SWoaAVbqKgB9iXBceIjmgMskr8DlJTAJ8vWK/bQUXRg=
+github.com/filecoin-project/go-keccak v0.1.0/go.mod h1:X3vAWrEOJSO5GnJfzRFZzv8QC/2IacwECuIj11cnE4Y=
 github.com/frankban/quicktest v1.14.6 h1:7Xjx+VpznH+oBnejlPUj8oUpdxnVs4f8XU8WnHkI4W8=
 github.com/frankban/quicktest v1.14.6/go.mod h1:4ptaffx2x8+WTWXmUCuVU6aPUX1/Mz7zb5vbUoiM6w0=
 github.com/go-yaml/yaml v2.1.0+incompatible/go.mod h1:w2MrLa16VYP0jy6N7M5kHaCkaLENm+P+Tv+MfurjSw0=
