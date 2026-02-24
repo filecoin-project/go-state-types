@@ -3,8 +3,8 @@ package evm
 import (
 	"bytes"
 
+	"github.com/filecoin-project/go-keccak"
 	"github.com/ipfs/go-cid"
-	"golang.org/x/crypto/sha3"
 	"golang.org/x/xerrors"
 
 	"github.com/filecoin-project/go-state-types/abi"
@@ -21,7 +21,7 @@ func CheckStateInvariants(st *State, store adt.Store) *builtin.MessageAccumulato
 	byteCode, err := getBytecode(st.Bytecode, store)
 	acc.RequireNoError(err, "Unable to retrieve bytecode")
 
-	hasher := sha3.NewLegacyKeccak256()
+	hasher := keccak.NewLegacyKeccak256()
 	hasher.Write(byteCode)
 	byteCodeHash := hasher.Sum(nil)
 
