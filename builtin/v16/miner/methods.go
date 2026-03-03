@@ -61,7 +61,7 @@ var Methods = map[abi.MethodNum]builtin.MethodMeta{
 	builtin.MustGenerateFRCMethodNum("GetMultiaddrs"):        builtin.NewMethodMeta("GetMultiaddrsExported", *new(func(*abi.EmptyValue) *GetMultiAddrsReturn)),                                  // GetMultiaddrsExported
 	builtin.MustGenerateFRCMethodNum("GetBeneficiary"):       builtin.NewMethodMeta("GetBeneficiaryExported", *new(func(*abi.EmptyValue) *GetBeneficiaryReturn)),                                // GetBeneficiaryExported
 	builtin.MustGenerateFRCMethodNum("MaxTerminationFee"):    builtin.NewMethodMeta("MaxTerminationFeeExported", *new(func(*MaxTerminationFeeParams) *MaxTerminationFeeReturn)),                 // MaxTerminationFeeExported
-	builtin.MustGenerateFRCMethodNum("InitialPledge"):        builtin.NewMethodMeta("InitialPledgeExported", *new(func(*abi.EmptyValue) *InitialPledgeReturn)),                                   // InitialPledgeExported
+	builtin.MustGenerateFRCMethodNum("InitialPledge"):        builtin.NewMethodMeta("InitialPledgeExported", *new(func(*abi.EmptyValue) *InitialPledgeReturn)),                                  // InitialPledgeExported
 	// 33 MovePartitions
 	34: builtin.NewMethodMeta("ProveCommitSectors3", *new(func(*ProveCommitSectors3Params) *ProveCommitSectors3Return)),    // ProveCommitSectors3
 	35: builtin.NewMethodMeta("ProveReplicaUpdates3", *new(func(*ProveReplicaUpdates3Params) *ProveReplicaUpdates3Return)), // ProveReplicaUpdates3
