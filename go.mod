@@ -16,7 +16,7 @@ require (
 	github.com/ipfs/go-ipld-cbor v0.2.1
 	github.com/ipld/go-ipld-prime v0.22.0
 	github.com/minio/sha256-simd v1.0.1
-	github.com/multiformats/go-multibase v0.2.0
+	github.com/multiformats/go-multibase v0.3.0
 	github.com/multiformats/go-multihash v0.2.3
 	github.com/multiformats/go-varint v0.1.0
 	github.com/stretchr/testify v1.11.1
@@ -33,7 +33,7 @@ require (
 	github.com/ipfs/boxo v0.34.0 // indirect
 	github.com/ipfs/go-ipld-format v0.6.2 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
-	github.com/mr-tron/base58 v1.2.0 // indirect
+	github.com/mr-tron/base58 v1.3.0 // indirect
 	github.com/multiformats/go-base32 v0.1.0 // indirect
 	github.com/multiformats/go-base36 v0.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
