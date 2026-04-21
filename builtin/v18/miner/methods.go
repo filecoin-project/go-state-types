@@ -53,15 +53,18 @@ var Methods = map[abi.MethodNum]builtin.MethodMeta{
 	builtin.MustGenerateFRCMethodNum("GetBeneficiary"): builtin.NewMethodMeta("GetBeneficiaryExported", *new(func(*abi.EmptyValue) *GetBeneficiaryReturn)), // GetBeneficiaryExported
 	// NB: the name of this method must not change across actor/network versions
 	32: builtin.NewMethodMeta("ExtendSectorExpiration2", *new(func(*ExtendSectorExpiration2Params) *abi.EmptyValue)), // ExtendSectorExpiration2
-	builtin.MustGenerateFRCMethodNum("MaxTerminationFee"):    builtin.NewMethodMeta("MaxTerminationFeeExported", *new(func(*MaxTerminationFeeParams) *MaxTerminationFeeReturn)),                 // MaxTerminationFeeExported
-	builtin.MustGenerateFRCMethodNum("InitialPledge"):        builtin.NewMethodMeta("InitialPledgeExported", *new(func(*abi.EmptyValue) *InitialPledgeReturn)),                                  // InitialPledgeExported
-	builtin.MustGenerateFRCMethodNum("GetOwner"):             builtin.NewMethodMeta("GetOwnerExported", *new(func(*abi.EmptyValue) *GetOwnerReturn)),                                            // GetOwnerExported
-	builtin.MustGenerateFRCMethodNum("IsControllingAddress"): builtin.NewMethodMeta("IsControllingAddressExported", *new(func(params *IsControllingAddressParams) *IsControllingAddressReturn)), // IsControllingAddressExported
-	builtin.MustGenerateFRCMethodNum("GetSectorSize"):        builtin.NewMethodMeta("GetSectorSizeExported", *new(func(*abi.EmptyValue) *GetSectorSizeReturn)),                                  // GetSectorSizeExported
-	builtin.MustGenerateFRCMethodNum("GetAvailableBalance"):  builtin.NewMethodMeta("GetAvailableBalanceExported", *new(func(*abi.EmptyValue) *GetAvailableBalanceReturn)),                      // GetAvailableBalanceExported
-	builtin.MustGenerateFRCMethodNum("GetVestingFunds"):      builtin.NewMethodMeta("GetVestingFundsExported", *new(func(*abi.EmptyValue) *GetVestingFundsReturn)),                              // GetVestingFundsExported
-	builtin.MustGenerateFRCMethodNum("GetPeerID"):            builtin.NewMethodMeta("GetPeerIDExported", *new(func(*abi.EmptyValue) *GetPeerIDReturn)),                                          // GetPeerIDExported
-	builtin.MustGenerateFRCMethodNum("GetMultiaddrs"):        builtin.NewMethodMeta("GetMultiaddrsExported", *new(func(*abi.EmptyValue) *GetMultiAddrsReturn)),                                  // GetMultiaddrsExported
+	builtin.MustGenerateFRCMethodNum("MaxTerminationFee"):          builtin.NewMethodMeta("MaxTerminationFeeExported", *new(func(*MaxTerminationFeeParams) *MaxTerminationFeeReturn)),                 // MaxTerminationFeeExported
+	builtin.MustGenerateFRCMethodNum("InitialPledge"):              builtin.NewMethodMeta("InitialPledgeExported", *new(func(*abi.EmptyValue) *InitialPledgeReturn)),                                  // InitialPledgeExported
+	builtin.MustGenerateFRCMethodNum("GetOwner"):                   builtin.NewMethodMeta("GetOwnerExported", *new(func(*abi.EmptyValue) *GetOwnerReturn)),                                            // GetOwnerExported
+	builtin.MustGenerateFRCMethodNum("IsControllingAddress"):       builtin.NewMethodMeta("IsControllingAddressExported", *new(func(params *IsControllingAddressParams) *IsControllingAddressReturn)), // IsControllingAddressExported
+	builtin.MustGenerateFRCMethodNum("GetSectorSize"):              builtin.NewMethodMeta("GetSectorSizeExported", *new(func(*abi.EmptyValue) *GetSectorSizeReturn)),                                  // GetSectorSizeExported
+	builtin.MustGenerateFRCMethodNum("GetAvailableBalance"):        builtin.NewMethodMeta("GetAvailableBalanceExported", *new(func(*abi.EmptyValue) *GetAvailableBalanceReturn)),                      // GetAvailableBalanceExported
+	builtin.MustGenerateFRCMethodNum("GetVestingFunds"):            builtin.NewMethodMeta("GetVestingFundsExported", *new(func(*abi.EmptyValue) *GetVestingFundsReturn)),                              // GetVestingFundsExported
+	builtin.MustGenerateFRCMethodNum("GetPeerID"):                  builtin.NewMethodMeta("GetPeerIDExported", *new(func(*abi.EmptyValue) *GetPeerIDReturn)),                                          // GetPeerIDExported
+	builtin.MustGenerateFRCMethodNum("GetMultiaddrs"):              builtin.NewMethodMeta("GetMultiaddrsExported", *new(func(*abi.EmptyValue) *GetMultiAddrsReturn)),                                  // GetMultiaddrsExported
+	builtin.MustGenerateFRCMethodNum("GenerateSectorLocation"):     builtin.NewMethodMeta("GenerateSectorLocationExported", *new(func(*GenerateSectorLocationParams) *GenerateSectorLocationReturn)),  // GenerateSectorLocationExported
+	builtin.MustGenerateFRCMethodNum("ValidateSectorStatus"):       builtin.NewMethodMeta("ValidateSectorStatusExported", *new(func(*ValidateSectorStatusParams) *ValidateSectorStatusReturn)),        // ValidateSectorStatusExported
+	builtin.MustGenerateFRCMethodNum("GetNominalSectorExpiration"): builtin.NewMethodMeta("GetNominalSectorExpirationExported", *new(func(*abi.SectorNumber) *GetNominalSectorExpirationReturn)),      // GetNominalSectorExpirationExported
 	// 33 MovePartitions
 	34: builtin.NewMethodMeta("ProveCommitSectors3", *new(func(*ProveCommitSectors3Params) *ProveCommitSectors3Return)),    // ProveCommitSectors3
 	35: builtin.NewMethodMeta("ProveReplicaUpdates3", *new(func(*ProveReplicaUpdates3Params) *ProveReplicaUpdates3Return)), // ProveReplicaUpdates3

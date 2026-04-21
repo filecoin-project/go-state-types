@@ -612,3 +612,14 @@ func (p RegisteredPoStProof) ProofSize() (uint64, error) {
 type SealRandomness Randomness
 type InteractiveSealRandomness Randomness
 type PoStRandomness Randomness
+
+type SectorStatusCode uint8
+
+const (
+	// SectorStatusCodeDead sector is not live (terminated or never committed)
+	SectorStatusCodeDead SectorStatusCode = iota
+	// SectorStatusCodeActive sector is active (not terminated, not faulty)
+	SectorStatusCodeActive
+	// SectorStatusCodeFaulty sector is currently faulty
+	SectorStatusCodeFaulty
+)
