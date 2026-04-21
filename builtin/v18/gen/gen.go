@@ -80,12 +80,12 @@ func main() {
 		// actor state
 		paych.State{},
 		paych.LaneState{},
-		//method params and returns
+		// method params and returns
 		paych.ConstructorParams{},
 		paych.UpdateChannelStateParams{},
 		paych.SignedVoucher{},
 		paych.ModVerifyParams{},
-		//other types
+		// other types
 		paych.Merge{},
 	); err != nil {
 		panic(err)
@@ -220,6 +220,9 @@ func main() {
 		miner.SectorNIActivationInfo{},
 		miner.ProveCommitSectorsNIParams{},
 		miner.MaxTerminationFeeParams{},
+		miner.GenerateSectorLocationParams{},
+		miner.GenerateSectorLocationReturn{},
+		miner.ValidateSectorStatusParams{},
 	); err != nil {
 		panic(err)
 	}

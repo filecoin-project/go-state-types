@@ -525,3 +525,22 @@ type MaxTerminationFeeParams struct {
 type MaxTerminationFeeReturn = abi.TokenAmount
 
 type InitialPledgeReturn = abi.TokenAmount
+
+type GenerateSectorLocationParams struct {
+	SectorNumber abi.SectorNumber
+}
+
+type GenerateSectorLocationReturn struct {
+	Status  abi.SectorStatusCode
+	AuxData []byte
+}
+
+type ValidateSectorStatusParams struct {
+	SectorNumber abi.SectorNumber
+	Status       abi.SectorStatusCode
+	AuxData      []byte
+}
+
+type ValidateSectorStatusReturn = cbg.CborBool
+
+type GetNominalSectorExpirationReturn = abi.ChainEpoch
