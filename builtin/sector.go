@@ -85,7 +85,8 @@ var SealProofPoliciesV11 = map[stabi.RegisteredSealProof]*SealProofPolicy{
 	},
 }
 
-// SectorMaximumLifetime is the maximum duration a sector sealed with this proof may exist between activation and expiration
+// SealProofSectorMaximumLifetime returns the maximum duration a sector sealed with this proof
+// may exist between activation and expiration
 func SealProofSectorMaximumLifetime(p stabi.RegisteredSealProof) (stabi.ChainEpoch, error) {
 	info, ok := SealProofPoliciesV11[p]
 	if !ok {
