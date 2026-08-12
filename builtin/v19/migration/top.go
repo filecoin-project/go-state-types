@@ -3,9 +3,12 @@ package migration
 import (
 	"context"
 
+	"github.com/filecoin-project/go-address"
+
 	adt14 "github.com/filecoin-project/go-state-types/builtin/v14/util/adt"
 
 	system18 "github.com/filecoin-project/go-state-types/builtin/v18/system"
+	reward19 "github.com/filecoin-project/go-state-types/builtin/v19/reward"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
@@ -17,9 +20,15 @@ import (
 	"golang.org/x/xerrors"
 )
 
+type RewardMigrationConfig struct {
+	SWATimelockEpochs abi.ChainEpoch
+	SWAActor          address.Address
+	Streams           []reward19.RegisterStreamParams
+}
+
 // MigrateStateTree Migrates the filecoin state tree starting from the global state tree and upgrading all actor state.
 // The store must support concurrent writes (even if the configured worker count is 1).
-func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID cid.Cid, actorsRootIn cid.Cid, priorEpoch abi.ChainEpoch, cfg migration.Config, log migration.Logger, cache migration.MigrationCache) (cid.Cid, error) {
+func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID cid.Cid, actorsRootIn cid.Cid, priorEpoch abi.ChainEpoch, rewardConfig RewardMigrationConfig, cfg migration.Config, log migration.Logger, cache migration.MigrationCache) (cid.Cid, error) {
 	if cfg.MaxWorkers <= 0 {
 		return cid.Undef, xerrors.Errorf("invalid migration config with %d workers", cfg.MaxWorkers)
 	}
@@ -67,7 +76,13 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	// Set of prior version code CIDs for actors to defer during iteration, for explicit migration afterwards.
 	deferredCodeIDs := make(map[cid.Cid]struct{})
 
+	reward18CID := cid.Undef
+
 	for _, oldEntry := range oldManifestData.Entries {
+		if oldEntry.Name == manifest.RewardKey {
+			reward18CID = oldEntry.Code
+		}
+
 		newCodeCID, ok := newManifest.Get(oldEntry.Name)
 		if !ok {
 			return cid.Undef, xerrors.Errorf("code cid for %s actor not found in new manifest", oldEntry.Name)
@@ -85,6 +100,19 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 
 	migrations[systemActor.Code] = systemActorMigrator{OutCodeCID: newSystemCodeCID, ManifestData: newManifest.Data}
+
+	if reward18CID == cid.Undef {
+		return cid.Undef, xerrors.Errorf("code cid for reward actor not found in old manifest")
+	}
+	reward19CID, ok := newManifest.Get(manifest.RewardKey)
+	if !ok {
+		return cid.Undef, xerrors.Errorf("code cid for reward actor not found in new manifest")
+	}
+	rewardMigrator, err := newRewardMigrator(rewardConfig, priorEpoch+1, reward19CID)
+	if err != nil {
+		return cid.Undef, xerrors.Errorf("failed to create reward migrator: %w", err)
+	}
+	migrations[reward18CID] = migration.CachedMigration(cache, *rewardMigrator)
 
 	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations)+len(deferredCodeIDs), len(oldManifestData.Entries))
