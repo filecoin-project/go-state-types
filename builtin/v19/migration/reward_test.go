@@ -11,6 +11,7 @@ import (
 	reward18 "github.com/filecoin-project/go-state-types/builtin/v18/reward"
 	smoothing18 "github.com/filecoin-project/go-state-types/builtin/v18/util/smoothing"
 	reward19 "github.com/filecoin-project/go-state-types/builtin/v19/reward"
+	adt19 "github.com/filecoin-project/go-state-types/builtin/v19/util/adt"
 	"github.com/filecoin-project/go-state-types/migration"
 	"github.com/ipfs/go-cid"
 	cbor "github.com/ipfs/go-ipld-cbor"
@@ -28,6 +29,7 @@ func validRewardMigrationConfig(t *testing.T, activationEpoch abi.ChainEpoch) Re
 	t.Helper()
 	pct := reward19.Denom / 100
 	return RewardMigrationConfig{
+		ActivationEpoch:   activationEpoch,
 		SWATimelockEpochs: 20_160,
 		SWAActor:          migrationIDAddress(t, 100),
 		Streams: []reward19.RegisterStreamParams{
@@ -74,7 +76,7 @@ func TestRewardMigration(t *testing.T) {
 	activationEpoch := abi.ChainEpoch(100)
 	config := validRewardMigrationConfig(t, activationEpoch)
 	outCodeCID := cid.MustParse("bafy2bzaca4aaaaaaaaaqk")
-	migrator, err := newRewardMigrator(config, activationEpoch, outCodeCID)
+	migrator, err := newRewardMigrator(config, outCodeCID)
 	req.NoError(err)
 	result, err := migrator.MigrateState(ctx, store, migration.ActorMigrationInput{Address: address.TestAddress, Head: inHead})
 	req.NoError(err)
@@ -98,16 +100,88 @@ func TestRewardMigration(t *testing.T) {
 	req.Equal(config.SWATimelockEpochs, outState.SWATimelockEpochs)
 	req.Equal(config.SWAActor, outState.SWAActor)
 
-	var streams reward19.StreamsState
-	req.NoError(store.Get(ctx, outState.StreamsRoot, &streams))
+	streams, err := outState.LoadStreams(adt19.WrapStore(ctx, store))
+	req.NoError(err)
 	req.Len(streams.Streams, 2)
 	req.Equal(reward19.StreamID(1), streams.Streams[0].ID)
+	req.Equal(config.Streams[0].Weight, streams.Streams[0].Weight)
 	req.Nil(streams.Streams[0].Distribution)
 	req.Equal(reward19.StreamID(2), streams.Streams[1].ID)
+	req.Equal(config.Streams[1].Weight, streams.Streams[1].Weight)
 	req.Equal(config.Streams[1].Distribution.Writer, streams.Streams[1].Distribution.Writer)
 	req.Equal(config.Streams[1].Distribution.Shares, streams.Streams[1].Distribution.Shares)
 	req.Empty(streams.Tombstones)
 	req.Empty(streams.PendingWrites)
+}
+
+func TestRewardMigrationDropsStoredRewardTotals(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	req := require.New(t)
+	store := cbor.NewMemCborStore()
+	activationEpoch := abi.ChainEpoch(100)
+	migrator, err := newRewardMigrator(
+		validRewardMigrationConfig(t, activationEpoch),
+		cid.MustParse("bafy2bzaca4aaaaaaaaaqk"),
+	)
+	req.NoError(err)
+
+	base := reward18.State{
+		CumsumBaseline:          big.NewInt(1),
+		CumsumRealized:          big.NewInt(2),
+		EffectiveNetworkTime:    3,
+		EffectiveBaselinePower:  big.NewInt(4),
+		ThisEpochReward:         abi.NewTokenAmount(5),
+		ThisEpochRewardSmoothed: smoothing18.NewEstimate(big.NewInt(6), big.NewInt(7)),
+		ThisEpochBaselinePower:  big.NewInt(8),
+		Epoch:                   9,
+		TotalStoragePowerReward: abi.NewTokenAmount(10),
+		SimpleTotal:             abi.NewTokenAmount(11),
+		BaselineTotal:           abi.NewTokenAmount(12),
+	}
+	alternate := base
+	alternate.SimpleTotal = abi.NewTokenAmount(13)
+	alternate.BaselineTotal = abi.NewTokenAmount(14)
+	req.NotEqual(base.SimpleTotal, alternate.SimpleTotal)
+	req.NotEqual(base.BaselineTotal, alternate.BaselineTotal)
+
+	migrate := func(input reward18.State) reward19.State {
+		head, err := store.Put(ctx, &input)
+		req.NoError(err)
+		result, err := migrator.MigrateState(ctx, store, migration.ActorMigrationInput{
+			Address: address.TestAddress,
+			Head:    head,
+		})
+		req.NoError(err)
+		var output reward19.State
+		req.NoError(store.Get(ctx, result.NewHead, &output))
+		return output
+	}
+
+	req.Equal(migrate(base), migrate(alternate))
+}
+
+func TestNewRewardMigratorAcceptsAlternativeBootstrapWeights(t *testing.T) {
+	activationEpoch := abi.ChainEpoch(100)
+	pct := reward19.Denom / 100
+	config := validRewardMigrationConfig(t, activationEpoch)
+	config.Streams[0].Weight = reward19.WeightRecord{
+		VStart: 80 * pct,
+		Slope:  -1,
+		TStart: activationEpoch,
+		Floor:  60 * pct,
+		Cap:    80 * pct,
+	}
+	config.Streams[1].Weight = reward19.WeightRecord{
+		VStart: 20 * pct,
+		Slope:  1,
+		TStart: activationEpoch,
+		Floor:  10 * pct,
+		Cap:    20 * pct,
+	}
+
+	_, err := newRewardMigrator(config, cid.MustParse("bafy2bzaca4aaaaaaaaaqk"))
+	require.NoError(t, err)
 }
 
 func TestNewRewardMigratorRejectsInvalidConfig(t *testing.T) {
@@ -140,11 +214,11 @@ func TestNewRewardMigratorRejectsInvalidConfig(t *testing.T) {
 			expected: "requires exactly two streams",
 		},
 		{
-			name: "wrong bootstrap weight",
+			name: "starting weights under-sum",
 			mutate: func(config *RewardMigrationConfig) {
-				config.Streams[0].Weight.VStart--
+				config.Streams[1].Weight.VStart--
 			},
-			expected: "consensus bootstrap weight is invalid",
+			expected: "bootstrap starting weights must sum to denominator",
 		},
 		{
 			name: "unequal slopes",
@@ -176,13 +250,31 @@ func TestNewRewardMigratorRejectsInvalidConfig(t *testing.T) {
 			},
 			expected: "SWA actor is not an ID address",
 		},
+		{
+			name: "non-ID SRA actor",
+			mutate: func(config *RewardMigrationConfig) {
+				addr, err := address.NewDelegatedAddress(10, []byte{1})
+				require.NoError(t, err)
+				config.Streams[1].Distribution.Writer = addr
+			},
+			expected: "distribution writer",
+		},
+		{
+			name: "non-ID initial orchestrator",
+			mutate: func(config *RewardMigrationConfig) {
+				addr, err := address.NewDelegatedAddress(10, []byte{1})
+				require.NoError(t, err)
+				config.Streams[1].Distribution.Shares[0].Recipient = addr
+			},
+			expected: "share recipient",
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			config := validRewardMigrationConfig(t, activationEpoch)
 			tc.mutate(&config)
-			_, err := newRewardMigrator(config, activationEpoch, outCodeCID)
+			_, err := newRewardMigrator(config, outCodeCID)
 			require.ErrorContains(t, err, tc.expected)
 		})
 	}

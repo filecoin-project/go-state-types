@@ -23,8 +23,8 @@ type rewardMigrator struct {
 	swaActor          address.Address
 }
 
-func newRewardMigrator(config RewardMigrationConfig, activationEpoch abi.ChainEpoch, outCodeCID cid.Cid) (*rewardMigrator, error) {
-	streams, accruals, err := reward19.ValidateMigrationStreams(config.Streams, activationEpoch)
+func newRewardMigrator(config RewardMigrationConfig, outCodeCID cid.Cid) (*rewardMigrator, error) {
+	streams, accruals, err := reward19.ValidateMigrationStreams(config.Streams, config.ActivationEpoch)
 	if err != nil {
 		return nil, xerrors.Errorf("invalid reward migration streams: %w", err)
 	}

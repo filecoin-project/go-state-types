@@ -4,6 +4,7 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
+	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v19/util/adt"
 	"github.com/filecoin-project/go-state-types/builtin/v19/util/smoothing"
 	"github.com/ipfs/go-cid"
@@ -60,42 +61,68 @@ type State struct {
 	TotalExplicitMinted abi.TokenAmount
 	// Accrued holds current-period accrual for each explicit stream, ordered by stream ID.
 	Accrued []StreamAccrual
-	// SWATimelockEpochs is the hold applied to SWA writes. Construction leaves zero;
-	// the activation migration sets the operational value.
+	// SWATimelockEpochs is the hold applied to SWA writes, set by the activation migration.
 	SWATimelockEpochs abi.ChainEpoch
-	// SWAActor manages stream configuration. Construction uses f00;
-	// the activation migration sets the operational address.
+	// SWAActor manages stream configuration and is set by the activation migration.
 	SWAActor address.Address
 	// StreamsRoot references offboarded stream, tombstone, and queued-write state.
 	StreamsRoot cid.Cid
 }
 
+// ConstructState creates the minimal v19 genesis configuration: one implicit
+// consensus stream at full weight and no service stream or burn. Its weight is
+// anchored at the pre-genesis epoch because state initialization advances from
+// epoch -1 to epoch 0; the zero slope makes the anchor otherwise immaterial.
+//
+// The f00 SWA actor deliberately leaves genesis weight governance disabled.
+// Activation migration instead supplies its configured SWA and validates the
+// two-stream bootstrap. The state adapter's v19-or-later branch means future
+// actor versions inherit this genesis configuration until they replace it.
 func ConstructState(store adt.Store, currRealizedPower abi.StoragePower) (*State, error) {
-	streamsRoot, err := store.Put(store.Context(), &StreamsState{})
-	if err != nil {
-		return nil, xerrors.Errorf("failed to store empty streams state: %w", err)
+	streams := &StreamsState{
+		Streams: []Stream{{
+			ID: 1,
+			Weight: WeightRecord{
+				VStart: Denom,
+				TStart: -1,
+				Floor:  Denom,
+				Cap:    Denom,
+			},
+		}},
 	}
-	swaActor, err := address.NewIDAddress(0)
+	streamsRoot, err := store.Put(store.Context(), streams)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to construct default SWA address: %w", err)
+		return nil, xerrors.Errorf("failed to put genesis reward streams state: %w", err)
 	}
+
 	st := &State{
-		CumsumBaseline:          big.Zero(),
-		CumsumRealized:          big.Zero(),
-		EffectiveBaselinePower:  BaselineInitialValue,
-		ThisEpochReward:         big.Zero(),
+		CumsumBaseline:         big.Zero(),
+		CumsumRealized:         big.Zero(),
+		EffectiveNetworkTime:   0,
+		EffectiveBaselinePower: BaselineInitialValue,
+
+		ThisEpochReward:        big.Zero(),
+		ThisEpochBaselinePower: InitBaselinePower(),
+		Epoch:                  -1,
+
 		ThisEpochRewardSmoothed: smoothing.NewEstimate(InitialRewardPositionEstimate, InitialRewardVelocityEstimate),
-		ThisEpochBaselinePower:  InitBaselinePower(),
-		Epoch:                   -1,
 		TotalMintedReward:       big.Zero(),
 		TotalBurnMinted:         big.Zero(),
 		TotalExplicitMinted:     big.Zero(),
-		Accrued:                 []StreamAccrual{},
-		SWAActor:                swaActor,
+		SWAActor:                builtin.SystemActorAddr,
 		StreamsRoot:             streamsRoot,
 	}
 	st.updateToNextEpochWithReward(currRealizedPower)
 	return st, nil
+}
+
+// LoadStreams loads the offboarded stream state referenced by this state.
+func (st *State) LoadStreams(store adt.Store) (*StreamsState, error) {
+	var streams StreamsState
+	if err := store.Get(store.Context(), st.StreamsRoot, &streams); err != nil {
+		return nil, xerrors.Errorf("failed to load streams state (%s): %w", st.StreamsRoot, err)
+	}
+	return &streams, nil
 }
 
 // updateToNextEpoch updates internal state for the current realized power.

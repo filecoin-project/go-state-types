@@ -733,14 +733,10 @@ func ValidateMigrationStreams(params []RegisterStreamParams, activationEpoch abi
 		}
 	}
 
-	pct := Denom / 100
 	consensus := params[0].Weight
 	explicit := params[1].Weight
-	if consensus.VStart != 95*pct || consensus.Floor != 50*pct || consensus.Cap != 95*pct {
-		return nil, nil, fmt.Errorf("consensus bootstrap weight is invalid")
-	}
-	if explicit.VStart != 5*pct || explicit.Floor != 5*pct || explicit.Cap != 10*pct {
-		return nil, nil, fmt.Errorf("explicit bootstrap weight is invalid")
+	if consensus.VStart > Denom || explicit.VStart != Denom-consensus.VStart {
+		return nil, nil, fmt.Errorf("bootstrap starting weights must sum to denominator")
 	}
 	if consensus.Slope >= 0 || explicit.Slope <= 0 || consensus.Slope != -explicit.Slope {
 		return nil, nil, fmt.Errorf("bootstrap weight slopes are invalid")

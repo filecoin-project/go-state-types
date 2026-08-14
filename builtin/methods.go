@@ -38,15 +38,31 @@ var MethodsCron = struct {
 }
 
 var MethodsReward = struct {
-	Constructor      abi.MethodNum
-	AwardBlockReward abi.MethodNum
-	ThisEpochReward  abi.MethodNum
-	UpdateNetworkKPI abi.MethodNum
+	Constructor               abi.MethodNum
+	AwardBlockReward          abi.MethodNum
+	ThisEpochReward           abi.MethodNum
+	UpdateNetworkKPI          abi.MethodNum
+	SetWeightRecordsExported  abi.MethodNum
+	StepWeightRecordsExported abi.MethodNum
+	RegisterStreamExported    abi.MethodNum
+	RemoveStreamExported      abi.MethodNum
+	SetDistributionExported   abi.MethodNum
+	SetSharesExported         abi.MethodNum
+	CancelPendingExported     abi.MethodNum
+	ClaimExported             abi.MethodNum
 }{
 	MethodConstructor,
 	2,
 	3,
 	4,
+	MustGenerateFRCMethodNum("SetWeightRecords"),
+	MustGenerateFRCMethodNum("StepWeightRecords"),
+	MustGenerateFRCMethodNum("RegisterStream"),
+	MustGenerateFRCMethodNum("RemoveStream"),
+	MustGenerateFRCMethodNum("SetDistribution"),
+	MustGenerateFRCMethodNum("SetShares"),
+	MustGenerateFRCMethodNum("CancelPending"),
+	MustGenerateFRCMethodNum("Claim"),
 }
 
 var MethodsMultisig = struct {

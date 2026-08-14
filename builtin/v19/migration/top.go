@@ -21,6 +21,7 @@ import (
 )
 
 type RewardMigrationConfig struct {
+	ActivationEpoch   abi.ChainEpoch
 	SWATimelockEpochs abi.ChainEpoch
 	SWAActor          address.Address
 	Streams           []reward19.RegisterStreamParams
@@ -108,7 +109,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	if !ok {
 		return cid.Undef, xerrors.Errorf("code cid for reward actor not found in new manifest")
 	}
-	rewardMigrator, err := newRewardMigrator(rewardConfig, priorEpoch+1, reward19CID)
+	rewardMigrator, err := newRewardMigrator(rewardConfig, reward19CID)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to create reward migrator: %w", err)
 	}

@@ -27,7 +27,11 @@ func CheckStateInvariants(st *State, store adt.Store, priorEpoch abi.ChainEpoch,
 	acc.Require(st.EffectiveNetworkTime <= st.Epoch, "effective network time %d greater than state epoch %d", st.EffectiveNetworkTime, st.Epoch)
 	acc.Require(st.CumsumRealized.LessThanEqual(st.CumsumBaseline), "cumsum realized %v > cumsum baseline %v", st.CumsumRealized, st.CumsumBaseline)
 	acc.Require(st.CumsumRealized.GreaterThanEqual(big.Zero()), "cumsum realized negative (%v)", st.CumsumRealized)
-	acc.Require(st.EffectiveBaselinePower.LessThanEqual(st.ThisEpochBaselinePower), "effective baseline power > baseline power")
+	// Before the first state transition, the effective baseline is anchored at
+	// epoch 0 while ThisEpochBaselinePower is anchored at epoch -1.
+	baselineOrdered := st.Epoch == 0 && st.EffectiveNetworkTime == 0 ||
+		st.EffectiveBaselinePower.LessThanEqual(st.ThisEpochBaselinePower)
+	acc.Require(baselineOrdered, "effective baseline power > baseline power")
 
 	for _, total := range []struct {
 		name   string
@@ -55,8 +59,8 @@ func CheckStateInvariants(st *State, store adt.Store, priorEpoch abi.ChainEpoch,
 		acc.Require(row.Amount.GreaterThanEqual(big.Zero()), "explicit-stream accrual for stream %d is negative (%v)", row.ID, row.Amount)
 	}
 
-	var streams StreamsState
-	if err := store.Get(store.Context(), st.StreamsRoot, &streams); err != nil {
+	streams, err := st.LoadStreams(store)
+	if err != nil {
 		acc.Addf("error loading streams state: %v", err)
 		return &StateSummary{}, acc
 	}
@@ -67,7 +71,7 @@ func CheckStateInvariants(st *State, store adt.Store, priorEpoch abi.ChainEpoch,
 		PendingWriteCount: len(streams.PendingWrites),
 	}
 	// Mirrors actors/reward/src/streams.rs::validate_streams_state.
-	if err := validateStreamsState(&streams, st.Accrued, priorEpoch+1); err != nil {
+	if err := validateStreamsState(streams, st.Accrued, priorEpoch+1); err != nil {
 		acc.Addf("invalid streams state: %v", err)
 	}
 
@@ -122,7 +126,7 @@ func CheckStateInvariants(st *State, store adt.Store, priorEpoch abi.ChainEpoch,
 	}
 
 	// Mirrors actors/reward/src/streams.rs::compute_service_liability.
-	liabilities, err := computeExplicitLiability(&streams, st.Accrued)
+	liabilities, err := computeExplicitLiability(streams, st.Accrued)
 	if err != nil {
 		acc.Addf("error computing explicit-stream liabilities: %v", err)
 	} else {

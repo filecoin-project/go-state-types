@@ -21,9 +21,18 @@ import (
 func validInvariantState(t *testing.T) (*State, *StreamsState, adt.Store) {
 	t.Helper()
 	store := adt.WrapStore(context.Background(), cbor.NewCborStore(test_util.NewBlockStoreInMemory()))
-	st, err := ConstructState(store, big.Zero())
-	require.NoError(t, err)
-	st.EffectiveBaselinePower = big.Zero()
+	st := &State{
+		CumsumBaseline:         big.Zero(),
+		CumsumRealized:         big.Zero(),
+		EffectiveBaselinePower: big.Zero(),
+		ThisEpochReward:        big.Zero(),
+		ThisEpochBaselinePower: big.Zero(),
+		Epoch:                  0,
+		TotalMintedReward:      big.Zero(),
+		TotalBurnMinted:        big.Zero(),
+		TotalExplicitMinted:    big.Zero(),
+		SWAActor:               idAddress(t, 99),
+	}
 
 	pct := Denom / 100
 	streams := &StreamsState{
@@ -77,6 +86,32 @@ func amountRows(t *testing.T, first, count uint64) []RecipientAmount {
 		return bytes.Compare(rows[i].Recipient.Bytes(), rows[j].Recipient.Bytes()) < 0
 	})
 	return rows
+}
+
+func TestConstructState(t *testing.T) {
+	store := adt.WrapStore(context.Background(), cbor.NewCborStore(test_util.NewBlockStoreInMemory()))
+	st, err := ConstructState(store, big.Zero())
+	require.NoError(t, err)
+
+	streams, err := st.LoadStreams(store)
+	require.NoError(t, err)
+	require.Equal(t, []Stream{{
+		ID: 1,
+		Weight: WeightRecord{
+			VStart: Denom,
+			TStart: -1,
+			Floor:  Denom,
+			Cap:    Denom,
+		},
+	}}, streams.Streams)
+	require.Empty(t, st.Accrued)
+	require.Empty(t, streams.Tombstones)
+	require.Empty(t, streams.PendingWrites)
+	require.Equal(t, builtin.SystemActorAddr, st.SWAActor)
+
+	summary, acc := CheckStateInvariants(st, store, st.Epoch-1, StorageMiningAllocationCheck)
+	require.Empty(t, acc.Messages())
+	require.Equal(t, &StateSummary{StreamCount: 1}, summary)
 }
 
 func TestCheckStateInvariants(t *testing.T) {
