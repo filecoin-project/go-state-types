@@ -25,27 +25,24 @@ func migrationIDAddress(t *testing.T, id uint64) address.Address {
 	return addr
 }
 
-func validRewardMigrationConfig(t *testing.T, activationEpoch abi.ChainEpoch) RewardMigrationConfig {
+func validRewardMigrationConfig(t *testing.T) RewardMigrationConfig {
 	t.Helper()
 	pct := reward19.Denom / 100
 	return RewardMigrationConfig{
-		ActivationEpoch:   activationEpoch,
 		SWATimelockEpochs: 20_160,
 		SWAActor:          migrationIDAddress(t, 100),
-		Streams: []reward19.RegisterStreamParams{
+		Streams: []RewardMigrationStream{
 			{
-				ID:              1,
-				Weight:          reward19.WeightRecord{VStart: 95 * pct, Slope: -1, TStart: activationEpoch, Floor: 50 * pct, Cap: 95 * pct},
-				ActivationEpoch: activationEpoch,
+				ID:     1,
+				Weight: RewardMigrationWeight{VStart: 95 * pct, Slope: -1, Floor: 50 * pct, Cap: 95 * pct},
 			},
 			{
 				ID:     2,
-				Weight: reward19.WeightRecord{VStart: 5 * pct, Slope: 1, TStart: activationEpoch, Floor: 5 * pct, Cap: 10 * pct},
+				Weight: RewardMigrationWeight{VStart: 5 * pct, Slope: 1, Floor: 5 * pct, Cap: 10 * pct},
 				Distribution: &reward19.DistributionInit{
 					Writer: migrationIDAddress(t, 101),
 					Shares: []reward19.RecipientShare{{Recipient: migrationIDAddress(t, 102), Share: reward19.Denom}},
 				},
-				ActivationEpoch: activationEpoch,
 			},
 		},
 	}
@@ -74,9 +71,9 @@ func TestRewardMigration(t *testing.T) {
 	req.NoError(err)
 
 	activationEpoch := abi.ChainEpoch(100)
-	config := validRewardMigrationConfig(t, activationEpoch)
+	config := validRewardMigrationConfig(t)
 	outCodeCID := cid.MustParse("bafy2bzaca4aaaaaaaaaqk")
-	migrator, err := newRewardMigrator(config, outCodeCID)
+	migrator, err := newRewardMigrator(config, activationEpoch, outCodeCID)
 	req.NoError(err)
 	result, err := migrator.MigrateState(ctx, store, migration.ActorMigrationInput{Address: address.TestAddress, Head: inHead})
 	req.NoError(err)
@@ -104,10 +101,22 @@ func TestRewardMigration(t *testing.T) {
 	req.NoError(err)
 	req.Len(streams.Streams, 2)
 	req.Equal(reward19.StreamID(1), streams.Streams[0].ID)
-	req.Equal(config.Streams[0].Weight, streams.Streams[0].Weight)
+	req.Equal(reward19.WeightRecord{
+		VStart: config.Streams[0].Weight.VStart,
+		Slope:  config.Streams[0].Weight.Slope,
+		TStart: activationEpoch,
+		Floor:  config.Streams[0].Weight.Floor,
+		Cap:    config.Streams[0].Weight.Cap,
+	}, streams.Streams[0].Weight)
 	req.Nil(streams.Streams[0].Distribution)
 	req.Equal(reward19.StreamID(2), streams.Streams[1].ID)
-	req.Equal(config.Streams[1].Weight, streams.Streams[1].Weight)
+	req.Equal(reward19.WeightRecord{
+		VStart: config.Streams[1].Weight.VStart,
+		Slope:  config.Streams[1].Weight.Slope,
+		TStart: activationEpoch,
+		Floor:  config.Streams[1].Weight.Floor,
+		Cap:    config.Streams[1].Weight.Cap,
+	}, streams.Streams[1].Weight)
 	req.Equal(config.Streams[1].Distribution.Writer, streams.Streams[1].Distribution.Writer)
 	req.Equal(config.Streams[1].Distribution.Shares, streams.Streams[1].Distribution.Shares)
 	req.Empty(streams.Tombstones)
@@ -121,7 +130,8 @@ func TestRewardMigrationDropsStoredRewardTotals(t *testing.T) {
 	store := cbor.NewMemCborStore()
 	activationEpoch := abi.ChainEpoch(100)
 	migrator, err := newRewardMigrator(
-		validRewardMigrationConfig(t, activationEpoch),
+		validRewardMigrationConfig(t),
+		activationEpoch,
 		cid.MustParse("bafy2bzaca4aaaaaaaaaqk"),
 	)
 	req.NoError(err)
@@ -164,23 +174,21 @@ func TestRewardMigrationDropsStoredRewardTotals(t *testing.T) {
 func TestNewRewardMigratorAcceptsAlternativeBootstrapWeights(t *testing.T) {
 	activationEpoch := abi.ChainEpoch(100)
 	pct := reward19.Denom / 100
-	config := validRewardMigrationConfig(t, activationEpoch)
-	config.Streams[0].Weight = reward19.WeightRecord{
+	config := validRewardMigrationConfig(t)
+	config.Streams[0].Weight = RewardMigrationWeight{
 		VStart: 80 * pct,
 		Slope:  -1,
-		TStart: activationEpoch,
 		Floor:  60 * pct,
 		Cap:    80 * pct,
 	}
-	config.Streams[1].Weight = reward19.WeightRecord{
+	config.Streams[1].Weight = RewardMigrationWeight{
 		VStart: 20 * pct,
 		Slope:  1,
-		TStart: activationEpoch,
 		Floor:  10 * pct,
 		Cap:    20 * pct,
 	}
 
-	_, err := newRewardMigrator(config, cid.MustParse("bafy2bzaca4aaaaaaaaaqk"))
+	_, err := newRewardMigrator(config, activationEpoch, cid.MustParse("bafy2bzaca4aaaaaaaaaqk"))
 	require.NoError(t, err)
 }
 
@@ -192,20 +200,6 @@ func TestNewRewardMigratorRejectsInvalidConfig(t *testing.T) {
 		mutate   func(*RewardMigrationConfig)
 		expected string
 	}{
-		{
-			name: "activation epoch mismatch",
-			mutate: func(config *RewardMigrationConfig) {
-				config.Streams[0].ActivationEpoch++
-			},
-			expected: "activation epoch 101 does not match upgrade epoch 100",
-		},
-		{
-			name: "weight start mismatch",
-			mutate: func(config *RewardMigrationConfig) {
-				config.Streams[1].Weight.TStart++
-			},
-			expected: "weight start 101 does not match upgrade epoch 100",
-		},
 		{
 			name: "wrong stream count",
 			mutate: func(config *RewardMigrationConfig) {
@@ -272,9 +266,9 @@ func TestNewRewardMigratorRejectsInvalidConfig(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			config := validRewardMigrationConfig(t, activationEpoch)
+			config := validRewardMigrationConfig(t)
 			tc.mutate(&config)
-			_, err := newRewardMigrator(config, outCodeCID)
+			_, err := newRewardMigrator(config, activationEpoch, outCodeCID)
 			require.ErrorContains(t, err, tc.expected)
 		})
 	}

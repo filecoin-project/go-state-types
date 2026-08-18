@@ -21,10 +21,24 @@ import (
 )
 
 type RewardMigrationConfig struct {
-	ActivationEpoch   abi.ChainEpoch
 	SWATimelockEpochs abi.ChainEpoch
 	SWAActor          address.Address
-	Streams           []reward19.RegisterStreamParams
+	Streams           []RewardMigrationStream
+}
+
+// RewardMigrationStream defines a bootstrap stream independently of its activation epoch.
+type RewardMigrationStream struct {
+	ID           reward19.StreamID
+	Weight       RewardMigrationWeight
+	Distribution *reward19.DistributionInit
+}
+
+// RewardMigrationWeight defines a bootstrap weigh independently of its start epoch.
+type RewardMigrationWeight struct {
+	VStart uint64
+	Slope  int64
+	Floor  uint64
+	Cap    uint64
 }
 
 // MigrateStateTree Migrates the filecoin state tree starting from the global state tree and upgrading all actor state.
@@ -109,11 +123,13 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	if !ok {
 		return cid.Undef, xerrors.Errorf("code cid for reward actor not found in new manifest")
 	}
-	rewardMigrator, err := newRewardMigrator(rewardConfig, reward19CID)
+	activationEpoch := priorEpoch + 1
+	rewardMigrator, err := newRewardMigrator(rewardConfig, activationEpoch, reward19CID)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to create reward migrator: %w", err)
 	}
-	migrations[reward18CID] = migration.CachedMigration(cache, *rewardMigrator)
+	// The output depends on priorEpoch as well as the actor head, so it cannot use the head-only migration cache.
+	migrations[reward18CID] = *rewardMigrator
 
 	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations)+len(deferredCodeIDs), len(oldManifestData.Entries))
