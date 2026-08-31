@@ -191,6 +191,25 @@ func TestNewRewardMigratorAcceptsAlternativeBootstrapWeights(t *testing.T) {
 	_, err := newRewardMigrator(config, activationEpoch, cid.MustParse("bafy2bzaca4aaaaaaaaaqk"))
 	require.NoError(t, err)
 }
+func TestNewRewardMigratorAcceptsNeutralBootstrap(t *testing.T) {
+	activationEpoch := abi.ChainEpoch(100)
+	config := RewardMigrationConfig{
+		SWATimelockEpochs: 20_160,
+		SWAActor:          migrationIDAddress(t, 100),
+		Streams: []RewardMigrationStream{{
+			ID:     1,
+			Weight: RewardMigrationWeight{VStart: reward19.Denom, Floor: reward19.Denom, Cap: reward19.Denom},
+		}},
+	}
+
+	migrator, err := newRewardMigrator(config, activationEpoch, cid.MustParse("bafy2bzaca4aaaaaaaaaqk"))
+	require.NoError(t, err)
+	require.Equal(t, []reward19.Stream{{
+		ID:     1,
+		Weight: reward19.WeightRecord{VStart: reward19.Denom, TStart: activationEpoch, Floor: reward19.Denom, Cap: reward19.Denom},
+	}}, migrator.streams.Streams)
+	require.Empty(t, migrator.accruals)
+}
 
 func TestNewRewardMigratorRejectsInvalidConfig(t *testing.T) {
 	activationEpoch := abi.ChainEpoch(100)
@@ -203,9 +222,16 @@ func TestNewRewardMigratorRejectsInvalidConfig(t *testing.T) {
 		{
 			name: "wrong stream count",
 			mutate: func(config *RewardMigrationConfig) {
+				config.Streams = append(config.Streams, RewardMigrationStream{ID: 3})
+			},
+			expected: "requires one or two streams",
+		},
+		{
+			name: "non-neutral single stream",
+			mutate: func(config *RewardMigrationConfig) {
 				config.Streams = config.Streams[:1]
 			},
-			expected: "requires exactly two streams",
+			expected: "single-stream bootstrap must be implicit stream 1 at constant DENOM",
 		},
 		{
 			name: "starting weights under-sum",

@@ -713,16 +713,10 @@ func computeExplicitLiability(streams *StreamsState, accruals []StreamAccrual) (
 	return total, nil
 }
 
-// ValidateMigrationStreams validates and constructs the two activation streams.
+// ValidateMigrationStreams validates and constructs a neutral or split bootstrap.
 func ValidateMigrationStreams(params []RegisterStreamParams, activationEpoch abi.ChainEpoch) (*StreamsState, []StreamAccrual, error) {
-	if len(params) != 2 {
-		return nil, nil, fmt.Errorf("bootstrap requires exactly two streams")
-	}
-	if params[0].ID != 1 || params[1].ID != 2 {
-		return nil, nil, fmt.Errorf("bootstrap stream IDs must be 1 and 2")
-	}
-	if params[0].Distribution != nil || params[1].Distribution == nil {
-		return nil, nil, fmt.Errorf("bootstrap distribution forms are invalid")
+	if len(params) != 1 && len(params) != 2 {
+		return nil, nil, fmt.Errorf("bootstrap requires one or two streams")
 	}
 	for _, param := range params {
 		if param.ActivationEpoch != activationEpoch {
@@ -733,16 +727,29 @@ func ValidateMigrationStreams(params []RegisterStreamParams, activationEpoch abi
 		}
 	}
 
-	consensus := params[0].Weight
-	explicit := params[1].Weight
-	if consensus.VStart > Denom || explicit.VStart != Denom-consensus.VStart {
-		return nil, nil, fmt.Errorf("bootstrap starting weights must sum to denominator")
-	}
-	if consensus.Slope >= 0 || explicit.Slope <= 0 || consensus.Slope != -explicit.Slope {
-		return nil, nil, fmt.Errorf("bootstrap weight slopes are invalid")
-	}
-	if len(params[1].Distribution.Shares) != 1 || params[1].Distribution.Shares[0].Share != Denom {
-		return nil, nil, fmt.Errorf("explicit bootstrap requires one full-share recipient")
+	if len(params) == 1 {
+		neutral := WeightRecord{VStart: Denom, TStart: activationEpoch, Floor: Denom, Cap: Denom}
+		if params[0].ID != 1 || params[0].Distribution != nil || params[0].Weight != neutral {
+			return nil, nil, fmt.Errorf("single-stream bootstrap must be implicit stream 1 at constant DENOM")
+		}
+	} else {
+		if params[0].ID != 1 || params[1].ID != 2 {
+			return nil, nil, fmt.Errorf("split bootstrap stream IDs must be 1 and 2")
+		}
+		if params[0].Distribution != nil || params[1].Distribution == nil {
+			return nil, nil, fmt.Errorf("split bootstrap distribution forms are invalid")
+		}
+		consensus := params[0].Weight
+		explicit := params[1].Weight
+		if consensus.VStart > Denom || explicit.VStart != Denom-consensus.VStart {
+			return nil, nil, fmt.Errorf("bootstrap starting weights must sum to denominator")
+		}
+		if consensus.Slope >= 0 || explicit.Slope <= 0 || consensus.Slope != -explicit.Slope {
+			return nil, nil, fmt.Errorf("bootstrap weight slopes are invalid")
+		}
+		if len(params[1].Distribution.Shares) != 1 || params[1].Distribution.Shares[0].Share != Denom {
+			return nil, nil, fmt.Errorf("explicit bootstrap requires one full-share recipient")
+		}
 	}
 
 	streams := &StreamsState{Streams: make([]Stream, 0, len(params))}
