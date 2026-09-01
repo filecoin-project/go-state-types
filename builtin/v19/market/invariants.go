@@ -28,16 +28,14 @@ type DealSummary struct {
 }
 
 type StateSummary struct {
-	Deals                    map[abi.DealID]*DealSummary
-	PendingDealAllocationIds map[abi.DealID]verifreg.AllocationId
-	ClaimIdToDealId          map[verifreg.ClaimId]abi.DealID
-	AllocIdToDealId          map[verifreg.AllocationId]abi.DealID
-	ProviderSectors          map[abi.SectorID][]abi.DealID
-	PendingProposalCount     uint64
-	DealStateCount           uint64
-	LockTableCount           uint64
-	DealOpEpochCount         uint64
-	DealOpCount              uint64
+	Deals                map[abi.DealID]*DealSummary
+	ClaimIdToDealId      map[verifreg.ClaimId]abi.DealID
+	ProviderSectors      map[abi.SectorID][]abi.DealID
+	PendingProposalCount uint64
+	DealStateCount       uint64
+	LockTableCount       uint64
+	DealOpEpochCount     uint64
+	DealOpCount          uint64
 }
 
 // Checks internal invariants of market state.
@@ -104,17 +102,6 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 	// Deal States
 	//
 
-	pendingDealAllocationIds, err := st.GetPendingDealAllocationIds(store)
-	acc.RequireNoError(err, "error loading pending deal proposal Ids")
-
-	allocationIdToDealId := make(map[verifreg.AllocationId]abi.DealID)
-	for dealId, allocationId := range pendingDealAllocationIds {
-		_, found := proposalStats[dealId]
-		acc.Require(found, "pending deal allocation %d not found in proposals", dealId)
-
-		allocationIdToDealId[allocationId] = dealId
-	}
-
 	dealStateCount := uint64(0)
 	claimIdToDealId := make(map[verifreg.ClaimId]abi.DealID)
 	expectedProviderSectors := make(map[abi.DealID]struct{})
@@ -152,9 +139,6 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 				stats.SlashEpoch = dealState.SlashEpoch
 				stats.SectorNumber = dealState.SectorNumber
 			}
-			_, found = pendingDealAllocationIds[abi.DealID(dealID)]
-			acc.Require(!found, "deal %d has pending allocation", dealID)
-
 			if dealState.SlashEpoch == EpochUndefined && dealState.SectorStartEpoch != EpochUndefined && stats.EndEpoch > currEpoch {
 				expectedProviderSectors[abi.DealID(dealID)] = struct{}{}
 			}
@@ -338,15 +322,13 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 	acc.Require(len(expectedProviderSectors) == 0, "missing %d providersectors entries for deals", len(expectedProviderSectors))
 
 	return &StateSummary{
-		Deals:                    proposalStats,
-		PendingDealAllocationIds: pendingDealAllocationIds,
-		PendingProposalCount:     pendingProposalCount,
-		DealStateCount:           dealStateCount,
-		LockTableCount:           lockTableCount,
-		DealOpEpochCount:         dealOpEpochCount,
-		DealOpCount:              dealOpCount,
-		ClaimIdToDealId:          claimIdToDealId,
-		AllocIdToDealId:          allocationIdToDealId,
-		ProviderSectors:          providerSectors,
+		Deals:                proposalStats,
+		PendingProposalCount: pendingProposalCount,
+		DealStateCount:       dealStateCount,
+		LockTableCount:       lockTableCount,
+		DealOpEpochCount:     dealOpEpochCount,
+		DealOpCount:          dealOpCount,
+		ClaimIdToDealId:      claimIdToDealId,
+		ProviderSectors:      providerSectors,
 	}, acc
 }

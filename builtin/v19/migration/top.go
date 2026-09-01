@@ -92,10 +92,14 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	deferredCodeIDs := make(map[cid.Cid]struct{})
 
 	reward18CID := cid.Undef
+	market18CID := cid.Undef
 
 	for _, oldEntry := range oldManifestData.Entries {
 		if oldEntry.Name == manifest.RewardKey {
 			reward18CID = oldEntry.Code
+		}
+		if oldEntry.Name == manifest.MarketKey {
+			market18CID = oldEntry.Code
 		}
 
 		newCodeCID, ok := newManifest.Get(oldEntry.Name)
@@ -130,6 +134,18 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 	// The output depends on priorEpoch as well as the actor head, so it cannot use the head-only migration cache.
 	migrations[reward18CID] = *rewardMigrator
+
+	// The Market Actor
+
+	if market18CID == cid.Undef {
+		return cid.Undef, xerrors.Errorf("code cid for market actor not found in old manifest")
+	}
+	market19CID, ok := newManifest.Get(manifest.MarketKey)
+	if !ok {
+		return cid.Undef, xerrors.Errorf("code cid for market actor not found in new manifest")
+	}
+	// Overrides the generic code-only migration registered above: the state shape changes.
+	migrations[market18CID] = migration.CachedMigration(cache, marketMigrator{OutCodeCID: market19CID})
 
 	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations)+len(deferredCodeIDs), len(oldManifestData.Entries))
