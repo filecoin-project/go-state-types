@@ -380,6 +380,20 @@ type SectorClaim struct {
 	DropClaims     []verifreg.ClaimId
 }
 
+type UpgradeSectorQualityParams struct {
+	Upgrades []UpgradeSectorQuality
+}
+
+type UpgradeSectorQuality struct {
+	Deadline  uint64
+	Partition uint64
+	// Sectors to upgrade to full quality-adjusted power (FIP-0118).
+	Sectors bitfield.BitField
+	// Unset means upgrade only: every selected sector keeps its own expiration.
+	// Otherwise the absolute epoch to extend all selected sectors to.
+	NewExpiration *abi.ChainEpoch
+}
+
 type GetOwnerReturn struct {
 	Owner    addr.Address
 	Proposed *addr.Address

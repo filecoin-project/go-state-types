@@ -240,6 +240,8 @@ func main() {
 		miner.SectorNIActivationInfo{},
 		miner.ProveCommitSectorsNIParams{},
 		miner.MaxTerminationFeeParams{},
+		miner.UpgradeSectorQualityParams{},
+		miner.UpgradeSectorQuality{},
 		miner.GenerateSectorLocationParams{},
 		miner.GenerateSectorLocationReturn{},
 		miner.ValidateSectorStatusParams{},

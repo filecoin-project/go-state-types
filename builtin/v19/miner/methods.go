@@ -69,4 +69,5 @@ var Methods = map[abi.MethodNum]builtin.MethodMeta{
 	34: builtin.NewMethodMeta("ProveCommitSectors3", *new(func(*ProveCommitSectors3Params) *ProveCommitSectors3Return)),    // ProveCommitSectors3
 	35: builtin.NewMethodMeta("ProveReplicaUpdates3", *new(func(*ProveReplicaUpdates3Params) *ProveReplicaUpdates3Return)), // ProveReplicaUpdates3
 	36: builtin.NewMethodMeta("ProveCommitSectorsNI", *new(func(*ProveCommitSectorsNIParams) *abi.EmptyValue)),             // ProveCommitSectorsNI
+	37: builtin.NewMethodMeta("UpgradeSectorQuality", *new(func(*UpgradeSectorQualityParams) *abi.EmptyValue)),             // UpgradeSectorQuality
 }

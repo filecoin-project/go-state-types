@@ -264,6 +264,7 @@ var MethodsMiner = struct {
 	ProveCommitSectorsNI      abi.MethodNum
 	MaxTerminationFeeExported abi.MethodNum
 	InitialPledgeExported     abi.MethodNum
+	UpgradeSectorQuality      abi.MethodNum
 }{
 	MethodConstructor,
 	2,
@@ -318,6 +319,7 @@ var MethodsMiner = struct {
 	36,
 	MustGenerateFRCMethodNum("MaxTerminationFee"),
 	MustGenerateFRCMethodNum("InitialPledge"),
+	37,
 }
 
 var MethodsVerifiedRegistry = struct {
