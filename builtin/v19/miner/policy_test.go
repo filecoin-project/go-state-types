@@ -13,7 +13,7 @@ import (
 
 func TestQualityForWeight(t *testing.T) {
 	emptyQuality := big.NewInt(1 << builtin.SectorQualityPrecision)
-	verifiedQuality := big.Mul(emptyQuality, big.Div(builtin.VerifiedDealWeightMultiplier, builtin.QualityBaseMultiplier))
+	verifiedQuality := big.Mul(emptyQuality, big.Div(builtin.MaxQualityMultiplier, builtin.QualityBaseMultiplier))
 	halfVerifiedQuality := big.Add(big.Div(emptyQuality, big.NewInt(2)), big.Div(verifiedQuality, big.NewInt(2)))
 
 	sizeRange := []abi.SectorSize{
@@ -79,5 +79,38 @@ func TestDailyProofFeeCalc(t *testing.T) {
 		delta := big.Sub(fee, tc.expected).Abs()
 		require.LessOrEqual(t, delta.Uint64(), uint64(10),
 			"size: %s, fee: %s, expected_fee: %s (±10)", tc.size, fee, tc.expected)
+	}
+}
+
+func TestSectorOnChainInfoFlags(t *testing.T) {
+	require.Equal(t, miner.SectorOnChainInfoFlags(0x1), miner.SIMPLE_QA_POWER)
+	require.Equal(t, miner.SectorOnChainInfoFlags(0x2), miner.FULL_QA_POWER)
+}
+
+func TestQAPowerForSector(t *testing.T) {
+	sizes := []abi.SectorSize{abi.SectorSize(2 << 10), abi.SectorSize(32 << 30), abi.SectorSize(64 << 30)}
+	for _, size := range sizes {
+		duration := abi.ChainEpoch(1000) * builtin.EpochsInDay
+		sector := func(flags miner.SectorOnChainInfoFlags, verifiedWeight abi.DealWeight) *miner.SectorOnChainInfo {
+			return &miner.SectorOnChainInfo{
+				Expiration:         duration,
+				PowerBaseEpoch:     0,
+				VerifiedDealWeight: verifiedWeight,
+				Flags:              flags,
+			}
+		}
+		fullWeight := big.NewInt(int64(size) * int64(duration))
+
+		// Unflagged: quality comes from the recorded weight.
+		require.Equal(t, miner.QAPowerForWeight(size, duration, big.Zero()),
+			miner.QAPowerForSector(size, sector(miner.SIMPLE_QA_POWER, big.Zero())))
+		require.Equal(t, miner.QAPowerForWeight(size, duration, fullWeight),
+			miner.QAPowerForSector(size, sector(miner.SIMPLE_QA_POWER, fullWeight)))
+
+		// Flagged: always maximum, whatever the weight says.
+		require.Equal(t, miner.QAPowerMax(size),
+			miner.QAPowerForSector(size, sector(miner.SIMPLE_QA_POWER|miner.FULL_QA_POWER, big.Zero())))
+		require.Equal(t, miner.QAPowerMax(size),
+			miner.QAPowerForSector(size, sector(miner.SIMPLE_QA_POWER|miner.FULL_QA_POWER, fullWeight)))
 	}
 }
