@@ -29,6 +29,27 @@ func DealDurationBounds(_ abi.PaddedPieceSize) (min abi.ChainEpoch, max abi.Chai
 // DealMaxLabelSize is the maximum size of a deal label.
 const DealMaxLabelSize = 256
 
+// DealUpdatesInterval is the number of epochs between cron visits for a deal. Deals published
+// since FIP-0074 receive exactly one visit; the interval spreads those visits over its span.
+const DealUpdatesInterval = 30 * builtin.EpochsInDay
+
+// NextUpdateEpoch calculates the first update epoch for a deal ID that is no sooner than
+// `earliest`. An ID is processed as a fixed offset within each `interval` of epochs.
+func NextUpdateEpoch(id abi.DealID, interval abi.ChainEpoch, earliest abi.ChainEpoch) abi.ChainEpoch {
+	// Same logic as QuantSpec from the miner actor, but duplicated here to avoid unnecessary
+	// dependencies.
+	offset := abi.ChainEpoch(uint64(id) % uint64(interval))
+	remainder := (earliest - offset) % interval
+	quotient := (earliest - offset) / interval
+
+	// Don't round if epoch falls on a quantization epoch or when negative (negative truncating
+	// division rounds up).
+	if remainder == 0 || earliest-offset < 0 {
+		return interval*quotient + offset
+	}
+	return interval*(quotient+1) + offset
+}
+
 func DealPricePerEpochBounds(_ abi.PaddedPieceSize, _ abi.ChainEpoch) (min abi.TokenAmount, max abi.TokenAmount) {
 	return abi.NewTokenAmount(0), builtin.TotalFilecoin
 }

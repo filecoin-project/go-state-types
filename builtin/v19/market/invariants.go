@@ -63,7 +63,6 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 	proposalCids := make(map[cid.Cid]struct{})
 	maxDealID := int64(-1)
 	proposalStats := make(map[abi.DealID]*DealSummary)
-	expectedDealOps := make(map[abi.DealID]struct{})
 	totalProposalCollateral := abi.NewTokenAmount(0)
 
 	if proposals, err := adt.AsArray(store, st.Proposals, ProposalsAmtBitwidth); err != nil {
@@ -73,10 +72,6 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 		err = proposals.ForEach(&proposal, func(dealID int64) error {
 			pcid, err := proposal.Cid()
 			acc.RequireNoError(err, "error getting cid from proposal")
-
-			if proposal.StartEpoch >= currEpoch {
-				expectedDealOps[abi.DealID(dealID)] = struct{}{}
-			}
 
 			// keep some state
 			proposalCids[pcid] = struct{}{}
@@ -240,6 +235,7 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 
 	dealOpEpochCount := uint64(0)
 	dealOpCount := uint64(0)
+	dealOpsByID := make(map[abi.DealID][]abi.ChainEpoch)
 	if dealOps, err := AsSetMultimap(store, st.DealOpsByEpoch, builtin.DefaultHamtBitwidth, builtin.DefaultHamtBitwidth); err != nil {
 		acc.Addf("error loading deal ops: %v", err)
 	} else {
@@ -253,7 +249,7 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 			return dealOps.ForEach(abi.ChainEpoch(epoch), func(id abi.DealID) error {
 				_, found := proposalStats[id]
 				acc.Require(found, "deal op found for deal id %d with missing proposal at epoch %d", id, epoch)
-				delete(expectedDealOps, id)
+				dealOpsByID[id] = append(dealOpsByID[id], abi.ChainEpoch(epoch))
 				dealOpCount++
 				return nil
 			})
@@ -261,7 +257,18 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 		acc.RequireNoError(err, "error iterating deal ops")
 	}
 
-	acc.Require(len(expectedDealOps) == 0, "missing deal ops for proposals: %v", expectedDealOps)
+	// A deal published since FIP-0074 is queued exactly once, at its first visit. Legacy deals
+	// have passed that epoch and are rescheduled by cron itself, so only deals that provably
+	// have not been visited yet are checked.
+	for dealID, stats := range proposalStats {
+		firstVisit := NextUpdateEpoch(dealID, DealUpdatesInterval, stats.StartEpoch)
+		if st.LastCron < firstVisit && stats.LastUpdatedEpoch == EpochUndefined {
+			scheduled := dealOpsByID[dealID]
+			acc.Require(len(scheduled) == 1 && scheduled[0] == firstVisit,
+				"never-visited deal %d must have exactly one deal op at epoch %d, found %v",
+				dealID, firstVisit, scheduled)
+		}
+	}
 
 	//
 	// Provider Sectors
