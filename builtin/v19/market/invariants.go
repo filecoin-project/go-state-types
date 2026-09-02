@@ -28,16 +28,14 @@ type DealSummary struct {
 }
 
 type StateSummary struct {
-	Deals                    map[abi.DealID]*DealSummary
-	PendingDealAllocationIds map[abi.DealID]verifreg.AllocationId
-	ClaimIdToDealId          map[verifreg.ClaimId]abi.DealID
-	AllocIdToDealId          map[verifreg.AllocationId]abi.DealID
-	ProviderSectors          map[abi.SectorID][]abi.DealID
-	PendingProposalCount     uint64
-	DealStateCount           uint64
-	LockTableCount           uint64
-	DealOpEpochCount         uint64
-	DealOpCount              uint64
+	Deals                map[abi.DealID]*DealSummary
+	ClaimIdToDealId      map[verifreg.ClaimId]abi.DealID
+	ProviderSectors      map[abi.SectorID][]abi.DealID
+	PendingProposalCount uint64
+	DealStateCount       uint64
+	LockTableCount       uint64
+	DealOpEpochCount     uint64
+	DealOpCount          uint64
 }
 
 // Checks internal invariants of market state.
@@ -63,7 +61,6 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 	proposalCids := make(map[cid.Cid]struct{})
 	maxDealID := int64(-1)
 	proposalStats := make(map[abi.DealID]*DealSummary)
-	expectedDealOps := make(map[abi.DealID]struct{})
 	totalProposalCollateral := abi.NewTokenAmount(0)
 
 	if proposals, err := adt.AsArray(store, st.Proposals, ProposalsAmtBitwidth); err != nil {
@@ -73,10 +70,6 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 		err = proposals.ForEach(&proposal, func(dealID int64) error {
 			pcid, err := proposal.Cid()
 			acc.RequireNoError(err, "error getting cid from proposal")
-
-			if proposal.StartEpoch >= currEpoch {
-				expectedDealOps[abi.DealID(dealID)] = struct{}{}
-			}
 
 			// keep some state
 			proposalCids[pcid] = struct{}{}
@@ -108,17 +101,6 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 	//
 	// Deal States
 	//
-
-	pendingDealAllocationIds, err := st.GetPendingDealAllocationIds(store)
-	acc.RequireNoError(err, "error loading pending deal proposal Ids")
-
-	allocationIdToDealId := make(map[verifreg.AllocationId]abi.DealID)
-	for dealId, allocationId := range pendingDealAllocationIds {
-		_, found := proposalStats[dealId]
-		acc.Require(found, "pending deal allocation %d not found in proposals", dealId)
-
-		allocationIdToDealId[allocationId] = dealId
-	}
 
 	dealStateCount := uint64(0)
 	claimIdToDealId := make(map[verifreg.ClaimId]abi.DealID)
@@ -157,9 +139,6 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 				stats.SlashEpoch = dealState.SlashEpoch
 				stats.SectorNumber = dealState.SectorNumber
 			}
-			_, found = pendingDealAllocationIds[abi.DealID(dealID)]
-			acc.Require(!found, "deal %d has pending allocation", dealID)
-
 			if dealState.SlashEpoch == EpochUndefined && dealState.SectorStartEpoch != EpochUndefined && stats.EndEpoch > currEpoch {
 				expectedProviderSectors[abi.DealID(dealID)] = struct{}{}
 			}
@@ -240,6 +219,7 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 
 	dealOpEpochCount := uint64(0)
 	dealOpCount := uint64(0)
+	dealOpsByID := make(map[abi.DealID][]abi.ChainEpoch)
 	if dealOps, err := AsSetMultimap(store, st.DealOpsByEpoch, builtin.DefaultHamtBitwidth, builtin.DefaultHamtBitwidth); err != nil {
 		acc.Addf("error loading deal ops: %v", err)
 	} else {
@@ -253,7 +233,7 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 			return dealOps.ForEach(abi.ChainEpoch(epoch), func(id abi.DealID) error {
 				_, found := proposalStats[id]
 				acc.Require(found, "deal op found for deal id %d with missing proposal at epoch %d", id, epoch)
-				delete(expectedDealOps, id)
+				dealOpsByID[id] = append(dealOpsByID[id], abi.ChainEpoch(epoch))
 				dealOpCount++
 				return nil
 			})
@@ -261,7 +241,18 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 		acc.RequireNoError(err, "error iterating deal ops")
 	}
 
-	acc.Require(len(expectedDealOps) == 0, "missing deal ops for proposals: %v", expectedDealOps)
+	// A deal published since FIP-0074 is queued exactly once, at its first visit. Legacy deals
+	// have passed that epoch and are rescheduled by cron itself, so only deals that provably
+	// have not been visited yet are checked.
+	for dealID, stats := range proposalStats {
+		firstVisit := NextUpdateEpoch(dealID, DealUpdatesInterval, stats.StartEpoch)
+		if st.LastCron < firstVisit && stats.LastUpdatedEpoch == EpochUndefined {
+			scheduled := dealOpsByID[dealID]
+			acc.Require(len(scheduled) == 1 && scheduled[0] == firstVisit,
+				"never-visited deal %d must have exactly one deal op at epoch %d, found %v",
+				dealID, firstVisit, scheduled)
+		}
+	}
 
 	//
 	// Provider Sectors
@@ -331,15 +322,13 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 	acc.Require(len(expectedProviderSectors) == 0, "missing %d providersectors entries for deals", len(expectedProviderSectors))
 
 	return &StateSummary{
-		Deals:                    proposalStats,
-		PendingDealAllocationIds: pendingDealAllocationIds,
-		PendingProposalCount:     pendingProposalCount,
-		DealStateCount:           dealStateCount,
-		LockTableCount:           lockTableCount,
-		DealOpEpochCount:         dealOpEpochCount,
-		DealOpCount:              dealOpCount,
-		ClaimIdToDealId:          claimIdToDealId,
-		AllocIdToDealId:          allocationIdToDealId,
-		ProviderSectors:          providerSectors,
+		Deals:                proposalStats,
+		PendingProposalCount: pendingProposalCount,
+		DealStateCount:       dealStateCount,
+		LockTableCount:       lockTableCount,
+		DealOpEpochCount:     dealOpEpochCount,
+		DealOpCount:          dealOpCount,
+		ClaimIdToDealId:      claimIdToDealId,
+		ProviderSectors:      providerSectors,
 	}, acc
 }

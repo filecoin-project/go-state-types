@@ -99,6 +99,83 @@ func TestSerializationProveCommitSectorsNIParams(t *testing.T) {
 	}
 }
 
+func TestSerializationUpgradeSectorQualityParams(t *testing.T) {
+	epoch := func(e abi.ChainEpoch) *abi.ChainEpoch { return &e }
+	testCases := []struct {
+		params UpgradeSectorQualityParams
+		hex    string
+	}{
+		{
+			params: UpgradeSectorQualityParams{Upgrades: nil},
+			// [[]]
+			hex: "8180",
+		},
+		{
+			params: UpgradeSectorQualityParams{
+				Upgrades: []UpgradeSectorQuality{{
+					Deadline:      1,
+					Partition:     2,
+					Sectors:       bfrt(3),
+					NewExpiration: nil,
+				}},
+			},
+			// [[[1,2,byte[7002],null]]]
+			hex: "8181840102427002f6",
+		},
+		{
+			params: UpgradeSectorQualityParams{
+				Upgrades: []UpgradeSectorQuality{{
+					Deadline:      4,
+					Partition:     5,
+					Sectors:       bfrt(6, 7),
+					NewExpiration: epoch(8),
+				}},
+			},
+			// [[[4,5,byte[d014],8]]]
+			hex: "818184040542d01408",
+		},
+		{
+			params: UpgradeSectorQualityParams{
+				Upgrades: []UpgradeSectorQuality{
+					{
+						Deadline:      9,
+						Partition:     10,
+						Sectors:       bfrt(11, 12, 13, 20, 21),
+						NewExpiration: nil,
+					},
+					{
+						Deadline:      14,
+						Partition:     15,
+						Sectors:       bfrt(16),
+						NewExpiration: epoch(1000000),
+					},
+					{
+						Deadline:      18,
+						Partition:     19,
+						Sectors:       bfrt(),
+						NewExpiration: epoch(17),
+					},
+				},
+			},
+			// [[[9,10,byte[701d4d01],null],[14,15,byte[0022],1000000],[18,19,byte[],17]]]
+			hex: "818384090a44701d4d01f6840e0f4200221a000f42408412134011",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run("", func(t *testing.T) {
+			req := require.New(t)
+
+			var buf bytes.Buffer
+			req.NoError(tc.params.MarshalCBOR(&buf))
+			req.Equal(tc.hex, hex.EncodeToString(buf.Bytes()))
+			var rt UpgradeSectorQualityParams
+			req.NoError(rt.UnmarshalCBOR(&buf))
+			req.Equal(tc.params, rt)
+		})
+	}
+}
+
 func TestSectorOnChainInfo(t *testing.T) {
 	sectorKey := cid.MustParse("baga6ea4seaaqc")
 	zero := big.Zero()

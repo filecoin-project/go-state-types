@@ -363,23 +363,4 @@ func CheckMarketAgainstVerifreg(acc *builtin.MessageAccumulator, verifregSummary
 
 		acc.Require(info.PieceCid == claim.Data, "mismatches piece cid %s %s on claim %d and deal %d", info.PieceCid, claim.Data, claimId, dealId)
 	}
-
-	// all pending deal allocation ids have an associated allocation
-	// note that it is possible for allocations to exist that don't match any deal
-	// if they are created from a direct DataCap transfer
-	for allocationId, dealId := range marketSummary.AllocIdToDealId {
-		alloc, found := verifregSummary.Allocations[allocationId]
-		acc.Require(found, "allocation %d not found for pending deal %d", allocationId, dealId)
-		if !found {
-			continue
-		}
-		info, found := marketSummary.Deals[dealId]
-		acc.Require(found, "internal invariant error invalid market state references missing deal %d", dealId)
-
-		providerId, err := address.IDFromAddress(info.Provider)
-		acc.RequireNoError(err, "error getting ID from provider address")
-		acc.Require(abi.ActorID(providerId) == alloc.Provider, "mismatched providers %d %d on alloc %d and deal %d", providerId, alloc.Provider, allocationId, dealId)
-
-		acc.Require(info.PieceCid == alloc.Data, "mismatched piece cid %s %s on alloc %d and deal %d", info.PieceCid, alloc.Data, allocationId, dealId)
-	}
 }

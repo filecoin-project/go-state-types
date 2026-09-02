@@ -34,11 +34,9 @@ func BaselinePowerFromPrev(prevEpochBaselinePower abi.StoragePower) abi.StorageP
 	return big.Rsh(thisEpochBaselinePower, math.Precision128)                   // Q.128 => Q.0
 }
 
-// These numbers are estimates of the onchain constants.  They are good for initializing state in
-// devnets and testing but will not match the on chain values exactly which depend on storage onboarding
-// and upgrade epoch history. They are in units of attoFIL, 10^-18 FIL
-var DefaultSimpleTotal = big.Mul(big.NewInt(330e6), big.NewInt(1e18))   // 330M
-var DefaultBaselineTotal = big.Mul(big.NewInt(770e6), big.NewInt(1e18)) // 770M
+// Canonical block reward allocations.
+var SimpleTotal = big.Mul(big.NewInt(330_000_000), big.NewInt(1e18))
+var BaselineTotal = big.MustFromString("768335872210768889362796814")
 
 // Computes RewardTheta which is is precise fractional value of effectiveNetworkTime.
 // The effectiveNetworkTime is defined by CumsumBaselinePower(theta) == CumsumRealizedPower
@@ -75,14 +73,14 @@ var (
 
 // Computes a reward for all expected leaders when effective network time changes from prevTheta to currTheta
 // Inputs are in Q.128 format
-func computeReward(epoch abi.ChainEpoch, prevTheta, currTheta, simpleTotal, baselineTotal big.Int) abi.TokenAmount {
-	simpleReward := big.Mul(simpleTotal, ExpLamSubOne)    //Q.0 * Q.128 =>  Q.128
+func computeReward(epoch abi.ChainEpoch, prevTheta, currTheta big.Int) abi.TokenAmount {
+	simpleReward := big.Mul(SimpleTotal, ExpLamSubOne)    //Q.0 * Q.128 =>  Q.128
 	epochLam := big.Mul(big.NewInt(int64(epoch)), Lambda) // Q.0 * Q.128 => Q.128
 
 	simpleReward = big.Mul(simpleReward, big.NewFromGo(math.ExpNeg(epochLam.Int))) // Q.128 * Q.128 => Q.256
 	simpleReward = big.Rsh(simpleReward, math.Precision128)                        // Q.256 >> 128 => Q.128
 
-	baselineReward := big.Sub(computeBaselineSupply(currTheta, baselineTotal), computeBaselineSupply(prevTheta, baselineTotal)) // Q.128
+	baselineReward := big.Sub(computeBaselineSupply(currTheta, BaselineTotal), computeBaselineSupply(prevTheta, BaselineTotal)) // Q.128
 
 	reward := big.Add(simpleReward, baselineReward) // Q.128
 

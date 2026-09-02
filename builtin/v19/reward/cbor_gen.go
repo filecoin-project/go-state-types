@@ -8,7 +8,9 @@ import (
 	"math"
 	"sort"
 
+	address "github.com/filecoin-project/go-address"
 	abi "github.com/filecoin-project/go-state-types/abi"
+	big "github.com/filecoin-project/go-state-types/big"
 	cid "github.com/ipfs/go-cid"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	xerrors "golang.org/x/xerrors"
@@ -19,7 +21,7 @@ var _ = cid.Undef
 var _ = math.E
 var _ = sort.Sort
 
-var lengthBufState = []byte{139}
+var lengthBufState = []byte{143}
 
 func (t *State) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -85,20 +87,58 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 		}
 	}
 
-	// t.TotalStoragePowerReward (big.Int) (struct)
-	if err := t.TotalStoragePowerReward.MarshalCBOR(cw); err != nil {
+	// t.TotalMintedReward (big.Int) (struct)
+	if err := t.TotalMintedReward.MarshalCBOR(cw); err != nil {
 		return err
 	}
 
-	// t.SimpleTotal (big.Int) (struct)
-	if err := t.SimpleTotal.MarshalCBOR(cw); err != nil {
+	// t.TotalBurnMinted (big.Int) (struct)
+	if err := t.TotalBurnMinted.MarshalCBOR(cw); err != nil {
 		return err
 	}
 
-	// t.BaselineTotal (big.Int) (struct)
-	if err := t.BaselineTotal.MarshalCBOR(cw); err != nil {
+	// t.TotalExplicitMinted (big.Int) (struct)
+	if err := t.TotalExplicitMinted.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
+	// t.Accrued ([]reward.StreamAccrual) (slice)
+	if len(t.Accrued) > 8192 {
+		return xerrors.Errorf("Slice value in field t.Accrued was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Accrued))); err != nil {
+		return err
+	}
+	for _, v := range t.Accrued {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+
+	}
+
+	// t.SWATimelockEpochs (abi.ChainEpoch) (int64)
+	if t.SWATimelockEpochs >= 0 {
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.SWATimelockEpochs)); err != nil {
+			return err
+		}
+	} else {
+		if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-t.SWATimelockEpochs-1)); err != nil {
+			return err
+		}
+	}
+
+	// t.SWAActor (address.Address) (struct)
+	if err := t.SWAActor.MarshalCBOR(cw); err != nil {
+		return err
+	}
+
+	// t.StreamsRoot (cid.Cid) (struct)
+
+	if err := cbg.WriteCid(cw, t.StreamsRoot); err != nil {
+		return xerrors.Errorf("failed to write cid field t.StreamsRoot: %w", err)
+	}
+
 	return nil
 }
 
@@ -121,7 +161,7 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 11 {
+	if extra != 15 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
@@ -229,30 +269,1632 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 
 		t.Epoch = abi.ChainEpoch(extraI)
 	}
-	// t.TotalStoragePowerReward (big.Int) (struct)
+	// t.TotalMintedReward (big.Int) (struct)
 
 	{
 
-		if err := t.TotalStoragePowerReward.UnmarshalCBOR(cr); err != nil {
-			return xerrors.Errorf("unmarshaling t.TotalStoragePowerReward: %w", err)
+		if err := t.TotalMintedReward.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.TotalMintedReward: %w", err)
 		}
 
 	}
-	// t.SimpleTotal (big.Int) (struct)
+	// t.TotalBurnMinted (big.Int) (struct)
 
 	{
 
-		if err := t.SimpleTotal.UnmarshalCBOR(cr); err != nil {
-			return xerrors.Errorf("unmarshaling t.SimpleTotal: %w", err)
+		if err := t.TotalBurnMinted.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.TotalBurnMinted: %w", err)
 		}
 
 	}
-	// t.BaselineTotal (big.Int) (struct)
+	// t.TotalExplicitMinted (big.Int) (struct)
 
 	{
 
-		if err := t.BaselineTotal.UnmarshalCBOR(cr); err != nil {
-			return xerrors.Errorf("unmarshaling t.BaselineTotal: %w", err)
+		if err := t.TotalExplicitMinted.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.TotalExplicitMinted: %w", err)
+		}
+
+	}
+	// t.Accrued ([]reward.StreamAccrual) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 8192 {
+		return fmt.Errorf("t.Accrued: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.Accrued = make([]StreamAccrual, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
+
+			{
+
+				if err := t.Accrued[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Accrued[i]: %w", err)
+				}
+
+			}
+
+		}
+	}
+	// t.SWATimelockEpochs (abi.ChainEpoch) (int64)
+	{
+		maj, extra, err := cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		var extraI int64
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
+			}
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative overflow")
+			}
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
+		}
+
+		t.SWATimelockEpochs = abi.ChainEpoch(extraI)
+	}
+	// t.SWAActor (address.Address) (struct)
+
+	{
+
+		if err := t.SWAActor.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.SWAActor: %w", err)
+		}
+
+	}
+	// t.StreamsRoot (cid.Cid) (struct)
+
+	{
+
+		c, err := cbg.ReadCid(cr)
+		if err != nil {
+			return xerrors.Errorf("failed to read cid field t.StreamsRoot: %w", err)
+		}
+
+		t.StreamsRoot = c
+
+	}
+	return nil
+}
+
+var lengthBufStreamsState = []byte{131}
+
+func (t *StreamsState) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufStreamsState); err != nil {
+		return err
+	}
+
+	// t.Streams ([]reward.Stream) (slice)
+	if len(t.Streams) > 8192 {
+		return xerrors.Errorf("Slice value in field t.Streams was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Streams))); err != nil {
+		return err
+	}
+	for _, v := range t.Streams {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+
+	}
+
+	// t.Tombstones ([]reward.Tombstone) (slice)
+	if len(t.Tombstones) > 8192 {
+		return xerrors.Errorf("Slice value in field t.Tombstones was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Tombstones))); err != nil {
+		return err
+	}
+	for _, v := range t.Tombstones {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+
+	}
+
+	// t.PendingWrites ([]reward.PendingWrite) (slice)
+	if len(t.PendingWrites) > 8192 {
+		return xerrors.Errorf("Slice value in field t.PendingWrites was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.PendingWrites))); err != nil {
+		return err
+	}
+	for _, v := range t.PendingWrites {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+
+	}
+	return nil
+}
+
+func (t *StreamsState) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = StreamsState{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 3 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Streams ([]reward.Stream) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 8192 {
+		return fmt.Errorf("t.Streams: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.Streams = make([]Stream, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
+
+			{
+
+				if err := t.Streams[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Streams[i]: %w", err)
+				}
+
+			}
+
+		}
+	}
+	// t.Tombstones ([]reward.Tombstone) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 8192 {
+		return fmt.Errorf("t.Tombstones: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.Tombstones = make([]Tombstone, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
+
+			{
+
+				if err := t.Tombstones[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Tombstones[i]: %w", err)
+				}
+
+			}
+
+		}
+	}
+	// t.PendingWrites ([]reward.PendingWrite) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 8192 {
+		return fmt.Errorf("t.PendingWrites: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.PendingWrites = make([]PendingWrite, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
+
+			{
+
+				if err := t.PendingWrites[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.PendingWrites[i]: %w", err)
+				}
+
+			}
+
+		}
+	}
+	return nil
+}
+
+var lengthBufStream = []byte{131}
+
+func (t *Stream) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufStream); err != nil {
+		return err
+	}
+
+	// t.ID (reward.StreamID) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.ID)); err != nil {
+		return err
+	}
+
+	// t.Weight (reward.WeightRecord) (struct)
+	if err := t.Weight.MarshalCBOR(cw); err != nil {
+		return err
+	}
+
+	// t.Distribution (reward.ExplicitDistribution) (struct)
+	if err := t.Distribution.MarshalCBOR(cw); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *Stream) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = Stream{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 3 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.ID (reward.StreamID) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.ID = StreamID(extra)
+
+	}
+	// t.Weight (reward.WeightRecord) (struct)
+
+	{
+
+		if err := t.Weight.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.Weight: %w", err)
+		}
+
+	}
+	// t.Distribution (reward.ExplicitDistribution) (struct)
+
+	{
+
+		b, err := cr.ReadByte()
+		if err != nil {
+			return err
+		}
+		if b != cbg.CborNull[0] {
+			if err := cr.UnreadByte(); err != nil {
+				return err
+			}
+			t.Distribution = new(ExplicitDistribution)
+			if err := t.Distribution.UnmarshalCBOR(cr); err != nil {
+				return xerrors.Errorf("unmarshaling t.Distribution pointer: %w", err)
+			}
+		}
+
+	}
+	return nil
+}
+
+var lengthBufWeightRecord = []byte{133}
+
+func (t *WeightRecord) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufWeightRecord); err != nil {
+		return err
+	}
+
+	// t.VStart (uint64) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.VStart)); err != nil {
+		return err
+	}
+
+	// t.Slope (int64) (int64)
+	if t.Slope >= 0 {
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Slope)); err != nil {
+			return err
+		}
+	} else {
+		if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-t.Slope-1)); err != nil {
+			return err
+		}
+	}
+
+	// t.TStart (abi.ChainEpoch) (int64)
+	if t.TStart >= 0 {
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.TStart)); err != nil {
+			return err
+		}
+	} else {
+		if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-t.TStart-1)); err != nil {
+			return err
+		}
+	}
+
+	// t.Floor (uint64) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Floor)); err != nil {
+		return err
+	}
+
+	// t.Cap (uint64) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Cap)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *WeightRecord) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = WeightRecord{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 5 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.VStart (uint64) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.VStart = uint64(extra)
+
+	}
+	// t.Slope (int64) (int64)
+	{
+		maj, extra, err := cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		var extraI int64
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
+			}
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative overflow")
+			}
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
+		}
+
+		t.Slope = int64(extraI)
+	}
+	// t.TStart (abi.ChainEpoch) (int64)
+	{
+		maj, extra, err := cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		var extraI int64
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
+			}
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative overflow")
+			}
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
+		}
+
+		t.TStart = abi.ChainEpoch(extraI)
+	}
+	// t.Floor (uint64) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.Floor = uint64(extra)
+
+	}
+	// t.Cap (uint64) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.Cap = uint64(extra)
+
+	}
+	return nil
+}
+
+var lengthBufWeightRecordUpdate = []byte{130}
+
+func (t *WeightRecordUpdate) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufWeightRecordUpdate); err != nil {
+		return err
+	}
+
+	// t.ID (reward.StreamID) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.ID)); err != nil {
+		return err
+	}
+
+	// t.Weight (reward.WeightRecord) (struct)
+	if err := t.Weight.MarshalCBOR(cw); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *WeightRecordUpdate) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = WeightRecordUpdate{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.ID (reward.StreamID) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.ID = StreamID(extra)
+
+	}
+	// t.Weight (reward.WeightRecord) (struct)
+
+	{
+
+		if err := t.Weight.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.Weight: %w", err)
+		}
+
+	}
+	return nil
+}
+
+var lengthBufExplicitDistribution = []byte{132}
+
+func (t *ExplicitDistribution) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufExplicitDistribution); err != nil {
+		return err
+	}
+
+	// t.Writer (address.Address) (struct)
+	if err := t.Writer.MarshalCBOR(cw); err != nil {
+		return err
+	}
+
+	// t.Shares ([]reward.RecipientShare) (slice)
+	if len(t.Shares) > 8192 {
+		return xerrors.Errorf("Slice value in field t.Shares was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Shares))); err != nil {
+		return err
+	}
+	for _, v := range t.Shares {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+
+	}
+
+	// t.Payable ([]reward.RecipientAmount) (slice)
+	if len(t.Payable) > 8192 {
+		return xerrors.Errorf("Slice value in field t.Payable was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Payable))); err != nil {
+		return err
+	}
+	for _, v := range t.Payable {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+
+	}
+
+	// t.ClaimedPeriod ([]reward.RecipientAmount) (slice)
+	if len(t.ClaimedPeriod) > 8192 {
+		return xerrors.Errorf("Slice value in field t.ClaimedPeriod was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.ClaimedPeriod))); err != nil {
+		return err
+	}
+	for _, v := range t.ClaimedPeriod {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+
+	}
+	return nil
+}
+
+func (t *ExplicitDistribution) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = ExplicitDistribution{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 4 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Writer (address.Address) (struct)
+
+	{
+
+		if err := t.Writer.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.Writer: %w", err)
+		}
+
+	}
+	// t.Shares ([]reward.RecipientShare) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 8192 {
+		return fmt.Errorf("t.Shares: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.Shares = make([]RecipientShare, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
+
+			{
+
+				if err := t.Shares[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Shares[i]: %w", err)
+				}
+
+			}
+
+		}
+	}
+	// t.Payable ([]reward.RecipientAmount) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 8192 {
+		return fmt.Errorf("t.Payable: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.Payable = make([]RecipientAmount, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
+
+			{
+
+				if err := t.Payable[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Payable[i]: %w", err)
+				}
+
+			}
+
+		}
+	}
+	// t.ClaimedPeriod ([]reward.RecipientAmount) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 8192 {
+		return fmt.Errorf("t.ClaimedPeriod: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.ClaimedPeriod = make([]RecipientAmount, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
+
+			{
+
+				if err := t.ClaimedPeriod[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.ClaimedPeriod[i]: %w", err)
+				}
+
+			}
+
+		}
+	}
+	return nil
+}
+
+var lengthBufRecipientShare = []byte{130}
+
+func (t *RecipientShare) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufRecipientShare); err != nil {
+		return err
+	}
+
+	// t.Recipient (address.Address) (struct)
+	if err := t.Recipient.MarshalCBOR(cw); err != nil {
+		return err
+	}
+
+	// t.Share (uint64) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Share)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *RecipientShare) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = RecipientShare{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Recipient (address.Address) (struct)
+
+	{
+
+		if err := t.Recipient.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.Recipient: %w", err)
+		}
+
+	}
+	// t.Share (uint64) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.Share = uint64(extra)
+
+	}
+	return nil
+}
+
+var lengthBufRecipientAmount = []byte{130}
+
+func (t *RecipientAmount) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufRecipientAmount); err != nil {
+		return err
+	}
+
+	// t.Recipient (address.Address) (struct)
+	if err := t.Recipient.MarshalCBOR(cw); err != nil {
+		return err
+	}
+
+	// t.Amount (big.Int) (struct)
+	if err := t.Amount.MarshalCBOR(cw); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *RecipientAmount) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = RecipientAmount{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Recipient (address.Address) (struct)
+
+	{
+
+		if err := t.Recipient.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.Recipient: %w", err)
+		}
+
+	}
+	// t.Amount (big.Int) (struct)
+
+	{
+
+		if err := t.Amount.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.Amount: %w", err)
+		}
+
+	}
+	return nil
+}
+
+var lengthBufTombstone = []byte{130}
+
+func (t *Tombstone) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufTombstone); err != nil {
+		return err
+	}
+
+	// t.ID (reward.StreamID) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.ID)); err != nil {
+		return err
+	}
+
+	// t.Payable ([]reward.RecipientAmount) (slice)
+	if len(t.Payable) > 8192 {
+		return xerrors.Errorf("Slice value in field t.Payable was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Payable))); err != nil {
+		return err
+	}
+	for _, v := range t.Payable {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+
+	}
+	return nil
+}
+
+func (t *Tombstone) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = Tombstone{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.ID (reward.StreamID) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.ID = StreamID(extra)
+
+	}
+	// t.Payable ([]reward.RecipientAmount) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 8192 {
+		return fmt.Errorf("t.Payable: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.Payable = make([]RecipientAmount, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
+
+			{
+
+				if err := t.Payable[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Payable[i]: %w", err)
+				}
+
+			}
+
+		}
+	}
+	return nil
+}
+
+var lengthBufPendingWrite = []byte{132}
+
+func (t *PendingWrite) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufPendingWrite); err != nil {
+		return err
+	}
+
+	// t.ID (reward.StreamID) (uint64)
+
+	if t.ID == nil {
+		if _, err := cw.Write(cbg.CborNull); err != nil {
+			return err
+		}
+	} else {
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(*t.ID)); err != nil {
+			return err
+		}
+	}
+
+	// t.Op (reward.PendingWriteOp) (uint8)
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Op)); err != nil {
+		return err
+	}
+
+	// t.Payload ([]uint8) (slice)
+	if len(t.Payload) > 2097152 {
+		return xerrors.Errorf("Byte array in field t.Payload was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajByteString, uint64(len(t.Payload))); err != nil {
+		return err
+	}
+
+	if _, err := cw.Write(t.Payload); err != nil {
+		return err
+	}
+
+	// t.EffectiveEpoch (abi.ChainEpoch) (int64)
+	if t.EffectiveEpoch >= 0 {
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.EffectiveEpoch)); err != nil {
+			return err
+		}
+	} else {
+		if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-t.EffectiveEpoch-1)); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (t *PendingWrite) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = PendingWrite{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 4 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.ID (reward.StreamID) (uint64)
+
+	{
+
+		b, err := cr.ReadByte()
+		if err != nil {
+			return err
+		}
+		if b != cbg.CborNull[0] {
+			if err := cr.UnreadByte(); err != nil {
+				return err
+			}
+			maj, extra, err = cr.ReadHeader()
+			if err != nil {
+				return err
+			}
+			if maj != cbg.MajUnsignedInt {
+				return fmt.Errorf("wrong type for uint64 field")
+			}
+			typed := StreamID(extra)
+			t.ID = &typed
+		}
+
+	}
+	// t.Op (reward.PendingWriteOp) (uint8)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajUnsignedInt {
+		return fmt.Errorf("wrong type for uint8 field")
+	}
+	if extra > math.MaxUint8 {
+		return fmt.Errorf("integer in input was too large for uint8 field")
+	}
+	t.Op = PendingWriteOp(extra)
+	// t.Payload ([]uint8) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 2097152 {
+		return fmt.Errorf("t.Payload: byte array too large (%d)", extra)
+	}
+	if maj != cbg.MajByteString {
+		return fmt.Errorf("expected byte array")
+	}
+
+	if extra > 0 {
+		t.Payload = make([]uint8, extra)
+	}
+
+	if _, err := io.ReadFull(cr, t.Payload); err != nil {
+		return err
+	}
+
+	// t.EffectiveEpoch (abi.ChainEpoch) (int64)
+	{
+		maj, extra, err := cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		var extraI int64
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
+			}
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative overflow")
+			}
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
+		}
+
+		t.EffectiveEpoch = abi.ChainEpoch(extraI)
+	}
+	return nil
+}
+
+var lengthBufDistributionInit = []byte{130}
+
+func (t *DistributionInit) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufDistributionInit); err != nil {
+		return err
+	}
+
+	// t.Writer (address.Address) (struct)
+	if err := t.Writer.MarshalCBOR(cw); err != nil {
+		return err
+	}
+
+	// t.Shares ([]reward.RecipientShare) (slice)
+	if len(t.Shares) > 8192 {
+		return xerrors.Errorf("Slice value in field t.Shares was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Shares))); err != nil {
+		return err
+	}
+	for _, v := range t.Shares {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+
+	}
+	return nil
+}
+
+func (t *DistributionInit) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = DistributionInit{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Writer (address.Address) (struct)
+
+	{
+
+		if err := t.Writer.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.Writer: %w", err)
+		}
+
+	}
+	// t.Shares ([]reward.RecipientShare) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 8192 {
+		return fmt.Errorf("t.Shares: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.Shares = make([]RecipientShare, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
+
+			{
+
+				if err := t.Shares[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Shares[i]: %w", err)
+				}
+
+			}
+
+		}
+	}
+	return nil
+}
+
+var lengthBufRegisterStreamPayload = []byte{130}
+
+func (t *RegisterStreamPayload) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufRegisterStreamPayload); err != nil {
+		return err
+	}
+
+	// t.Weight (reward.WeightRecord) (struct)
+	if err := t.Weight.MarshalCBOR(cw); err != nil {
+		return err
+	}
+
+	// t.Distribution (reward.DistributionInit) (struct)
+	if err := t.Distribution.MarshalCBOR(cw); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *RegisterStreamPayload) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = RegisterStreamPayload{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Weight (reward.WeightRecord) (struct)
+
+	{
+
+		if err := t.Weight.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.Weight: %w", err)
+		}
+
+	}
+	// t.Distribution (reward.DistributionInit) (struct)
+
+	{
+
+		b, err := cr.ReadByte()
+		if err != nil {
+			return err
+		}
+		if b != cbg.CborNull[0] {
+			if err := cr.UnreadByte(); err != nil {
+				return err
+			}
+			t.Distribution = new(DistributionInit)
+			if err := t.Distribution.UnmarshalCBOR(cr); err != nil {
+				return xerrors.Errorf("unmarshaling t.Distribution pointer: %w", err)
+			}
+		}
+
+	}
+	return nil
+}
+
+var lengthBufSetDistributionPayload = []byte{129}
+
+func (t *SetDistributionPayload) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufSetDistributionPayload); err != nil {
+		return err
+	}
+
+	// t.Writer (address.Address) (struct)
+	if err := t.Writer.MarshalCBOR(cw); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *SetDistributionPayload) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = SetDistributionPayload{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Writer (address.Address) (struct)
+
+	{
+
+		if err := t.Writer.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.Writer: %w", err)
+		}
+
+	}
+	return nil
+}
+
+var lengthBufStreamAccrual = []byte{130}
+
+func (t *StreamAccrual) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufStreamAccrual); err != nil {
+		return err
+	}
+
+	// t.ID (reward.StreamID) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.ID)); err != nil {
+		return err
+	}
+
+	// t.Amount (big.Int) (struct)
+	if err := t.Amount.MarshalCBOR(cw); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *StreamAccrual) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = StreamAccrual{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.ID (reward.StreamID) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.ID = StreamID(extra)
+
+	}
+	// t.Amount (big.Int) (struct)
+
+	{
+
+		if err := t.Amount.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.Amount: %w", err)
 		}
 
 	}
@@ -446,6 +2088,893 @@ func (t *AwardBlockRewardParams) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 
 		t.WinCount = int64(extraI)
+	}
+	return nil
+}
+
+var lengthBufSetWeightRecordsParams = []byte{129}
+
+func (t *SetWeightRecordsParams) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufSetWeightRecordsParams); err != nil {
+		return err
+	}
+
+	// t.Updates ([]reward.WeightRecordUpdate) (slice)
+	if len(t.Updates) > 8192 {
+		return xerrors.Errorf("Slice value in field t.Updates was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Updates))); err != nil {
+		return err
+	}
+	for _, v := range t.Updates {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+
+	}
+	return nil
+}
+
+func (t *SetWeightRecordsParams) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = SetWeightRecordsParams{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Updates ([]reward.WeightRecordUpdate) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 8192 {
+		return fmt.Errorf("t.Updates: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.Updates = make([]WeightRecordUpdate, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
+
+			{
+
+				if err := t.Updates[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Updates[i]: %w", err)
+				}
+
+			}
+
+		}
+	}
+	return nil
+}
+
+var lengthBufStepWeightRecordsParams = []byte{129}
+
+func (t *StepWeightRecordsParams) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufStepWeightRecordsParams); err != nil {
+		return err
+	}
+
+	// t.Updates ([]reward.WeightRecordUpdate) (slice)
+	if len(t.Updates) > 8192 {
+		return xerrors.Errorf("Slice value in field t.Updates was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Updates))); err != nil {
+		return err
+	}
+	for _, v := range t.Updates {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+
+	}
+	return nil
+}
+
+func (t *StepWeightRecordsParams) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = StepWeightRecordsParams{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Updates ([]reward.WeightRecordUpdate) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 8192 {
+		return fmt.Errorf("t.Updates: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.Updates = make([]WeightRecordUpdate, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
+
+			{
+
+				if err := t.Updates[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Updates[i]: %w", err)
+				}
+
+			}
+
+		}
+	}
+	return nil
+}
+
+var lengthBufRegisterStreamParams = []byte{132}
+
+func (t *RegisterStreamParams) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufRegisterStreamParams); err != nil {
+		return err
+	}
+
+	// t.ID (reward.StreamID) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.ID)); err != nil {
+		return err
+	}
+
+	// t.Weight (reward.WeightRecord) (struct)
+	if err := t.Weight.MarshalCBOR(cw); err != nil {
+		return err
+	}
+
+	// t.Distribution (reward.DistributionInit) (struct)
+	if err := t.Distribution.MarshalCBOR(cw); err != nil {
+		return err
+	}
+
+	// t.ActivationEpoch (abi.ChainEpoch) (int64)
+	if t.ActivationEpoch >= 0 {
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.ActivationEpoch)); err != nil {
+			return err
+		}
+	} else {
+		if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-t.ActivationEpoch-1)); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (t *RegisterStreamParams) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = RegisterStreamParams{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 4 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.ID (reward.StreamID) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.ID = StreamID(extra)
+
+	}
+	// t.Weight (reward.WeightRecord) (struct)
+
+	{
+
+		if err := t.Weight.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.Weight: %w", err)
+		}
+
+	}
+	// t.Distribution (reward.DistributionInit) (struct)
+
+	{
+
+		b, err := cr.ReadByte()
+		if err != nil {
+			return err
+		}
+		if b != cbg.CborNull[0] {
+			if err := cr.UnreadByte(); err != nil {
+				return err
+			}
+			t.Distribution = new(DistributionInit)
+			if err := t.Distribution.UnmarshalCBOR(cr); err != nil {
+				return xerrors.Errorf("unmarshaling t.Distribution pointer: %w", err)
+			}
+		}
+
+	}
+	// t.ActivationEpoch (abi.ChainEpoch) (int64)
+	{
+		maj, extra, err := cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		var extraI int64
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
+			}
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative overflow")
+			}
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
+		}
+
+		t.ActivationEpoch = abi.ChainEpoch(extraI)
+	}
+	return nil
+}
+
+var lengthBufRemoveStreamParams = []byte{129}
+
+func (t *RemoveStreamParams) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufRemoveStreamParams); err != nil {
+		return err
+	}
+
+	// t.ID (reward.StreamID) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.ID)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *RemoveStreamParams) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = RemoveStreamParams{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.ID (reward.StreamID) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.ID = StreamID(extra)
+
+	}
+	return nil
+}
+
+var lengthBufSetDistributionParams = []byte{130}
+
+func (t *SetDistributionParams) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufSetDistributionParams); err != nil {
+		return err
+	}
+
+	// t.ID (reward.StreamID) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.ID)); err != nil {
+		return err
+	}
+
+	// t.Writer (address.Address) (struct)
+	if err := t.Writer.MarshalCBOR(cw); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *SetDistributionParams) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = SetDistributionParams{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.ID (reward.StreamID) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.ID = StreamID(extra)
+
+	}
+	// t.Writer (address.Address) (struct)
+
+	{
+
+		if err := t.Writer.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.Writer: %w", err)
+		}
+
+	}
+	return nil
+}
+
+var lengthBufSetSharesParams = []byte{130}
+
+func (t *SetSharesParams) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufSetSharesParams); err != nil {
+		return err
+	}
+
+	// t.ID (reward.StreamID) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.ID)); err != nil {
+		return err
+	}
+
+	// t.Shares ([]reward.RecipientShare) (slice)
+	if len(t.Shares) > 8192 {
+		return xerrors.Errorf("Slice value in field t.Shares was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Shares))); err != nil {
+		return err
+	}
+	for _, v := range t.Shares {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+
+	}
+	return nil
+}
+
+func (t *SetSharesParams) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = SetSharesParams{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.ID (reward.StreamID) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.ID = StreamID(extra)
+
+	}
+	// t.Shares ([]reward.RecipientShare) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 8192 {
+		return fmt.Errorf("t.Shares: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.Shares = make([]RecipientShare, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
+
+			{
+
+				if err := t.Shares[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Shares[i]: %w", err)
+				}
+
+			}
+
+		}
+	}
+	return nil
+}
+
+var lengthBufCancelPendingParams = []byte{130}
+
+func (t *CancelPendingParams) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufCancelPendingParams); err != nil {
+		return err
+	}
+
+	// t.ID (reward.StreamID) (uint64)
+
+	if t.ID == nil {
+		if _, err := cw.Write(cbg.CborNull); err != nil {
+			return err
+		}
+	} else {
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(*t.ID)); err != nil {
+			return err
+		}
+	}
+
+	// t.Op (reward.PendingWriteOp) (uint8)
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Op)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *CancelPendingParams) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = CancelPendingParams{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.ID (reward.StreamID) (uint64)
+
+	{
+
+		b, err := cr.ReadByte()
+		if err != nil {
+			return err
+		}
+		if b != cbg.CborNull[0] {
+			if err := cr.UnreadByte(); err != nil {
+				return err
+			}
+			maj, extra, err = cr.ReadHeader()
+			if err != nil {
+				return err
+			}
+			if maj != cbg.MajUnsignedInt {
+				return fmt.Errorf("wrong type for uint64 field")
+			}
+			typed := StreamID(extra)
+			t.ID = &typed
+		}
+
+	}
+	// t.Op (reward.PendingWriteOp) (uint8)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajUnsignedInt {
+		return fmt.Errorf("wrong type for uint8 field")
+	}
+	if extra > math.MaxUint8 {
+		return fmt.Errorf("integer in input was too large for uint8 field")
+	}
+	t.Op = PendingWriteOp(extra)
+	return nil
+}
+
+var lengthBufClaimParams = []byte{130}
+
+func (t *ClaimParams) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufClaimParams); err != nil {
+		return err
+	}
+
+	// t.ID (reward.StreamID) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.ID)); err != nil {
+		return err
+	}
+
+	// t.Wallets ([]address.Address) (slice)
+	if len(t.Wallets) > 8192 {
+		return xerrors.Errorf("Slice value in field t.Wallets was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Wallets))); err != nil {
+		return err
+	}
+	for _, v := range t.Wallets {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+
+	}
+	return nil
+}
+
+func (t *ClaimParams) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = ClaimParams{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 2 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.ID (reward.StreamID) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.ID = StreamID(extra)
+
+	}
+	// t.Wallets ([]address.Address) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 8192 {
+		return fmt.Errorf("t.Wallets: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.Wallets = make([]address.Address, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
+
+			{
+
+				if err := t.Wallets[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Wallets[i]: %w", err)
+				}
+
+			}
+
+		}
+	}
+	return nil
+}
+
+var lengthBufClaimReturn = []byte{129}
+
+func (t *ClaimReturn) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write(lengthBufClaimReturn); err != nil {
+		return err
+	}
+
+	// t.Amounts ([]big.Int) (slice)
+	if len(t.Amounts) > 8192 {
+		return xerrors.Errorf("Slice value in field t.Amounts was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Amounts))); err != nil {
+		return err
+	}
+	for _, v := range t.Amounts {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+
+	}
+	return nil
+}
+
+func (t *ClaimReturn) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = ClaimReturn{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("cbor input should be of type array")
+	}
+
+	if extra != 1 {
+		return fmt.Errorf("cbor input had wrong number of fields")
+	}
+
+	// t.Amounts ([]big.Int) (slice)
+
+	maj, extra, err = cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+
+	if extra > 8192 {
+		return fmt.Errorf("t.Amounts: array too large (%d)", extra)
+	}
+
+	if maj != cbg.MajArray {
+		return fmt.Errorf("expected cbor array")
+	}
+
+	if extra > 0 {
+		t.Amounts = make([]big.Int, extra)
+	}
+
+	for i := 0; i < int(extra); i++ {
+		{
+			var maj byte
+			var extra uint64
+			var err error
+			_ = maj
+			_ = extra
+			_ = err
+
+			{
+
+				if err := t.Amounts[i].UnmarshalCBOR(cr); err != nil {
+					return xerrors.Errorf("unmarshaling t.Amounts[i]: %w", err)
+				}
+
+			}
+
+		}
 	}
 	return nil
 }

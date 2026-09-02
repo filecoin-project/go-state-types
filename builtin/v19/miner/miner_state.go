@@ -162,25 +162,34 @@ type SectorOnChainInfoFlags uint64
 
 const (
 	SIMPLE_QA_POWER SectorOnChainInfoFlags = 1 << iota // QA power mechanism introduced in FIP-0045
+	// FULL_QA_POWER means the sector always receives maximum QA power (10x), regardless of deal
+	// content. Introduced by FIP-0118 (deprecate FIL+).
+	FULL_QA_POWER
 )
 
 // Information stored on-chain for a proven sector.
 type SectorOnChainInfo struct {
-	SectorNumber          abi.SectorNumber
-	SealProof             abi.RegisteredSealProof // The seal proof type implies the PoSt proof/s
-	SealedCID             cid.Cid                 // CommR
-	DeprecatedDealIDs     []abi.DealID            `json:"-"`
-	Activation            abi.ChainEpoch          // Epoch during which the sector proof was accepted
-	Expiration            abi.ChainEpoch          // Epoch during which the sector expires
-	DealWeight            abi.DealWeight          // Integral of active deals over sector lifetime
-	VerifiedDealWeight    abi.DealWeight          // Integral of active verified deals over sector lifetime
-	InitialPledge         abi.TokenAmount         // Pledge collected to commit this sector
-	ExpectedDayReward     *abi.TokenAmount        // Expected one day projection of reward for sector computed at activation time
-	ExpectedStoragePledge *abi.TokenAmount        // Expected twenty day projection of reward for sector computed at activation time
-	PowerBaseEpoch        abi.ChainEpoch          // Epoch at which this sector's power was most recently updated
-	ReplacedDayReward     *abi.TokenAmount        // Day reward of this sector before its power was most recently updated
-	SectorKeyCID          *cid.Cid                // The original SealedSectorCID, only gets set on the first ReplicaUpdate
-	Flags                 SectorOnChainInfoFlags  // Additional flags
+	SectorNumber      abi.SectorNumber
+	SealProof         abi.RegisteredSealProof // The seal proof type implies the PoSt proof/s
+	SealedCID         cid.Cid                 // CommR
+	DeprecatedDealIDs []abi.DealID            `json:"-"`
+	Activation        abi.ChainEpoch          // Epoch during which the sector proof was accepted
+	Expiration        abi.ChainEpoch          // Epoch during which the sector expires
+	// DealWeight is the spacetime of legacy unverified deals. Zero for sectors activated since
+	// FIP-0118, which record piece spacetime in VerifiedDealWeight; legacy sectors keep theirs
+	// and carry it across extensions, because the data-presence checks read both fields.
+	DealWeight abi.DealWeight
+	// VerifiedDealWeight is the spacetime of the sector's pieces, restated across extensions so
+	// quality is unchanged. Nothing is verified since FIP-0118; directly onboarded data lands
+	// here too.
+	VerifiedDealWeight    abi.DealWeight
+	InitialPledge         abi.TokenAmount        // Pledge collected to commit this sector
+	ExpectedDayReward     *abi.TokenAmount       // Expected one day projection of reward for sector computed at activation time
+	ExpectedStoragePledge *abi.TokenAmount       // Expected twenty day projection of reward for sector computed at activation time
+	PowerBaseEpoch        abi.ChainEpoch         // Epoch at which this sector's power was most recently updated
+	ReplacedDayReward     *abi.TokenAmount       // Day reward of this sector before its power was most recently updated
+	SectorKeyCID          *cid.Cid               // The original SealedSectorCID, only gets set on the first ReplicaUpdate
+	Flags                 SectorOnChainInfoFlags // Additional flags
 	// The total fee payable per day for this sector. The value of this field is set at the time of
 	// sector activation, extension and whenever a sector's QAP is changed. This fee is payable for
 	// the lifetime of the sector and is aggregated in the deadline's `daily_fee` field.
