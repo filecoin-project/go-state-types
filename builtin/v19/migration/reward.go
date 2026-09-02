@@ -23,7 +23,14 @@ type rewardMigrator struct {
 	swaActor          address.Address
 }
 
-func newRewardMigrator(config RewardMigrationConfig, activationEpoch abi.ChainEpoch, outCodeCID cid.Cid) (*rewardMigrator, error) {
+// ValidateRewardMigrationConfig reports whether config describes a reward bootstrap the
+// migration will accept at activationEpoch, running the checks the migration itself runs.
+func ValidateRewardMigrationConfig(config RewardMigrationConfig, activationEpoch abi.ChainEpoch) error {
+	_, _, err := validateRewardMigrationConfig(config, activationEpoch)
+	return err
+}
+
+func validateRewardMigrationConfig(config RewardMigrationConfig, activationEpoch abi.ChainEpoch) (*reward19.StreamsState, []reward19.StreamAccrual, error) {
 	streamParams := make([]reward19.RegisterStreamParams, len(config.Streams))
 	for i, stream := range config.Streams {
 		streamParams[i] = reward19.RegisterStreamParams{
@@ -41,13 +48,21 @@ func newRewardMigrator(config RewardMigrationConfig, activationEpoch abi.ChainEp
 	}
 	streams, accruals, err := reward19.ValidateMigrationStreams(streamParams, activationEpoch)
 	if err != nil {
-		return nil, xerrors.Errorf("invalid reward migration streams: %w", err)
+		return nil, nil, xerrors.Errorf("invalid reward migration streams: %w", err)
 	}
 	if config.SWATimelockEpochs < 0 {
-		return nil, xerrors.Errorf("SWA timelock is negative")
+		return nil, nil, xerrors.Errorf("SWA timelock is negative")
 	}
 	if config.SWAActor.Protocol() != address.ID {
-		return nil, xerrors.Errorf("SWA actor is not an ID address")
+		return nil, nil, xerrors.Errorf("SWA actor is not an ID address")
+	}
+	return streams, accruals, nil
+}
+
+func newRewardMigrator(config RewardMigrationConfig, activationEpoch abi.ChainEpoch, outCodeCID cid.Cid) (*rewardMigrator, error) {
+	streams, accruals, err := validateRewardMigrationConfig(config, activationEpoch)
+	if err != nil {
+		return nil, err
 	}
 	return &rewardMigrator{
 		outCodeCID:        outCodeCID,

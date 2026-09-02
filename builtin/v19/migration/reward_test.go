@@ -211,6 +211,61 @@ func TestNewRewardMigratorAcceptsNeutralBootstrap(t *testing.T) {
 	require.Empty(t, migrator.accruals)
 }
 
+// ValidateRewardMigrationConfig is the same gate newRewardMigrator applies, so callers that
+// assemble a config can check it without building a migrator.
+func TestValidateRewardMigrationConfig(t *testing.T) {
+	activationEpoch := abi.ChainEpoch(100)
+	valid := RewardMigrationConfig{
+		SWATimelockEpochs: 20_160,
+		SWAActor:          migrationIDAddress(t, 100),
+		Streams: []RewardMigrationStream{{
+			ID:     1,
+			Weight: RewardMigrationWeight{VStart: reward19.Denom, Floor: reward19.Denom, Cap: reward19.Denom},
+		}},
+	}
+	require.NoError(t, ValidateRewardMigrationConfig(valid, activationEpoch))
+
+	t.Run("unset SWA actor", func(t *testing.T) {
+		config := valid
+		config.SWAActor = address.Undef
+		require.ErrorContains(t, ValidateRewardMigrationConfig(config, activationEpoch),
+			"SWA actor is not an ID address")
+	})
+
+	t.Run("unset distribution writer", func(t *testing.T) {
+		config := valid
+		config.Streams = []RewardMigrationStream{
+			{
+				ID:     1,
+				Weight: RewardMigrationWeight{VStart: reward19.Denom / 2, Slope: -1, Floor: 0, Cap: reward19.Denom},
+			},
+			{
+				ID:     2,
+				Weight: RewardMigrationWeight{VStart: reward19.Denom / 2, Slope: 1, Floor: 0, Cap: reward19.Denom},
+				Distribution: &reward19.DistributionInit{
+					Shares: []reward19.RecipientShare{{Recipient: migrationIDAddress(t, 101), Share: reward19.Denom}},
+				},
+			},
+		}
+		require.ErrorContains(t, ValidateRewardMigrationConfig(config, activationEpoch),
+			"is not an ID address")
+	})
+
+	t.Run("negative timelock", func(t *testing.T) {
+		config := valid
+		config.SWATimelockEpochs = -1
+		require.ErrorContains(t, ValidateRewardMigrationConfig(config, activationEpoch),
+			"SWA timelock is negative")
+	})
+
+	t.Run("agrees with newRewardMigrator", func(t *testing.T) {
+		config := valid
+		config.SWAActor = address.Undef
+		_, migratorErr := newRewardMigrator(config, activationEpoch, cid.MustParse("bafy2bzaca4aaaaaaaaaqk"))
+		require.EqualError(t, ValidateRewardMigrationConfig(config, activationEpoch), migratorErr.Error())
+	})
+}
+
 func TestNewRewardMigratorRejectsInvalidConfig(t *testing.T) {
 	activationEpoch := abi.ChainEpoch(100)
 	outCodeCID := cid.MustParse("bafy2bzaca4aaaaaaaaaqk")
