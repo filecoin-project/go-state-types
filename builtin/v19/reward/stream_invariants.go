@@ -11,11 +11,12 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
+	"github.com/filecoin-project/go-state-types/builtin"
 )
 
-// The invariant rules in this file mirror actors/reward/src/streams.rs.
+// The invariant rules in this file mirror actors/reward/src/streams/.
 
-// Mirrors actors/reward/src/streams.rs::compute_weight.
+// Mirrors actors/reward/src/streams/weights.rs::compute_weight.
 func computeWeight(record WeightRecord, epoch abi.ChainEpoch) uint64 {
 	delta := new(mathbig.Int).Sub(mathbig.NewInt(int64(epoch)), mathbig.NewInt(int64(record.TStart)))
 	value := new(mathbig.Int).Mul(mathbig.NewInt(record.Slope), delta)
@@ -31,7 +32,7 @@ func computeWeight(record WeightRecord, epoch abi.ChainEpoch) uint64 {
 	return value.Uint64()
 }
 
-// Mirrors actors/reward/src/streams.rs::validate_weight_record.
+// Mirrors actors/reward/src/streams/weights.rs::validate_weight_record.
 func validateWeightRecord(record WeightRecord) error {
 	if record.Floor > record.Cap {
 		return fmt.Errorf("weight floor exceeds cap")
@@ -48,7 +49,7 @@ func validateWeightRecord(record WeightRecord) error {
 	return nil
 }
 
-// Mirrors actors/reward/src/streams.rs::validate_weight_updates.
+// Mirrors actors/reward/src/streams/weights.rs::validate_weight_updates.
 func validateWeightUpdates(updates []WeightRecordUpdate) error {
 	if len(updates) == 0 {
 		return fmt.Errorf("weight-record update is empty")
@@ -69,7 +70,7 @@ func validateWeightUpdates(updates []WeightRecordUpdate) error {
 	return nil
 }
 
-// Mirrors actors/reward/src/streams.rs::weight_breakpoints.
+// Mirrors actors/reward/src/streams/weights.rs::weight_breakpoints.
 func weightBreakpoints(record WeightRecord, startEpoch abi.ChainEpoch) []abi.ChainEpoch {
 	epochs := map[abi.ChainEpoch]struct{}{startEpoch: {}}
 	if record.TStart >= startEpoch {
@@ -122,7 +123,7 @@ func weightBreakpoints(record WeightRecord, startEpoch abi.ChainEpoch) []abi.Cha
 	return out
 }
 
-// Mirrors actors/reward/src/streams.rs::validate_weight_schedule.
+// Mirrors actors/reward/src/streams/invariants.rs::schedule.
 func validateWeightSchedule(streams []Stream, startEpoch abi.ChainEpoch) error {
 	epochs := map[abi.ChainEpoch]struct{}{startEpoch: {}, math.MaxInt64: {}}
 	for _, stream := range streams {
@@ -133,19 +134,22 @@ func validateWeightSchedule(streams []Stream, startEpoch abi.ChainEpoch) error {
 			epochs[epoch] = struct{}{}
 		}
 	}
+	denom := new(mathbig.Int).SetUint64(Denom)
 	for epoch := range epochs {
-		var sum uint64
+		// A stream count beyond MaxStreams reaches here from the invariant checker, so the sum
+		// is taken in arbitrary precision rather than resting on that bound.
+		sum := new(mathbig.Int)
 		for _, stream := range streams {
-			sum += computeWeight(stream.Weight, epoch)
+			sum.Add(sum, new(mathbig.Int).SetUint64(computeWeight(stream.Weight, epoch)))
 		}
-		if sum > Denom {
-			return fmt.Errorf("stream weights exceed DENOM at epoch %d: %d", epoch, sum)
+		if sum.Cmp(denom) > 0 {
+			return fmt.Errorf("stream weights exceed DENOM at epoch %d: %s", epoch, sum)
 		}
 	}
 	return nil
 }
 
-// Mirrors actors/reward/src/streams.rs::validate_id_address.
+// Mirrors actors/reward/src/streams/distribution.rs::validate_id_address.
 func validateIDAddress(addr address.Address, label string) error {
 	if addr.Protocol() != address.ID {
 		return fmt.Errorf("%s %s is not an ID address", label, addr)
@@ -153,53 +157,96 @@ func validateIDAddress(addr address.Address, label string) error {
 	return nil
 }
 
-// Mirrors actors/reward/src/streams.rs::validate_shares.
-func validateShares(shares []RecipientShare) error {
+// Mirrors actors/reward/src/streams/distribution.rs::validate_share_rows.
+// A stored map ascends by recipient ID and carries no burn sentinel but when received as a message
+// it can be in any order and may repeat the sentinel.
+func validateShareRows(shares []RecipientShare, stored bool) error {
 	if len(shares) > MaxRecipients {
 		return fmt.Errorf("recipient count %d exceeds maximum %d", len(shares), MaxRecipients)
 	}
 	recipients := make(map[address.Address]struct{}, len(shares))
-	var total uint64
-	for _, row := range shares {
-		if err := validateIDAddress(row.Recipient, "share recipient"); err != nil {
+	var previousID uint64
+	for i, row := range shares {
+		id, err := recipientID(row.Recipient, "share recipient")
+		if err != nil {
 			return err
 		}
+		if stored && i > 0 && previousID >= id {
+			return fmt.Errorf("stored share recipients are not ordered")
+		}
+		previousID = id
 		if row.Share == 0 {
 			return fmt.Errorf("share for recipient %s is zero", row.Recipient)
+		}
+		if row.Recipient == builtin.BurntFundsActorAddr {
+			if stored {
+				return fmt.Errorf("burn sentinel persisted as a recipient")
+			}
+			continue
 		}
 		if _, found := recipients[row.Recipient]; found {
 			return fmt.Errorf("duplicate share recipient %s", row.Recipient)
 		}
 		recipients[row.Recipient] = struct{}{}
-		if row.Share > Denom-total {
-			return fmt.Errorf("shares exceed DENOM")
-		}
-		total += row.Share
-	}
-	if total != Denom {
-		return fmt.Errorf("shares sum to %d, expected %d", total, Denom)
 	}
 	return nil
 }
 
-func addressRowsStrictlyOrdered[T any](rows []T, addressOf func(T) address.Address) bool {
-	for i := 1; i < len(rows); i++ {
-		if bytes.Compare(addressOf(rows[i-1]).Bytes(), addressOf(rows[i]).Bytes()) >= 0 {
-			return false
-		}
+// shareTotal sums in arbitrary precision, as Rust sums in u128, so a map beyond MaxRecipients
+// is safe to total.
+func shareTotal(shares []RecipientShare) *mathbig.Int {
+	total := new(mathbig.Int)
+	for _, row := range shares {
+		total.Add(total, new(mathbig.Int).SetUint64(row.Share))
 	}
-	return true
+	return total
 }
 
-// Mirrors actors/reward/src/streams.rs::validate_amount_rows.
-func validateAmountRows(rows []RecipientAmount, label string) error {
-	if !addressRowsStrictlyOrdered(rows, func(row RecipientAmount) address.Address { return row.Recipient }) {
-		return fmt.Errorf("%s recipients are not ordered", label)
+// Mirrors actors/reward/src/streams/distribution.rs::validate_shares: a map in a msg whose
+// sentinel-inclusive shares sum to DENOM.
+func validateShares(shares []RecipientShare) error {
+	if err := validateShareRows(shares, false); err != nil {
+		return err
 	}
-	for _, row := range rows {
-		if err := validateIDAddress(row.Recipient, label); err != nil {
+	if total := shareTotal(shares); total.Cmp(new(mathbig.Int).SetUint64(Denom)) != 0 {
+		return fmt.Errorf("shares sum to %s, expected %d", total, Denom)
+	}
+	return nil
+}
+
+// Mirrors actors/reward/src/streams/distribution.rs::validate_stored_shares: a stored map
+// whose sentinel-free shares sum within DENOM.
+func validateStoredShares(shares []RecipientShare) error {
+	if err := validateShareRows(shares, true); err != nil {
+		return err
+	}
+	if total := shareTotal(shares); total.Cmp(new(mathbig.Int).SetUint64(Denom)) > 0 {
+		return fmt.Errorf("stored shares sum to %s, exceeds %d", total, Denom)
+	}
+	return nil
+}
+
+// recipientID decodes the actor ID that recipient ordering compares. Rust derives Ord for
+// Address over Payload::ID(u64), so the order is numeric (i.e. not raw varint bytes).
+func recipientID(addr address.Address, label string) (uint64, error) {
+	if err := validateIDAddress(addr, label); err != nil {
+		return 0, err
+	}
+	return address.IDFromAddress(addr)
+}
+
+// Mirrors actors/reward/src/streams/distribution.rs::validate_amount_rows.
+func validateAmountRows(rows []RecipientAmount, label string) error {
+	var previousID uint64
+	for i, row := range rows {
+		id, err := recipientID(row.Recipient, label)
+		if err != nil {
 			return err
 		}
+		if i > 0 && previousID >= id {
+			return fmt.Errorf("%s recipients are not ordered", label)
+		}
+		previousID = id
 		if !row.Amount.GreaterThan(big.Zero()) {
 			return fmt.Errorf("%s amount is not positive", label)
 		}
@@ -207,7 +254,7 @@ func validateAmountRows(rows []RecipientAmount, label string) error {
 	return nil
 }
 
-// Mirrors actors/reward/src/streams.rs::validate_period_claims.
+// Mirrors actors/reward/src/streams/distribution.rs::validate_period_claims.
 func validatePeriodClaims(distribution *ExplicitDistribution, pool abi.TokenAmount) error {
 	if err := validateAmountRows(distribution.Payable, "payable"); err != nil {
 		return err
@@ -234,7 +281,7 @@ func validatePeriodClaims(distribution *ExplicitDistribution, pool abi.TokenAmou
 	return nil
 }
 
-// Mirrors actors/reward/src/streams.rs::recipient_union_len.
+// Mirrors actors/reward/src/state.rs::RecipientTable::union_len.
 func recipientUnionLen(payable []RecipientAmount, shares []RecipientShare) int {
 	recipients := make(map[address.Address]struct{}, len(payable)+len(shares))
 	for _, row := range payable {
@@ -246,7 +293,7 @@ func recipientUnionLen(payable []RecipientAmount, shares []RecipientShare) int {
 	return len(recipients)
 }
 
-// Mirrors actors/reward/src/streams.rs::validate_stream_configuration_without_weights.
+// Mirrors actors/reward/src/streams/invariants.rs::stream_table.
 func validateStreamConfigurationWithoutWeights(streams []Stream) error {
 	if len(streams) > MaxStreams {
 		return fmt.Errorf("stream count exceeds maximum %d", MaxStreams)
@@ -267,10 +314,7 @@ func validateStreamConfigurationWithoutWeights(streams []Stream) error {
 		if err := validateIDAddress(distribution.Writer, "distribution writer"); err != nil {
 			return err
 		}
-		if !addressRowsStrictlyOrdered(distribution.Shares, func(row RecipientShare) address.Address { return row.Recipient }) {
-			return fmt.Errorf("share recipients are not ordered")
-		}
-		if err := validateShares(distribution.Shares); err != nil {
+		if err := validateStoredShares(distribution.Shares); err != nil {
 			return err
 		}
 		if err := validateAmountRows(distribution.Payable, "payable"); err != nil {
@@ -293,19 +337,6 @@ func validateStreamConfigurationWithoutWeights(streams []Stream) error {
 	return nil
 }
 
-// Mirrors actors/reward/src/streams.rs::validate_stream_configuration.
-func validateStreamConfiguration(streams []Stream) error {
-	if err := validateStreamConfigurationWithoutWeights(streams); err != nil {
-		return err
-	}
-	for _, stream := range streams {
-		if err := validateWeightRecord(stream.Weight); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 type cborUnmarshaler interface {
 	UnmarshalCBOR(io.Reader) error
 }
@@ -321,7 +352,7 @@ func unmarshalPendingPayload(payload []byte, out cborUnmarshaler) error {
 	return nil
 }
 
-// Mirrors actors/reward/src/streams.rs::validate_distribution_init.
+// Mirrors actors/reward/src/streams/distribution.rs::validate_distribution_init.
 func validateDistributionInit(distribution *DistributionInit) error {
 	if distribution == nil {
 		return nil
@@ -329,10 +360,10 @@ func validateDistributionInit(distribution *DistributionInit) error {
 	if err := validateIDAddress(distribution.Writer, "distribution writer"); err != nil {
 		return err
 	}
-	return validateShares(distribution.Shares)
+	return validateStoredShares(distribution.Shares)
 }
 
-// Mirrors actors/reward/src/streams.rs::validate_pending_payload.
+// Mirrors actors/reward/src/streams/queue.rs::QueuedCall::decode.
 func validatePendingPayload(write PendingWrite) error {
 	switch write.Op {
 	case PendingWriteOpSetWeightRecords, PendingWriteOpStepWeightRecords:
@@ -380,7 +411,7 @@ func slotForWrite(write PendingWrite) pendingSlot {
 	return slot
 }
 
-// Mirrors actors/reward/src/streams.rs::validate_pending_queue.
+// Mirrors actors/reward/src/streams/queue.rs::validate_pending_queue.
 func validatePendingQueue(writes []PendingWrite) error {
 	if len(writes) > MaxPendingWrites {
 		return fmt.Errorf("pending write count %d exceeds maximum %d", len(writes), MaxPendingWrites)
@@ -406,7 +437,7 @@ func validatePendingQueue(writes []PendingWrite) error {
 	return nil
 }
 
-// Mirrors actors/reward/src/streams.rs::validate_tombstone_capacity.
+// Mirrors actors/reward/src/streams/invariants.rs::validate_tombstone_capacity.
 func validateTombstoneCapacity(streams *StreamsState) error {
 	rows := 0
 	for _, tombstone := range streams.Tombstones {
@@ -433,7 +464,7 @@ func validateTombstoneCapacity(streams *StreamsState) error {
 	return nil
 }
 
-// Mirrors actors/reward/src/streams.rs::validate_award_state_structure.
+// Mirrors actors/reward/src/streams/invariants.rs::structure.
 func validateAwardStateStructure(streams *StreamsState) error {
 	if err := validatePendingQueue(streams.PendingWrites); err != nil {
 		return err
@@ -478,162 +509,8 @@ func validateAwardStateStructure(streams *StreamsState) error {
 	return validateTombstoneCapacity(streams)
 }
 
-func cloneStreamsState(streams *StreamsState) StreamsState {
-	clone := StreamsState{
-		Streams:       make([]Stream, len(streams.Streams)),
-		Tombstones:    append([]Tombstone(nil), streams.Tombstones...),
-		PendingWrites: append([]PendingWrite(nil), streams.PendingWrites...),
-	}
-	for i, stream := range streams.Streams {
-		clone.Streams[i] = stream
-		if stream.Distribution != nil {
-			distribution := *stream.Distribution
-			distribution.Shares = append([]RecipientShare(nil), distribution.Shares...)
-			distribution.Payable = append([]RecipientAmount(nil), distribution.Payable...)
-			distribution.ClaimedPeriod = append([]RecipientAmount(nil), distribution.ClaimedPeriod...)
-			clone.Streams[i].Distribution = &distribution
-		}
-	}
-	return clone
-}
-
-// Mirrors the projection-only path through
-// actors/reward/src/streams.rs::apply_pending_transition.
-func applyPendingTransition(streams *StreamsState, write PendingWrite) error {
-	switch write.Op {
-	case PendingWriteOpSetWeightRecords, PendingWriteOpStepWeightRecords:
-		var payload SetWeightRecordsParams
-		if err := unmarshalPendingPayload(write.Payload, &payload); err != nil {
-			return err
-		}
-		if err := validateWeightUpdates(payload.Updates); err != nil {
-			return err
-		}
-		for _, update := range payload.Updates {
-			found := false
-			for i := range streams.Streams {
-				if streams.Streams[i].ID == update.ID {
-					streams.Streams[i].Weight = update.Weight
-					found = true
-					break
-				}
-			}
-			if !found {
-				return fmt.Errorf("stream %d not found", update.ID)
-			}
-		}
-	case PendingWriteOpRegisterStream:
-		if write.ID == nil {
-			return fmt.Errorf("RegisterStream call has no stream ID")
-		}
-		if *write.ID == 0 {
-			return fmt.Errorf("stream ID 0 is reserved")
-		}
-		for _, stream := range streams.Streams {
-			if stream.ID == *write.ID {
-				return fmt.Errorf("stream ID %d is already registered", *write.ID)
-			}
-		}
-		for _, tombstone := range streams.Tombstones {
-			if tombstone.ID == *write.ID {
-				return fmt.Errorf("stream ID %d is tombstoned", *write.ID)
-			}
-		}
-		var payload RegisterStreamPayload
-		if err := unmarshalPendingPayload(write.Payload, &payload); err != nil {
-			return err
-		}
-		if err := validateWeightRecord(payload.Weight); err != nil {
-			return err
-		}
-		if err := validateDistributionInit(payload.Distribution); err != nil {
-			return err
-		}
-		var distribution *ExplicitDistribution
-		if payload.Distribution != nil {
-			distribution = &ExplicitDistribution{
-				Writer: payload.Distribution.Writer,
-				Shares: append([]RecipientShare(nil), payload.Distribution.Shares...),
-			}
-		}
-		streams.Streams = append(streams.Streams, Stream{ID: *write.ID, Weight: payload.Weight, Distribution: distribution})
-		sort.Slice(streams.Streams, func(i, j int) bool { return streams.Streams[i].ID < streams.Streams[j].ID })
-	case PendingWriteOpRemoveStream:
-		if write.ID == nil {
-			return fmt.Errorf("RemoveStream call has no stream ID")
-		}
-		found := false
-		for i, stream := range streams.Streams {
-			if stream.ID == *write.ID {
-				streams.Streams = append(streams.Streams[:i], streams.Streams[i+1:]...)
-				found = true
-				break
-			}
-		}
-		if !found {
-			return fmt.Errorf("stream %d not found", *write.ID)
-		}
-	case PendingWriteOpSetDistribution:
-		if write.ID == nil {
-			return fmt.Errorf("SetDistribution call has no stream ID")
-		}
-		var payload SetDistributionPayload
-		if err := unmarshalPendingPayload(write.Payload, &payload); err != nil {
-			return err
-		}
-		for i := range streams.Streams {
-			if streams.Streams[i].ID != *write.ID {
-				continue
-			}
-			if streams.Streams[i].Distribution == nil {
-				return fmt.Errorf("stream %d is implicit", *write.ID)
-			}
-			streams.Streams[i].Distribution.Writer = payload.Writer
-			return nil
-		}
-		return fmt.Errorf("stream %d not found", *write.ID)
-	default:
-		return fmt.Errorf("unknown pending operation %d", write.Op)
-	}
-	return nil
-}
-
-// Mirrors actors/reward/src/streams.rs::validate_projected_queue.
-func validateProjectedQueue(streams *StreamsState, currentEpoch abi.ChainEpoch) error {
-	if err := validatePendingQueue(streams.PendingWrites); err != nil {
-		return err
-	}
-	if err := validateStreamConfiguration(streams.Streams); err != nil {
-		return err
-	}
-	if err := validateWeightSchedule(streams.Streams, currentEpoch); err != nil {
-		return err
-	}
-	projected := cloneStreamsState(streams)
-	for _, write := range streams.PendingWrites {
-		candidate := cloneStreamsState(&projected)
-		if err := applyPendingTransition(&candidate, write); err != nil {
-			continue
-		}
-		if err := validateStreamConfiguration(candidate.Streams); err != nil {
-			continue
-		}
-		if err := validateWeightSchedule(candidate.Streams, write.EffectiveEpoch); err != nil {
-			continue
-		}
-		if err := validateTombstoneCapacity(&candidate); err != nil {
-			continue
-		}
-		projected = candidate
-	}
-	return nil
-}
-
-// Mirrors actors/reward/src/streams.rs::validate_streams_state.
-func validateStreamsState(streams *StreamsState, accruals []StreamAccrual, currentEpoch abi.ChainEpoch) error {
-	if err := validateAwardStateStructure(streams); err != nil {
-		return err
-	}
+// Mirrors actors/reward/src/streams/invariants.rs::accounting.
+func validateAwardStateAccounting(streams *StreamsState, accruals []StreamAccrual) error {
 	for i := 1; i < len(accruals); i++ {
 		if accruals[i-1].ID >= accruals[i].ID {
 			return fmt.Errorf("explicit-stream accruals are not ordered")
@@ -660,15 +537,22 @@ func validateStreamsState(streams *StreamsState, accruals []StreamAccrual, curre
 			return err
 		}
 	}
-	for _, stream := range streams.Streams {
-		if err := validateWeightRecord(stream.Weight); err != nil {
-			return err
-		}
-	}
-	return validateProjectedQueue(streams, currentEpoch)
+	return nil
 }
 
-// Mirrors actors/reward/src/streams.rs::compute_service_liability.
+// Mirrors actors/reward/src/streams/invariants.rs::validate_streams_state: the structure,
+// accounting and schedule groups, the last of them from currentEpoch onward.
+func validateStreamsState(streams *StreamsState, accruals []StreamAccrual, currentEpoch abi.ChainEpoch) error {
+	if err := validateAwardStateStructure(streams); err != nil {
+		return err
+	}
+	if err := validateAwardStateAccounting(streams, accruals); err != nil {
+		return err
+	}
+	return validateWeightSchedule(streams.Streams, currentEpoch)
+}
+
+// Mirrors actors/reward/src/streams/award.rs::explicit_liability.
 func computeExplicitLiability(streams *StreamsState, accruals []StreamAccrual) (abi.TokenAmount, error) {
 	total := big.Zero()
 	accrualIndex := 0

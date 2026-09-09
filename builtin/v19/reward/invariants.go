@@ -70,7 +70,7 @@ func CheckStateInvariants(st *State, store adt.Store, priorEpoch abi.ChainEpoch,
 		TombstoneCount:    len(streams.Tombstones),
 		PendingWriteCount: len(streams.PendingWrites),
 	}
-	// Mirrors actors/reward/src/streams.rs::validate_streams_state.
+	// Mirrors actors/reward/src/streams/invariants.rs::validate_streams_state.
 	if err := validateStreamsState(streams, st.Accrued, priorEpoch+1); err != nil {
 		acc.Addf("invalid streams state: %v", err)
 	}
@@ -125,7 +125,7 @@ func CheckStateInvariants(st *State, store adt.Store, priorEpoch abi.ChainEpoch,
 		}
 	}
 
-	// Mirrors actors/reward/src/streams.rs::compute_service_liability.
+	// Mirrors actors/reward/src/streams/award.rs::explicit_liability.
 	liabilities, err := computeExplicitLiability(streams, st.Accrued)
 	if err != nil {
 		acc.Addf("error computing explicit-stream liabilities: %v", err)

@@ -71,8 +71,9 @@ type State struct {
 
 // ConstructState creates the minimal v19 genesis configuration: one implicit
 // consensus stream at full weight and no service stream or burn. Its weight is
-// anchored at the pre-genesis epoch because state initialization advances from
-// epoch -1 to epoch 0; the zero slope makes the anchor otherwise immaterial.
+// anchored at epoch 0 to match actors/reward/src/state.rs::State::new, so a
+// Go-built and a Rust-built genesis streams block encode identically; the zero
+// slope makes the anchor otherwise immaterial.
 //
 // The f00 SWA actor deliberately leaves genesis weight governance disabled.
 // Activation migration instead supplies its configured SWA and validates the
@@ -84,7 +85,7 @@ func ConstructState(store adt.Store, currRealizedPower abi.StoragePower) (*State
 			ID: 1,
 			Weight: WeightRecord{
 				VStart: Denom,
-				TStart: -1,
+				TStart: 0,
 				Floor:  Denom,
 				Cap:    Denom,
 			},
