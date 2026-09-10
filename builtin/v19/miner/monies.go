@@ -30,7 +30,13 @@ var InitialPledgeLockTarget = builtin.BigFrac{
 	Denominator: big.NewInt(10),
 }
 
-const GammaFixedPointFactor = 1000 // 3 decimal places
+// FIP-0081 splits the additional pledge between the baseline and simple formulations,
+// as permille shares.
+const (
+	PledgeSharePermille    = 1000
+	BaselinePledgePermille = 700
+	SimplePledgePermille   = PledgeSharePermille - BaselinePledgePermille
+)
 
 // The projected block reward a sector would earn over some period.
 // Also known as "BR(t)".
@@ -73,19 +79,21 @@ func PreCommitDepositForPower(rewardEstimate, networkQAPowerEstimate smoothing.F
 // - storage pledge, aka IP base: a multiple of the reward expected to be earned by newly-committed power
 // - consensus pledge, aka additional IP: a pro-rata fraction of the circulating money supply
 //
-// IP = IPBase(t) + AdditionalIP(t)
+// Additional IP is a convex combination of a baseline and a simple formulation, split 70/30 by
+// FIP-0081.
+//
+// IP = IPBase(t) + 0.7*AdditionalIP_baseline(t) + 0.3*AdditionalIP_simple(t)
 // IPBase(t) = BR(t, InitialPledgeProjectionPeriod)
-// AdditionalIP(t) = LockTarget(t)*PledgeShare(t)
+// AdditionalIP_x(t) = LockTarget(t)*PledgeShare_x(t)
 // LockTarget = (LockTargetFactorNum / LockTargetFactorDenom) * FILCirculatingSupply(t)
-// PledgeShare(t) = sectorQAPower / max(BaselinePower(t), NetworkQAPower(t))
+// PledgeShare_baseline(t) = sectorQAPower / max(BaselinePower(t), NetworkQAPower(t), sectorQAPower)
+// PledgeShare_simple(t) = sectorQAPower / max(NetworkQAPower(t), sectorQAPower)
 func InitialPledgeForPower(
 	qaPower,
 	baselinePower abi.StoragePower,
 	rewardEstimate,
 	networkQAPowerEstimate smoothing.FilterEstimate,
 	circulatingSupply abi.TokenAmount,
-	epochsSinceRampStart int64,
-	rampDurationEpochs uint64,
 ) abi.TokenAmount {
 	ipBase := ExpectedRewardForPowerClampedAtAttoFIL(rewardEstimate, networkQAPowerEstimate, qaPower, InitialPledgeProjectionPeriod)
 
@@ -94,35 +102,15 @@ func InitialPledgeForPower(
 	pledgeShareNum := qaPower
 	networkQAPower := smoothing.Estimate(&networkQAPowerEstimate)
 
-	// Once FIP-0081 has fully activated, additional pledge will be 70% baseline
-	// pledge + 30% simple pledge.
-	const fip0081ActivationPermille = 300
-	// Gamma/GAMMA_FIXED_POINT_FACTOR is the share of pledge coming from the
-	// baseline formulation, with 1-(gamma/GAMMA_FIXED_POINT_FACTOR) coming from
-	// simple pledge.
-	// gamma = 1000 - 300 * (epochs_since_ramp_start / ramp_duration_epochs).max(0).min(1)
-	var skew uint64
-	switch {
-	case epochsSinceRampStart < 0:
-		// No skew before ramp start
-		skew = 0
-	case rampDurationEpochs == 0 || epochsSinceRampStart >= int64(rampDurationEpochs):
-		// 100% skew after ramp end
-		skew = fip0081ActivationPermille
-	case epochsSinceRampStart > 0:
-		skew = (uint64(epochsSinceRampStart*fip0081ActivationPermille) / rampDurationEpochs)
-	}
-	gamma := big.NewInt(int64(GammaFixedPointFactor - skew))
-
 	additionalIPNum := big.Mul(lockTargetNum, pledgeShareNum)
 
 	pledgeShareDenomBaseline := big.Max(big.Max(networkQAPower, baselinePower), qaPower)
 	pledgeShareDenomSimple := big.Max(networkQAPower, qaPower)
 
 	additionalIPDenomBaseline := big.Mul(pledgeShareDenomBaseline, lockTargetDenom)
-	additionalIPBaseline := big.Div(big.Mul(gamma, additionalIPNum), big.Mul(additionalIPDenomBaseline, big.NewInt(GammaFixedPointFactor)))
+	additionalIPBaseline := big.Div(big.Mul(big.NewInt(BaselinePledgePermille), additionalIPNum), big.Mul(additionalIPDenomBaseline, big.NewInt(PledgeSharePermille)))
 	additionalIPDenomSimple := big.Mul(pledgeShareDenomSimple, lockTargetDenom)
-	additionalIPSimple := big.Div(big.Mul(big.Sub(big.NewInt(GammaFixedPointFactor), gamma), additionalIPNum), big.Mul(additionalIPDenomSimple, big.NewInt(GammaFixedPointFactor)))
+	additionalIPSimple := big.Div(big.Mul(big.NewInt(SimplePledgePermille), additionalIPNum), big.Mul(additionalIPDenomSimple, big.NewInt(PledgeSharePermille)))
 
 	// convex combination of simple and baseline pledge
 	additionalIP := big.Add(additionalIPBaseline, additionalIPSimple)
