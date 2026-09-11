@@ -31,6 +31,8 @@ var InitialRewardVelocityEstimate = abi.NewTokenAmount(-109897758509)
 // - SimpleTotal and BaselineTotal move from state to code constants.
 // - Stream accounting, SWA configuration, and offboarded stream state are added.
 type State struct {
+	// ---- Baseline and per-epoch block reward ----
+
 	// CumsumBaseline is the target CumsumRealized must reach for EffectiveNetworkTime to increase.
 	// It is expressed in byte-epochs.
 	CumsumBaseline Spacetime
@@ -53,19 +55,31 @@ type State struct {
 	ThisEpochBaselinePower abi.StoragePower
 	// Epoch identifies the epoch for which the reward was computed.
 	Epoch abi.ChainEpoch
+	// ---- Minted totals: total = burn + explicit + the miners' share ----
+
 	// TotalMintedReward is the total FIL minted through block rewards.
 	TotalMintedReward abi.TokenAmount
 	// TotalBurnMinted is the cumulative block-reward residual sent to the burnt funds actor.
 	TotalBurnMinted abi.TokenAmount
 	// TotalExplicitMinted is the cumulative block reward accrued to explicit streams.
 	TotalExplicitMinted abi.TokenAmount
-	// Accrued holds current-period accrual for each explicit stream, ordered by stream ID.
-	Accrued []StreamAccrual
-	// SWATimelockEpochs is the hold applied to SWA writes, set by the activation migration.
+
+	// ---- SWA configuration, set by the activation migration ----
+
+	// SWATimelockEpochs is the hold applied to SWA writes. Activation migration sets the
+	// operational value.
 	SWATimelockEpochs abi.ChainEpoch
-	// SWAActor manages stream configuration and is set by the activation migration.
+	// SWAActor is authorized to manage stream configuration. Activation migration sets the
+	// operational address.
 	SWAActor address.Address
-	// StreamsRoot references offboarded stream, tombstone, and queued-write state.
+
+	// ---- The stream ledger elements, spanning this root block and StreamsState ----
+
+	// Accrued holds current-period accrual for each explicit stream, unique and ascending by
+	// stream ID. Inline because it mutates with every award.
+	Accrued []StreamAccrual
+	// StreamsRoot references offboarded stream, tombstone, and queued-write state. Only mutates
+	// on SWA writes and share operations.
 	StreamsRoot cid.Cid
 }
 

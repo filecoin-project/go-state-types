@@ -102,21 +102,6 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.Accrued ([]reward.StreamAccrual) (slice)
-	if len(t.Accrued) > 8192 {
-		return xerrors.Errorf("Slice value in field t.Accrued was too long")
-	}
-
-	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Accrued))); err != nil {
-		return err
-	}
-	for _, v := range t.Accrued {
-		if err := v.MarshalCBOR(cw); err != nil {
-			return err
-		}
-
-	}
-
 	// t.SWATimelockEpochs (abi.ChainEpoch) (int64)
 	if t.SWATimelockEpochs >= 0 {
 		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.SWATimelockEpochs)); err != nil {
@@ -131,6 +116,21 @@ func (t *State) MarshalCBOR(w io.Writer) error {
 	// t.SWAActor (address.Address) (struct)
 	if err := t.SWAActor.MarshalCBOR(cw); err != nil {
 		return err
+	}
+
+	// t.Accrued ([]reward.StreamAccrual) (slice)
+	if len(t.Accrued) > 8192 {
+		return xerrors.Errorf("Slice value in field t.Accrued was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Accrued))); err != nil {
+		return err
+	}
+	for _, v := range t.Accrued {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+
 	}
 
 	// t.StreamsRoot (cid.Cid) (struct)
@@ -296,6 +296,40 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 
 	}
+	// t.SWATimelockEpochs (abi.ChainEpoch) (int64)
+	{
+		maj, extra, err := cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		var extraI int64
+		switch maj {
+		case cbg.MajUnsignedInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 positive overflow")
+			}
+		case cbg.MajNegativeInt:
+			extraI = int64(extra)
+			if extraI < 0 {
+				return fmt.Errorf("int64 negative overflow")
+			}
+			extraI = -1 - extraI
+		default:
+			return fmt.Errorf("wrong type for int64 field: %d", maj)
+		}
+
+		t.SWATimelockEpochs = abi.ChainEpoch(extraI)
+	}
+	// t.SWAActor (address.Address) (struct)
+
+	{
+
+		if err := t.SWAActor.UnmarshalCBOR(cr); err != nil {
+			return xerrors.Errorf("unmarshaling t.SWAActor: %w", err)
+		}
+
+	}
 	// t.Accrued ([]reward.StreamAccrual) (slice)
 
 	maj, extra, err = cr.ReadHeader()
@@ -333,40 +367,6 @@ func (t *State) UnmarshalCBOR(r io.Reader) (err error) {
 			}
 
 		}
-	}
-	// t.SWATimelockEpochs (abi.ChainEpoch) (int64)
-	{
-		maj, extra, err := cr.ReadHeader()
-		if err != nil {
-			return err
-		}
-		var extraI int64
-		switch maj {
-		case cbg.MajUnsignedInt:
-			extraI = int64(extra)
-			if extraI < 0 {
-				return fmt.Errorf("int64 positive overflow")
-			}
-		case cbg.MajNegativeInt:
-			extraI = int64(extra)
-			if extraI < 0 {
-				return fmt.Errorf("int64 negative overflow")
-			}
-			extraI = -1 - extraI
-		default:
-			return fmt.Errorf("wrong type for int64 field: %d", maj)
-		}
-
-		t.SWATimelockEpochs = abi.ChainEpoch(extraI)
-	}
-	// t.SWAActor (address.Address) (struct)
-
-	{
-
-		if err := t.SWAActor.UnmarshalCBOR(cr); err != nil {
-			return xerrors.Errorf("unmarshaling t.SWAActor: %w", err)
-		}
-
 	}
 	// t.StreamsRoot (cid.Cid) (struct)
 
