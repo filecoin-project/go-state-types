@@ -389,8 +389,8 @@ type UpgradeSectorQuality struct {
 	Partition uint64
 	// Sectors to upgrade to full quality-adjusted power (FIP-0118).
 	Sectors bitfield.BitField
-	// Unset means upgrade only: every selected sector keeps its own expiration.
-	// Otherwise the absolute epoch to extend all selected sectors to.
+	// Unset means upgrade only. Otherwise this must be after the current epoch and every
+	// selected sector's current expiration.
 	NewExpiration *abi.ChainEpoch
 }
 

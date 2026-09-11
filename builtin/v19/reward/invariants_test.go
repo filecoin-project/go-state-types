@@ -122,7 +122,7 @@ func TestConstructState(t *testing.T) {
 	require.Equal(t, genesisStreamsRoot, st.StreamsRoot.String())
 	require.Empty(t, st.Accrued)
 	require.Empty(t, streams.Tombstones)
-	require.Empty(t, streams.PendingWrites)
+	require.Empty(t, streams.PendingWritesQueue)
 	require.Equal(t, builtin.SystemActorAddr, st.SWAActor)
 
 	summary, acc := CheckStateInvariants(st, store, st.Epoch-1, StorageMiningAllocationCheck)
@@ -297,14 +297,14 @@ func TestCheckStateInvariantsRejectsStreamCorruption(t *testing.T) {
 		{
 			name: "malformed pending payload",
 			mutate: func(_ *testing.T, _ *State, streams *StreamsState) {
-				streams.PendingWrites = []PendingWrite{{Op: PendingWriteOpSetWeightRecords, Payload: []byte{0xff}, EffectiveEpoch: 1}}
+				streams.PendingWritesQueue = []PendingWrite{{Op: PendingWriteOpSetWeightRecords, Payload: []byte{0xff}, EffectiveEpoch: 1}}
 			},
 			expected: "invalid streams state",
 		},
 		{
 			name: "non-canonical pending target",
 			mutate: func(_ *testing.T, _ *State, streams *StreamsState) {
-				streams.PendingWrites = []PendingWrite{{Op: PendingWriteOpRemoveStream, Payload: []byte{0x80}, EffectiveEpoch: 1}}
+				streams.PendingWritesQueue = []PendingWrite{{Op: PendingWriteOpRemoveStream, Payload: []byte{0x80}, EffectiveEpoch: 1}}
 			},
 			expected: "non-canonical stream ID",
 		},
@@ -312,7 +312,7 @@ func TestCheckStateInvariantsRejectsStreamCorruption(t *testing.T) {
 			name: "duplicate pending slot",
 			mutate: func(_ *testing.T, _ *State, streams *StreamsState) {
 				id := StreamID(2)
-				streams.PendingWrites = []PendingWrite{
+				streams.PendingWritesQueue = []PendingWrite{
 					{ID: &id, Op: PendingWriteOpRemoveStream, Payload: []byte{0x80}, EffectiveEpoch: 1},
 					{ID: &id, Op: PendingWriteOpRemoveStream, Payload: []byte{0x80}, EffectiveEpoch: 2},
 				}
@@ -324,7 +324,7 @@ func TestCheckStateInvariantsRejectsStreamCorruption(t *testing.T) {
 			mutate: func(t *testing.T, _ *State, streams *StreamsState) {
 				id := StreamID(2)
 				payload := &RegisterStreamPayload{Weight: weight(0, 0, 1, 0, 0)}
-				streams.PendingWrites = []PendingWrite{{ID: &id, Op: PendingWriteOpRegisterStream, Payload: marshalPayload(t, payload), EffectiveEpoch: 1}}
+				streams.PendingWritesQueue = []PendingWrite{{ID: &id, Op: PendingWriteOpRegisterStream, Payload: marshalPayload(t, payload), EffectiveEpoch: 1}}
 			},
 			expected: "pending registration reuses stream ID 2",
 		},
@@ -333,7 +333,7 @@ func TestCheckStateInvariantsRejectsStreamCorruption(t *testing.T) {
 			mutate: func(t *testing.T, _ *State, streams *StreamsState) {
 				streams.Tombstones = []Tombstone{{ID: 3, Payable: amountRows(t, 1_000, 200)}}
 				id := StreamID(2)
-				streams.PendingWrites = []PendingWrite{{ID: &id, Op: PendingWriteOpRemoveStream, Payload: []byte{0x80}, EffectiveEpoch: 1}}
+				streams.PendingWritesQueue = []PendingWrite{{ID: &id, Op: PendingWriteOpRemoveStream, Payload: []byte{0x80}, EffectiveEpoch: 1}}
 			},
 			expected: "tombstone row reservation 264 exceeds maximum 256",
 		},
@@ -422,7 +422,7 @@ func TestRecipientRowsUseNumericIDOrder(t *testing.T) {
 				if !ordered {
 					payload.Distribution.Shares = reversedShares
 				}
-				streams.PendingWrites = []PendingWrite{{
+				streams.PendingWritesQueue = []PendingWrite{{
 					ID: &id, Op: PendingWriteOpRegisterStream,
 					Payload: marshalPayload(t, payload), EffectiveEpoch: 1,
 				}}
@@ -465,7 +465,7 @@ func TestPendingRegistrationRejectsBurnSentinelShare(t *testing.T) {
 			Shares: []RecipientShare{{Recipient: builtin.BurntFundsActorAddr, Share: Denom}},
 		},
 	}
-	streams.PendingWrites = []PendingWrite{{
+	streams.PendingWritesQueue = []PendingWrite{{
 		ID: &id, Op: PendingWriteOpRegisterStream,
 		Payload: marshalPayload(t, payload), EffectiveEpoch: 1,
 	}}

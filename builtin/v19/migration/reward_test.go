@@ -120,7 +120,7 @@ func TestRewardMigration(t *testing.T) {
 	req.Equal(config.Streams[1].Distribution.Writer, streams.Streams[1].Distribution.Writer)
 	req.Equal(config.Streams[1].Distribution.Shares, streams.Streams[1].Distribution.Shares)
 	req.Empty(streams.Tombstones)
-	req.Empty(streams.PendingWrites)
+	req.Empty(streams.PendingWritesQueue)
 }
 
 func TestRewardMigrationDropsStoredRewardTotals(t *testing.T) {

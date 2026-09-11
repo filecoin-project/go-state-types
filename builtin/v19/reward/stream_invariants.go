@@ -443,7 +443,7 @@ func validateTombstoneCapacity(streams *StreamsState) error {
 	for _, tombstone := range streams.Tombstones {
 		rows += len(tombstone.Payable)
 	}
-	for _, write := range streams.PendingWrites {
+	for _, write := range streams.PendingWritesQueue {
 		if write.Op != PendingWriteOpRemoveStream {
 			continue
 		}
@@ -466,7 +466,7 @@ func validateTombstoneCapacity(streams *StreamsState) error {
 
 // Mirrors actors/reward/src/streams/invariants.rs::structure.
 func validateAwardStateStructure(streams *StreamsState) error {
-	if err := validatePendingQueue(streams.PendingWrites); err != nil {
+	if err := validatePendingQueue(streams.PendingWritesQueue); err != nil {
 		return err
 	}
 	if err := validateStreamConfigurationWithoutWeights(streams.Streams); err != nil {
@@ -495,7 +495,7 @@ func validateAwardStateStructure(streams *StreamsState) error {
 		}
 		tombstoneIDs[tombstone.ID] = struct{}{}
 	}
-	for _, write := range streams.PendingWrites {
+	for _, write := range streams.PendingWritesQueue {
 		if write.Op != PendingWriteOpRegisterStream || write.ID == nil {
 			continue
 		}

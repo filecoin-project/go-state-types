@@ -68,7 +68,7 @@ func CheckStateInvariants(st *State, store adt.Store, priorEpoch abi.ChainEpoch,
 	summary := &StateSummary{
 		StreamCount:       len(streams.Streams),
 		TombstoneCount:    len(streams.Tombstones),
-		PendingWriteCount: len(streams.PendingWrites),
+		PendingWriteCount: len(streams.PendingWritesQueue),
 	}
 	// Mirrors actors/reward/src/streams/invariants.rs::validate_streams_state.
 	if err := validateStreamsState(streams, st.Accrued, priorEpoch+1); err != nil {
@@ -114,14 +114,14 @@ func CheckStateInvariants(st *State, store adt.Store, priorEpoch abi.ChainEpoch,
 	}
 	acc.Require(len(missing) == 0 && len(unexpected) == 0, "explicit-stream accrual IDs do not match live explicit streams: missing %v, unexpected %v", missing, unexpected)
 
-	pendingSlots := make(map[pendingSlot]struct{}, len(streams.PendingWrites))
-	for i, write := range streams.PendingWrites {
+	pendingSlots := make(map[pendingSlot]struct{}, len(streams.PendingWritesQueue))
+	for i, write := range streams.PendingWritesQueue {
 		slot := slotForWrite(write)
 		_, duplicate := pendingSlots[slot]
 		acc.Require(!duplicate, "duplicate pending slot (%v, %d)", write.ID, write.Op)
 		pendingSlots[slot] = struct{}{}
 		if i > 0 {
-			acc.Require(streams.PendingWrites[i-1].EffectiveEpoch <= write.EffectiveEpoch, "pending writes are not ordered by effective epoch")
+			acc.Require(streams.PendingWritesQueue[i-1].EffectiveEpoch <= write.EffectiveEpoch, "pending writes are not ordered by effective epoch")
 		}
 	}
 

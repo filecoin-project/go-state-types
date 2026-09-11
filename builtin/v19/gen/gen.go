@@ -69,6 +69,7 @@ func main() {
 		reward.RemoveStreamParams{},
 		reward.SetDistributionParams{},
 		reward.SetSharesParams{},
+		reward.ReplaceAddressParams{},
 		reward.CancelPendingParams{},
 		reward.ClaimParams{},
 		reward.ClaimReturn{},

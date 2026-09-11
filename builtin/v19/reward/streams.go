@@ -156,8 +156,8 @@ type StreamsState struct {
 	Streams []Stream
 	// Tombstones contains retired streams with liabilities, ordered by ID.
 	Tombstones []Tombstone
-	// PendingWrites is stably ordered by EffectiveEpoch.
-	PendingWrites []PendingWrite
+	// PendingWritesQueue is stably ordered by EffectiveEpoch.
+	PendingWritesQueue []PendingWrite
 }
 
 // StreamAccrual is the current-period gross accrual persisted inline in State.

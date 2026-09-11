@@ -161,7 +161,8 @@ type SectorPreCommitOnChainInfo struct {
 type SectorOnChainInfoFlags uint64
 
 const (
-	SIMPLE_QA_POWER SectorOnChainInfoFlags = 1 << iota // QA power mechanism introduced in FIP-0045
+	// SIMPLE_QA_POWER marks the FIP-0045 QA mechanism. The miner actor no longer reads it.
+	SIMPLE_QA_POWER SectorOnChainInfoFlags = 1 << iota
 	// FULL_QA_POWER means the sector always receives maximum QA power (10x), regardless of deal
 	// content. Introduced by FIP-0118 (deprecate FIL+).
 	FULL_QA_POWER
@@ -177,11 +178,11 @@ type SectorOnChainInfo struct {
 	Expiration        abi.ChainEpoch          // Epoch during which the sector expires
 	// DealWeight is the spacetime of legacy unverified deals. Zero for sectors activated since
 	// FIP-0118, which record piece spacetime in VerifiedDealWeight; legacy sectors keep theirs
-	// and carry it across extensions, because the data-presence checks read both fields.
+	// because data-presence checks read both fields. A future upgrade may remove this field.
 	DealWeight abi.DealWeight
-	// VerifiedDealWeight is the spacetime of the sector's pieces, restated across extensions so
-	// quality is unchanged. Nothing is verified since FIP-0118; directly onboarded data lands
-	// here too.
+	// VerifiedDealWeight is the spacetime of the sector's pieces, restated across extensions to
+	// preserve quality apart from integer rounding. Nothing is verified since FIP-0118; it tracks
+	// the total spacetime of all pieces. A future upgrade may remove it or convert it to simple space.
 	VerifiedDealWeight    abi.DealWeight
 	InitialPledge         abi.TokenAmount        // Pledge collected to commit this sector
 	ExpectedDayReward     *abi.TokenAmount       // Expected one day projection of reward for sector computed at activation time
@@ -190,14 +191,12 @@ type SectorOnChainInfo struct {
 	ReplacedDayReward     *abi.TokenAmount       // Day reward of this sector before its power was most recently updated
 	SectorKeyCID          *cid.Cid               // The original SealedSectorCID, only gets set on the first ReplicaUpdate
 	Flags                 SectorOnChainInfoFlags // Additional flags
-	// The total fee payable per day for this sector. The value of this field is set at the time of
-	// sector activation, extension and whenever a sector's QAP is changed. This fee is payable for
-	// the lifetime of the sector and is aggregated in the deadline's `daily_fee` field.
+	// DailyFee is the fee payable per day for this sector. It is set at activation, when a
+	// pre-FIP-0100 zero fee is first touched, and when an upgrade changes QAP. An existing
+	// non-zero fee remains fixed across extension. The fee is aggregated in the deadline.
 	//
-	// This field is not included in the serialised form of the struct prior to the activation of
-	// FIP-0100, and is added as the 16th element of the array after that point only for new sectors
-	// or sectors that are updated after that point. For old sectors, the value of this field will
-	// always be zero.
+	// This field is absent from sector records written before FIP-0100. Such records decode
+	// with a zero fee until an extension or update initializes it.
 	//
 	// This field is OPTIONAL, meaning that it may present as a nil BigInt (not a nil pointer).
 	// If FeeDeduction.Nil() then it should be treated the same as if it were zero (but cannot be

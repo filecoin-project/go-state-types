@@ -91,10 +91,11 @@ func TestQAPowerForSector(t *testing.T) {
 	sizes := []abi.SectorSize{abi.SectorSize(2 << 10), abi.SectorSize(32 << 30), abi.SectorSize(64 << 30)}
 	for _, size := range sizes {
 		duration := abi.ChainEpoch(1000) * builtin.EpochsInDay
-		sector := func(flags miner.SectorOnChainInfoFlags, verifiedWeight abi.DealWeight) *miner.SectorOnChainInfo {
+		sector := func(flags miner.SectorOnChainInfoFlags, dealWeight, verifiedWeight abi.DealWeight) *miner.SectorOnChainInfo {
 			return &miner.SectorOnChainInfo{
 				Expiration:         duration,
 				PowerBaseEpoch:     0,
+				DealWeight:         dealWeight,
 				VerifiedDealWeight: verifiedWeight,
 				Flags:              flags,
 			}
@@ -103,14 +104,14 @@ func TestQAPowerForSector(t *testing.T) {
 
 		// Unflagged: quality comes from the recorded weight.
 		require.Equal(t, miner.QAPowerForWeight(size, duration, big.Zero()),
-			miner.QAPowerForSector(size, sector(miner.SIMPLE_QA_POWER, big.Zero())))
+			miner.QAPowerForSector(size, sector(miner.SIMPLE_QA_POWER, big.Zero(), big.Zero())))
 		require.Equal(t, miner.QAPowerForWeight(size, duration, fullWeight),
-			miner.QAPowerForSector(size, sector(miner.SIMPLE_QA_POWER, fullWeight)))
+			miner.QAPowerForSector(size, sector(miner.SIMPLE_QA_POWER, big.Zero(), fullWeight)))
 
-		// Flagged: always maximum, whatever the weight says.
+		// Flagged: always maximum, whatever the weights say.
 		require.Equal(t, miner.QAPowerMax(size),
-			miner.QAPowerForSector(size, sector(miner.SIMPLE_QA_POWER|miner.FULL_QA_POWER, big.Zero())))
+			miner.QAPowerForSector(size, sector(miner.SIMPLE_QA_POWER|miner.FULL_QA_POWER, big.Zero(), big.Zero())))
 		require.Equal(t, miner.QAPowerMax(size),
-			miner.QAPowerForSector(size, sector(miner.SIMPLE_QA_POWER|miner.FULL_QA_POWER, fullWeight)))
+			miner.QAPowerForSector(size, sector(miner.SIMPLE_QA_POWER|miner.FULL_QA_POWER, fullWeight, fullWeight)))
 	}
 }

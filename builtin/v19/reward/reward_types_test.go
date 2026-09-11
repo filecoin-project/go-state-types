@@ -263,8 +263,8 @@ func TestSerializationStreamsState(t *testing.T) {
 						},
 					},
 				},
-				Tombstones:    []Tombstone{{ID: 3, Payable: []RecipientAmount{{Recipient: idAddress(t, 104), Amount: abi.NewTokenAmount(9)}}}},
-				PendingWrites: []PendingWrite{{ID: streamIDPtr(4), Op: PendingWriteOpRegisterStream, Payload: []byte{0x81, 0x01}, EffectiveEpoch: 10}},
+				Tombstones:         []Tombstone{{ID: 3, Payable: []RecipientAmount{{Recipient: idAddress(t, 104), Amount: abi.NewTokenAmount(9)}}}},
+				PendingWritesQueue: []PendingWrite{{ID: streamIDPtr(4), Op: PendingWriteOpRegisterStream, Payload: []byte{0x81, 0x01}, EffectiveEpoch: 10}},
 			},
 			hex: "83828301850000000000f6830285052101040584420064818242006506818242006642000781824200674200088182038182420068420009818404024281010a",
 		},
@@ -540,6 +540,45 @@ func TestSerializationSetSharesParams(t *testing.T) {
 			req.NoError(tc.params.MarshalCBOR(&buf))
 			req.Equal(tc.hex, hex.EncodeToString(buf.Bytes()))
 			var rt SetSharesParams
+			req.NoError(rt.UnmarshalCBOR(&buf))
+			req.Equal(tc.params, rt)
+		})
+	}
+}
+
+func TestSerializationReplaceAddressParams(t *testing.T) {
+	testCases := []struct {
+		name   string
+		params ReplaceAddressParams
+		hex    string
+	}{
+		{
+			name: "id_addresses",
+			params: ReplaceAddressParams{
+				ID:         24,
+				OldAddress: idAddress(t, 101),
+				NewAddress: idAddress(t, 102),
+			},
+			hex: "831818420065420066",
+		},
+		{
+			name: "mixed_protocols",
+			params: ReplaceAddressParams{
+				ID:         256,
+				OldAddress: idAddress(t, 1<<32),
+				NewAddress: delegatedAddress(t),
+			},
+			hex: "831901004600808080801056040a1111111111111111111111111111111111111111",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			req := require.New(t)
+			var buf bytes.Buffer
+			req.NoError(tc.params.MarshalCBOR(&buf))
+			req.Equal(tc.hex, hex.EncodeToString(buf.Bytes()))
+			var rt ReplaceAddressParams
 			req.NoError(rt.UnmarshalCBOR(&buf))
 			req.Equal(tc.params, rt)
 		})

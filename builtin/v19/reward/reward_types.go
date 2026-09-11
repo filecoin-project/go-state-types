@@ -72,6 +72,16 @@ type SetSharesParams struct {
 	Shares []RecipientShare
 }
 
+// ReplaceAddressParams replaces a recipient address in one explicit stream.
+type ReplaceAddressParams struct {
+	// ID identifies the explicit stream.
+	ID StreamID
+	// OldAddress identifies the current recipient.
+	OldAddress address.Address
+	// NewAddress is its replacement.
+	NewAddress address.Address
+}
+
 // CancelPendingParams identifies one queued operation to cancel after due writes are applied.
 type CancelPendingParams struct {
 	// ID is nil for schedule-wide weight updates and identifies a stream for per-stream operations.
