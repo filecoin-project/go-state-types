@@ -93,6 +93,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 	reward18CID := cid.Undef
 	market18CID := cid.Undef
+	power18CID := cid.Undef
 
 	for _, oldEntry := range oldManifestData.Entries {
 		if oldEntry.Name == manifest.RewardKey {
@@ -100,6 +101,9 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		}
 		if oldEntry.Name == manifest.MarketKey {
 			market18CID = oldEntry.Code
+		}
+		if oldEntry.Name == manifest.PowerKey {
+			power18CID = oldEntry.Code
 		}
 
 		newCodeCID, ok := newManifest.Get(oldEntry.Name)
@@ -146,6 +150,18 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 	// Overrides the generic code-only migration registered above: the state shape changes.
 	migrations[market18CID] = migration.CachedMigration(cache, marketMigrator{OutCodeCID: market19CID})
+
+	// The Power Actor
+
+	if power18CID == cid.Undef {
+		return cid.Undef, xerrors.Errorf("code cid for power actor not found in old manifest")
+	}
+	power19CID, ok := newManifest.Get(manifest.PowerKey)
+	if !ok {
+		return cid.Undef, xerrors.Errorf("code cid for power actor not found in new manifest")
+	}
+	// Overrides the generic code-only migration registered above: the state shape changes.
+	migrations[power18CID] = migration.CachedMigration(cache, powerMigrator{OutCodeCID: power19CID})
 
 	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations)+len(deferredCodeIDs), len(oldManifestData.Entries))
