@@ -1,6 +1,6 @@
 module github.com/filecoin-project/go-state-types
 
-go 1.25.7
+go 1.26.0
 
 retract v0.12.7 // wrongfully skipped a patch version, use v0.12.6 or v0.12.8&^
 
@@ -22,7 +22,7 @@ require (
 	github.com/stretchr/testify v1.12.1
 	github.com/whyrusleeping/cbor-gen v0.3.1
 	golang.org/x/crypto v0.55.0
-	golang.org/x/sync v0.22.0
+	golang.org/x/sync v0.23.0
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da
 )
 
