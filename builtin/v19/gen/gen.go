@@ -47,11 +47,32 @@ func main() {
 	}
 
 	if err := gen.WriteTupleEncodersToFile("./builtin/v19/reward/cbor_gen.go", "reward",
-		// actor state
 		reward.State{},
-		// method params and returns
+		reward.StreamsState{},
+		reward.Stream{},
+		reward.WeightRecord{},
+		reward.WeightRecordUpdate{},
+		reward.ExplicitDistribution{},
+		reward.RecipientShare{},
+		reward.RecipientAmount{},
+		reward.Tombstone{},
+		reward.PendingWrite{},
+		reward.DistributionInit{},
+		reward.RegisterStreamPayload{},
+		reward.SetDistributionPayload{},
+		reward.StreamAccrual{},
 		reward.ThisEpochRewardReturn{},
 		reward.AwardBlockRewardParams{},
+		reward.SetWeightRecordsParams{},
+		reward.StepWeightRecordsParams{},
+		reward.RegisterStreamParams{},
+		reward.RemoveStreamParams{},
+		reward.SetDistributionParams{},
+		reward.SetSharesParams{},
+		reward.ReplaceAddressParams{},
+		reward.CancelPendingParams{},
+		reward.ClaimParams{},
+		reward.ClaimReturn{},
 	); err != nil {
 		panic(err)
 	}
@@ -220,6 +241,8 @@ func main() {
 		miner.SectorNIActivationInfo{},
 		miner.ProveCommitSectorsNIParams{},
 		miner.MaxTerminationFeeParams{},
+		miner.UpgradeSectorQualityParams{},
+		miner.UpgradeSectorQuality{},
 		miner.GenerateSectorLocationParams{},
 		miner.GenerateSectorLocationReturn{},
 		miner.ValidateSectorStatusParams{},

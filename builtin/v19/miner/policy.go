@@ -169,7 +169,7 @@ const DailyFeeBlockRewardCapDenom = 2
 // QualityForWeight calculates the quality of a sector with the given size, duration, and verified weight.
 // VerifiedDealWeight is spacetime occupied by verified pieces in a sector.
 // VerifiedDealWeight should be less than or equal to total SpaceTime of a sector.
-// Sectors full of VerifiedDeals will have a BigInt of VerifiedDealWeightMultiplier/QualityBaseMultiplier.
+// Sectors full of VerifiedDeals will have a BigInt of MaxQualityMultiplier/QualityBaseMultiplier.
 // Sectors without VerifiedDeals will have a BigInt of QualityBaseMultiplier/QualityBaseMultiplier.
 // BigInt of a sector is a weighted average of multipliers based on their proportions.
 func QualityForWeight(size abi.SectorSize, duration abi.ChainEpoch, verifiedWeight abi.DealWeight) abi.SectorQuality {
@@ -179,8 +179,8 @@ func QualityForWeight(size abi.SectorSize, duration abi.ChainEpoch, verifiedWeig
 	// weightedBaseSpaceTime = (sectorSpaceTime - verifiedWeight) * QualityBaseMultiplier
 	weightedBaseSpaceTime := big.Mul(big.Sub(sectorSpaceTime, verifiedWeight), builtin.QualityBaseMultiplier)
 	// Verified - all verified deal size * verified deal duration * 100
-	// weightedVerifiedSpaceTime = verifiedWeight * VerifiedDealWeightMultiplier
-	weightedVerifiedSpaceTime := big.Mul(verifiedWeight, builtin.VerifiedDealWeightMultiplier)
+	// weightedVerifiedSpaceTime = verifiedWeight * MaxQualityMultiplier
+	weightedVerifiedSpaceTime := big.Mul(verifiedWeight, builtin.MaxQualityMultiplier)
 	// Sum - sum of all spacetime
 	// weightedSumSpaceTime = weightedBaseSpaceTime + weightedVerifiedSpaceTime
 	weightedSumSpaceTime := big.Sum(weightedBaseSpaceTime, weightedVerifiedSpaceTime)
@@ -198,7 +198,11 @@ func QAPowerForWeight(size abi.SectorSize, duration abi.ChainEpoch, verifiedWeig
 }
 
 // The quality-adjusted power for a sector.
+// Sectors with the FULL_QA_POWER flag always receive maximum QA power (10x).
 func QAPowerForSector(size abi.SectorSize, sector *SectorOnChainInfo) abi.StoragePower {
+	if sector.Flags&FULL_QA_POWER != 0 {
+		return QAPowerMax(size)
+	}
 	duration := sector.Expiration - sector.PowerBaseEpoch
 	return QAPowerForWeight(size, duration, sector.VerifiedDealWeight)
 }
@@ -218,7 +222,7 @@ type VestSpec struct {
 // Returns maximum achievable QA power.
 func QAPowerMax(size abi.SectorSize) abi.StoragePower {
 	return big.Div(
-		big.Mul(big.NewInt(int64(size)), builtin.VerifiedDealWeightMultiplier),
+		big.Mul(big.NewInt(int64(size)), builtin.MaxQualityMultiplier),
 		builtin.QualityBaseMultiplier)
 }
 

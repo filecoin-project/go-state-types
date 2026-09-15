@@ -54,8 +54,15 @@ var QualityBaseMultiplier = big.NewInt(10)
 // DEPRECATED: This is no longer used, but is kept here for reference.
 var DealWeightMultiplier = big.NewInt(10)
 
-// Quality multiplier for verified deals in a sector
-var VerifiedDealWeightMultiplier = big.NewInt(100)
+// MaxQualityMultiplier is the quality multiplier for maximum quality-adjusted power:
+// applied to verified deal weight on the legacy path, and to every sector carrying
+// FULL_QA_POWER (FIP-0118).
+var MaxQualityMultiplier = big.NewInt(100)
+
+// VerifiedDealWeightMultiplier is the pre-FIP-0118 name for MaxQualityMultiplier, from
+// when the multiplier applied only to verified deal weight. Retained because actors v18
+// and earlier reference it; new code should use MaxQualityMultiplier.
+var VerifiedDealWeightMultiplier = MaxQualityMultiplier
 
 // Precision used for making QA power calculations
 const SectorQualityPrecision = 20
