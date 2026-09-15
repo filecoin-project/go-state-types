@@ -157,10 +157,10 @@ func validateIDAddress(addr address.Address, label string) error {
 	return nil
 }
 
-// Mirrors actors/reward/src/streams/distribution.rs::validate_share_rows.
-// A stored map ascends by recipient ID and carries no burn sentinel but when received as a message
-// it can be in any order and may repeat the sentinel.
-func validateShareRows(shares []RecipientShare, stored bool) error {
+// Mirrors the stored arm of actors/reward/src/streams/distribution.rs::validate_share_rows:
+// a stored map ascends by recipient ID, there's no burn sentinel, and recipient are deduped.
+// The message form, which may arrive unordered and repeat the sentinel, is checked by the actor.
+func validateStoredShareRows(shares []RecipientShare) error {
 	if len(shares) > MaxRecipients {
 		return fmt.Errorf("recipient count %d exceeds maximum %d", len(shares), MaxRecipients)
 	}
@@ -171,7 +171,7 @@ func validateShareRows(shares []RecipientShare, stored bool) error {
 		if err != nil {
 			return err
 		}
-		if stored && i > 0 && previousID >= id {
+		if i > 0 && previousID >= id {
 			return fmt.Errorf("stored share recipients are not ordered")
 		}
 		previousID = id
@@ -179,10 +179,7 @@ func validateShareRows(shares []RecipientShare, stored bool) error {
 			return fmt.Errorf("share for recipient %s is zero", row.Recipient)
 		}
 		if row.Recipient == builtin.BurntFundsActorAddr {
-			if stored {
-				return fmt.Errorf("burn sentinel persisted as a recipient")
-			}
-			continue
+			return fmt.Errorf("burn sentinel persisted as a recipient")
 		}
 		if _, found := recipients[row.Recipient]; found {
 			return fmt.Errorf("duplicate share recipient %s", row.Recipient)
@@ -202,22 +199,10 @@ func shareTotal(shares []RecipientShare) *mathbig.Int {
 	return total
 }
 
-// Mirrors actors/reward/src/streams/distribution.rs::validate_shares: a map in a msg whose
-// sentinel-inclusive shares sum to DENOM.
-func validateShares(shares []RecipientShare) error {
-	if err := validateShareRows(shares, false); err != nil {
-		return err
-	}
-	if total := shareTotal(shares); total.Cmp(new(mathbig.Int).SetUint64(Denom)) != 0 {
-		return fmt.Errorf("shares sum to %s, expected %d", total, Denom)
-	}
-	return nil
-}
-
 // Mirrors actors/reward/src/streams/distribution.rs::validate_stored_shares: a stored map
 // whose sentinel-free shares sum within DENOM.
 func validateStoredShares(shares []RecipientShare) error {
-	if err := validateShareRows(shares, true); err != nil {
+	if err := validateStoredShareRows(shares); err != nil {
 		return err
 	}
 	if total := shareTotal(shares); total.Cmp(new(mathbig.Int).SetUint64(Denom)) > 0 {

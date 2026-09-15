@@ -6,6 +6,7 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
+	"github.com/filecoin-project/go-state-types/builtin"
 	reward18 "github.com/filecoin-project/go-state-types/builtin/v18/reward"
 	reward19 "github.com/filecoin-project/go-state-types/builtin/v19/reward"
 	smoothing19 "github.com/filecoin-project/go-state-types/builtin/v19/util/smoothing"
@@ -23,8 +24,8 @@ type rewardMigrator struct {
 	swaActor          address.Address
 }
 
-// ValidateRewardMigrationConfig reports whether config describes a reward bootstrap the
-// migration will accept at activationEpoch, running the checks the migration itself runs.
+// ValidateRewardMigrationConfig checks the bootstrap parameters at activationEpoch.
+// MigrateStateTree additionally checks recipient existence and actor types in the input tree.
 func ValidateRewardMigrationConfig(config RewardMigrationConfig, activationEpoch abi.ChainEpoch) error {
 	_, _, err := validateRewardMigrationConfig(config, activationEpoch)
 	return err
@@ -71,6 +72,30 @@ func newRewardMigrator(config RewardMigrationConfig, activationEpoch abi.ChainEp
 		swaTimelockEpochs: config.SWATimelockEpochs,
 		swaActor:          config.SWAActor,
 	}, nil
+}
+
+func (m rewardMigrator) validateRecipients(actors *builtin.ActorTree, paychCode cid.Cid) error {
+	for _, stream := range m.streams.Streams {
+		if stream.Distribution == nil {
+			continue
+		}
+		if !paychCode.Defined() {
+			return xerrors.Errorf("code cid for payment channel actor not found in old manifest")
+		}
+		for _, share := range stream.Distribution.Shares {
+			actor, found, err := actors.GetActorV5(share.Recipient)
+			if err != nil {
+				return xerrors.Errorf("failed to load reward recipient %s: %w", share.Recipient, err)
+			}
+			if !found {
+				return xerrors.Errorf("reward recipient %s does not exist", share.Recipient)
+			}
+			if actor.Code == paychCode {
+				return xerrors.Errorf("reward recipient %s is a payment channel", share.Recipient)
+			}
+		}
+	}
+	return nil
 }
 
 func (m rewardMigrator) MigratedCodeCID() cid.Cid {

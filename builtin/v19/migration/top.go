@@ -93,6 +93,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 
 	reward18CID := cid.Undef
 	market18CID := cid.Undef
+	paych18CID := cid.Undef
 
 	for _, oldEntry := range oldManifestData.Entries {
 		if oldEntry.Name == manifest.RewardKey {
@@ -100,6 +101,9 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 		}
 		if oldEntry.Name == manifest.MarketKey {
 			market18CID = oldEntry.Code
+		}
+		if oldEntry.Name == manifest.PaychKey {
+			paych18CID = oldEntry.Code
 		}
 
 		newCodeCID, ok := newManifest.Get(oldEntry.Name)
@@ -131,6 +135,9 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	rewardMigrator, err := newRewardMigrator(rewardConfig, activationEpoch, reward19CID)
 	if err != nil {
 		return cid.Undef, xerrors.Errorf("failed to create reward migrator: %w", err)
+	}
+	if err := rewardMigrator.validateRecipients(actorsIn, paych18CID); err != nil {
+		return cid.Undef, xerrors.Errorf("invalid reward migration recipients: %w", err)
 	}
 	// The output depends on priorEpoch as well as the actor head, so it cannot use the head-only migration cache.
 	migrations[reward18CID] = *rewardMigrator
