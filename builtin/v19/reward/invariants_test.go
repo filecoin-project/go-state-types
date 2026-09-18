@@ -137,6 +137,22 @@ func TestCheckStateInvariants(t *testing.T) {
 	require.Equal(t, &StateSummary{StreamCount: 2}, summary)
 }
 
+// A claim of a recipient's whole slice is within earnings when the stored map sums below Denom,
+// as it does after a removal.
+func TestCheckStateInvariantsClaimsDivideByStoredShareTotal(t *testing.T) {
+	st, streams, store := validInvariantState(t)
+	distribution := streams.Streams[1].Distribution
+	distribution.Shares = []RecipientShare{{Recipient: distribution.Shares[0].Recipient, Share: Denom * 4 / 5}}
+	distribution.ClaimedPeriod = []RecipientAmount{{Recipient: distribution.Shares[0].Recipient, Amount: abi.NewTokenAmount(100)}}
+	st.Accrued[0].Amount = abi.NewTokenAmount(100)
+	st.TotalExplicitMinted = abi.NewTokenAmount(100)
+	st.TotalMintedReward = big.Add(st.TotalMintedReward, abi.NewTokenAmount(100))
+	putStreamsState(t, store, st, streams)
+
+	_, acc := CheckStateInvariants(st, store, st.Epoch-1, StorageMiningAllocationCheck)
+	require.Empty(t, acc.Messages())
+}
+
 func TestCheckStateInvariantsRejectsTopLevelCorruption(t *testing.T) {
 	testCases := []struct {
 		name     string
@@ -252,6 +268,14 @@ func TestCheckStateInvariantsRejectsStreamCorruption(t *testing.T) {
 			expected: "stored shares sum to",
 		},
 		{
+			name: "zero-share distribution has accrual",
+			mutate: func(_ *testing.T, st *State, streams *StreamsState) {
+				streams.Streams[1].Distribution.Shares = nil
+				st.Accrued[0].Amount = abi.NewTokenAmount(1)
+			},
+			expected: "zero-share distribution has non-zero accrual",
+		},
+		{
 			name: "burn sentinel persisted as recipient",
 			mutate: func(_ *testing.T, _ *State, streams *StreamsState) {
 				streams.Streams[1].Distribution.Shares[0].Recipient = builtin.BurntFundsActorAddr
@@ -327,6 +351,15 @@ func TestCheckStateInvariantsRejectsStreamCorruption(t *testing.T) {
 				streams.PendingWritesQueue = []PendingWrite{{ID: &id, Op: PendingWriteOpRegisterStream, Payload: marshalPayload(t, payload), EffectiveEpoch: 1}}
 			},
 			expected: "pending registration reuses stream ID 2",
+		},
+		{
+			name: "pending registration reserves stream ID zero",
+			mutate: func(t *testing.T, _ *State, streams *StreamsState) {
+				id := StreamID(0)
+				payload := &RegisterStreamPayload{Weight: weight(0, 0, 1, 0, 0)}
+				streams.PendingWritesQueue = []PendingWrite{{ID: &id, Op: PendingWriteOpRegisterStream, Payload: marshalPayload(t, payload), EffectiveEpoch: 1}}
+			},
+			expected: "stream ID 0 is reserved",
 		},
 		{
 			name: "tombstone reservations exceed cap",

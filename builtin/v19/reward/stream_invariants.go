@@ -158,7 +158,7 @@ func validateIDAddress(addr address.Address, label string) error {
 }
 
 // Mirrors the stored arm of actors/reward/src/streams/distribution.rs::validate_share_rows:
-// a stored map ascends by recipient ID, there's no burn sentinel, and recipient are deduped.
+// a stored map ascends by recipient ID, there's no burn sentinel, and recipients are deduped.
 // The message form, which may arrive unordered and repeat the sentinel, is checked by the actor.
 func validateStoredShareRows(shares []RecipientShare) error {
 	if len(shares) > MaxRecipients {
@@ -247,6 +247,11 @@ func validatePeriodClaims(distribution *ExplicitDistribution, pool abi.TokenAmou
 	if err := validateAmountRows(distribution.ClaimedPeriod, "claimed-period"); err != nil {
 		return err
 	}
+	// Structure validation runs first, so every stored share is positive.
+	total := big.NewFromGo(shareTotal(distribution.Shares))
+	if total.Sign() == 0 && pool.Sign() != 0 {
+		return fmt.Errorf("zero-share distribution has non-zero accrual")
+	}
 	for _, claimed := range distribution.ClaimedPeriod {
 		var share *RecipientShare
 		for i := range distribution.Shares {
@@ -258,7 +263,7 @@ func validatePeriodClaims(distribution *ExplicitDistribution, pool abi.TokenAmou
 		if share == nil {
 			return fmt.Errorf("claimed-period recipient is absent from shares")
 		}
-		earned := big.Div(big.Mul(pool, big.NewIntUnsigned(share.Share)), big.NewIntUnsigned(Denom))
+		earned := big.Div(big.Mul(pool, big.NewIntUnsigned(share.Share)), total)
 		if claimed.Amount.GreaterThan(earned) {
 			return fmt.Errorf("claimed amount exceeds earnings for recipient %s", claimed.Recipient)
 		}
@@ -483,6 +488,10 @@ func validateAwardStateStructure(streams *StreamsState) error {
 	for _, write := range streams.PendingWritesQueue {
 		if write.Op != PendingWriteOpRegisterStream || write.ID == nil {
 			continue
+		}
+		// This is stricter than Rust's structure check because Rust rejects ID 0 at admission.
+		if *write.ID == 0 {
+			return fmt.Errorf("stream ID 0 is reserved")
 		}
 		if _, found := liveIDs[*write.ID]; found {
 			return fmt.Errorf("pending registration reuses stream ID %d", *write.ID)

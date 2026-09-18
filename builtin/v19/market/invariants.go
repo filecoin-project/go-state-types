@@ -12,7 +12,6 @@ import (
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v19/util/adt"
-	"github.com/filecoin-project/go-state-types/builtin/v19/verifreg"
 )
 
 type DealSummary struct {
@@ -29,7 +28,6 @@ type DealSummary struct {
 
 type StateSummary struct {
 	Deals                map[abi.DealID]*DealSummary
-	ClaimIdToDealId      map[verifreg.ClaimId]abi.DealID
 	ProviderSectors      map[abi.SectorID][]abi.DealID
 	PendingProposalCount uint64
 	DealStateCount       uint64
@@ -103,7 +101,6 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 	//
 
 	dealStateCount := uint64(0)
-	claimIdToDealId := make(map[verifreg.ClaimId]abi.DealID)
 	expectedProviderSectors := make(map[abi.DealID]struct{})
 	if dealStates, err := adt.AsArray(store, st.States, StatesAmtBitwidth); err != nil {
 		acc.Addf("error loading deal states: %v", err)
@@ -328,7 +325,6 @@ func CheckStateInvariants(st *State, store adt.Store, balance abi.TokenAmount, c
 		LockTableCount:       lockTableCount,
 		DealOpEpochCount:     dealOpEpochCount,
 		DealOpCount:          dealOpCount,
-		ClaimIdToDealId:      claimIdToDealId,
 		ProviderSectors:      providerSectors,
 	}, acc
 }

@@ -691,6 +691,7 @@ func TestExportedMethodNumbers(t *testing.T) {
 		"RemoveStream":      1623858416,
 		"SetDistribution":   3872725033,
 		"SetShares":         2414422607,
+		"ReplaceAddress":    3068846150,
 		"CancelPending":     187585191,
 		"Claim":             4045527845,
 	}

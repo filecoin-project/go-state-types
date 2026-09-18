@@ -33,7 +33,7 @@ type RewardMigrationStream struct {
 	Distribution *reward19.DistributionInit
 }
 
-// RewardMigrationWeight defines a bootstrap weigh independently of its start epoch.
+// RewardMigrationWeight defines a bootstrap weight independently of its start epoch.
 type RewardMigrationWeight struct {
 	VStart uint64
 	Slope  int64

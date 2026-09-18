@@ -36,7 +36,7 @@ const (
 	Version26                 // Tock
 	Version27                 // GoldenWeek
 	Version28                 // FireHorse
-	Version29                 // TBD
+	Version29                 // Solstice
 
 	// VersionMax is the maximum version number
 	VersionMax = Version(math.MaxUint32)

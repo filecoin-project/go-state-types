@@ -48,6 +48,7 @@ var MethodsReward = struct {
 	RemoveStreamExported      abi.MethodNum
 	SetDistributionExported   abi.MethodNum
 	SetSharesExported         abi.MethodNum
+	ReplaceAddressExported    abi.MethodNum
 	CancelPendingExported     abi.MethodNum
 	ClaimExported             abi.MethodNum
 }{
@@ -61,6 +62,7 @@ var MethodsReward = struct {
 	MustGenerateFRCMethodNum("RemoveStream"),
 	MustGenerateFRCMethodNum("SetDistribution"),
 	MustGenerateFRCMethodNum("SetShares"),
+	MustGenerateFRCMethodNum("ReplaceAddress"),
 	MustGenerateFRCMethodNum("CancelPending"),
 	MustGenerateFRCMethodNum("Claim"),
 }

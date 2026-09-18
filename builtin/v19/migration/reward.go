@@ -25,7 +25,7 @@ type rewardMigrator struct {
 }
 
 // ValidateRewardMigrationConfig checks the bootstrap parameters at activationEpoch.
-// MigrateStateTree additionally checks recipient existence and actor types in the input tree.
+// MigrateStateTree additionally checks referenced actor existence and type in the input tree.
 func ValidateRewardMigrationConfig(config RewardMigrationConfig, activationEpoch abi.ChainEpoch) error {
 	_, _, err := validateRewardMigrationConfig(config, activationEpoch)
 	return err
@@ -75,25 +75,41 @@ func newRewardMigrator(config RewardMigrationConfig, activationEpoch abi.ChainEp
 }
 
 func (m rewardMigrator) validateRecipients(actors *builtin.ActorTree, paychCode cid.Cid) error {
+	if !paychCode.Defined() {
+		return xerrors.Errorf("code cid for payment channel actor not found in old manifest")
+	}
+	if err := validateRewardActorReference(actors, m.swaActor, "SWA actor", paychCode); err != nil {
+		return err
+	}
 	for _, stream := range m.streams.Streams {
 		if stream.Distribution == nil {
 			continue
 		}
-		if !paychCode.Defined() {
-			return xerrors.Errorf("code cid for payment channel actor not found in old manifest")
+		if err := validateRewardActorReference(actors, stream.Distribution.Writer, "distribution writer", paychCode); err != nil {
+			return err
 		}
 		for _, share := range stream.Distribution.Shares {
-			actor, found, err := actors.GetActorV5(share.Recipient)
-			if err != nil {
-				return xerrors.Errorf("failed to load reward recipient %s: %w", share.Recipient, err)
-			}
-			if !found {
-				return xerrors.Errorf("reward recipient %s does not exist", share.Recipient)
-			}
-			if actor.Code == paychCode {
-				return xerrors.Errorf("reward recipient %s is a payment channel", share.Recipient)
+			if err := validateRewardActorReference(actors, share.Recipient, "reward recipient", paychCode); err != nil {
+				return err
 			}
 		}
+	}
+	return nil
+}
+
+func validateRewardActorReference(actors *builtin.ActorTree, addr address.Address, label string, paychCode cid.Cid) error {
+	if addr == builtin.BurntFundsActorAddr {
+		return xerrors.Errorf("%s is the burn actor", label)
+	}
+	actor, found, err := actors.GetActorV5(addr)
+	if err != nil {
+		return xerrors.Errorf("failed to load %s %s: %w", label, addr, err)
+	}
+	if !found {
+		return xerrors.Errorf("%s %s does not exist", label, addr)
+	}
+	if actor.Code == paychCode {
+		return xerrors.Errorf("%s %s is a payment channel", label, addr)
 	}
 	return nil
 }

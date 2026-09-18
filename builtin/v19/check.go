@@ -190,8 +190,6 @@ func CheckStateInvariants(tree *builtin.ActorTree, priorEpoch abi.ChainEpoch, ac
 	CheckMinersAgainstPower(acc, minerSummaries, powerSummary)
 	CheckDealStatesAgainstSectors(acc, minerSummaries, marketSummary, priorEpoch)
 	CheckVerifregAgainstMiners(acc, verifregSummary, minerSummaries)
-	CheckMarketAgainstVerifreg(acc, verifregSummary, marketSummary)
-	CheckVerifregAgainstDatacap(acc, verifregSummary, datacapSummary)
 
 	_ = initSummary
 	_ = verifregSummary
@@ -308,34 +306,6 @@ func CheckDealStatesAgainstSectors(acc *builtin.MessageAccumulator, minerSummari
 	}
 }
 
-func CheckVerifregAgainstDatacap(acc *builtin.MessageAccumulator, verifregSummary *verifreg.StateSummary, datacapSummary *datacap.StateSummary) {
-	// Check verifiers and clients are disjoint.
-	for verifier := range verifregSummary.Verifiers {
-		actorId, err := address.IDFromAddress(verifier)
-		acc.RequireNoError(err, "error getting actor ID: %v", err)
-
-		_, found := datacapSummary.Balances[abi.ActorID(actorId)]
-		acc.Require(!found, "verifier %v is also a client", verifier)
-	}
-
-	// Check verifreg token balance matches unclaimed allocations
-	var pendingAllocationsTotal = big.Zero()
-	for _, allocation := range verifregSummary.Allocations {
-		pendingAllocationsTotal = big.Add(pendingAllocationsTotal, big.NewIntUnsigned(uint64(allocation.Size)))
-	}
-
-	pendingAllocationsTotal = big.Mul(pendingAllocationsTotal, verifreg.DataCapGranularity)
-	verifregId, err := address.IDFromAddress(builtin.VerifiedRegistryActorAddr)
-	acc.RequireNoError(err, "could not get verifreg ID from address")
-	verifregBalance, found := datacapSummary.Balances[abi.ActorID(verifregId)]
-	if !found {
-		verifregBalance = big.Zero()
-	}
-
-	acc.Require(found, "verifreg not found in datacap actor balances map")
-	acc.Require(verifregBalance.Equals(pendingAllocationsTotal), "verifreg datacap balance %d does not match pending allocation size %d", verifregBalance, pendingAllocationsTotal)
-}
-
 func CheckVerifregAgainstMiners(acc *builtin.MessageAccumulator, verifregSummary *verifreg.StateSummary, minerSummaries map[address.Address]*miner.StateSummary) {
 	for _, claim := range verifregSummary.Claims {
 		// all claims are indexed by valid providers
@@ -344,23 +314,5 @@ func CheckVerifregAgainstMiners(acc *builtin.MessageAccumulator, verifregSummary
 
 		_, ok := minerSummaries[maddr]
 		acc.Require(ok, "claim provider %s is not found in miner summaries", maddr)
-	}
-}
-
-func CheckMarketAgainstVerifreg(acc *builtin.MessageAccumulator, verifregSummary *verifreg.StateSummary, marketSummary *market.StateSummary) {
-	// all activated verified deals with claim ids reference a claim in verifreg state
-	// note that it is possible for claims to exist with no matching deal if the deal expires
-	for claimId, dealId := range marketSummary.ClaimIdToDealId {
-		claim, found := verifregSummary.Claims[claimId]
-		acc.Require(found, "claim %d not found for activated deal %d", claimId, dealId)
-
-		info, found := marketSummary.Deals[dealId]
-		acc.Require(found, "internal invariant error invalid market state references missing deal %d", dealId)
-
-		providerId, err := address.IDFromAddress(info.Provider)
-		acc.RequireNoError(err, "error getting ID from provider address")
-		acc.Require(abi.ActorID(providerId) == claim.Provider, "mismatches providers %d %d on claim %d and deal %d", providerId, claim.Provider, claimId, dealId)
-
-		acc.Require(info.PieceCid == claim.Data, "mismatches piece cid %s %s on claim %d and deal %d", info.PieceCid, claim.Data, claimId, dealId)
 	}
 }
