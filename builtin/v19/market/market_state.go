@@ -2,7 +2,6 @@ package market
 
 import (
 	"github.com/ipfs/go-cid"
-	cbg "github.com/whyrusleeping/cbor-gen"
 	xerrors "golang.org/x/xerrors"
 
 	addr "github.com/filecoin-project/go-address"
@@ -10,7 +9,6 @@ import (
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v19/util/adt"
-	"github.com/filecoin-project/go-state-types/builtin/v19/verifreg"
 	"github.com/filecoin-project/go-state-types/exitcode"
 )
 
@@ -54,9 +52,6 @@ type State struct {
 	// Total storage fee that is locked in escrow -> unlocked when payments are made
 	TotalClientStorageFee abi.TokenAmount
 
-	// Verified registry allocation IDs for deals that are not yet activated.
-	PendingDealAllocationIds cid.Cid // HAMT[DealID]AllocationID
-
 	/// Maps providers to their sector IDs to deal IDs.
 	/// This supports finding affected deals when a sector is terminated early
 	/// or has data replaced.
@@ -88,26 +83,21 @@ func ConstructState(store adt.Store) (*State, error) {
 	if err != nil {
 		return nil, xerrors.Errorf("failed to create empty balance table: %w", err)
 	}
-	emptyPendingDealAllocationMapCid, err := adt.StoreEmptyMap(store, builtin.DefaultHamtBitwidth)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to create empty map: %w", err)
-	}
 	emptyProviderSectorsMap, err := adt.StoreEmptyMap(store, ProviderSectorsHamtBitwidth)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to create empty map: %w", err)
 	}
 
 	return &State{
-		Proposals:                emptyProposalsArrayCid,
-		States:                   emptyStatesArrayCid,
-		PendingProposals:         emptyPendingProposalsMapCid,
-		EscrowTable:              emptyBalanceTableCid,
-		LockedTable:              emptyBalanceTableCid,
-		NextID:                   abi.DealID(0),
-		DealOpsByEpoch:           emptyDealOpsHamtCid,
-		LastCron:                 abi.ChainEpoch(-1),
-		PendingDealAllocationIds: emptyPendingDealAllocationMapCid,
-		ProviderSectors:          emptyProviderSectorsMap,
+		Proposals:        emptyProposalsArrayCid,
+		States:           emptyStatesArrayCid,
+		PendingProposals: emptyPendingProposalsMapCid,
+		EscrowTable:      emptyBalanceTableCid,
+		LockedTable:      emptyBalanceTableCid,
+		NextID:           abi.DealID(0),
+		DealOpsByEpoch:   emptyDealOpsHamtCid,
+		LastCron:         abi.ChainEpoch(-1),
+		ProviderSectors:  emptyProviderSectorsMap,
 
 		TotalClientLockedCollateral:   abi.NewTokenAmount(0),
 		TotalProviderLockedCollateral: abi.NewTokenAmount(0),
@@ -215,27 +205,4 @@ func validateDealCanActivate(proposal *DealProposal, minerAddr addr.Address, sec
 		return exitcode.ErrIllegalArgument.Wrapf("proposal expiration %d exceeds sector expiration %d", proposal.EndEpoch, sectorExpiration)
 	}
 	return nil
-}
-
-func (st *State) GetPendingDealAllocationIds(store adt.Store) (map[abi.DealID]verifreg.AllocationId, error) {
-	adtMap, err := adt.AsMap(store, st.PendingDealAllocationIds, builtin.DefaultHamtBitwidth)
-	if err != nil {
-		return nil, xerrors.Errorf("couldn't get map: %x", err)
-	}
-
-	var dealIdToAllocId = make(map[abi.DealID]verifreg.AllocationId)
-	var out cbg.CborInt
-	err = adtMap.ForEach(&out, func(key string) error {
-		uintKey, err := abi.ParseUIntKey(key)
-		if err != nil {
-			return xerrors.Errorf("couldn't parse key to uint: %w", err)
-		}
-		dealIdToAllocId[abi.DealID(uintKey)] = verifreg.AllocationId(out)
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return dealIdToAllocId, nil
 }
