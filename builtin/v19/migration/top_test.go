@@ -28,77 +28,70 @@ func (l testMigrationLogger) Log(_ rt.LogLevel, format string, args ...interface
 }
 
 func TestMigrationChecksRewardActorReferences(t *testing.T) {
+	// placeActor installs an actor of the given manifest type at an address in the migration input.
+	type placeActor func(addr address.Address, actorType string)
+
 	for _, tc := range []struct {
 		name      string
-		mutate    func(*RewardMigrationConfig)
-		reference func(RewardMigrationConfig) address.Address
-		actorType string
+		mutate    func(*RewardMigrationConfig, placeActor)
 		wantError string
 	}{
-		{"account references", func(*RewardMigrationConfig) {}, nil, "", ""},
+		{"account references", func(*RewardMigrationConfig, placeActor) {}, ""},
 		{
 			"system actor references",
-			func(config *RewardMigrationConfig) {
+			func(config *RewardMigrationConfig, _ placeActor) {
 				config.SWAActor = builtin.SystemActorAddr
 				config.Streams[1].Distribution.Writer = builtin.SystemActorAddr
 			},
-			nil,
-			"",
 			"",
 		},
 		{
 			"payment channel SWA actor",
-			func(config *RewardMigrationConfig) {},
-			func(config RewardMigrationConfig) address.Address { return config.SWAActor },
-			manifest.PaychKey,
+			func(config *RewardMigrationConfig, place placeActor) {
+				place(config.SWAActor, manifest.PaychKey)
+			},
 			"SWA actor",
 		},
 		{
 			"payment channel distribution writer",
-			func(config *RewardMigrationConfig) {},
-			func(config RewardMigrationConfig) address.Address { return config.Streams[1].Distribution.Writer },
-			manifest.PaychKey,
+			func(config *RewardMigrationConfig, place placeActor) {
+				place(config.Streams[1].Distribution.Writer, manifest.PaychKey)
+			},
 			"distribution writer",
 		},
 		{
 			"payment channel recipient",
-			func(config *RewardMigrationConfig) {},
-			func(config RewardMigrationConfig) address.Address {
-				return config.Streams[1].Distribution.Shares[0].Recipient
+			func(config *RewardMigrationConfig, place placeActor) {
+				place(config.Streams[1].Distribution.Shares[0].Recipient, manifest.PaychKey)
 			},
-			manifest.PaychKey,
 			"reward recipient",
 		},
 		{
 			"missing SWA actor",
-			func(config *RewardMigrationConfig) { config.SWAActor = migrationIDAddress(t, 103) },
-			nil,
-			"",
+			func(config *RewardMigrationConfig, _ placeActor) {
+				config.SWAActor = migrationIDAddress(t, 103)
+			},
 			"SWA actor",
 		},
 		{
 			"missing distribution writer",
-			func(config *RewardMigrationConfig) {
+			func(config *RewardMigrationConfig, _ placeActor) {
 				config.Streams[1].Distribution.Writer = migrationIDAddress(t, 103)
 			},
-			nil,
-			"",
 			"distribution writer",
 		},
 		{
 			"burn SWA actor",
-			func(config *RewardMigrationConfig) { config.SWAActor = builtin.BurntFundsActorAddr },
-			nil,
-			"",
+			func(config *RewardMigrationConfig, _ placeActor) {
+				config.SWAActor = builtin.BurntFundsActorAddr
+			},
 			"SWA actor is the burn actor",
 		},
 		{
 			"burn distribution writer",
-			func(config *RewardMigrationConfig) {
+			func(config *RewardMigrationConfig, _ placeActor) {
 				config.Streams[1].Distribution.Writer = builtin.BurntFundsActorAddr
 			},
-			nil,
-			"",
 			"distribution writer is the burn actor",
 		},
 	} {
@@ -147,12 +140,11 @@ func TestMigrationChecksRewardActorReferences(t *testing.T) {
 					Code: oldCodes[manifest.AccountKey], Head: oldDataRoot, Balance: big.Zero(),
 				}))
 			}
-			tc.mutate(&config)
-			if tc.reference != nil {
-				require.NoError(t, actors.SetActorV5(tc.reference(config), &builtin.ActorV5{
-					Code: oldCodes[tc.actorType], Head: oldDataRoot, Balance: big.Zero(),
+			tc.mutate(&config, func(addr address.Address, actorType string) {
+				require.NoError(t, actors.SetActorV5(addr, &builtin.ActorV5{
+					Code: oldCodes[actorType], Head: oldDataRoot, Balance: big.Zero(),
 				}))
-			}
+			})
 			root, err := actors.Flush()
 			require.NoError(t, err)
 

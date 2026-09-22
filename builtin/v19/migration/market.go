@@ -31,8 +31,8 @@ func (m marketMigrator) MigrateState(ctx context.Context, store cbor.IpldStore, 
 		return nil, xerrors.Errorf("failed to load market state for %s: %w", in.Address, err)
 	}
 
-	// FIP-0118 ends the verified registry's role in deal activation, so nothing claims
-	// an allocation and nothing reads these ids again so `PublishStorageDeals` becomes useless.
+	// PendingDealAllocationIds is absent below: FIP-0118 ends the verified registry's role in
+	// deal activation, so nothing claims an allocation and nothing reads these ids again.
 	outState := market19.State{
 		Proposals:                     inState.Proposals,
 		States:                        inState.States,

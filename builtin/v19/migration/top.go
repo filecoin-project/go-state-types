@@ -151,8 +151,7 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	if !ok {
 		return cid.Undef, xerrors.Errorf("code cid for market actor not found in new manifest")
 	}
-	// Overrides the generic code-only migration registered above: the state shape changes.
-	migrations[market18CID] = migration.CachedMigration(cache, marketMigrator{OutCodeCID: market19CID})
+	migrations[market18CID] = marketMigrator{OutCodeCID: market19CID}
 
 	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations)+len(deferredCodeIDs), len(oldManifestData.Entries))
