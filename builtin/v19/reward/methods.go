@@ -16,7 +16,7 @@ var Methods = map[abi.MethodNum]builtin.MethodMeta{
 	builtin.MustGenerateFRCMethodNum("RemoveStream"):      builtin.NewMethodMeta("RemoveStreamExported", *new(func(*RemoveStreamParams) *abi.EmptyValue)),
 	builtin.MustGenerateFRCMethodNum("SetDistribution"):   builtin.NewMethodMeta("SetDistributionExported", *new(func(*SetDistributionParams) *abi.EmptyValue)),
 	builtin.MustGenerateFRCMethodNum("SetShares"):         builtin.NewMethodMeta("SetSharesExported", *new(func(*SetSharesParams) *abi.EmptyValue)),
-	builtin.MustGenerateFRCMethodNum("ReplaceAddress"):    builtin.NewMethodMeta("ReplaceAddressExported", *new(func(*ReplaceAddressParams) *abi.EmptyValue)),
+	builtin.MustGenerateFRCMethodNum("ReplaceAddress"):    builtin.NewMethodMeta("ReplaceAddressExported", *new(func(*ReplaceAddressParams) *ReplaceAddressReturn)),
 	builtin.MustGenerateFRCMethodNum("CancelPending"):     builtin.NewMethodMeta("CancelPendingExported", *new(func(*CancelPendingParams) *abi.EmptyValue)),
 	builtin.MustGenerateFRCMethodNum("Claim"):             builtin.NewMethodMeta("ClaimExported", *new(func(*ClaimParams) *ClaimReturn)),
 }
