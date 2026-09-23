@@ -585,6 +585,40 @@ func TestSerializationReplaceAddressParams(t *testing.T) {
 	}
 }
 
+func TestSerializationReplaceAddressReturn(t *testing.T) {
+	testCases := []struct {
+		name   string
+		result ReplaceAddressReturn
+		hex    string
+	}{
+		{name: "address_replaced", result: ReplaceAddressReturnAddressReplaced, hex: "00"},
+		{name: "old_address_not_in_ledger", result: ReplaceAddressReturnOldAddressNotInLedger, hex: "01"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			req := require.New(t)
+			var buf bytes.Buffer
+			req.NoError(tc.result.MarshalCBOR(&buf))
+			req.Equal(tc.hex, hex.EncodeToString(buf.Bytes()))
+			var rt ReplaceAddressReturn
+			req.NoError(rt.UnmarshalCBOR(&buf))
+			req.Equal(tc.result, rt)
+		})
+	}
+
+	t.Run("rejects_out_of_range", func(t *testing.T) {
+		invalid := ReplaceAddressReturn(2)
+		require.Error(t, invalid.MarshalCBOR(&bytes.Buffer{}))
+		for _, h := range []string{"02", "18ff", "20", "f6", "80"} {
+			data, err := hex.DecodeString(h)
+			require.NoError(t, err)
+			var rt ReplaceAddressReturn
+			require.Error(t, rt.UnmarshalCBOR(bytes.NewReader(data)), h)
+		}
+	})
+}
+
 func TestSerializationCancelPendingParams(t *testing.T) {
 	testCases := []struct {
 		name   string

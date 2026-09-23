@@ -1,9 +1,13 @@
 package reward
 
 import (
+	"fmt"
+	"io"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin/v19/util/smoothing"
+	cbg "github.com/whyrusleeping/cbor-gen"
 )
 
 // AwardBlockRewardParams identifies a winning miner and the reward inputs for one block.
@@ -80,6 +84,39 @@ type ReplaceAddressParams struct {
 	OldAddress address.Address
 	// NewAddress is its replacement.
 	NewAddress address.Address
+}
+
+// ReplaceAddressReturn reports the outcome of ReplaceAddress, encoded as a CBOR unsigned integer.
+type ReplaceAddressReturn uint8
+
+const (
+	// ReplaceAddressReturnAddressReplaced reports that the old recipient's share moved to the new address.
+	ReplaceAddressReturnAddressReplaced ReplaceAddressReturn = iota
+	// ReplaceAddressReturnOldAddressNotInLedger reports that the resolved old address doesn't have
+	// a current share, so nothing was replaced. Due writes were still applied and settled.
+	ReplaceAddressReturnOldAddressNotInLedger
+)
+
+func (t *ReplaceAddressReturn) MarshalCBOR(w io.Writer) error {
+	if *t > ReplaceAddressReturnOldAddressNotInLedger {
+		return fmt.Errorf("invalid ReplaceAddressReturn %d", *t)
+	}
+	return cbg.NewCborWriter(w).WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(*t))
+}
+
+func (t *ReplaceAddressReturn) UnmarshalCBOR(r io.Reader) error {
+	maj, extra, err := cbg.NewCborReader(r).ReadHeader()
+	if err != nil {
+		return err
+	}
+	if maj != cbg.MajUnsignedInt {
+		return fmt.Errorf("wrong type for ReplaceAddressReturn: major type %d", maj)
+	}
+	if extra > uint64(ReplaceAddressReturnOldAddressNotInLedger) {
+		return fmt.Errorf("invalid ReplaceAddressReturn %d", extra)
+	}
+	*t = ReplaceAddressReturn(extra)
+	return nil
 }
 
 // CancelPendingParams identifies one queued operation to cancel after due writes are applied.
