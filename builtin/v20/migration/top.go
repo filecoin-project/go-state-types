@@ -8,7 +8,7 @@ import (
 	adt14 "github.com/filecoin-project/go-state-types/builtin/v14/util/adt"
 
 	system18 "github.com/filecoin-project/go-state-types/builtin/v18/system"
-	reward19 "github.com/filecoin-project/go-state-types/builtin/v19/reward"
+	reward19 "github.com/filecoin-project/go-state-types/builtin/v20/reward"
 
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"

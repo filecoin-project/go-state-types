@@ -1,4 +1,4 @@
-package v19
+package v20
 
 import (
 	"bytes"
@@ -11,18 +11,18 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin"
-	"github.com/filecoin-project/go-state-types/builtin/v19/account"
-	"github.com/filecoin-project/go-state-types/builtin/v19/cron"
-	"github.com/filecoin-project/go-state-types/builtin/v19/datacap"
-	"github.com/filecoin-project/go-state-types/builtin/v19/evm"
-	init_ "github.com/filecoin-project/go-state-types/builtin/v19/init"
-	"github.com/filecoin-project/go-state-types/builtin/v19/market"
-	"github.com/filecoin-project/go-state-types/builtin/v19/miner"
-	"github.com/filecoin-project/go-state-types/builtin/v19/multisig"
-	"github.com/filecoin-project/go-state-types/builtin/v19/paych"
-	"github.com/filecoin-project/go-state-types/builtin/v19/power"
-	"github.com/filecoin-project/go-state-types/builtin/v19/reward"
-	"github.com/filecoin-project/go-state-types/builtin/v19/verifreg"
+	"github.com/filecoin-project/go-state-types/builtin/v20/account"
+	"github.com/filecoin-project/go-state-types/builtin/v20/cron"
+	"github.com/filecoin-project/go-state-types/builtin/v20/datacap"
+	"github.com/filecoin-project/go-state-types/builtin/v20/evm"
+	init_ "github.com/filecoin-project/go-state-types/builtin/v20/init"
+	"github.com/filecoin-project/go-state-types/builtin/v20/market"
+	"github.com/filecoin-project/go-state-types/builtin/v20/miner"
+	"github.com/filecoin-project/go-state-types/builtin/v20/multisig"
+	"github.com/filecoin-project/go-state-types/builtin/v20/paych"
+	"github.com/filecoin-project/go-state-types/builtin/v20/power"
+	"github.com/filecoin-project/go-state-types/builtin/v20/reward"
+	"github.com/filecoin-project/go-state-types/builtin/v20/verifreg"
 	"github.com/filecoin-project/go-state-types/manifest"
 )
 

@@ -6,7 +6,7 @@ import (
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/go-state-types/builtin/v19/util/smoothing"
+	"github.com/filecoin-project/go-state-types/builtin/v20/util/smoothing"
 	cbg "github.com/whyrusleeping/cbor-gen"
 )
 

@@ -11,7 +11,7 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin"
-	"github.com/filecoin-project/go-state-types/builtin/v19/util/adt"
+	"github.com/filecoin-project/go-state-types/builtin/v20/util/adt"
 )
 
 type DealSummary struct {

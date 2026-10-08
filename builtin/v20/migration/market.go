@@ -4,7 +4,7 @@ import (
 	"context"
 
 	market18 "github.com/filecoin-project/go-state-types/builtin/v18/market"
-	market19 "github.com/filecoin-project/go-state-types/builtin/v19/market"
+	market19 "github.com/filecoin-project/go-state-types/builtin/v20/market"
 	"github.com/filecoin-project/go-state-types/migration"
 	"github.com/ipfs/go-cid"
 	cbor "github.com/ipfs/go-ipld-cbor"

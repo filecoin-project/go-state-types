@@ -7,7 +7,7 @@ import (
 	"github.com/filecoin-project/go-bitfield"
 	abi "github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
-	"github.com/filecoin-project/go-state-types/builtin/v19/util/adt"
+	"github.com/filecoin-project/go-state-types/builtin/v20/util/adt"
 	xc "github.com/filecoin-project/go-state-types/exitcode"
 	"github.com/filecoin-project/go-state-types/proof"
 )

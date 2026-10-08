@@ -4,7 +4,7 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
-	"github.com/filecoin-project/go-state-types/builtin/v19/miner"
+	"github.com/filecoin-project/go-state-types/builtin/v20/miner"
 )
 
 var Methods = map[abi.MethodNum]builtin.MethodMeta{

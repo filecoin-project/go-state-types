@@ -7,8 +7,8 @@ import (
 	abi "github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin"
-	"github.com/filecoin-project/go-state-types/builtin/v19/miner"
-	"github.com/filecoin-project/go-state-types/builtin/v19/util/smoothing"
+	"github.com/filecoin-project/go-state-types/builtin/v20/miner"
+	"github.com/filecoin-project/go-state-types/builtin/v20/util/smoothing"
 )
 
 // See filecoin-project/builtin-actors actors/miner/tests/fip0081_initial_pledge.rs

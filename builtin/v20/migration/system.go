@@ -3,7 +3,7 @@ package migration
 import (
 	"context"
 
-	system19 "github.com/filecoin-project/go-state-types/builtin/v19/system"
+	system19 "github.com/filecoin-project/go-state-types/builtin/v20/system"
 
 	"github.com/filecoin-project/go-state-types/migration"
 
