@@ -28,6 +28,7 @@ const (
 	Version17 Version = 17
 	Version18 Version = 18
 	Version19 Version = 19
+	Version20 Version = 20
 )
 
 // Converts a network version into an actors adt version.
@@ -71,6 +72,8 @@ func VersionForNetwork(version network.Version) (Version, error) {
 		return Version18, nil
 	case network.Version29:
 		return Version19, nil
+	case network.Version30:
+		return Version20, nil
 	default:
 		return -1, fmt.Errorf("unsupported network version %d", version)
 	}
