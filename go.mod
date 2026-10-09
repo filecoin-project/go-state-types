@@ -1,6 +1,6 @@
 module github.com/filecoin-project/go-state-types
 
-go 1.25.7
+go 1.26.0
 
 retract v0.12.7 // wrongfully skipped a patch version, use v0.12.6 or v0.12.8&^
 
@@ -21,7 +21,7 @@ require (
 	github.com/multiformats/go-varint v0.1.0
 	github.com/stretchr/testify v1.12.1
 	github.com/whyrusleeping/cbor-gen v0.3.1
-	golang.org/x/crypto v0.55.0
+	golang.org/x/crypto v0.57.0
 	golang.org/x/sync v0.22.0
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da
 )
@@ -38,6 +38,6 @@ require (
 	github.com/polydawn/refmt v0.90.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
 	lukechampine.com/blake3 v1.4.1 // indirect
 )
