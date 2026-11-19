@@ -23,11 +23,9 @@ func TestSerializationCurrentTotalPowerReturn(t *testing.T) {
 				QualityAdjPower:         abi.NewStoragePower(0),
 				PledgeCollateral:        abi.NewTokenAmount(0),
 				QualityAdjPowerSmoothed: smoothing.NewEstimate(big.Zero(), big.Zero()),
-				RampStartEpoch:          0,
-				RampDurationEpochs:      0,
 			},
-			// [byte[],byte[],byte[],[byte[],byte[]],0,0]
-			hex: "864040408240400000",
+			// [byte[],byte[],byte[],[byte[],byte[]]]
+			hex: "84404040824040",
 		},
 		{
 			params: CurrentTotalPowerReturn{
@@ -35,12 +33,10 @@ func TestSerializationCurrentTotalPowerReturn(t *testing.T) {
 				QualityAdjPower:         abi.NewStoragePower(1 << 21),
 				PledgeCollateral:        abi.NewTokenAmount(1 << 22),
 				QualityAdjPowerSmoothed: smoothing.NewEstimate(big.NewInt(1<<23), big.NewInt(1<<24)),
-				RampStartEpoch:          25,
-				RampDurationEpochs:      26,
 			},
 			// FilterEstimate BigInts have a precision shift of 128, so they end up larger than the others.
-			// [byte[00100000],byte[00200000],byte[00400000],[byte[0080000000000000000000000000000000000000],byte[000100000000000000000000000000000000000000]],25,26]
-			hex: "8644001000004400200000440040000082540080000000000000000000000000000000000000550001000000000000000000000000000000000000001819181a",
+			// [byte[00100000],byte[00200000],byte[00400000],[byte[0080000000000000000000000000000000000000],byte[000100000000000000000000000000000000000000]]]
+			hex: "844400100000440020000044004000008254008000000000000000000000000000000000000055000100000000000000000000000000000000000000",
 		},
 	}
 
