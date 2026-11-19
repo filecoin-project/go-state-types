@@ -30,7 +30,11 @@ var InitialPledgeLockTarget = builtin.BigFrac{
 	Denominator: big.NewInt(10),
 }
 
-const GammaFixedPointFactor = 1000 // 3 decimal places
+const (
+	PledgeSharePermille    = 1000
+	BaselinePledgePermille = 700
+	SimplePledgePermille   = PledgeSharePermille - BaselinePledgePermille
+)
 
 // The projected block reward a sector would earn over some period.
 // Also known as "BR(t)".
@@ -93,21 +97,20 @@ func InitialPledgeForPower(
 	pledgeShareNum := qaPower
 	networkQAPower := smoothing.Estimate(&networkQAPowerEstimate)
 
-	// The FIP-0081 ramp is complete: additional pledge is 70% baseline pledge
-	// and 30% simple pledge, with each contribution rounded down separately.
-	const baselinePledgeWeightPermille = 700
-	gamma := big.NewInt(baselinePledgeWeightPermille)
-
 	additionalIPNum := big.Mul(lockTargetNum, pledgeShareNum)
 
 	pledgeShareDenomBaseline := big.Max(big.Max(networkQAPower, baselinePower), qaPower)
 	pledgeShareDenomSimple := big.Max(networkQAPower, qaPower)
 
 	additionalIPDenomBaseline := big.Mul(pledgeShareDenomBaseline, lockTargetDenom)
-	additionalIPBaseline := big.Div(big.Mul(gamma, additionalIPNum), big.Mul(additionalIPDenomBaseline, big.NewInt(GammaFixedPointFactor)))
+	additionalIPBaseline := big.Div(
+		big.Mul(big.NewInt(BaselinePledgePermille), additionalIPNum),
+		big.Mul(additionalIPDenomBaseline, big.NewInt(PledgeSharePermille)))
 	additionalIPDenomSimple := big.Mul(pledgeShareDenomSimple, lockTargetDenom)
-	additionalIPSimple := big.Div(big.Mul(big.Sub(big.NewInt(GammaFixedPointFactor), gamma), additionalIPNum), big.Mul(additionalIPDenomSimple, big.NewInt(GammaFixedPointFactor)))
-
+	additionalIPSimple := big.Div(
+		big.Mul(big.NewInt(SimplePledgePermille), additionalIPNum),
+		big.Mul(additionalIPDenomSimple, big.NewInt(PledgeSharePermille)),
+	)
 	// convex combination of simple and baseline pledge
 	additionalIP := big.Add(additionalIPBaseline, additionalIPSimple)
 
