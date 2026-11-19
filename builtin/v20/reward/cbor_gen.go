@@ -1901,7 +1901,7 @@ func (t *StreamAccrual) UnmarshalCBOR(r io.Reader) (err error) {
 	return nil
 }
 
-var lengthBufThisEpochRewardReturn = []byte{130}
+var lengthBufThisEpochRewardReturn = []byte{131}
 
 func (t *ThisEpochRewardReturn) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -1924,6 +1924,13 @@ func (t *ThisEpochRewardReturn) MarshalCBOR(w io.Writer) error {
 	if err := t.ThisEpochBaselinePower.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
+	// t.ThisEpochImplicitStreamWeight (uint64) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.ThisEpochImplicitStreamWeight)); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -1946,7 +1953,7 @@ func (t *ThisEpochRewardReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 2 {
+	if extra != 3 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
@@ -1966,6 +1973,20 @@ func (t *ThisEpochRewardReturn) UnmarshalCBOR(r io.Reader) (err error) {
 		if err := t.ThisEpochBaselinePower.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.ThisEpochBaselinePower: %w", err)
 		}
+
+	}
+	// t.ThisEpochImplicitStreamWeight (uint64) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.ThisEpochImplicitStreamWeight = uint64(extra)
 
 	}
 	return nil

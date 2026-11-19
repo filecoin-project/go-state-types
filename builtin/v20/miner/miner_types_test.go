@@ -9,6 +9,7 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/builtin"
+	"github.com/filecoin-project/go-state-types/builtin/v20/util/smoothing"
 	cid "github.com/ipfs/go-cid"
 	"github.com/stretchr/testify/require"
 )
@@ -17,6 +18,36 @@ import (
 
 // defaultCid as a Rust Default::default() value
 var defaultCid = cid.MustParse("baeaaaaa")
+
+func TestSerializationDeferredCronEventParams(t *testing.T) {
+	// Fixtures from Rust power::serialization::deferred_cron_event_params_append_implicit_stream_weight.
+	testCases := []struct {
+		name   string
+		weight uint64
+		hex    string
+	}{
+		{"zero weight", 0, "84420102824200014201028242000342010400"},
+		{"half weight", 500_000_000_000_000_000, "8442010282420001420102824200034201041b06f05b59d3b20000"},
+		{"full weight", 1_000_000_000_000_000_000, "8442010282420001420102824200034201041b0de0b6b3a7640000"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			params := DeferredCronEventParams{
+				EventPayload:            []byte{0x01, 0x02},
+				RewardSmoothed:          smoothing.FilterEstimate{PositionEstimate: big.NewInt(1), VelocityEstimate: big.NewInt(-2)},
+				QualityAdjPowerSmoothed: smoothing.FilterEstimate{PositionEstimate: big.NewInt(3), VelocityEstimate: big.NewInt(-4)},
+				ImplicitStreamWeight:    tc.weight,
+			}
+			var buf bytes.Buffer
+			require.NoError(t, params.MarshalCBOR(&buf))
+			require.Equal(t, tc.hex, hex.EncodeToString(buf.Bytes()))
+			var decoded DeferredCronEventParams
+			require.NoError(t, decoded.UnmarshalCBOR(&buf))
+			require.Equal(t, params, decoded)
+		})
+	}
+}
 
 func TestSerializationProveCommitSectorsNIParams(t *testing.T) {
 	testCases := []struct {

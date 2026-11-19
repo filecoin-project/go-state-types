@@ -4701,7 +4701,7 @@ func (t *DeclareFaultsRecoveredParams) UnmarshalCBOR(r io.Reader) (err error) {
 	return nil
 }
 
-var lengthBufDeferredCronEventParams = []byte{131}
+var lengthBufDeferredCronEventParams = []byte{132}
 
 func (t *DeferredCronEventParams) MarshalCBOR(w io.Writer) error {
 	if t == nil {
@@ -4737,6 +4737,13 @@ func (t *DeferredCronEventParams) MarshalCBOR(w io.Writer) error {
 	if err := t.QualityAdjPowerSmoothed.MarshalCBOR(cw); err != nil {
 		return err
 	}
+
+	// t.ImplicitStreamWeight (uint64) (uint64)
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.ImplicitStreamWeight)); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -4759,7 +4766,7 @@ func (t *DeferredCronEventParams) UnmarshalCBOR(r io.Reader) (err error) {
 		return fmt.Errorf("cbor input should be of type array")
 	}
 
-	if extra != 3 {
+	if extra != 4 {
 		return fmt.Errorf("cbor input had wrong number of fields")
 	}
 
@@ -4801,6 +4808,20 @@ func (t *DeferredCronEventParams) UnmarshalCBOR(r io.Reader) (err error) {
 		if err := t.QualityAdjPowerSmoothed.UnmarshalCBOR(cr); err != nil {
 			return xerrors.Errorf("unmarshaling t.QualityAdjPowerSmoothed: %w", err)
 		}
+
+	}
+	// t.ImplicitStreamWeight (uint64) (uint64)
+
+	{
+
+		maj, extra, err = cr.ReadHeader()
+		if err != nil {
+			return err
+		}
+		if maj != cbg.MajUnsignedInt {
+			return fmt.Errorf("wrong type for uint64 field")
+		}
+		t.ImplicitStreamWeight = uint64(extra)
 
 	}
 	return nil

@@ -28,6 +28,8 @@ type ThisEpochRewardReturn struct {
 	ThisEpochRewardSmoothed smoothing.FilterEstimate
 	// ThisEpochBaselinePower is the baseline power targeted in the current epoch.
 	ThisEpochBaselinePower abi.StoragePower
+	// ImplicitStreamWeight is the weight of the implicit stream.
+	ThisEpochImplicitStreamWeight uint64
 }
 
 // SetWeightRecordsParams queues a cancellable batch of replacement weight records.

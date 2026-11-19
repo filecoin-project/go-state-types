@@ -221,19 +221,45 @@ func TestSerializationAwardBlockRewardParams(t *testing.T) {
 }
 
 func TestSerializationThisEpochRewardReturn(t *testing.T) {
-	params := ThisEpochRewardReturn{
-		ThisEpochRewardSmoothed: smoothing.NewEstimate(big.NewInt(1), big.NewInt(-2)),
-		ThisEpochBaselinePower:  abi.NewStoragePower(256),
+	testCases := []struct {
+		name   string
+		weight uint64
+		hex    string
+	}{
+		{
+			name:   "zero_weight",
+			weight: 0,
+			hex:    "838252000100000000000000000000000000000000520102000000000000000000000000000000004300010000",
+		},
+		{
+			name:   "half_weight",
+			weight: Denom / 2,
+			hex:    "83825200010000000000000000000000000000000052010200000000000000000000000000000000430001001b06f05b59d3b20000",
+		},
+		{
+			name:   "full_weight",
+			weight: Denom,
+			hex:    "83825200010000000000000000000000000000000052010200000000000000000000000000000000430001001b0de0b6b3a7640000",
+		},
 	}
-	const expected = "8282520001000000000000000000000000000000005201020000000000000000000000000000000043000100"
 
-	var buf bytes.Buffer
-	require.NoError(t, params.MarshalCBOR(&buf))
-	require.Equal(t, expected, hex.EncodeToString(buf.Bytes()))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			params := ThisEpochRewardReturn{
+				ThisEpochRewardSmoothed:       smoothing.NewEstimate(big.NewInt(1), big.NewInt(-2)),
+				ThisEpochBaselinePower:        abi.NewStoragePower(256),
+				ThisEpochImplicitStreamWeight: tc.weight,
+			}
+			req := require.New(t)
+			var buf bytes.Buffer
+			req.NoError(params.MarshalCBOR(&buf))
+			req.Equal(tc.hex, hex.EncodeToString(buf.Bytes()))
 
-	var decoded ThisEpochRewardReturn
-	require.NoError(t, decoded.UnmarshalCBOR(&buf))
-	require.Equal(t, params, decoded)
+			var decoded ThisEpochRewardReturn
+			req.NoError(decoded.UnmarshalCBOR(&buf))
+			req.Equal(params, decoded)
+		})
+	}
 }
 
 func TestSerializationStreamsState(t *testing.T) {
