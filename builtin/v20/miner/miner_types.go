@@ -1,7 +1,7 @@
 package miner
 
 import (
-	cid "github.com/ipfs/go-cid"
+	"github.com/ipfs/go-cid"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	"golang.org/x/xerrors"
 
@@ -348,6 +348,7 @@ type DeferredCronEventParams struct {
 	EventPayload            []byte
 	RewardSmoothed          smoothing.FilterEstimate
 	QualityAdjPowerSmoothed smoothing.FilterEstimate
+	ImplicitStreamWeight    uint64
 }
 
 type ApplyRewardParams struct {

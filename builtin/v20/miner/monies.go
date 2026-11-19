@@ -157,12 +157,15 @@ var TermFeeMaxFaultFeeMultiple = builtin.BigFrac{
 const ContinuedFaultFactorNum = 351
 const ContinuedFaultFactorDenom = 100
 const ContinuedFaultProjectionPeriod abi.ChainEpoch = (builtin.EpochsInDay * ContinuedFaultFactorNum) / ContinuedFaultFactorDenom
+const weightDenom uint64 = 1_000_000_000_000_000_000
 
 // PledgePenaltyForContinuedFault calculates the penalty for a sector continuing faulty for another
 // proving period.
-// It is a projection of the expected reward earned by the sector. Also known as "FF(t)"
-func PledgePenaltyForContinuedFault(rewardEstimate smoothing.FilterEstimate, networkQaPowerEstimate smoothing.FilterEstimate, qaSectorPower abi.StoragePower) abi.TokenAmount {
-	return ExpectedRewardForPower(rewardEstimate, networkQaPowerEstimate, qaSectorPower, ContinuedFaultProjectionPeriod)
+// It is a projection of the expected reward earned by the sector, scaled by the implicit
+// stream weight with denominator 10^18. Also known as "FF(t)".
+func PledgePenaltyForContinuedFault(rewardEstimate smoothing.FilterEstimate, networkQaPowerEstimate smoothing.FilterEstimate, qaSectorPower abi.StoragePower, weight uint64) abi.TokenAmount {
+	reward := ExpectedRewardForPower(rewardEstimate, networkQaPowerEstimate, qaSectorPower, ContinuedFaultProjectionPeriod)
+	return big.Div(big.Mul(reward, big.NewIntUnsigned(weight)), big.NewIntUnsigned(weightDenom))
 }
 
 // PledgePenaltyForTermination Calculates termination fee for a given sector. Normally, it's

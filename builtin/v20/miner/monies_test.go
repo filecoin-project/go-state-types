@@ -217,7 +217,7 @@ func TestZeroPowerMeansZeroFaultPenalty(t *testing.T) {
 		VelocityEstimate: powerRateOfChange,
 	}
 
-	penaltyForZeroPowerFaulted := miner.PledgePenaltyForContinuedFault(rewardEstimate, powerEstimate, zeroQAPower)
+	penaltyForZeroPowerFaulted := miner.PledgePenaltyForContinuedFault(rewardEstimate, powerEstimate, zeroQAPower, 1_000_000_000_000_000_000)
 	if !penaltyForZeroPowerFaulted.IsZero() {
 		t.Fatalf("expected zero penalty, got %v", penaltyForZeroPowerFaulted)
 	}
@@ -251,11 +251,12 @@ func TestAggregatePowerPledgePenaltyForContinuedFault(t *testing.T) {
 				rewardEstimate,
 				powerEstimate,
 				big.Mul(qaPower, big.NewInt(sectorMultiple)),
+				1_000_000_000_000_000_000,
 			)
 
 			individualPenalties := big.Zero()
 			for i := int64(0); i < sectorMultiple; i++ {
-				individualPenalty := miner.PledgePenaltyForContinuedFault(rewardEstimate, powerEstimate, qaPower)
+				individualPenalty := miner.PledgePenaltyForContinuedFault(rewardEstimate, powerEstimate, qaPower, 1_000_000_000_000_000_000)
 				individualPenalties = big.Add(individualPenalties, individualPenalty)
 			}
 			if aggregatePenalty.LessThanEqual(big.Zero()) {
@@ -266,6 +267,90 @@ func TestAggregatePowerPledgePenaltyForContinuedFault(t *testing.T) {
 			allowedAttoDifference := big.NewInt(sectorMultiple)
 			if diff.GreaterThan(allowedAttoDifference) {
 				t.Fatalf("aggregate_penalty: %v, individual_penalties: %v, diff: %v", aggregatePenalty, individualPenalties, diff)
+			}
+		})
+	}
+}
+
+func TestPledgePenaltyForContinuedFaultWeight(t *testing.T) {
+	const fullWeight uint64 = 1_000_000_000_000_000_000
+	rewardEstimate := smoothing.NewEstimate(big.NewInt(1), big.Zero())
+	qaPower := abi.NewStoragePower(1)
+
+	// At one attoFIL per epoch and full network power, the continued-fault
+	// projection is 10,108 attoFIL. The 65% case floors 6,570.2 to 6,570.
+	testCases := []struct {
+		name           string
+		weight         uint64
+		networkQAPower int64
+		expected       int64
+	}{
+		{"zero weight", 0, 1, 0},
+		{"full weight preserves projected reward", fullWeight, 1, 10_108},
+		{"half weight", fullWeight / 2, 1, 5_054},
+		{"partial weight rounds down", fullWeight / 100 * 65, 1, 6_570},
+		{"tiny positive weight rounds to zero", 1, 1, 0},
+		// A one-third power share first floors the projection to 3,369.
+		// Scaling this by 65% yields 2,189, rather than a combined floor of 2,190.
+		{"projected reward is rounded before scaling", fullWeight / 100 * 65, 3, 2_189},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			powerEstimate := smoothing.NewEstimate(big.NewInt(tc.networkQAPower), big.Zero())
+			penalty := miner.PledgePenaltyForContinuedFault(rewardEstimate, powerEstimate, qaPower, tc.weight)
+			if !penalty.Equals(abi.NewTokenAmount(tc.expected)) {
+				t.Fatalf("expected fault penalty %d, got %v", tc.expected, penalty)
+			}
+		})
+	}
+}
+
+func TestPledgePenaltyForContinuedFaultBigIntegerPrecision(t *testing.T) {
+	epochReward := big.Lsh(big.NewInt(1), 200)
+	rewardEstimate := smoothing.NewEstimate(epochReward, big.Zero())
+	powerEstimate := smoothing.NewEstimate(big.NewInt(1), big.Zero())
+
+	// A quarter of the 10,108-epoch projection is 2,527 times 2^200.
+	// Both the projected reward and its weighted product exceed 128 bits.
+	expected := big.MustFromString("4060732437842468426294538207346117896573606965289117494806577152")
+	penalty := miner.PledgePenaltyForContinuedFault(
+		rewardEstimate, powerEstimate, abi.NewStoragePower(1), 250_000_000_000_000_000,
+	)
+	if !penalty.Equals(expected) {
+		t.Fatalf("expected fault penalty %v, got %v", expected, penalty)
+	}
+}
+
+func TestPledgePenaltyForTerminationWithScaledFaultFee(t *testing.T) {
+	const fullWeight uint64 = 1_000_000_000_000_000_000
+	rewardEstimate := smoothing.NewEstimate(big.NewInt(1), big.Zero())
+	powerEstimate := smoothing.NewEstimate(big.NewInt(1), big.Zero())
+	initialPledge := abi.NewTokenAmount(10_000)
+	maxAge := miner.TerminationLifetimeCap * builtin.EpochsInDay
+
+	// The 2% pledge minimum and age-adjusted 8.5% pledge fee remain in effect.
+	// At larger weights, 105% of the scaled fault fee dominates these bounds.
+	testCases := []struct {
+		name     string
+		weight   uint64
+		age      abi.ChainEpoch
+		expected int64
+	}{
+		{"zero weight preserves pledge minimum", 0, 0, 200},
+		{"zero weight preserves age adjustment", 0, maxAge / 2, 425},
+		{"zero weight preserves full pledge fee", 0, maxAge, 850},
+		{"small nonzero weight preserves pledge minimum", fullWeight / 100, 0, 200},
+		{"partial weight scales fault fee bound", fullWeight / 100 * 65, maxAge, 6_898},
+		{"full weight preserves fault fee bound", fullWeight, maxAge, 10_613},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			faultFee := miner.PledgePenaltyForContinuedFault(rewardEstimate, powerEstimate, abi.NewStoragePower(1), tc.weight)
+			penalty := miner.PledgePenaltyForTermination(initialPledge, tc.age, faultFee)
+			if !penalty.Equals(abi.NewTokenAmount(tc.expected)) {
+				t.Fatalf("expected termination penalty %d, got %v", tc.expected, penalty)
 			}
 		})
 	}
