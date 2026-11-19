@@ -75,17 +75,16 @@ func PreCommitDepositForPower(rewardEstimate, networkQAPowerEstimate smoothing.F
 //
 // IP = IPBase(t) + AdditionalIP(t)
 // IPBase(t) = BR(t, InitialPledgeProjectionPeriod)
-// AdditionalIP(t) = LockTarget(t)*PledgeShare(t)
+// AdditionalIP(t) = floor(0.7*LockTarget(t)*BaselinePledgeShare(t)) + floor(0.3*LockTarget(t)*SimplePledgeShare(t))
 // LockTarget = (LockTargetFactorNum / LockTargetFactorDenom) * FILCirculatingSupply(t)
-// PledgeShare(t) = sectorQAPower / max(BaselinePower(t), NetworkQAPower(t))
+// BaselinePledgeShare(t) = sectorQAPower / max(BaselinePower(t), NetworkQAPower(t), sectorQAPower)
+// SimplePledgeShare(t) = sectorQAPower / max(NetworkQAPower(t), sectorQAPower)
 func InitialPledgeForPower(
 	qaPower,
 	baselinePower abi.StoragePower,
 	rewardEstimate,
 	networkQAPowerEstimate smoothing.FilterEstimate,
 	circulatingSupply abi.TokenAmount,
-	epochsSinceRampStart int64,
-	rampDurationEpochs uint64,
 ) abi.TokenAmount {
 	ipBase := ExpectedRewardForPowerClampedAtAttoFIL(rewardEstimate, networkQAPowerEstimate, qaPower, InitialPledgeProjectionPeriod)
 
@@ -94,25 +93,10 @@ func InitialPledgeForPower(
 	pledgeShareNum := qaPower
 	networkQAPower := smoothing.Estimate(&networkQAPowerEstimate)
 
-	// Once FIP-0081 has fully activated, additional pledge will be 70% baseline
-	// pledge + 30% simple pledge.
-	const fip0081ActivationPermille = 300
-	// Gamma/GAMMA_FIXED_POINT_FACTOR is the share of pledge coming from the
-	// baseline formulation, with 1-(gamma/GAMMA_FIXED_POINT_FACTOR) coming from
-	// simple pledge.
-	// gamma = 1000 - 300 * (epochs_since_ramp_start / ramp_duration_epochs).max(0).min(1)
-	var skew uint64
-	switch {
-	case epochsSinceRampStart < 0:
-		// No skew before ramp start
-		skew = 0
-	case rampDurationEpochs == 0 || epochsSinceRampStart >= int64(rampDurationEpochs):
-		// 100% skew after ramp end
-		skew = fip0081ActivationPermille
-	case epochsSinceRampStart > 0:
-		skew = (uint64(epochsSinceRampStart*fip0081ActivationPermille) / rampDurationEpochs)
-	}
-	gamma := big.NewInt(int64(GammaFixedPointFactor - skew))
+	// The FIP-0081 ramp is complete: additional pledge is 70% baseline pledge
+	// and 30% simple pledge, with each contribution rounded down separately.
+	const baselinePledgeWeightPermille = 700
+	gamma := big.NewInt(baselinePledgeWeightPermille)
 
 	additionalIPNum := big.Mul(lockTargetNum, pledgeShareNum)
 

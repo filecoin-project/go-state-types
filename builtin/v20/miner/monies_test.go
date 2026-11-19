@@ -11,166 +11,74 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v20/util/smoothing"
 )
 
-// See filecoin-project/builtin-actors actors/miner/tests/fip0081_initial_pledge.rs
+// FIP-0081 is fully activated: additional pledge is 70% baseline and 30% simple pledge.
 func TestInitialPledgeForPowerFip0081(t *testing.T) {
+	const sectorPower int64 = 1 << 36
 	filPrecision := big.NewInt(1_000_000_000_000_000_000)
-
-	epochTargetReward := abi.TokenAmount(big.Zero())
-	qaSectorPower := abi.StoragePower(big.NewInt(1 << 36))
-	networkQAPower := abi.StoragePower(big.NewInt(1 << 10))
-	powerRateOfChange := abi.StoragePower(big.NewInt(1 << 10))
-	rewardEstimate := smoothing.FilterEstimate{
-		PositionEstimate: epochTargetReward,
-		VelocityEstimate: big.Zero(),
-	}
-	powerEstimate := smoothing.FilterEstimate{
-		PositionEstimate: networkQAPower,
-		VelocityEstimate: powerRateOfChange,
-	}
-	circulatingSupply := abi.TokenAmount(filPrecision)
 
 	testCases := []struct {
 		name                  string
-		qaSectorPower         abi.StoragePower
-		rewardEstimate        smoothing.FilterEstimate
-		powerEstimate         smoothing.FilterEstimate
+		baselinePower         int64
+		networkQAPower        int64
+		epochReward           int64
 		circulatingSupply     abi.TokenAmount
-		epochsSinceRampStart  int64
-		rampDurationEpochs    uint64
 		expectedInitialPledge abi.TokenAmount
 	}{
 		{
-			name:                  "pre-ramp where 'baseline power' dominates (negative epochsSinceRampStart)",
-			qaSectorPower:         qaSectorPower,
-			rewardEstimate:        rewardEstimate,
-			powerEstimate:         powerEstimate,
-			circulatingSupply:     circulatingSupply,
-			epochsSinceRampStart:  -100,
-			rampDurationEpochs:    100,
-			expectedInitialPledge: big.Add(big.Div(big.Mul(big.NewInt(1500), filPrecision), big.NewInt(10000)), big.NewInt(1)),
+			name:                  "70 percent baseline and 30 percent simple pledge",
+			baselinePower:         2 * sectorPower,
+			networkQAPower:        sectorPower,
+			circulatingSupply:     filPrecision,
+			expectedInitialPledge: big.NewInt(195_000_000_000_000_001),
 		},
 		{
-			name:                  "zero ramp duration",
-			qaSectorPower:         qaSectorPower,
-			rewardEstimate:        rewardEstimate,
-			powerEstimate:         powerEstimate,
-			circulatingSupply:     circulatingSupply,
-			epochsSinceRampStart:  0,
-			rampDurationEpochs:    0,
-			expectedInitialPledge: big.Add(big.Div(big.Mul(big.NewInt(1950), filPrecision), big.NewInt(10000)), big.NewInt(1)),
+			name:                  "network power exceeds baseline",
+			baselinePower:         2 * sectorPower,
+			networkQAPower:        4 * sectorPower,
+			circulatingSupply:     filPrecision,
+			expectedInitialPledge: big.NewInt(75_000_000_000_000_001),
 		},
 		{
-			name:                  "zero ramp duration (10 epochs since)",
-			qaSectorPower:         qaSectorPower,
-			rewardEstimate:        rewardEstimate,
-			powerEstimate:         powerEstimate,
-			circulatingSupply:     circulatingSupply,
-			epochsSinceRampStart:  10,
-			rampDurationEpochs:    0,
-			expectedInitialPledge: big.Add(big.Div(big.Mul(big.NewInt(1950), filPrecision), big.NewInt(10000)), big.NewInt(1)),
+			name:                  "sector power bounds both denominators",
+			baselinePower:         sectorPower / 2,
+			networkQAPower:        sectorPower / 4,
+			circulatingSupply:     filPrecision,
+			expectedInitialPledge: big.NewInt(300_000_000_000_000_001),
 		},
 		{
-			name:                  "pre-ramp where 'baseline power' dominates",
-			qaSectorPower:         qaSectorPower,
-			rewardEstimate:        rewardEstimate,
-			powerEstimate:         powerEstimate,
-			circulatingSupply:     circulatingSupply,
-			epochsSinceRampStart:  0,
-			rampDurationEpochs:    100,
-			expectedInitialPledge: big.Add(big.Div(big.Mul(big.NewInt(1500), filPrecision), big.NewInt(10000)), big.NewInt(1)),
+			name:              "weighted pledge terms are rounded separately",
+			baselinePower:     2 * sectorPower,
+			networkQAPower:    sectorPower,
+			circulatingSupply: big.NewInt(16),
+			// floor(1.68) + floor(1.44) + 1 attoFIL minimum reward.
+			expectedInitialPledge: big.NewInt(3),
 		},
 		{
-			name:                  "on-ramp where 'baseline power' is at 85% and `simple power` is at 15%",
-			qaSectorPower:         qaSectorPower,
-			rewardEstimate:        rewardEstimate,
-			powerEstimate:         powerEstimate,
-			circulatingSupply:     circulatingSupply,
-			epochsSinceRampStart:  50,
-			rampDurationEpochs:    100,
-			expectedInitialPledge: big.Add(big.Div(big.Mul(big.NewInt(1725), filPrecision), big.NewInt(10000)), big.NewInt(1)),
+			name:              "projected reward is added to consensus pledge",
+			baselinePower:     2 * sectorPower,
+			networkQAPower:    sectorPower,
+			epochReward:       1,
+			circulatingSupply: filPrecision,
+			// At full network power, 20 days of reward adds 57,600 attoFIL.
+			expectedInitialPledge: big.NewInt(195_000_000_000_057_600),
 		},
 		{
-			name:                  "after-ramp where 'baseline power' is at 70% and `simple power` is at 30%",
-			qaSectorPower:         qaSectorPower,
-			rewardEstimate:        rewardEstimate,
-			powerEstimate:         powerEstimate,
-			circulatingSupply:     circulatingSupply,
-			epochsSinceRampStart:  150,
-			rampDurationEpochs:    100,
-			expectedInitialPledge: big.Add(big.Div(big.Mul(big.NewInt(1950), filPrecision), big.NewInt(10000)), big.NewInt(1)),
-		},
-		{
-			name:                  "on-ramp where 'baseline power' has reduced effect (97%)",
-			qaSectorPower:         qaSectorPower,
-			rewardEstimate:        rewardEstimate,
-			powerEstimate:         powerEstimate,
-			circulatingSupply:     circulatingSupply,
-			epochsSinceRampStart:  10,
-			rampDurationEpochs:    100,
-			expectedInitialPledge: big.Add(big.Div(big.Mul(big.NewInt(1545), filPrecision), big.NewInt(10000)), big.NewInt(1)),
-		},
-		{
-			name:                  "on-ramp, first epoch, pledge should be 97% 'baseline' + 3% simple",
-			qaSectorPower:         qaSectorPower,
-			rewardEstimate:        rewardEstimate,
-			powerEstimate:         powerEstimate,
-			circulatingSupply:     circulatingSupply,
-			epochsSinceRampStart:  1,
-			rampDurationEpochs:    10,
-			expectedInitialPledge: big.Add(big.Div(big.Mul(big.NewInt(1545), filPrecision), big.NewInt(10000)), big.NewInt(1)),
-		},
-		{
-			name:                  "validate pledges 1 epoch before and after ramp start: before ramp start",
-			qaSectorPower:         qaSectorPower,
-			rewardEstimate:        rewardEstimate,
-			powerEstimate:         powerEstimate,
-			circulatingSupply:     circulatingSupply,
-			epochsSinceRampStart:  -1,
-			rampDurationEpochs:    10,
-			expectedInitialPledge: big.Add(big.Div(big.Mul(big.NewInt(1500), filPrecision), big.NewInt(10000)), big.NewInt(1)),
-		},
-		{
-			name:                  "validate pledges 1 epoch before and after ramp start: at ramp start",
-			qaSectorPower:         qaSectorPower,
-			rewardEstimate:        rewardEstimate,
-			powerEstimate:         powerEstimate,
-			circulatingSupply:     circulatingSupply,
-			epochsSinceRampStart:  0,
-			rampDurationEpochs:    10,
-			expectedInitialPledge: big.Add(big.Div(big.Mul(big.NewInt(1500), filPrecision), big.NewInt(10000)), big.NewInt(1)),
-		},
-		{
-			name:                  "validate pledges 1 epoch before and after ramp start: on ramp start",
-			qaSectorPower:         qaSectorPower,
-			rewardEstimate:        rewardEstimate,
-			powerEstimate:         powerEstimate,
-			circulatingSupply:     circulatingSupply,
-			epochsSinceRampStart:  1,
-			rampDurationEpochs:    10,
-			expectedInitialPledge: big.Add(big.Div(big.Mul(big.NewInt(1545), filPrecision), big.NewInt(10000)), big.NewInt(1)),
-		},
-		{
-			name:                  "post-ramp where 'baseline power' has reduced effect (70%)",
-			qaSectorPower:         qaSectorPower,
-			rewardEstimate:        rewardEstimate,
-			powerEstimate:         powerEstimate,
-			circulatingSupply:     circulatingSupply,
-			epochsSinceRampStart:  500,
-			rampDurationEpochs:    100,
-			expectedInitialPledge: big.Add(big.Div(big.Mul(big.NewInt(1950), filPrecision), big.NewInt(10000)), big.NewInt(1)),
+			name:                  "pledge is capped",
+			baselinePower:         2 * sectorPower,
+			networkQAPower:        sectorPower,
+			circulatingSupply:     big.Mul(filPrecision, big.NewInt(100)),
+			expectedInitialPledge: big.Mul(miner.InitialPledgeMaxPerByte, big.NewInt(sectorPower)),
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			initialPledge := miner.InitialPledgeForPower(
-				tc.qaSectorPower,
-				abi.StoragePower(big.NewInt(1<<37)),
-				tc.rewardEstimate,
-				tc.powerEstimate,
+				abi.NewStoragePower(sectorPower),
+				abi.NewStoragePower(tc.baselinePower),
+				smoothing.NewEstimate(big.NewInt(tc.epochReward), big.Zero()),
+				smoothing.NewEstimate(big.NewInt(tc.networkQAPower), big.Zero()),
 				tc.circulatingSupply,
-				tc.epochsSinceRampStart,
-				tc.rampDurationEpochs,
 			)
 			if !initialPledge.Equals(tc.expectedInitialPledge) {
 				t.Fatalf("expected initial pledge %v, got %v", tc.expectedInitialPledge, initialPledge)
