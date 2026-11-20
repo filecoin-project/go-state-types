@@ -17,14 +17,42 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func populatedPowerState(withProofValidationBatch bool) power19.State {
+	ret := power19.State{
+		TotalRawBytePower:         abi.NewStoragePower(101),
+		TotalBytesCommitted:       abi.NewStoragePower(102),
+		TotalQualityAdjPower:      abi.NewStoragePower(103),
+		TotalQABytesCommitted:     abi.NewStoragePower(104),
+		TotalPledgeCollateral:     abi.NewTokenAmount(105),
+		ThisEpochRawBytePower:     abi.NewStoragePower(106),
+		ThisEpochQualityAdjPower:  abi.NewStoragePower(107),
+		ThisEpochPledgeCollateral: abi.NewTokenAmount(108),
+		ThisEpochQAPowerSmoothed:  smoothing19.NewEstimate(big.NewInt(109), big.NewInt(110)),
+		MinerCount:                112,
+		MinerAboveMinPowerCount:   111,
+		RampStartEpoch:            113,
+		RampDurationEpochs:        114,
+		CronEventQueue:            cid.MustParse("bafy2bzacafza"),
+		FirstCronEpoch:            115,
+		Claims:                    cid.MustParse("bafy2bzacafzq"),
+		ProofValidationBatch:      nil,
+	}
+
+	if withProofValidationBatch {
+		pvb := cid.MustParse("bafy2bzacaf2a")
+		ret.ProofValidationBatch = &pvb
+	}
+	return ret
+}
+
 func TestPowerMigration(t *testing.T) {
-	pvb := cid.MustParse("bafy2bzacaf2a")
+
 	for _, tc := range []struct {
-		name                 string
-		proofValidationBatch *cid.Cid
+		name string
+		pvb  bool
 	}{
-		{name: "without proof validation batch"},
-		{name: "with proof validation batch", proofValidationBatch: &pvb},
+		{name: "without proof validation batch", pvb: false},
+		{name: "with proof validation batch", pvb: true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -32,25 +60,8 @@ func TestPowerMigration(t *testing.T) {
 			req := require.New(t)
 			store := cbor.NewMemCborStore()
 
-			inState := power19.State{
-				TotalRawBytePower:         abi.NewStoragePower(101),
-				TotalBytesCommitted:       abi.NewStoragePower(102),
-				TotalQualityAdjPower:      abi.NewStoragePower(103),
-				TotalQABytesCommitted:     abi.NewStoragePower(104),
-				TotalPledgeCollateral:     abi.NewTokenAmount(105),
-				ThisEpochRawBytePower:     abi.NewStoragePower(106),
-				ThisEpochQualityAdjPower:  abi.NewStoragePower(107),
-				ThisEpochPledgeCollateral: abi.NewTokenAmount(108),
-				ThisEpochQAPowerSmoothed:  smoothing19.NewEstimate(big.NewInt(109), big.NewInt(110)),
-				MinerCount:                112,
-				MinerAboveMinPowerCount:   111,
-				RampStartEpoch:            113,
-				RampDurationEpochs:        114,
-				CronEventQueue:            cid.MustParse("bafy2bzacafza"),
-				FirstCronEpoch:            115,
-				Claims:                    cid.MustParse("bafy2bzacafzq"),
-				ProofValidationBatch:      tc.proofValidationBatch,
-			}
+			inState := populatedPowerState(tc.pvb)
+
 			inHead, err := store.Put(ctx, &inState)
 			req.NoError(err)
 
@@ -101,4 +112,30 @@ func TestPowerMigration(t *testing.T) {
 			req.Equal(result.NewHead, alternateResult.NewHead)
 		})
 	}
+}
+
+// The v20 state must round-trip through CBOR without the removed fields, and decode to the
+// same values it was written with.
+func TestPowerStateRoundTripsWithoutRampFields(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	req := require.New(t)
+	store := cbor.NewMemCborStore()
+
+	inState := populatedPowerState(true)
+	inHead, err := store.Put(ctx, &inState)
+	req.NoError(err)
+	result, err := powerMigrator{OutCodeCID: cid.MustParse("bafy2bzaca4aaaaaaaaaqk")}.
+		MigrateState(ctx, store, migration.ActorMigrationInput{Address: address.TestAddress, Head: inHead})
+	req.NoError(err)
+
+	var outState power20.State
+	req.NoError(store.Get(ctx, result.NewHead, &outState))
+	rewritten, err := store.Put(ctx, &outState)
+	req.NoError(err)
+	req.Equal(result.NewHead, rewritten, "v20 power state does not round-trip")
+
+	// A v19 decoder must not accept it: the tuple is two fields shorter.
+	var asV19 power19.State
+	req.Error(store.Get(ctx, result.NewHead, &asV19))
 }
