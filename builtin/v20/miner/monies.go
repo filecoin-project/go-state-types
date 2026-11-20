@@ -30,6 +30,8 @@ var InitialPledgeLockTarget = builtin.BigFrac{
 	Denominator: big.NewInt(10),
 }
 
+// FIP-0081 splits the additional pledge between the baseline and simple formulations,
+// as permille shares.
 const (
 	PledgeSharePermille    = 1000
 	BaselinePledgePermille = 700
