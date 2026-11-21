@@ -5,7 +5,6 @@ import (
 
 	"github.com/filecoin-project/go-state-types/builtin/v20/account"
 	"github.com/filecoin-project/go-state-types/builtin/v20/cron"
-	"github.com/filecoin-project/go-state-types/builtin/v20/datacap"
 	"github.com/filecoin-project/go-state-types/builtin/v20/eam"
 	"github.com/filecoin-project/go-state-types/builtin/v20/evm"
 	init_ "github.com/filecoin-project/go-state-types/builtin/v20/init"
@@ -17,7 +16,6 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v20/reward"
 	"github.com/filecoin-project/go-state-types/builtin/v20/system"
 	"github.com/filecoin-project/go-state-types/builtin/v20/util/smoothing"
-	"github.com/filecoin-project/go-state-types/builtin/v20/verifreg"
 )
 
 func main() {
@@ -246,70 +244,6 @@ func main() {
 		miner.GenerateSectorLocationParams{},
 		miner.GenerateSectorLocationReturn{},
 		miner.ValidateSectorStatusParams{},
-	); err != nil {
-		panic(err)
-	}
-
-	if err := gen.WriteTupleEncodersToFile("./builtin/v20/verifreg/cbor_gen.go", "verifreg",
-		// actor state
-		verifreg.State{},
-
-		// method params and returns
-		verifreg.AddVerifierParams{},
-		verifreg.AddVerifiedClientParams{},
-		verifreg.UseBytesParams{},
-		verifreg.RestoreBytesParams{},
-		verifreg.RemoveDataCapParams{},
-		verifreg.RemoveDataCapReturn{},
-		verifreg.RemoveExpiredAllocationsParams{},
-		verifreg.RemoveExpiredAllocationsReturn{},
-		verifreg.ClaimAllocationsParams{},
-		verifreg.ClaimAllocationsReturn{},
-		verifreg.GetClaimsParams{},
-		verifreg.GetClaimsReturn{},
-		verifreg.UniversalReceiverParams{},
-		verifreg.AllocationsResponse{},
-		verifreg.ExtendClaimTermsParams{},
-		verifreg.ExtendClaimTermsReturn{},
-		verifreg.RemoveExpiredClaimsParams{},
-		verifreg.RemoveExpiredClaimsReturn{},
-		// other types
-		verifreg.RemoveDataCapRequest{},
-		verifreg.RemoveDataCapProposal{},
-		verifreg.RmDcProposalID{},
-		verifreg.SectorAllocationClaims{},
-		verifreg.AllocationClaim{},
-		verifreg.Claim{},
-		verifreg.ClaimTerm{},
-		verifreg.ClaimExtensionRequest{},
-		verifreg.Allocation{},
-		verifreg.AllocationRequest{},
-		verifreg.AllocationRequests{},
-	); err != nil {
-		panic(err)
-	}
-
-	if err := gen.WriteTupleEncodersToFile("./builtin/v20/datacap/cbor_gen.go", "datacap",
-		// actor state
-		datacap.State{},
-		datacap.TokenState{},
-
-		// method params and returns
-		datacap.MintParams{},
-		datacap.MintReturn{},
-		datacap.DestroyParams{},
-		datacap.TransferParams{},
-		datacap.TransferReturn{},
-		datacap.TransferFromParams{},
-		datacap.TransferFromReturn{},
-		datacap.IncreaseAllowanceParams{},
-		datacap.DecreaseAllowanceParams{},
-		datacap.RevokeAllowanceParams{},
-		datacap.GetAllowanceParams{},
-		datacap.BurnParams{},
-		datacap.BurnReturn{},
-		datacap.BurnFromParams{},
-		datacap.BurnFromReturn{},
 	); err != nil {
 		panic(err)
 	}

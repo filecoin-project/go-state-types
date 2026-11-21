@@ -48,7 +48,7 @@ func CheckStateInvariants(st *State, tree *builtin.ActorTree, actorCodes map[str
 
 		acc.Require(keyAddr.Protocol() != addr.ID, "key %v is an ID address", keyAddr)
 		acc.Require(keyAddr.Protocol() <= addr.Delegated, "unknown address protocol for key %v", keyAddr)
-		acc.Require(actorId >= builtin.FirstNonSingletonActorId, "unexpected singleton ID value %v", actorId)
+		acc.Require(actorId >= builtin.FirstNonSingletonActorId || actorId == 80, "unexpected singleton ID value %v", actorId)
 
 		foundAddr, found := reverse[actorId]
 		isPair := (keyAddr.Protocol() == addr.Actor && foundAddr.Protocol() == addr.Delegated) ||

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"slices"
 
 	actorstypes "github.com/filecoin-project/go-state-types/actors"
 
@@ -25,8 +26,8 @@ const (
 	PowerKey       = "storagepower"
 	RewardKey      = "reward"
 	SystemKey      = "system"
-	VerifregKey    = "verifiedregistry"
-	DatacapKey     = "datacap"
+	VerifregKey    = "verifiedregistry" // Actor deleted in v20, constant retained for compatibility
+	DatacapKey     = "datacap"          // Actor deleted in v20, constant retained for compatibility
 	EvmKey         = "evm"
 	EamKey         = "eam"
 	PlaceholderKey = "placeholder"
@@ -53,6 +54,11 @@ func GetBuiltinActorsKeys(av actorstypes.Version) []string {
 	if av >= 10 {
 		keys = append(keys, EvmKey, EamKey, PlaceholderKey, EthAccountKey)
 	}
+
+	if av >= 20 {
+		keys = slices.DeleteFunc(keys, func(s string) bool { return s == VerifregKey || s == DatacapKey })
+	}
+
 	return keys
 }
 
