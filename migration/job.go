@@ -25,12 +25,12 @@ type migrationJobResult struct {
 func (job *migrationJob) run(ctx context.Context, store cbor.IpldStore) (*migrationJobResult, error) {
 	result, err := job.MigrateState(ctx, store, ActorMigrationInput{
 		Address: job.Address,
-		Head:    job.ActorV5.Head,
+		Head:    job.Head,
 		Cache:   job.cache,
 	})
 	if err != nil {
 		return nil, xerrors.Errorf("state migration failed for actor code %s, addr %s: %w",
-			job.ActorV5.Code, job.Address, err)
+			job.Code, job.Address, err)
 	}
 
 	// Set up new actor record with the migrated state.
@@ -39,9 +39,9 @@ func (job *migrationJob) run(ctx context.Context, store cbor.IpldStore) (*migrat
 		builtin.ActorV5{
 			Code:             result.NewCodeCID,
 			Head:             result.NewHead,
-			CallSeqNum:       job.ActorV5.CallSeqNum,       // Unchanged
-			Balance:          job.ActorV5.Balance,          // Unchanged
-			DelegatedAddress: job.ActorV5.DelegatedAddress, // Unchanged
+			CallSeqNum:       job.CallSeqNum,       // Unchanged
+			Balance:          job.Balance,          // Unchanged
+			DelegatedAddress: job.DelegatedAddress, // Unchanged
 		},
 	}, nil
 }
