@@ -87,7 +87,8 @@ func newFIP121MigrationFixture(t *testing.T) *fip121MigrationFixture {
 	f.newManifest = f.put(&manifest.Manifest{Version: 1, Data: f.newManifestData})
 
 	// Every surviving actor type is represented, including a multisig other than
-	// actor 80. Opaque heads are sufficient for actors whose state is unchanged.
+	// actor 80 and an account at the neighboring ID 82. Opaque heads are sufficient
+	// for actors whose state is unchanged.
 	for _, actor := range []struct {
 		id   uint64
 		name string
@@ -95,7 +96,8 @@ func newFIP121MigrationFixture(t *testing.T) *fip121MigrationFixture {
 		{0, manifest.SystemKey}, {1, manifest.InitKey}, {2, manifest.RewardKey},
 		{3, manifest.CronKey}, {4, manifest.PowerKey}, {5, manifest.MarketKey},
 		{6, manifest.VerifregKey}, {7, manifest.DatacapKey}, {10, manifest.EamKey},
-		{80, manifest.MultisigKey}, {99, manifest.AccountKey}, {100, manifest.AccountKey},
+		{80, manifest.MultisigKey}, {81, manifest.AccountKey}, {82, manifest.AccountKey},
+		{99, manifest.AccountKey}, {100, manifest.AccountKey},
 		{101, manifest.MinerKey}, {102, manifest.MultisigKey}, {103, manifest.PaychKey},
 		{104, manifest.PlaceholderKey}, {105, manifest.EvmKey}, {106, manifest.EthAccountKey},
 	} {
@@ -198,7 +200,7 @@ func (f *fip121MigrationFixture) requireMigrated(root, outRoot cid.Cid, before m
 	after := f.snapshot(outRoot)
 	removed := make(map[address.Address]bool)
 	burnt := before[f.id(99)].Balance
-	for _, id := range []uint64{6, 7, 80} {
+	for _, id := range []uint64{6, 7, 80, 81} {
 		addr := f.id(id)
 		if actor, found := before[addr]; found {
 			burnt = big.Add(burnt, actor.Balance)
@@ -298,15 +300,15 @@ func (f *fip121MigrationFixture) requireFailure(wantError string) {
 func TestFIP121MigrationBalancesAndState(t *testing.T) {
 	for _, tc := range []struct {
 		name     string
-		balances [4]int64 // IDs 6, 7, 80, 99.
+		balances [5]int64 // IDs 6, 7, 80, 81, 99.
 	}{
-		{"nonzero balances", [4]int64{11, 23, 37, 101}},
-		{"zero retired balances", [4]int64{0, 0, 0, 101}},
-		{"zero burn balance", [4]int64{11, 23, 37, 0}},
+		{"nonzero balances", [5]int64{11, 23, 37, 53, 101}},
+		{"zero retired balances", [5]int64{0, 0, 0, 0, 101}},
+		{"zero burn balance", [5]int64{11, 23, 37, 53, 0}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			f := newFIP121MigrationFixture(t)
-			for i, id := range []uint64{6, 7, 80, 99} {
+			for i, id := range []uint64{6, 7, 80, 81, 99} {
 				actor := f.actor(id)
 				actor.Balance = abi.NewTokenAmount(tc.balances[i])
 				require.NoError(t, f.actors.SetActorV5(f.id(id), actor))
@@ -473,4 +475,74 @@ func TestFIP121MigrationDeterministicAcrossWorkersAndCache(t *testing.T) {
 			fixture.requireMigrated(root, out, before)
 		})
 	}
+}
+
+func TestFIP121MigrationActor81Variants(t *testing.T) {
+	for _, kind := range []string{manifest.AccountKey, manifest.MultisigKey, "unknown code", "absent", "both 80 and 81 absent"} {
+		t.Run(kind, func(t *testing.T) {
+			f := newFIP121MigrationFixture(t)
+			actor := f.actor(81)
+			switch kind {
+			case "absent", "both 80 and 81 absent":
+				require.NoError(t, f.actors.Map.Delete(abi.AddrKey(f.id(81))))
+				if kind == "both 80 and 81 absent" {
+					require.NoError(t, f.actors.Map.Delete(abi.AddrKey(f.id(80))))
+				}
+			case "unknown code":
+				tag := cbg.CborInt(9002)
+				actor.Code = f.put(&tag)
+				require.NoError(t, f.actors.SetActorV5(f.id(81), actor))
+			default:
+				actor.Code = f.oldCodes[kind]
+				require.NoError(t, f.actors.SetActorV5(f.id(81), actor))
+			}
+			root := f.root()
+			before := f.snapshot(root)
+			out, err := f.migrate(root, 2, migration.NewMemMigrationCache())
+			require.NoError(t, err)
+			f.requireMigrated(root, out, before)
+		})
+	}
+}
+
+func TestFIP121MigrationPreservesActor81AccountMapping(t *testing.T) {
+	f := newFIP121MigrationFixture(t)
+	key, err := address.NewSecp256k1Address([]byte("fip121 actor 81 account"))
+	require.NoError(t, err)
+	actor := f.actor(81)
+	actor.Head = f.put(&account19.State{Address: key})
+	require.NoError(t, f.actors.SetActorV5(f.id(81), actor))
+
+	var state init19.State
+	require.NoError(t, f.store.Get(f.ctx, f.actor(1).Head, &state))
+	addressMap, err := adt20.AsMap(f.adtStore, state.AddressMap, builtin.DefaultHamtBitwidth)
+	require.NoError(t, err)
+	value := cbg.CborInt(81)
+	require.NoError(t, addressMap.Put(abi.AddrKey(key), &value))
+	state.AddressMap, err = addressMap.Root()
+	require.NoError(t, err)
+	f.setHead(1, f.put(&state))
+
+	root := f.root()
+	before := f.snapshot(root)
+	out, err := f.migrate(root, 2, migration.NewMemMigrationCache())
+	require.NoError(t, err)
+	f.requireMigrated(root, out, before)
+	tree, err := builtin.LoadTree(f.adtStore, out)
+	require.NoError(t, err)
+	initActor, found, err := tree.GetActorV5(f.id(1))
+	require.NoError(t, err)
+	require.True(t, found)
+	var migrated init20.State
+	require.NoError(t, f.store.Get(f.ctx, initActor.Head, &migrated))
+	require.Equal(t, state.AddressMap, migrated.AddressMap)
+	resolved, found, err := migrated.ResolveAddress(f.adtStore, key)
+	require.NoError(t, err)
+	require.True(t, found)
+	require.Equal(t, f.id(81), resolved)
+	_, found, err = tree.GetActorV5(resolved)
+	require.NoError(t, err)
+	require.False(t, found)
+	_, messages := init20.CheckStateInvariants(&migrated, tree, f.newCodes)
+	require.True(t, messages.IsEmpty(), "%v", messages.Messages())
 }

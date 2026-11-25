@@ -79,3 +79,34 @@ func TestCheckStateInvariantsAddressMapIDs(t *testing.T) {
 		})
 	}
 }
+
+func TestCheckStateInvariantsRetiredVerifierMapping(t *testing.T) {
+	for _, tc := range []struct {
+		name         string
+		id           abi.ActorID
+		wantMessages []string
+	}{
+		{name: "retired genesis verifier mapping", id: 81},
+		{name: "neighbor remains reserved", id: 82, wantMessages: []string{"unexpected singleton ID value 82"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			store := adt.WrapStore(context.Background(), cbor.NewMemCborStore())
+			tree, err := builtin.NewTree(store)
+			require.NoError(t, err)
+			st, err := init_.ConstructState(store, "invariant-test")
+			require.NoError(t, err)
+			key, err := address.NewBLSAddress(make([]byte, 48))
+			require.NoError(t, err)
+			addressMap, err := adt.AsMap(store, st.AddressMap, builtin.DefaultHamtBitwidth)
+			require.NoError(t, err)
+			value := cbg.CborInt(tc.id)
+			require.NoError(t, addressMap.Put(abi.AddrKey(key), &value))
+			st.AddressMap, err = addressMap.Root()
+			require.NoError(t, err)
+
+			summary, acc := init_.CheckStateInvariants(st, tree, nil)
+			require.Equal(t, tc.wantMessages, acc.Messages())
+			require.Equal(t, map[address.Address]abi.ActorID{key: tc.id}, summary.AddrIDs)
+		})
+	}
+}

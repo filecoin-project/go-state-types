@@ -84,6 +84,10 @@ func TestCheckStateInvariantsAfterFilPlusRemoval(t *testing.T) {
 	require.NoError(t, err)
 	rootID := cbg.CborInt(80)
 	require.NoError(t, addressMap.Put(abi.AddrKey(rootKey), &rootID))
+	verifierKey, err := address.NewBLSAddress(make([]byte, 48))
+	require.NoError(t, err)
+	verifierID := cbg.CborInt(81)
+	require.NoError(t, addressMap.Put(abi.AddrKey(verifierKey), &verifierID))
 	initState.AddressMap, err = addressMap.Root()
 	require.NoError(t, err)
 
@@ -108,8 +112,9 @@ func TestCheckStateInvariantsAfterFilPlusRemoval(t *testing.T) {
 	install(7, "datacap", datacapState, big.NewInt(5))
 	install(10, "eam", []struct{}{}, big.Zero())
 	install(80, "account", &account19.State{Address: rootKey}, big.NewInt(7))
+	install(81, "account", &account19.State{Address: verifierKey}, big.NewInt(11))
 	install(99, "account", &account19.State{Address: builtin.BurntFundsActorAddr},
-		big.Sub(big.Sub(builtin.TotalFilecoin, reward19.StorageMiningAllocationCheck), big.NewInt(15)))
+		big.Sub(big.Sub(builtin.TotalFilecoin, reward19.StorageMiningAllocationCheck), big.NewInt(26)))
 	root, err := tree.Flush()
 	require.NoError(t, err)
 
@@ -119,7 +124,7 @@ func TestCheckStateInvariantsAfterFilPlusRemoval(t *testing.T) {
 	require.NoError(t, err)
 	out, err := builtin.LoadTree(adtStore, migratedRoot)
 	require.NoError(t, err)
-	for _, id := range []uint64{6, 7, 80} {
+	for _, id := range []uint64{6, 7, 80, 81} {
 		addr, err := address.NewIDAddress(id)
 		require.NoError(t, err)
 		_, found, err := out.GetActorV5(addr)

@@ -13,11 +13,16 @@ func transferBalanceAndDeleteVerifregDataCap(actorsIn *builtin.ActorTree) error 
 	if err != nil {
 		return xerrors.Errorf("failed to create verifreg root address: %w", err)
 	}
+	verifierAddr, err := addr.NewIDAddress(81)
+	if err != nil {
+		return xerrors.Errorf("failed to create genesis verifier address: %w", err)
+	}
 
 	var actorsToDelete = map[string]addr.Address{
-		"Verifreg":      builtin.VerifiedRegistryActorAddr,
-		"Datacap":       builtin.DatacapActorAddr,
-		"Verifreg Root": verifregKeyAddrs,
+		"Verifreg":         builtin.VerifiedRegistryActorAddr,
+		"Datacap":          builtin.DatacapActorAddr,
+		"Verifreg Root":    verifregKeyAddrs,
+		"Genesis Verifier": verifierAddr,
 	}
 
 	act, found, err := actorsIn.GetActorV5(builtin.BurntFundsActorAddr)
@@ -42,7 +47,7 @@ func transferBalanceAndDeleteVerifregDataCap(actorsIn *builtin.ActorTree) error 
 			// Transfer balance to burnt funds actor
 			act.Balance = big.Add(act.Balance, actr.Balance)
 		} else {
-			if addrs != verifregKeyAddrs {
+			if addrs != verifregKeyAddrs && addrs != verifierAddr {
 				return xerrors.Errorf("%s actor not found", name)
 			}
 		}
