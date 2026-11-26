@@ -69,7 +69,7 @@ func RunMigration(ctx context.Context, cfg Config, cache MigrationCache, store c
 		grp.Go(func() error {
 			defer workerWg.Done()
 			for job := range jobCh {
-				if job.ActorMigration.Deferred() {
+				if job.Deferred() {
 					deferredLk.Lock()
 					deferred[job.Address] = struct{}{}
 					deferredLk.Unlock()

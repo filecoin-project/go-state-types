@@ -22,6 +22,5 @@ var Methods = map[abi.MethodNum]builtin.MethodMeta{
 	8: builtin.NewMethodMeta("ChangeNumApprovalsThreshold", *new(func(*ChangeNumApprovalsThresholdParams) *abi.EmptyValue)), // ChangeNumApprovalsThreshold
 	builtin.MustGenerateFRCMethodNum("ChangeNumApprovalsThreshold"): builtin.NewMethodMeta("ChangeNumApprovalsThresholdExported", *new(func(*ChangeNumApprovalsThresholdParams) *abi.EmptyValue)), // ChangeNumApprovalsThresholdExported
 	9: builtin.NewMethodMeta("LockBalance", *new(func(*LockBalanceParams) *abi.EmptyValue)), // LockBalance
-	builtin.MustGenerateFRCMethodNum("LockBalance"): builtin.NewMethodMeta("LockBalanceExported", *new(func(*LockBalanceParams) *abi.EmptyValue)),          // LockBalanceExported
-	builtin.MustGenerateFRCMethodNum("Receive"):     builtin.NewMethodMeta("UniversalReceiverHook", *new(func(*abi.CborBytesTransparent) *abi.EmptyValue)), // UniversalReceiverHook
+	builtin.MustGenerateFRCMethodNum("LockBalance"): builtin.NewMethodMeta("LockBalanceExported", *new(func(*LockBalanceParams) *abi.EmptyValue)), // LockBalanceExported
 }

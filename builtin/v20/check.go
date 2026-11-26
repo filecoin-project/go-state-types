@@ -13,7 +13,6 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin"
 	"github.com/filecoin-project/go-state-types/builtin/v20/account"
 	"github.com/filecoin-project/go-state-types/builtin/v20/cron"
-	"github.com/filecoin-project/go-state-types/builtin/v20/datacap"
 	"github.com/filecoin-project/go-state-types/builtin/v20/evm"
 	init_ "github.com/filecoin-project/go-state-types/builtin/v20/init"
 	"github.com/filecoin-project/go-state-types/builtin/v20/market"
@@ -22,7 +21,6 @@ import (
 	"github.com/filecoin-project/go-state-types/builtin/v20/paych"
 	"github.com/filecoin-project/go-state-types/builtin/v20/power"
 	"github.com/filecoin-project/go-state-types/builtin/v20/reward"
-	"github.com/filecoin-project/go-state-types/builtin/v20/verifreg"
 	"github.com/filecoin-project/go-state-types/manifest"
 )
 
@@ -34,8 +32,6 @@ func CheckStateInvariants(tree *builtin.ActorTree, priorEpoch abi.ChainEpoch, ac
 	totalFIl := big.Zero()
 	var initSummary *init_.StateSummary
 	var cronSummary *cron.StateSummary
-	var verifregSummary *verifreg.StateSummary
-	var datacapSummary *datacap.StateSummary
 	var marketSummary *market.StateSummary
 	var rewardSummary *reward.StateSummary
 	var accountSummaries []*account.StateSummary
@@ -140,22 +136,6 @@ func CheckStateInvariants(tree *builtin.ActorTree, priorEpoch abi.ChainEpoch, ac
 			summary, msgs := reward.CheckStateInvariants(&st, tree.Store, priorEpoch, actor.Balance)
 			acc.WithPrefix("reward: ").AddAll(msgs)
 			rewardSummary = summary
-		case actorCodes[manifest.VerifregKey]:
-			var st verifreg.State
-			if err := tree.Store.Get(tree.Store.Context(), actor.Head, &st); err != nil {
-				return err
-			}
-			summary, msgs := verifreg.CheckStateInvariants(&st, tree.Store, priorEpoch)
-			acc.WithPrefix("verifreg: ").AddAll(msgs)
-			verifregSummary = summary
-		case actorCodes[manifest.DatacapKey]:
-			var st datacap.State
-			if err := tree.Store.Get(tree.Store.Context(), actor.Head, &st); err != nil {
-				return err
-			}
-			summary, msgs := datacap.CheckStateInvariants(&st, tree.Store)
-			acc.WithPrefix("datacap: ").AddAll(msgs)
-			datacapSummary = summary
 		case actorCodes[manifest.EvmKey]:
 			var st evm.State
 			if err := tree.Store.Get(tree.Store.Context(), actor.Head, &st); err != nil {
@@ -189,14 +169,11 @@ func CheckStateInvariants(tree *builtin.ActorTree, priorEpoch abi.ChainEpoch, ac
 
 	CheckMinersAgainstPower(acc, minerSummaries, powerSummary)
 	CheckDealStatesAgainstSectors(acc, minerSummaries, marketSummary, priorEpoch)
-	CheckVerifregAgainstMiners(acc, verifregSummary, minerSummaries)
 
 	_ = initSummary
-	_ = verifregSummary
 	_ = cronSummary
 	_ = marketSummary
 	_ = rewardSummary
-	_ = datacapSummary
 
 	if !totalFIl.Equals(builtin.TotalFilecoin) {
 		acc.Addf("total token balance is %v, expected %v", totalFIl, builtin.TotalFilecoin)
@@ -303,16 +280,5 @@ func CheckDealStatesAgainstSectors(acc *builtin.MessageAccumulator, minerSummari
 
 			marketDealToSector[dealID] = sectorID
 		}
-	}
-}
-
-func CheckVerifregAgainstMiners(acc *builtin.MessageAccumulator, verifregSummary *verifreg.StateSummary, minerSummaries map[address.Address]*miner.StateSummary) {
-	for _, claim := range verifregSummary.Claims {
-		// all claims are indexed by valid providers
-		maddr, err := address.NewIDAddress(uint64(claim.Provider))
-		acc.RequireNoError(err, "error creating ID address: %v", err)
-
-		_, ok := minerSummaries[maddr]
-		acc.Require(ok, "claim provider %s is not found in miner summaries", maddr)
 	}
 }
