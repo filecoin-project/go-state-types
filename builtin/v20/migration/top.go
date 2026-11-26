@@ -67,7 +67,14 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	// Set of prior version code CIDs for actors to defer during iteration, for explicit migration afterwards.
 	deferredCodeIDs := make(map[cid.Cid]struct{})
 
+	power19CID := cid.Undef
+
 	for _, oldEntry := range oldManifestData.Entries {
+
+		if oldEntry.Name == manifest.PowerKey {
+			power19CID = oldEntry.Code
+		}
+
 		newCodeCID, ok := newManifest.Get(oldEntry.Name)
 		if !ok {
 			return cid.Undef, xerrors.Errorf("code cid for %s actor not found in new manifest", oldEntry.Name)
@@ -85,6 +92,16 @@ func MigrateStateTree(ctx context.Context, store cbor.IpldStore, newManifestCID 
 	}
 
 	migrations[systemActor.Code] = systemActorMigrator{OutCodeCID: newSystemCodeCID, ManifestData: newManifest.Data}
+
+	// Power actor
+	if power19CID == cid.Undef {
+		return cid.Undef, xerrors.Errorf("code cid for power actor not found in old manifest")
+	}
+	newPowerCodeCID, ok := newManifest.Get(manifest.PowerKey)
+	if !ok {
+		return cid.Undef, xerrors.Errorf("code cid for power actor not found in new manifest")
+	}
+	migrations[power19CID] = migration.CachedMigration(cache, powerMigrator{OutCodeCID: newPowerCodeCID})
 
 	if len(migrations)+len(deferredCodeIDs) != len(oldManifestData.Entries) {
 		return cid.Undef, xerrors.Errorf("incomplete migration specification with %d code CIDs, need %d", len(migrations)+len(deferredCodeIDs), len(oldManifestData.Entries))

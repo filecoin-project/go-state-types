@@ -360,5 +360,5 @@ func (bi *Int) Nil() bool {
 }
 
 func (bi *Int) NilOrZero() bool {
-	return bi.Int == nil || bi.Int.Sign() == 0
+	return bi.Int == nil || bi.Sign() == 0
 }
